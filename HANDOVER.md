@@ -2,7 +2,17 @@
 
 **Workflow:** Composer 2.5 implements; Opus reviews at each DoD. Plan of record is `ULTRAPLAN.md`.
 
-**Last updated:** 2026-05-30 (cyclability context layer shipped; hazard-overlay intersect in `normalize` fixed — `data:build` now completes here; product reframed as data-compilation, not a scoring engine).
+**Last updated:** 2026-05-30 (SHIPPED: pushed to GitHub + live on GitHub Pages; cyclability context layer; hazard-overlay intersect in `normalize` fixed — `data:build` now completes here; product reframed as data-compilation, not a scoring engine).
+
+---
+
+## Deployment status (LIVE)
+
+- **Repo:** https://github.com/rafaelvonhellmann/melbourne-liveability (public, `master`).
+- **Live site (GitHub Pages):** https://rafaelvonhellmann.github.io/melbourne-liveability/ — auto-deploys on push to `master` via `.github/workflows/deploy-pages.yml` (builds with `NEXT_PUBLIC_BASE_PATH=/melbourne-liveability`). Verified: home, `/data/*.json`, place pages, compare, methodology all 200.
+- **Vercel (not yet connected — needs owner's interactive auth):** run `vercel login` then `vercel --prod` (root hosting, leave `NEXT_PUBLIC_BASE_PATH` unset), or import the repo at vercel.com/new. `vercel.json` is ready.
+- **Runtime asset paths** are base-path-aware via `lib/asset-path.ts` (`withBase`), so the same codebase serves correctly at a sub-path (Pages) and at root (Vercel/local).
+- **Known minor:** deep links with a trailing slash (e.g. `/places/<slug>/`) 404 on Pages; the canonical no-slash form (what `<Link>`/sitemap emit) works. Set `trailingSlash: true` if directory-form URLs are ever needed.
 
 ---
 
