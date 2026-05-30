@@ -4,7 +4,12 @@
 
 **Inspiration:** analisa.pt (map-first, mobile-first, fuzzy suburb search, transparent scoring) + spachus.com.au (thematic layer toggles, clean filters). Open directly into the map experience, never a marketing landing page.
 
-**Concept:** a liveability map of Greater Melbourne built **only** from Australian government / official open data, organised as **domains**. Each domain is its own toggleable map layer, its own sub-score, its own sources and caveats. Movers re-weight domains live; map re-colors and results re-rank.
+**Concept:** a liveability map of Greater Melbourne built **only** from Australian government / official open data (with OSM as attributed fallback), organised as **domains**. Each domain is its own toggleable map layer, its own sub-score, its own sources and caveats. Movers re-weight domains live; map re-colors and results re-rank.
+
+### ⚠️ Product framing (authoritative — read this before adding metrics)
+**The product is a data-access / compilation tool, NOT a scoring engine.** The point is to **compile open government (and attributed open) data into an accessible, transparent website** so ordinary people can easily find and understand it for where they live or want to move. Generating "the score" is a convenience entry point, not the mission.
+
+Consequence for new work: **new metrics are added as context — display panels + optional toggleable map layers — NOT folded into the scored composite, the weights, or the Data Confidence scoring.** The scored composite stays the locked v1 set (Affordability/Transport/Safety/Health/Hazards/Education/Income). Context layers (Equity, Community, Environment, Politics, Data Confidence, **15-minute access / walkability / cyclability**) are first-class deliverables in their own right — the website's value is the breadth and honesty of the compiled data, not one ranking number. Every metric still needs a verified licence, a source record (version+hash), and a caveat.
 
 ---
 
@@ -28,12 +33,18 @@ The whole vertical, but only 4 scored domains. Prove crosswalk → data → map 
 Restore full weights (Sec 1 table) as domains land.
 - **Scored domains:** Hazards (bushfire+flood), Education (schools/childcare/catchments), Income/economy (DHI/employment).
 - **Context panels:** Equity (SEIFA, Gini), Community (migration/churn/First Nations/tenure/area-character/welfare), Politics, Environment (heat/air), Social housing.
+- **Access / compilation context (NOT scored):**
+  - ✅ **15-minute access** — per-SA2 straight-line reachability of everyday amenities (supermarket, pharmacy, GP, school, childcare, park, cafe/restaurant, gym/leisure) within ~1.2 km of the population-weighted centroid. Inspired by Melbourne's "20-minute neighbourhood" + Paris's "15-minute city". Emits an "N of 8 categories reachable" availability summary + a coarse **walkability index** (amenity-coverage + density blend). `WalkAccessPanel` on profiles + `pct_walkaccess` map context layer. Source: OSM (ODbL, attributed). Caveat: straight-line, not street-network; OSM coverage uneven.
+  - ✅ **Cyclability index** — per-SA2 density of OSM cycling infrastructure: dedicated cycleways (`highway=cycleway`), on-road bike lanes (`cycleway=*`) and bicycle-designated paths (`bicycle=designated`), summed by length whose midpoint falls in the SA2 and divided by land area → km/km² + a coarse 0–100 saturating index. `CyclabilityPanel` on profiles + `pct_cyclability` map context layer (mutually exclusive with the other context layers). Source: OSM (ODbL, attributed). Caveat: infrastructure density, not a safety/comfort/connectivity rating; separated vs on-road lanes counted equally; OSM coverage uneven. Context only — never scored.
 - **Context enrichment:** housing stress, PHIDU health outcomes, childcare deserts.
 - **Persona presets** (Family/Young-professional/Retiree/Student).
 - **SEO/OG + sitemap.**
 
 ### v2+ — see Sec 9 Deferred + Sec 10 National
 Green space, walkability, travel-time-to-CBD, vacancy, NBN, gambling/liquor, aircraft noise, buyer mode, national expansion (jurisdiction adapters).
+
+### Engagement / accounts / monetisation — see Sec 12
+Everything stays **free** for now. Phased roadmap (localStorage personalisation → email alerts → accounts/sync → freemium + B2B area reports) lives in **Section 12**. Core map + liveability data remain static and free.
 
 **Rule:** an indicator is not "in" until it has a verified licence, a source record (version+hash), and a caveat. No half-wired data on the map.
 
@@ -408,7 +419,7 @@ Simplify SA2 with `mapshaper` (topology-preserving `-simplify` + `-clean`), targ
 - **Tree canopy cover** — heat-island/greening, pairs with Environment + green space.
 - **Median sale prices** (Vic Valuer-General) + development/planning-permit pipeline — buyer mode.
 - Buyer mode: stamp duty / first-home-buyer / land tax (v1 is renter-focused).
-- **Walkability score** (Walk Score-style) — computable from OSM/POI density per SA2.
+- **Walkability score** (Walk Score-style) — ✅ shipped as a context-only walkability index inside the 15-minute access layer (OSM amenity coverage + density). NOT scored. Street/intersection-density refinement still open.
 - **Cost-of-living beyond rent** (Numbeo-style) — groceries/transport cost context.
 - **Resident reviews** (Homely-style UGC) — needs DB + moderation; breaks static-only model.
 - Expansion beyond Melbourne → see Section 10.
@@ -475,3 +486,35 @@ We ship Greater Melbourne first but the codebase goes Australia-wide. Bake these
 - **Nomad List** — mover slider/filter UX.
 - **Numbeo** — cost-of-living + QoL indices (→ cost-of-living-beyond-rent).
 - **Walk Score** — walkability metric (→ deferred walkability indicator).
+
+---
+
+## 12. Engagement, accounts & monetisation roadmap (POST-v1.x)
+
+**Status:** agreed direction (2026-05-30). **Everything ships free for now.** These phases are added incrementally only after the data product is solid; each behind its own DoD.
+
+> ⚠️ **This intentionally revises a §0 "locked" decision.** §0 says *no database, auth, accounts, paid APIs, server runtime — static-first*. The core map + all liveability data stay **static and free** (it's a movers' public good and our SEO engine). Accounts/payments are added as a **thin, separate service** layered on top so the data site stays static. Do not introduce a server runtime for the data pipeline.
+
+### Guiding principles (non-negotiable)
+- **Free core, forever:** full map, all scored domains, methodology, data-confidence, per-suburb profiles. Never paywall core liveability *facts* (safety, affordability, hazards) — exploitative for a relocation tool and it kills SEO/virality.
+- **Sell the experience, not the data.** Sources are CC BY open-government data: we may build a paid product on them and must **retain attribution**, but we charge for tooling/convenience/derived analysis — not for reselling ABS/VCSA data, and never implying official endorsement.
+- **Personalisation is the spine.** Personas (Family / Young-pro / Retiree / Student + interest views: rental, education, **data-quality**) drive layout, default map layer, re-weighting, and profile emphasis.
+- **Privacy = obligation, not checkbox.** The moment we collect email/payment we become a **data controller under the Australian Privacy Act (APPs)** → privacy policy, consent, secure storage, breach plan. Gate Phase B on this.
+
+### Phase A — Engagement, **zero backend** (do first; stays fully static) ✅ SHIPPED
+- ✅ **localStorage personalisation:** persona, weights, recently-viewed, suburb shortlist (`lib/user-prefs.ts`).
+- ✅ **Shareable views:** URL `w`, `list`, `view`, `persona` + Copy link (`lib/share-url.ts`, `ShareViewButton`).
+- ✅ **SEO as top-of-funnel:** 354 SSG suburb pages + sitemap + OG (maintain).
+- ✅ **Email capture without accounts:** `/alerts` page; Formspree via `NEXT_PUBLIC_FORMSPREE_ALERTS_ID` or local save; ties to monthly `data-refresh` CI.
+- ✅ **Interest views / persona dashboards:** Balanced, Renting, Education, Data quality (`lib/interest-views.ts`) — default layer + weights + confidence mode.
+- **DoD:** retention/return-visit + shortlist-usage metrics show traction before Phase B (measure in analytics when enabled).
+
+### Phase B — Accounts & sync (only if Phase A retention proves out)
+- Thin hosted auth+DB (e.g. **Supabase / Clerk + Postgres**) to **sync** shortlists/personas/dashboards across devices. Core map stays static and free.
+- Privacy policy + consent + secure storage live (APP compliance). Still **free**.
+
+### Phase C — Freemium + B2B
+- **Free:** full map, all domains, methodology, data confidence, basic compare (≤3), 1 shortlist.
+- **Paid (small $/mo or $/yr):** unlimited named persona dashboards (synced), multi-suburb compare (5–10), **exportable PDF/CSV suburb report card**, shortlist update-alerts, saved searches, trend view (when time-series lands).
+- **B2B / B2G (likely the real revenue):** authoritative, sourced, exportable **area report cards** for councils, MPs' offices, journalists, relocation/real-estate firms — the "politicians checking their area" + data-quality angle monetises far better than $3/mo consumers. Price-test early.
+- Payments via Stripe through a serverless function called client-side; **never** add a server runtime to the data build.

@@ -51,8 +51,8 @@
     "url": "https://opendata.transport.vic.gov.au/dataset/gtfs-schedule",
     "licence": "CC BY 4.0",
     "period": "rolling schedule export",
-    "fetchedAt": "2026-05-29",
-    "sha256": "d7f97aaa622d40db02d2c864bd85230e80d8377e708d83141d98c5ce9d6ce333"
+    "fetchedAt": "2026-05-30",
+    "sha256": "6bd9f83c6ce39763072f3dd49aa671783cc21937bef4829f921b6eec16b1e43a"
   },
   {
     "id": "osm-pt",
@@ -143,5 +143,23 @@
     "period": "2021",
     "fetchedAt": "2026-05-29",
     "sha256": "6b836f174b35ebd0f06f15c0e944210def0ee0edd8b16678918c1bc31095c0bf"
+  },
+  {
+    "id": "osm-amenities",
+    "name": "OpenStreetMap — everyday amenities for 15-min access (supermarket, pharmacy, park, cafe/restaurant, gym/leisure; Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-05-30",
+    "sha256": "a884b87e5d59d8e17e9bee1a9ab70b10cf1b4122f4ba1452e12f039642ddc586"
+  },
+  {
+    "id": "osm-cycleways",
+    "name": "OpenStreetMap — cycling infrastructure for cyclability index (cycleways, on-road bike lanes, bicycle-designated paths; Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-05-30",
+    "sha256": "7c3059913cbaab1e297770c89bcce6c291fa32b62ccd61719463ba04f81504f8"
   }
 ]

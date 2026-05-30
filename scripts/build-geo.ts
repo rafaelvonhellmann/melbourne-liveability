@@ -51,6 +51,12 @@ async function main() {
       props[`pct_${d}`] = place?.domains[d]?.percentile ?? null;
     }
     props.pct_confidence = place?.dataConfidence?.score ?? null;
+    // Context layer (never scored): % of key everyday-amenity categories
+    // reachable within a ~15-min walk of the SA2 centroid (straight-line).
+    props.pct_walkaccess = place?.context?.walkAccess?.accessPct ?? null;
+    // Context layer (never scored): coarse cyclability index (OSM cycle
+    // infrastructure density per SA2). 0–100, not a percentile, not scored.
+    props.pct_cyclability = place?.context?.cyclability?.index ?? null;
     features.push({
       type: "Feature",
       properties: props,

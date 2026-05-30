@@ -26,6 +26,8 @@ const SOURCE_FILES: Record<string, { dir: "raw" | "generated"; file: string }> =
   "vic-planning-bpa": { dir: "raw", file: "vic-bpa.geojson" },
   "vic-planning-flood": { dir: "raw", file: "vic-lsio.geojson" },
   "osm-schools": { dir: "raw", file: "osm-schools.json" },
+  "osm-amenities": { dir: "raw", file: "osm-amenities.json" },
+  "osm-cycleways": { dir: "raw", file: "osm-cycleways.json" },
   "abs-seifa-2021": { dir: "raw", file: "abs-sa2-seifa.json" },
   "abs-census-community-2021": { dir: "raw", file: "abs-sa2-community.json" },
 };

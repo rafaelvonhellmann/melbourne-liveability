@@ -6,6 +6,7 @@ import type { DomainId } from "@/lib/types";
 import { MELBOURNE_BOUNDS, MELBOURNE_CENTER } from "@/lib/region";
 import { choroplethFillColor, choroplethFillColorByProp } from "@/lib/map-expressions";
 import { getDomain } from "@/lib/domains";
+import { withBase } from "@/lib/asset-path";
 
 const BASEMAP =
   "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
@@ -14,20 +15,30 @@ type MelbourneMapProps = {
   className?: string;
   activeDomain: DomainId;
   confidenceMode?: boolean;
+  walkAccessMode?: boolean;
+  cyclabilityMode?: boolean;
   visiblePins?: Record<string, boolean>;
   onPlaceSelect?: (props: { slug?: string; name?: string; sa2Code?: string }) => void;
 };
 
-function fillColorFor(activeDomain: DomainId, confidenceMode: boolean): unknown[] {
-  return confidenceMode
-    ? choroplethFillColorByProp("pct_confidence")
-    : choroplethFillColor(activeDomain);
+function fillColorFor(
+  activeDomain: DomainId,
+  confidenceMode: boolean,
+  walkAccessMode: boolean,
+  cyclabilityMode: boolean
+): unknown[] {
+  if (walkAccessMode) return choroplethFillColorByProp("pct_walkaccess");
+  if (cyclabilityMode) return choroplethFillColorByProp("pct_cyclability");
+  if (confidenceMode) return choroplethFillColorByProp("pct_confidence");
+  return choroplethFillColor(activeDomain);
 }
 
 export function MelbourneMap({
   className,
   activeDomain,
   confidenceMode = false,
+  walkAccessMode = false,
+  cyclabilityMode = false,
   visiblePins = {},
   onPlaceSelect,
 }: MelbourneMapProps) {
@@ -54,7 +65,7 @@ export function MelbourneMap({
     map.on("load", () => {
       map.addSource("sa2", {
         type: "geojson",
-        data: "/data/places.geojson",
+        data: withBase("/data/places.geojson"),
       });
       map.addLayer({
         id: "sa2-fill",
@@ -63,7 +74,9 @@ export function MelbourneMap({
         paint: {
           "fill-color": fillColorFor(
             activeDomain,
-            confidenceMode
+            confidenceMode,
+            walkAccessMode,
+            cyclabilityMode
           ) as maplibregl.ExpressionSpecification,
           "fill-opacity": 0.72,
         },
@@ -80,7 +93,7 @@ export function MelbourneMap({
 
       map.addSource("pois", {
         type: "geojson",
-        data: "/data/pois.geojson",
+        data: withBase("/data/pois.geojson"),
       });
       map.addLayer({
         id: "poi-circles",
@@ -119,7 +132,9 @@ export function MelbourneMap({
     if (!map || !map.getLayer("sa2-fill")) return;
     const color = fillColorFor(
       activeDomain,
-      confidenceMode
+      confidenceMode,
+      walkAccessMode,
+      cyclabilityMode
     ) as maplibregl.ExpressionSpecification;
     if (!map.isStyleLoaded()) {
       map.once("idle", () => {
@@ -130,7 +145,7 @@ export function MelbourneMap({
       return;
     }
     map.setPaintProperty("sa2-fill", "fill-color", color);
-  }, [activeDomain, confidenceMode]);
+  }, [activeDomain, confidenceMode, walkAccessMode, cyclabilityMode]);
 
   useEffect(() => {
     const map = mapRef.current;

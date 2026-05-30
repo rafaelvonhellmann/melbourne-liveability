@@ -64,6 +64,57 @@ export default function MethodologyPage() {
           profiles for transparency only. They never change the liveability rank.
         </p>
 
+        <h2 className="text-lg font-medium text-slate-100">
+          15-minute access (context, not scored)
+        </h2>
+        <p>
+          Inspired by Melbourne&apos;s &ldquo;20-minute neighbourhood&rdquo; and
+          Paris&apos;s &ldquo;15-minute city&rdquo; programs, we compile how many
+          of eight everyday-amenity categories — supermarket/grocery, pharmacy,
+          GP/clinic, school, childcare/kinder, park/open space, cafe/restaurant,
+          and gym/leisure — sit within about a 15-minute walk (~1.2 km at 5 km/h)
+          of each SA2&apos;s population-weighted centroid. We also report a coarse
+          walkability index that blends category coverage with local amenity
+          density. Both appear as a profile panel and an optional
+          &ldquo;15-min walk access&rdquo; map layer.
+        </p>
+        <p className="text-sm text-slate-500">
+          This is a <strong>data-compilation / accessibility feature</strong>, not
+          a routing engine, and it is <strong>never part of the liveability
+          score, its weights, or the data-confidence index</strong>. Caveats:
+          distances are <strong>straight-line</strong> (&ldquo;as the crow
+          flies&rdquo;), so they overstate real walking access — the street
+          network, rivers, freeways and rail crossings are not modelled; and
+          amenity data is © OpenStreetMap contributors (ODbL), which is
+          community-maintained and uneven in coverage.
+        </p>
+
+        <h2 className="text-lg font-medium text-slate-100">
+          Cyclability (context, not scored)
+        </h2>
+        <p>
+          For each SA2 we compile the total length of OpenStreetMap cycling
+          infrastructure — dedicated cycleways (<code>highway=cycleway</code>),
+          on-road bike lanes (<code>cycleway=*</code> tags) and
+          bicycle-designated paths (<code>bicycle=designated</code>) — whose
+          midpoint falls inside the SA2, then divide by the SA2&apos;s land area
+          to get a cycle-infrastructure density (km per km²). A coarse 0–100
+          cyclability index saturates that density so dense inner suburbs reach
+          the top without a single outlier dominating. It appears as a profile
+          panel and an optional &ldquo;Cyclability&rdquo; map layer.
+        </p>
+        <p className="text-sm text-slate-500">
+          This is an <strong>infrastructure-density</strong> measure, not a
+          safety, comfort or connectivity rating, and it is{" "}
+          <strong>never part of the liveability score, its weights, or the
+          data-confidence index</strong>. Caveats: separated paths and painted
+          on-road lanes are both counted equally; long trails crossing two SA2s
+          are attributed wholly to the SA2 containing their midpoint; the
+          Overpass query is capped to the Greater Melbourne envelope; and OSM
+          cycle tagging is © OpenStreetMap contributors (ODbL),
+          community-maintained and uneven.
+        </p>
+
         <h2 className="text-lg font-medium text-slate-100">Data confidence</h2>
         <p>
           Each SA2 carries a data-confidence index (0–100) combining domain
@@ -117,8 +168,9 @@ export default function MethodologyPage() {
         <h2 className="text-lg font-medium text-slate-100">Attribution & licences</h2>
         <p>
           ABS (CC BY 4.0); PTV GTFS (CC BY 4.0); VCSA (CC BY 4.0); Victoria planning and
-          MapShare (CC BY 4.0); © OpenStreetMap contributors (ODbL) for schools, GP, and
-          transport fallback.
+          MapShare (CC BY 4.0); © OpenStreetMap contributors (ODbL) for schools, GP,
+          transport fallback, 15-minute-access everyday amenities, and
+          cyclability cycle-infrastructure.
         </p>
       </section>
     </div>

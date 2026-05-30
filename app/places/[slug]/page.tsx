@@ -9,7 +9,10 @@ import { getSource, sourcesForIndicatorIds } from "@/lib/sources";
 import { SourceDrawer } from "@/components/SourceDrawer";
 import { StalenessBadge } from "@/components/StalenessBadge";
 import { ContextPanels } from "@/components/ContextPanels";
+import { WalkAccessPanel } from "@/components/WalkAccessPanel";
+import { CyclabilityPanel } from "@/components/CyclabilityPanel";
 import { DataConfidenceCard } from "@/components/DataConfidenceCard";
+import { ProfileEngagement } from "@/components/ProfileEngagement";
 import type { DomainId } from "@/lib/types";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -81,6 +84,8 @@ export default async function PlaceProfilePage({ params }: Props) {
         </span>
       </p>
 
+      <ProfileEngagement slug={place.slug} name={place.name} />
+
       {place.suburbAliases.length > 0 && (
         <p className="mt-2 text-sm text-slate-500">
           Also known as: {place.suburbAliases.slice(0, 8).join(", ")}
@@ -145,6 +150,10 @@ export default async function PlaceProfilePage({ params }: Props) {
           crosswalk — not resident point-level. See methodology for details.
         </p>
       )}
+
+      <WalkAccessPanel walkAccess={place.context?.walkAccess} />
+
+      <CyclabilityPanel cyclability={place.context?.cyclability} />
 
       <DataConfidenceCard confidence={place.dataConfidence} />
 

@@ -17,6 +17,14 @@ export default function DisclaimerPage() {
         and health layers may be spatially coarse. See methodology for licences and
         update dates.
       </p>
+      <h2 className="mt-6 text-lg font-medium text-slate-100">Privacy (shortlist & alerts)</h2>
+      <p className="mt-2">
+        Persona, weights, shortlist, and recently viewed areas are stored in your
+        browser only (localStorage) unless you share a link. If you register for email
+        update alerts, we collect your email and shortlisted suburb identifiers to
+        send occasional refresh notices — handled under the Australian Privacy Act.
+        You can unsubscribe at any time. We do not sell your data.
+      </p>
     </div>
   );
 }

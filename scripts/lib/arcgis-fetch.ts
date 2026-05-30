@@ -58,13 +58,20 @@ export async function fetchArcGisTable(
   return rows;
 }
 
-export async function overpassMelbourne(query: string): Promise<unknown> {
+export async function overpassMelbourne(
+  query: string,
+  opts: { out?: "center" | "geom" } = {}
+): Promise<unknown> {
+  // `out center` → a single representative point per element (POIs).
+  // `out geom`   → inline node coordinates per way (needed for line lengths,
+  //                e.g. cycleway infrastructure).
+  const outClause = opts.out === "geom" ? "out geom;" : "out center;";
   const q = `
 [out:json][timeout:180];
 (
   ${query}
 );
-out center;
+${outClause}
 `;
   const res = await fetch("https://overpass-api.de/api/interpreter", {
     method: "POST",

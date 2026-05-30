@@ -1,4 +1,5 @@
 import type { Place } from "./types";
+import { withBase } from "./asset-path";
 
 export type PlacesFile = {
   generatedAt: string;
@@ -6,7 +7,7 @@ export type PlacesFile = {
 };
 
 export async function loadPlaces(): Promise<Place[]> {
-  const res = await fetch("/data/places.json");
+  const res = await fetch(withBase("/data/places.json"));
   if (!res.ok) throw new Error("Failed to load places.json");
   const data = (await res.json()) as PlacesFile;
   return data.places;

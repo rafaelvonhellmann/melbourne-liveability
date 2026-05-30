@@ -93,6 +93,8 @@ export const SOURCE_REFRESH: Record<
   "osm-pt": { cadence: "rolling", probe: { type: "none" } },
   "osm-health": { cadence: "rolling", probe: { type: "none" } },
   "osm-schools": { cadence: "rolling", probe: { type: "none" } },
+  "osm-amenities": { cadence: "rolling", probe: { type: "none" } },
+  "osm-cycleways": { cadence: "rolling", probe: { type: "none" } },
 };
 
 const UA = "MelbourneLiveability/1.0";

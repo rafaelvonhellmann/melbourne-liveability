@@ -140,6 +140,43 @@ async function main() {
   `);
   await writeFile(path.join(RAW, "osm-schools.json"), JSON.stringify(schools));
 
+  // Everyday amenities for the "15-minute access" context layer (ULTRAPLAN
+  // walkability roadmap). Categories beyond health/schools we already fetch:
+  // supermarkets/grocery, pharmacy, parks/open space, cafe/restaurant,
+  // gym/leisure. Used straight-line from SA2 centroids — context only, never
+  // scored. OSM is ODbL; attribute contributors.
+  console.log("Overpass everyday amenities (15-min access)...");
+  const amenities = await overpassMelbourne(`
+    node["shop"~"supermarket|convenience|greengrocer"](-38.35,144.45,-37.45,145.65);
+    way["shop"~"supermarket|convenience|greengrocer"](-38.35,144.45,-37.45,145.65);
+    node["amenity"~"pharmacy|cafe|restaurant|fast_food|gym"](-38.35,144.45,-37.45,145.65);
+    node["shop"="chemist"](-38.35,144.45,-37.45,145.65);
+    node["leisure"~"park|garden|fitness_centre|sports_centre"](-38.35,144.45,-37.45,145.65);
+    way["leisure"~"park|garden|fitness_centre|sports_centre"](-38.35,144.45,-37.45,145.65);
+  `);
+  await writeFile(path.join(RAW, "osm-amenities.json"), JSON.stringify(amenities));
+
+  // Cycling infrastructure for the "cyclability index" context layer (ULTRAPLAN
+  // walkability/cyclability roadmap). Dedicated cycleways, on-road bike lanes
+  // (cycleway=* tags on roads) and bicycle-designated paths. `out geom` so we
+  // get full way geometry to measure length per SA2 — context only, never
+  // scored. OSM is ODbL; attribute contributors. bbox capped to Greater
+  // Melbourne (same envelope as the other OSM extracts) to keep the query
+  // bounded; documented in methodology.
+  console.log("Overpass cycling infrastructure (cyclability)...");
+  const cycleways = await overpassMelbourne(
+    `
+    way["highway"="cycleway"](-38.35,144.45,-37.45,145.65);
+    way["cycleway"~"lane|track|opposite_lane|opposite_track|shared_lane|share_busway"](-38.35,144.45,-37.45,145.65);
+    way["cycleway:left"~"lane|track|shared_lane"](-38.35,144.45,-37.45,145.65);
+    way["cycleway:right"~"lane|track|shared_lane"](-38.35,144.45,-37.45,145.65);
+    way["cycleway:both"~"lane|track|shared_lane"](-38.35,144.45,-37.45,145.65);
+    way["highway"~"path|footway"]["bicycle"="designated"](-38.35,144.45,-37.45,145.65);
+  `,
+    { out: "geom" }
+  );
+  await writeFile(path.join(RAW, "osm-cycleways.json"), JSON.stringify(cycleways));
+
   console.log("fetch-indicators complete");
 }
 

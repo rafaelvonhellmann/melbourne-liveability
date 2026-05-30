@@ -16,7 +16,15 @@ import {
 } from "./lib/vcsa-crime.js";
 import { countWithinKm, minDistanceKm } from "./lib/proximity.js";
 import { buildHazardIndex, overlayPctInSa2 } from "./lib/sa2-overlay-pct.js";
-import type { PlaceContext } from "../lib/types.js";
+import { computeCyclabilityByCode } from "./lib/cyclability-compute.js";
+import type { Cyclability, PlaceContext, WalkAccess } from "../lib/types.js";
+import {
+  WALK_THRESHOLD_KM,
+  WALK_CATEGORY_IDS,
+  classifyOsmAmenity,
+  summariseWalkAccess,
+  type WalkCategoryId,
+} from "../lib/walk-access.js";
 
 type Sa2Raw = {
   sa2Code: string;
@@ -48,6 +56,8 @@ type Sa2Raw = {
   renterPct: number | null;
   apartmentPct: number | null;
   firstNationsPct: number | null;
+  walkAccess?: WalkAccess;
+  cyclability?: Cyclability;
   context?: PlaceContext;
 };
 
@@ -325,6 +335,81 @@ async function main() {
   }
   console.log(`Education: ${schoolPts.length} OSM schools, preschool from ABS`);
 
+  // 15-minute access (context only, never scored) — straight-line reachability
+  // of everyday amenities from each SA2 centroid. Categories come from OSM:
+  // supermarket/pharmacy/park/cafe/gym from osm-amenities.json, GP from
+  // osm-health, school/childcare from osm-schools.
+  const amenitiesJson = JSON.parse(
+    (await readFile(path.join(RAW, "osm-amenities.json"), "utf8").catch(
+      () => "{}"
+    )) || "{}"
+  ) as {
+    elements?: {
+      lat?: number;
+      lon?: number;
+      center?: { lat: number; lon: number };
+      tags?: Record<string, string>;
+    }[];
+  };
+  const walkPoints: Record<WalkCategoryId, [number, number][]> = {
+    supermarket: [],
+    pharmacy: [],
+    gp: gps,
+    school: schoolPts,
+    childcare: osmPoints(schoolsJson, (t) => t.amenity === "kindergarten"),
+    park: [],
+    cafe_restaurant: [],
+    gym_leisure: [],
+  };
+  for (const el of amenitiesJson.elements ?? []) {
+    const lat = el.lat ?? el.center?.lat;
+    const lon = el.lon ?? el.center?.lon;
+    if (lat == null || lon == null) continue;
+    const cat = classifyOsmAmenity(el.tags ?? {});
+    if (cat && cat in walkPoints) walkPoints[cat].push([lon, lat]);
+  }
+  for (const p of byCode.values()) {
+    const counts = {} as Record<WalkCategoryId, number>;
+    for (const id of WALK_CATEGORY_IDS) {
+      counts[id] = countWithinKm(p.centroid, walkPoints[id], WALK_THRESHOLD_KM);
+    }
+    p.walkAccess = summariseWalkAccess(counts, {
+      sourceId: "osm-amenities",
+      period: "current",
+    });
+  }
+  console.log(
+    `15-min access: supermarkets=${walkPoints.supermarket.length} pharmacies=${walkPoints.pharmacy.length} parks=${walkPoints.park.length} cafe/restaurant=${walkPoints.cafe_restaurant.length} gym/leisure=${walkPoints.gym_leisure.length}`
+  );
+
+  // Cyclability index (context only, never scored) — OSM cycling infrastructure
+  // length per SA2, normalised by land area. See lib/cyclability.ts caveats.
+  const cyclewaysJson = JSON.parse(
+    (await readFile(path.join(RAW, "osm-cycleways.json"), "utf8").catch(
+      () => "{}"
+    )) || "{}"
+  ) as { elements?: { type?: string; geometry?: { lat: number; lon: number }[]; tags?: Record<string, string> }[] };
+  const cyclabilityByCode = computeCyclabilityByCode(
+    cyclewaysJson,
+    sa2GeomByCode,
+    { sourceId: "osm-cycleways", period: "current" }
+  );
+  for (const p of byCode.values()) {
+    const c = cyclabilityByCode.get(p.sa2Code);
+    if (c) p.cyclability = c;
+  }
+  {
+    let withInfra = 0;
+    let totalKm = 0;
+    for (const c of cyclabilityByCode.values()) {
+      if (c.cyclewayKm > 0) withInfra++;
+      totalKm += c.cyclewayKm;
+    }
+    console.log(
+      `Cyclability: ${totalKm.toFixed(0)} km cycle infrastructure across ${withInfra}/${cyclabilityByCode.size} SA2`
+    );
+  }
+
   async function loadOverlay(name: string): Promise<FeatureCollection | null> {
     try {
       return JSON.parse(
@@ -393,7 +478,9 @@ async function main() {
         period: "2021",
       };
     }
-    if (ctx.equity || ctx.community) p.context = ctx;
+    if (p.walkAccess) ctx.walkAccess = p.walkAccess;
+    if (p.cyclability) ctx.cyclability = p.cyclability;
+    p.context = ctx;
   }
 
   await mkdir(GENERATED, { recursive: true });

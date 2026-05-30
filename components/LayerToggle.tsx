@@ -11,6 +11,10 @@ type LayerToggleProps = {
   onPinToggle: (pinType: string) => void;
   confidenceMode?: boolean;
   onConfidenceToggle?: () => void;
+  walkAccessMode?: boolean;
+  onWalkAccessToggle?: () => void;
+  cyclabilityMode?: boolean;
+  onCyclabilityToggle?: () => void;
 };
 
 export function LayerToggle({
@@ -20,6 +24,10 @@ export function LayerToggle({
   onPinToggle,
   confidenceMode = false,
   onConfidenceToggle,
+  walkAccessMode = false,
+  onWalkAccessToggle,
+  cyclabilityMode = false,
+  onCyclabilityToggle,
 }: LayerToggleProps) {
   return (
     <div
@@ -70,19 +78,45 @@ export function LayerToggle({
         ))}
       </ul>
 
-      {onConfidenceToggle && (
-        <div className="mt-3 border-t border-surface-border pt-2">
-          <div className="mb-1 text-xs font-medium text-slate-400">Context layer</div>
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-300">
-            <input
-              type="checkbox"
-              checked={confidenceMode}
-              onChange={onConfidenceToggle}
-              className="rounded border-surface-border"
-            />
-            Data confidence
-            <span className="text-xs text-slate-500">(not in score)</span>
-          </label>
+      {(onConfidenceToggle || onWalkAccessToggle || onCyclabilityToggle) && (
+        <div className="mt-3 space-y-1 border-t border-surface-border pt-2">
+          <div className="mb-1 text-xs font-medium text-slate-400">Context layers</div>
+          {onWalkAccessToggle && (
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-300">
+              <input
+                type="checkbox"
+                checked={walkAccessMode}
+                onChange={onWalkAccessToggle}
+                className="rounded border-surface-border"
+              />
+              15-min walk access
+              <span className="text-xs text-slate-500">(not in score)</span>
+            </label>
+          )}
+          {onCyclabilityToggle && (
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-300">
+              <input
+                type="checkbox"
+                checked={cyclabilityMode}
+                onChange={onCyclabilityToggle}
+                className="rounded border-surface-border"
+              />
+              Cyclability
+              <span className="text-xs text-slate-500">(not in score)</span>
+            </label>
+          )}
+          {onConfidenceToggle && (
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-300">
+              <input
+                type="checkbox"
+                checked={confidenceMode}
+                onChange={onConfidenceToggle}
+                className="rounded border-surface-border"
+              />
+              Data confidence
+              <span className="text-xs text-slate-500">(not in score)</span>
+            </label>
+          )}
         </div>
       )}
     </div>

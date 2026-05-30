@@ -5,6 +5,7 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import type { Feature, FeatureCollection, Point } from "geojson";
 import { RAW, PUBLIC_DATA } from "./lib/paths.js";
+import { classifyOsmAmenity } from "../lib/walk-access.js";
 
 type OsmEl = {
   lat?: number;
@@ -37,6 +38,27 @@ function osmToFeatures(
   return out;
 }
 
+/** Everyday-amenity pins for the 15-min access context layer. */
+function amenitiesToFeatures(
+  data: { elements?: OsmEl[] } | null
+): Feature<Point>[] {
+  const out: Feature<Point>[] = [];
+  for (const el of data?.elements ?? []) {
+    const lat = el.lat ?? el.center?.lat;
+    const lon = el.lon ?? el.center?.lon;
+    if (lat == null || lon == null) continue;
+    const tags = el.tags ?? {};
+    const cat = classifyOsmAmenity(tags);
+    if (!cat) continue;
+    out.push({
+      type: "Feature",
+      properties: { pinType: cat, name: tags.name ?? cat },
+      geometry: { type: "Point", coordinates: [lon, lat] },
+    });
+  }
+  return out;
+}
+
 async function main() {
   const health = JSON.parse(
     await readFile(path.join(RAW, "osm-health.json"), "utf8").catch(() => "{}")
@@ -47,6 +69,9 @@ async function main() {
   const vic = JSON.parse(
     await readFile(path.join(RAW, "vic-hospitals.json"), "utf8").catch(() => "{}")
   ) as { points?: [number, number][] };
+  const amenities = JSON.parse(
+    await readFile(path.join(RAW, "osm-amenities.json"), "utf8").catch(() => "{}")
+  );
 
   const features: Feature<Point>[] = [
     ...osmToFeatures(health, "police", (t) => t.amenity === "police"),
@@ -54,6 +79,8 @@ async function main() {
     ...osmToFeatures(health, "hospital", (t) => t.amenity === "hospital"),
     ...osmToFeatures(schools, "school", (t) => t.amenity === "school"),
     ...osmToFeatures(schools, "childcare", (t) => t.amenity === "kindergarten"),
+    // 15-minute access everyday amenities (context layer; OSM ODbL).
+    ...amenitiesToFeatures(amenities),
   ];
 
   for (const [lon, lat] of vic.points ?? []) {

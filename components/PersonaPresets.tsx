@@ -1,10 +1,9 @@
 "use client";
 
-import { PERSONA_PRESETS, personaWeights, type PersonaId } from "@/lib/personas";
-import type { ScoreWeights } from "@/lib/types";
+import { PERSONA_PRESETS, type PersonaId } from "@/lib/personas";
 
 type PersonaPresetsProps = {
-  onSelect: (weights: ScoreWeights) => void;
+  onSelect: (id: PersonaId) => void;
 };
 
 export function PersonaPresets({ onSelect }: PersonaPresetsProps) {
@@ -20,7 +19,7 @@ export function PersonaPresets({ onSelect }: PersonaPresetsProps) {
               key={id}
               type="button"
               title={p.description}
-              onClick={() => onSelect(personaWeights(id))}
+              onClick={() => onSelect(id)}
               className="rounded border border-surface-border px-2 py-1 text-xs text-slate-300 hover:border-emerald-700 hover:text-emerald-200"
             >
               {p.label}
