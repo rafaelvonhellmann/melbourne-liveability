@@ -63,6 +63,27 @@ export type PlaceContext = {
   politics?: { note: string };
 };
 
+/**
+ * Meta-measure of how well-measured an SA2 is — about our pipeline, NOT about
+ * whether the place is good to live in. Display-only; never affects rank.
+ */
+export type DataConfidence = {
+  /** 0–100 composite. */
+  score: number;
+  coverage: number;
+  completeness: number;
+  freshness: number;
+  methodConfidence: number;
+  counts: {
+    total: number;
+    direct: number;
+    estimated: number;
+    proximity: number;
+    missing: number;
+    stale: number;
+  };
+};
+
 export type Place = {
   sa2Code: string;
   slug: string;
@@ -74,6 +95,7 @@ export type Place = {
   coverage?: number;
   domains: Partial<Record<DomainId, DomainScore>>;
   context?: PlaceContext;
+  dataConfidence?: DataConfidence;
 };
 
 export type PoiType =

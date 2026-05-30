@@ -50,6 +50,7 @@ async function main() {
     ] as DomainId[]) {
       props[`pct_${d}`] = place?.domains[d]?.percentile ?? null;
     }
+    props.pct_confidence = place?.dataConfidence?.score ?? null;
     features.push({
       type: "Feature",
       properties: props,

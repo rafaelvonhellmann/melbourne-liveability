@@ -7,6 +7,7 @@ import { GENERATED } from "./lib/paths.js";
 import { percentileRank } from "../lib/scoring.js";
 import { V1_SCORED_DOMAINS } from "../lib/domains.js";
 import type {
+  DataConfidence,
   DomainId,
   DomainScore,
   IndicatorValue,
@@ -91,6 +92,78 @@ function domainScore(
   subIndicators: Record<string, IndicatorValue>
 ): DomainScore {
   return { domain, scored: true, percentile, subIndicators };
+}
+
+/** Confidence weight per aggregation method (how directly we measured it). */
+const METHOD_CONFIDENCE: Record<string, number> = {
+  direct: 1,
+  precomputed: 1,
+  "population-weighted": 0.85,
+  "area-weighted": 0.7,
+  proximity: 0.6,
+};
+
+/**
+ * Meta-measure of data confidence for an SA2 — about the pipeline, not the place.
+ * Display-only; never enters the liveability score.
+ */
+function computeDataConfidence(
+  domains: Place["domains"],
+  coverage: number
+): DataConfidence {
+  let total = 0;
+  let nonMissing = 0;
+  let fresh = 0;
+  let methodSum = 0;
+  const counts = {
+    total: 0,
+    direct: 0,
+    estimated: 0,
+    proximity: 0,
+    missing: 0,
+    stale: 0,
+  };
+
+  for (const d of V1_SCORED_DOMAINS) {
+    const subs = domains[d]?.subIndicators;
+    if (!subs) continue;
+    for (const ind of Object.values(subs)) {
+      total++;
+      const conf = METHOD_CONFIDENCE[ind.method ?? ""] ?? 0.5;
+      methodSum += conf;
+      if (!ind.missing) nonMissing++;
+      else counts.missing++;
+      if (!ind.stale) fresh++;
+      else counts.stale++;
+      if (ind.method === "direct" || ind.method === "precomputed" || ind.method === "population-weighted") {
+        counts.direct++;
+      } else if (ind.method === "area-weighted") {
+        counts.estimated++;
+      } else if (ind.method === "proximity") {
+        counts.proximity++;
+      }
+    }
+  }
+  counts.total = total;
+
+  const completeness = total > 0 ? nonMissing / total : 0;
+  const freshness = total > 0 ? fresh / total : 0;
+  const methodConfidence = total > 0 ? methodSum / total : 0;
+  const score =
+    100 *
+    (0.4 * coverage +
+      0.25 * completeness +
+      0.15 * freshness +
+      0.2 * methodConfidence);
+
+  return {
+    score: Math.round(score * 10) / 10,
+    coverage: Math.round(coverage * 1000) / 1000,
+    completeness: Math.round(completeness * 1000) / 1000,
+    freshness: Math.round(freshness * 1000) / 1000,
+    methodConfidence: Math.round(methodConfidence * 1000) / 1000,
+    counts,
+  };
 }
 
 async function main() {
@@ -417,6 +490,7 @@ async function main() {
     const present = V1_SCORED_DOMAINS.filter(
       (d) => domains[d]?.percentile != null
     ).length;
+    const coverage = present / domainCount;
 
     return {
       sa2Code: p.sa2Code,
@@ -426,9 +500,12 @@ async function main() {
       suburbAliases: p.suburbAliases,
       centroid: p.centroid,
       nonResidential,
-      coverage: present / domainCount,
+      coverage,
       domains,
       context: p.context,
+      dataConfidence: nonResidential
+        ? undefined
+        : computeDataConfidence(domains, coverage),
     };
   });
 

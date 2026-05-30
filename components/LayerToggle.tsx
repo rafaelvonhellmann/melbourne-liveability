@@ -9,6 +9,8 @@ type LayerToggleProps = {
   onDomainChange: (id: DomainId) => void;
   visiblePins: Record<string, boolean>;
   onPinToggle: (pinType: string) => void;
+  confidenceMode?: boolean;
+  onConfidenceToggle?: () => void;
 };
 
 export function LayerToggle({
@@ -16,6 +18,8 @@ export function LayerToggle({
   onDomainChange,
   visiblePins,
   onPinToggle,
+  confidenceMode = false,
+  onConfidenceToggle,
 }: LayerToggleProps) {
   return (
     <div
@@ -65,6 +69,22 @@ export function LayerToggle({
           </li>
         ))}
       </ul>
+
+      {onConfidenceToggle && (
+        <div className="mt-3 border-t border-surface-border pt-2">
+          <div className="mb-1 text-xs font-medium text-slate-400">Context layer</div>
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              checked={confidenceMode}
+              onChange={onConfidenceToggle}
+              className="rounded border-surface-border"
+            />
+            Data confidence
+            <span className="text-xs text-slate-500">(not in score)</span>
+          </label>
+        </div>
+      )}
     </div>
   );
 }

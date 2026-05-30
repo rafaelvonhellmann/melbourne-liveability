@@ -1,0 +1,59 @@
+name: Data refresh
+
+# Automatically re-fetch upstream open data, rebuild the scored artifacts, and
+# commit them. The commit triggers the static redeploy (e.g. Vercel git hook),
+# so the map refreshes itself instead of relying on a manual run.
+#
+# Cadence: 2nd of each month (covers quarterly crime + annual ABS editions;
+# census-cadence sources simply no-op when upstream is unchanged because the
+# sha256 manifest stays identical and git sees no diff).
+
+on:
+  schedule:
+    - cron: "0 17 2 * *" # 02:00 AEST on the 2nd (cron is UTC)
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Report upstream freshness
+        run: npm run data:freshness || true
+
+      - name: Fetch + rebuild all data
+        run: npm run data:all
+
+      - name: Test
+        run: npm test
+
+      - name: Build static site
+        run: npm run build
+
+      - name: Commit refreshed data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/generated/*.json public/data/*
+          if git diff --staged --quiet; then
+            echo "No data changes — upstream unchanged."
+          else
+            git commit -m "chore(data): automated refresh $(date -u +%Y-%m-%d)"
+            git push
+          fi

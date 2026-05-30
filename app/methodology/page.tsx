@@ -64,6 +64,27 @@ export default function MethodologyPage() {
           profiles for transparency only. They never change the liveability rank.
         </p>
 
+        <h2 className="text-lg font-medium text-slate-100">Data confidence</h2>
+        <p>
+          Each SA2 carries a data-confidence index (0–100) combining domain
+          coverage, completeness (non-missing sub-indicators), freshness, and
+          aggregation-method confidence (directly measured &gt; crosswalk-estimated
+          &gt; proximity). It describes how well-measured an area is — a property of
+          our pipeline, not a judgement of the place — and is shown as an optional
+          map layer and a per-area report card. It is never part of the liveability
+          score. Across Greater Melbourne it is near-uniform (≈86–95) and shows no
+          correlation with income or SEIFA (r ≈ 0).
+        </p>
+
+        <h2 className="text-lg font-medium text-slate-100">Automated refresh</h2>
+        <p>
+          Each source records a cadence (rolling / quarterly / annual / census) and,
+          where the upstream API exposes it, a last-updated date. A scheduled job
+          re-fetches, rebuilds, and re-hashes the data monthly; when a raw file&apos;s
+          sha256 changes the map redeploys automatically, and when upstream is
+          unchanged the build is a no-op.
+        </p>
+
         <h2 className="text-lg font-medium text-slate-100">Caveats</h2>
         <ul className="list-disc space-y-1 pl-5">
           <li>

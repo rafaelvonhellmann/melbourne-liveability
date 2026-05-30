@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import type { DomainId } from "@/lib/types";
 import { MELBOURNE_BOUNDS, MELBOURNE_CENTER } from "@/lib/region";
-import { choroplethFillColor } from "@/lib/map-expressions";
+import { choroplethFillColor, choroplethFillColorByProp } from "@/lib/map-expressions";
 import { getDomain } from "@/lib/domains";
 
 const BASEMAP =
@@ -13,13 +13,21 @@ const BASEMAP =
 type MelbourneMapProps = {
   className?: string;
   activeDomain: DomainId;
+  confidenceMode?: boolean;
   visiblePins?: Record<string, boolean>;
   onPlaceSelect?: (props: { slug?: string; name?: string; sa2Code?: string }) => void;
 };
 
+function fillColorFor(activeDomain: DomainId, confidenceMode: boolean): unknown[] {
+  return confidenceMode
+    ? choroplethFillColorByProp("pct_confidence")
+    : choroplethFillColor(activeDomain);
+}
+
 export function MelbourneMap({
   className,
   activeDomain,
+  confidenceMode = false,
   visiblePins = {},
   onPlaceSelect,
 }: MelbourneMapProps) {
@@ -53,8 +61,9 @@ export function MelbourneMap({
         type: "fill",
         source: "sa2",
         paint: {
-          "fill-color": choroplethFillColor(
-            activeDomain
+          "fill-color": fillColorFor(
+            activeDomain,
+            confidenceMode
           ) as maplibregl.ExpressionSpecification,
           "fill-opacity": 0.72,
         },
@@ -108,24 +117,20 @@ export function MelbourneMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !map.getLayer("sa2-fill")) return;
+    const color = fillColorFor(
+      activeDomain,
+      confidenceMode
+    ) as maplibregl.ExpressionSpecification;
     if (!map.isStyleLoaded()) {
       map.once("idle", () => {
         if (map.getLayer("sa2-fill")) {
-          map.setPaintProperty(
-            "sa2-fill",
-            "fill-color",
-            choroplethFillColor(activeDomain) as maplibregl.ExpressionSpecification
-          );
+          map.setPaintProperty("sa2-fill", "fill-color", color);
         }
       });
       return;
     }
-    map.setPaintProperty(
-      "sa2-fill",
-      "fill-color",
-      choroplethFillColor(activeDomain) as maplibregl.ExpressionSpecification
-    );
-  }, [activeDomain]);
+    map.setPaintProperty("sa2-fill", "fill-color", color);
+  }, [activeDomain, confidenceMode]);
 
   useEffect(() => {
     const map = mapRef.current;

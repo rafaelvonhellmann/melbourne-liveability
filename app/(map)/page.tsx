@@ -34,6 +34,7 @@ export default function MapPage() {
   const [weights, setWeights] = useState<ScoreWeights>(getDefaultWeights());
   const [selected, setSelected] = useState<Place | null>(null);
   const [showTable, setShowTable] = useState(false);
+  const [confidenceMode, setConfidenceMode] = useState(false);
   const [visiblePins, setVisiblePins] = useState<Record<string, boolean>>({
     police: true,
     hospital: true,
@@ -69,6 +70,7 @@ export default function MapPage() {
       <MelbourneMap
         className="absolute inset-0"
         activeDomain={activeDomain}
+        confidenceMode={confidenceMode}
         visiblePins={visiblePins}
         onPlaceSelect={(props) => {
           const p = places.find(
@@ -123,6 +125,8 @@ export default function MapPage() {
                 onPinToggle={(pin) =>
                   setVisiblePins((v) => ({ ...v, [pin]: !v[pin] }))
                 }
+                confidenceMode={confidenceMode}
+                onConfidenceToggle={() => setConfidenceMode((v) => !v)}
               />
             </div>
             <div className="pointer-events-auto space-y-3">
@@ -146,7 +150,13 @@ export default function MapPage() {
               <ResultsList places={places} weights={weights} />
             </div>
             <div className="pointer-events-auto">
-              <MapLegend domainLabel={DOMAIN_LABELS[activeDomain]} />
+              <MapLegend
+                domainLabel={
+                  confidenceMode
+                    ? "Data confidence (context, not in score)"
+                    : DOMAIN_LABELS[activeDomain]
+                }
+              />
             </div>
             <div className="pointer-events-auto">
               <Attribution />

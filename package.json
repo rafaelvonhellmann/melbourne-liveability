@@ -47,6 +47,8 @@
     "data:geo": "tsx scripts/build-geo.ts",
     "data:poi": "tsx scripts/build-poi.ts",
     "data:hash": "tsx scripts/hash-sources.ts",
+    "data:freshness": "tsx scripts/check-freshness.ts",
+    "data:all": "npm run data:fetch && npm run data:build",
     "data:build": "tsx scripts/build.ts",
     "dev": "next dev",
     "build": "next build",

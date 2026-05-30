@@ -2,7 +2,11 @@ import type { DomainId } from "./types";
 import { domainProperty } from "./colors";
 
 export function choroplethFillColor(domain: DomainId): unknown[] {
-  const prop = ["get", domainProperty(domain)];
+  return choroplethFillColorByProp(domainProperty(domain));
+}
+
+export function choroplethFillColorByProp(property: string): unknown[] {
+  const prop = ["get", property];
   return [
     "case",
     ["==", ["get", "nonResidential"], true],

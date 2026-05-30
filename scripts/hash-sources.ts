@@ -34,6 +34,7 @@ type Source = {
   id: string;
   sha256?: string;
   derived?: boolean;
+  fetchedAt?: string;
   [k: string]: unknown;
 };
 
@@ -49,6 +50,7 @@ async function sha256(file: string): Promise<string | null> {
 async function main() {
   const sourcesPath = path.join(GENERATED, "sources.json");
   const sources = JSON.parse(await readFile(sourcesPath, "utf8")) as Source[];
+  const today = new Date().toISOString().slice(0, 10);
 
   const missing: string[] = [];
   let hashed = 0;
@@ -66,6 +68,10 @@ async function main() {
     const base = map.dir === "raw" ? RAW : GENERATED;
     const hash = await sha256(path.join(base, map.file));
     if (hash) {
+      if (s.sha256 !== hash) {
+        // Hash changed (or first run) → the raw file was (re)fetched: stamp it.
+        s.fetchedAt = today;
+      }
       s.sha256 = hash;
       hashed++;
     } else {

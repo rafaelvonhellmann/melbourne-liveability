@@ -1,0 +1,133 @@
+{
+  "checkedAt": "2026-05-30T04:57:21.896Z",
+  "items": [
+    {
+      "id": "abs-sa2-income-dbr",
+      "cadence": "annual",
+      "fetchedAt": "2026-05-29",
+      "monthsSinceFetch": 0,
+      "upstreamLastUpdated": "2026-02-26",
+      "status": "fresh"
+    },
+    {
+      "id": "abs-census-rent-2021",
+      "cadence": "census",
+      "fetchedAt": "2026-05-29",
+      "monthsSinceFetch": 0,
+      "upstreamLastUpdated": "2023-12-04",
+      "status": "fresh"
+    },
+    {
+      "id": "abs-rent-to-income-2021",
+      "cadence": "n/a",
+      "fetchedAt": "2026-05-29",
+      "monthsSinceFetch": null,
+      "upstreamLastUpdated": null,
+      "status": "unknown"
+    },
+    {
+      "id": "abs-erp-sa2",
+      "cadence": "annual",
+      "fetchedAt": "2026-05-29",
+      "monthsSinceFetch": 0,
+      "upstreamLastUpdated": "2024-06-07",
+      "status": "fresh"
+    },
+    {
+      "id": "vcsa-recorded-offences",
+      "cadence": "quarterly",
+      "fetchedAt": "2026-05-29",
+      "monthsSinceFetch": 0,
+      "upstreamLastUpdated": null,
+      "status": "fresh"
+    },
+    {
+      "id": "ptv-gtfs",
+      "cadence": "rolling",
+      "fetchedAt": "2026-05-29",
+      "monthsSinceFetch": 0,
+      "upstreamLastUpdated": null,
+      "status": "fresh"
+    },
+    {
+      "id": "osm-pt",
+      "cadence": "rolling",
+      "fetchedAt": "2026-05-29",
+      "monthsSinceFetch": 0,
+      "upstreamLastUpdated": null,
+      "status": "fresh"
+    },
+    {
+      "id": "vic-mapshare-hospitals",
+      "cadence": "n/a",
+      "fetchedAt": "2026-05-29",
+      "monthsSinceFetch": null,
+      "upstreamLastUpdated": null,
+      "status": "unknown"
+    },
+    {
+      "id": "osm-health",
+      "cadence": "rolling",
+      "fetchedAt": "2026-05-29",
+      "monthsSinceFetch": 0,
+      "upstreamLastUpdated": null,
+      "status": "fresh"
+    },
+    {
+      "id": "abs-census-labour-2016",
+      "cadence": "census",
+      "fetchedAt": "2026-05-29",
+      "monthsSinceFetch": 0,
+      "upstreamLastUpdated": "2023-12-11",
+      "status": "fresh"
+    },
+    {
+      "id": "vic-planning-bpa",
+      "cadence": "annual",
+      "fetchedAt": "2026-05-29",
+      "monthsSinceFetch": 0,
+      "upstreamLastUpdated": "2026-05-23",
+      "status": "fresh"
+    },
+    {
+      "id": "vic-planning-flood",
+      "cadence": "annual",
+      "fetchedAt": "2026-05-29",
+      "monthsSinceFetch": 0,
+      "upstreamLastUpdated": null,
+      "status": "fresh"
+    },
+    {
+      "id": "osm-schools",
+      "cadence": "rolling",
+      "fetchedAt": "2026-05-29",
+      "monthsSinceFetch": 0,
+      "upstreamLastUpdated": null,
+      "status": "fresh"
+    },
+    {
+      "id": "abs-census-preschool-2021",
+      "cadence": "census",
+      "fetchedAt": "2026-05-29",
+      "monthsSinceFetch": 0,
+      "upstreamLastUpdated": "2023-12-11",
+      "status": "fresh"
+    },
+    {
+      "id": "abs-seifa-2021",
+      "cadence": "census",
+      "fetchedAt": "2026-05-29",
+      "monthsSinceFetch": 0,
+      "upstreamLastUpdated": "2023-12-08",
+      "status": "fresh"
+    },
+    {
+      "id": "abs-census-community-2021",
+      "cadence": "census",
+      "fetchedAt": "2026-05-29",
+      "monthsSinceFetch": 0,
+      "upstreamLastUpdated": "2023-12-04",
+      "status": "fresh"
+    }
+  ]
+}

@@ -9,6 +9,7 @@ import { getSource, sourcesForIndicatorIds } from "@/lib/sources";
 import { SourceDrawer } from "@/components/SourceDrawer";
 import { StalenessBadge } from "@/components/StalenessBadge";
 import { ContextPanels } from "@/components/ContextPanels";
+import { DataConfidenceCard } from "@/components/DataConfidenceCard";
 import type { DomainId } from "@/lib/types";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -144,6 +145,8 @@ export default async function PlaceProfilePage({ params }: Props) {
           crosswalk — not resident point-level. See methodology for details.
         </p>
       )}
+
+      <DataConfidenceCard confidence={place.dataConfidence} />
 
       <ContextPanels context={place.context} />
 
