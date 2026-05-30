@@ -1,0 +1,149 @@
+/**
+ * Fetches indicator raw files into data/raw (gitignored).
+ */
+import { createWriteStream } from "node:fs";
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { pipeline } from "node:stream/promises";
+import { RAW } from "./lib/paths.js";
+import { loadMelbourneSa2Codes } from "./lib/melbourne-sa2-codes.js";
+import { fetchArcGisTable, overpassMelbourne } from "./lib/arcgis-fetch.js";
+import { fetchVicHospitalPoints } from "./lib/vic-facilities.js";
+
+const UA = "MelbourneLiveability/1.0";
+
+async function download(url: string, dest: string) {
+  const res = await fetch(url, {
+    redirect: "follow",
+    headers: { "User-Agent": UA },
+  });
+  if (!res.ok) throw new Error(`Download ${res.status}: ${url}`);
+  await mkdir(path.dirname(dest), { recursive: true });
+  if (res.body) {
+    await pipeline(res.body as NodeJS.ReadableStream, createWriteStream(dest));
+  }
+}
+
+async function main() {
+  await mkdir(RAW, { recursive: true });
+  const codes = await loadMelbourneSa2Codes();
+  console.log(`Melbourne SA2 count: ${codes.length}`);
+
+  console.log("ABS income (equiv weekly)...");
+  const income = await fetchArcGisTable("SA2_income_DbR_Nov25", 0, {
+    codes,
+    where: "gccsa_code_2021='2GMEL'",
+    outFields: "sa2_code_2021,equiv_22021",
+  });
+  await writeFile(
+    path.join(RAW, "abs-sa2-income.json"),
+    JSON.stringify(income)
+  );
+
+  console.log("ABS median rent (Census 2021)...");
+  const rent = await fetchArcGisTable("ABS_Family_and_community_by_2021_SA2", 0, {
+    codes,
+    outFields: "sa2_code_2021,rent_42021",
+  });
+  await writeFile(path.join(RAW, "abs-sa2-rent.json"), JSON.stringify(rent));
+
+  console.log("ABS ERP 2023...");
+  const erp = await fetchArcGisTable("ABS_ERP_2001_2023_SA2", 0, {
+    codes,
+    outFields: "sa2_code_2021,erp_no_2023",
+  });
+  await writeFile(path.join(RAW, "abs-sa2-erp.json"), JSON.stringify(erp));
+
+  console.log("ABS education & employment (Census 2016 labour force + 2021 preschool)...");
+  const emp = await fetchArcGisTable("ABS_Education_and_employment_by_2021_SA2", 0, {
+    codes,
+    outFields: "sa2_code_2021,lf_62016,lf_52016,lf_22016,presch_82021",
+  });
+  await writeFile(path.join(RAW, "abs-sa2-employment.json"), JSON.stringify(emp));
+
+  console.log("ABS SEIFA 2021 (IRSAD / IRSD deciles)...");
+  const seifa = await fetchArcGisTable(
+    "ABS_Socio_Economic_Indexes_for_Areas_SEIFA_by_2021_SA2",
+    0,
+    { codes, outFields: "sa2_code_2021,irsad_aus_decile,irsd_aus_decile" }
+  );
+  await writeFile(path.join(RAW, "abs-sa2-seifa.json"), JSON.stringify(seifa));
+
+  console.log("ABS family & community (tenure, dwelling structure)...");
+  const fam = await fetchArcGisTable("ABS_Family_and_community_by_2021_SA2", 0, {
+    codes,
+    outFields:
+      "sa2_code_2021,tenure_72021,tenure_82021,tenure_92021,tenure_102021,dwell_42021,dwell_72021",
+  });
+  await writeFile(path.join(RAW, "abs-sa2-community.json"), JSON.stringify(fam));
+
+  console.log("ABS Census G01 (First Nations population)...");
+  const g01 = await fetchArcGisTable("ABS_2021_Census_G01_SA2", 0, {
+    codes,
+    outFields: "sa2_code_2021,indigenous_p_tot_p,tot_p_p",
+  });
+  await writeFile(path.join(RAW, "abs-sa2-indigenous.json"), JSON.stringify(g01));
+
+  console.log("Vic MapShare hospitals...");
+  try {
+    const hospitals = await fetchVicHospitalPoints();
+    await writeFile(
+      path.join(RAW, "vic-hospitals.json"),
+      JSON.stringify({ points: hospitals })
+    );
+    console.log(`  ${hospitals.length} hospitals in Melbourne envelope`);
+  } catch (e) {
+    console.warn("  Vic hospitals:", (e as Error).message);
+  }
+
+  console.log("VCSA crime (CKAN → XLSX)...");
+  try {
+    const pkg = await fetch(
+      "https://discover.data.vic.gov.au/api/3/action/package_show?id=data-tables-recorded-offences",
+      { headers: { "User-Agent": UA } }
+    );
+    const data = (await pkg.json()) as {
+      result?: { resources?: { url: string; format: string; name: string }[] };
+    };
+    const xlsx = (data.result?.resources ?? [])
+      .filter((r) => /xlsx/i.test(r.format ?? "") && /LGA.*Recorded/i.test(r.name ?? ""))
+      .sort((a, b) => (b.name ?? "").localeCompare(a.name ?? ""))[0];
+    if (xlsx?.url) {
+      await download(xlsx.url, path.join(RAW, "vcsa-lga-offences.xlsx"));
+      console.log(`  ${xlsx.name}`);
+    }
+  } catch (e) {
+    console.warn("  Crime:", (e as Error).message);
+  }
+
+  console.log("Overpass PT stops...");
+  const pt = await overpassMelbourne(`
+    node["public_transport"~"platform|stop_position"](-38.35,144.45,-37.45,145.65);
+    node["railway"="tram_stop"](-38.35,144.45,-37.45,145.65);
+    node["highway"="bus_stop"](-38.35,144.45,-37.45,145.65);
+  `);
+  await writeFile(path.join(RAW, "osm-pt.json"), JSON.stringify(pt));
+
+  console.log("Overpass hospitals + GP + police...");
+  const health = await overpassMelbourne(`
+    node["amenity"="hospital"](-38.35,144.45,-37.45,145.65);
+    node["amenity"~"doctors|clinic"](-38.35,144.45,-37.45,145.65);
+    node["amenity"="police"](-38.35,144.45,-37.45,145.65);
+  `);
+  await writeFile(path.join(RAW, "osm-health.json"), JSON.stringify(health));
+
+  console.log("Overpass schools + childcare...");
+  const schools = await overpassMelbourne(`
+    node["amenity"="school"](-38.35,144.45,-37.45,145.65);
+    way["amenity"="school"](-38.35,144.45,-37.45,145.65);
+    node["amenity"="kindergarten"](-38.35,144.45,-37.45,145.65);
+  `);
+  await writeFile(path.join(RAW, "osm-schools.json"), JSON.stringify(schools));
+
+  console.log("fetch-indicators complete");
+}
+
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

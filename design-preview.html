@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Liveability MVP - Design Direction Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  /* ---------- DATA PALETTE: constant across all themes (color is a data channel) ---------- */
+  :root {
+    --d1:#ffffcc; --d2:#a1dab4; --d3:#41b6c4; --d4:#2c7fb8; --d5:#253494; /* ColorBrewer YlGnBu, colorblind-safe */
+    --nodata:#d9d6cf;
+    --sans:'Inter',system-ui,sans-serif;
+  }
+
+  /* ---------- THEME A: Anthropic warm-editorial ---------- */
+  .theme-warm {
+    --bg:#F0EEE6; --surface:#FAF9F5; --surface2:#F3F1E9;
+    --ink:#1A1A18; --muted:#6B6862; --border:#E3DFD3;
+    --accent:#D97757; --accent-ink:#fff;
+    --radius:10px; --shadow:0 1px 3px rgba(40,35,25,.08),0 8px 24px rgba(40,35,25,.06);
+    --head:'Fraunces',Georgia,serif; --head-weight:500;
+  }
+  /* ---------- THEME B: Neutral utility ---------- */
+  .theme-neutral {
+    --bg:#F5F5F5; --surface:#FFFFFF; --surface2:#F9FAFB;
+    --ink:#111111; --muted:#6B7280; --border:#E5E7EB;
+    --accent:#2563EB; --accent-ink:#fff;
+    --radius:6px; --shadow:0 1px 2px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.05);
+    --head:'Inter',sans-serif; --head-weight:600;
+  }
+  /* ---------- THEME C: Consumer-bold ---------- */
+  .theme-bold {
+    --bg:#F8FAFC; --surface:#FFFFFF; --surface2:#F1F5F9;
+    --ink:#0F172A; --muted:#64748B; --border:#E2E8F0;
+    --accent:#7C3AED; --accent-ink:#fff;
+    --radius:16px; --shadow:0 4px 6px rgba(15,23,42,.06),0 14px 40px rgba(124,58,237,.12);
+    --head:'Inter',sans-serif; --head-weight:700;
+  }
+
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:var(--sans); background:#222; color:#ccc; -webkit-font-smoothing:antialiased; }
+  .num { font-variant-numeric:tabular-nums; }
+
+  /* top chooser */
+  .chooser { position:sticky; top:0; z-index:50; background:#1a1a1a; border-bottom:1px solid #333; padding:14px 20px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .chooser h1 { font-size:14px; color:#fff; font-weight:600; margin-right:8px; }
+  .chooser .hint { color:#888; font-size:12px; margin-left:auto; }
+  .tab { padding:8px 16px; border-radius:8px; border:1px solid #444; background:#2a2a2a; color:#ddd; cursor:pointer; font-size:13px; font-weight:500; font-family:var(--sans); }
+  .tab:hover { background:#333; }
+  .tab.active { background:#fff; color:#111; border-color:#fff; }
+
+  .stage { padding:24px; }
+
+  /* ===== app mock ===== */
+  .app { background:var(--bg); color:var(--ink); border-radius:14px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.4); max-width:1180px; margin:0 auto; height:760px; display:flex; flex-direction:column; }
+
+  .topbar { display:flex; align-items:center; gap:14px; padding:14px 20px; background:var(--surface); border-bottom:1px solid var(--border); }
+  .brand { font-family:var(--head); font-weight:var(--head-weight); font-size:20px; letter-spacing:-.01em; }
+  .brand .dot { color:var(--accent); }
+  .search { flex:1; max-width:380px; display:flex; align-items:center; gap:8px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius); padding:9px 13px; color:var(--muted); font-size:13px; }
+  .topbtn { margin-left:auto; padding:9px 15px; border-radius:var(--radius); background:var(--accent); color:var(--accent-ink); font-size:13px; font-weight:600; border:none; cursor:pointer; }
+  .topbtn.ghost { background:transparent; color:var(--ink); border:1px solid var(--border); }
+
+  .body { flex:1; display:grid; grid-template-columns:1fr 372px; min-height:0; }
+
+  /* map */
+  .map { position:relative; background:
+      radial-gradient(circle at 30% 30%, #eef1ee, #e7eae6 60%, #dfe3df);
+      overflow:hidden; }
+  .map svg { width:100%; height:100%; display:block; }
+  .map .roads { stroke:#fff; stroke-width:2.5; opacity:.7; fill:none; }
+  .legend { position:absolute; left:16px; bottom:16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:10px 12px; box-shadow:var(--shadow); font-size:11px; color:var(--muted); }
+  .legend .row { display:flex; align-items:center; gap:6px; }
+  .legend .sw { display:flex; gap:2px; margin:6px 0 4px; }
+  .legend .sw span { width:26px; height:10px; border-radius:2px; }
+  .legend .lab { display:flex; justify-content:space-between; }
+  .layerctl { position:absolute; right:16px; top:16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:6px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:4px; }
+  .chip { font-size:11px; padding:6px 10px; border-radius:calc(var(--radius) - 2px); color:var(--ink); cursor:pointer; white-space:nowrap; }
+  .chip.on { background:var(--accent); color:var(--accent-ink); font-weight:600; }
+
+  /* panel */
+  .panel { background:var(--surface); border-left:1px solid var(--border); display:flex; flex-direction:column; min-height:0; }
+  .panel-h { padding:16px 18px 12px; border-bottom:1px solid var(--border); }
+  .panel-h .place { font-family:var(--head); font-weight:var(--head-weight); font-size:24px; letter-spacing:-.01em; }
+  .panel-h .meta { color:var(--muted); font-size:12px; margin-top:2px; }
+
+  .scorebox { display:flex; align-items:center; gap:14px; padding:14px 18px; border-bottom:1px solid var(--border); }
+  .score { width:74px; height:74px; border-radius:var(--radius); display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(135deg,var(--d4),var(--d5)); }
+  .theme-bold .score { background:linear-gradient(135deg,#7C3AED,#2563EB); border-radius:18px; }
+  .score b { font-size:30px; line-height:1; }
+  .score small { font-size:9px; opacity:.85; letter-spacing:.05em; text-transform:uppercase; margin-top:3px; }
+  .scoretxt b { font-size:14px; } .scoretxt p { color:var(--muted); font-size:12px; margin-top:3px; max-width:200px; }
+
+  .section { padding:14px 18px; }
+  .section h3 { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:10px; font-weight:600; }
+
+  .bar { margin-bottom:11px; }
+  .bar .t { display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; }
+  .bar .t b { font-weight:500; } .bar .t .v { color:var(--muted); }
+  .bar .track { height:7px; border-radius:4px; background:var(--surface2); overflow:hidden; }
+  .bar .fill { height:100%; border-radius:4px; }
+
+  .sliders .srow { display:flex; align-items:center; gap:10px; margin-bottom:9px; font-size:12px; }
+  .sliders .srow span:first-child { width:88px; }
+  .sliders .srow .w { width:30px; text-align:right; color:var(--muted); }
+  input[type=range]{ -webkit-appearance:none; appearance:none; flex:1; height:4px; border-radius:3px; background:var(--border); }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:var(--accent); cursor:pointer; border:2px solid var(--surface); box-shadow:0 0 0 1px var(--border); }
+
+  .presets { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:4px; }
+  .preset { font-size:12px; padding:6px 12px; border-radius:999px; border:1px solid var(--border); background:var(--surface2); cursor:pointer; color:var(--ink); }
+  .preset.on { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:500; }
+
+  .caveat { margin:0 18px 16px; font-size:11px; color:var(--muted); background:var(--surface2); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:var(--radius); padding:9px 11px; line-height:1.45; }
+  .badge { display:inline-block; font-size:10px; padding:2px 7px; border-radius:999px; background:var(--surface2); border:1px solid var(--border); color:var(--muted); margin-left:6px; vertical-align:middle; }
+
+  .descr { max-width:1180px; margin:14px auto 0; color:#aaa; font-size:13px; line-height:1.5; padding:0 6px; }
+  .descr b { color:#fff; }
+</style>
+</head>
+<body class="theme-warm">
+
+<div class="chooser">
+  <h1>Liveability MVP - pick a direction</h1>
+  <button class="tab active" data-t="warm">A - Anthropic warm-editorial</button>
+  <button class="tab" data-t="neutral">B - Neutral utility</button>
+  <button class="tab" data-t="bold">C - Consumer-bold</button>
+  <span class="hint">Data colors (map + score) stay identical across all 3 - only the chrome changes.</span>
+</div>
+
+<div class="stage">
+  <div class="app">
+    <!-- top bar -->
+    <div class="topbar">
+      <div class="brand">liveable<span class="dot">.</span>melbourne</div>
+      <div class="search">&#128269; &nbsp;Search suburb... e.g. Carlton, Box Hill</div>
+      <button class="topbtn ghost">Compare</button>
+      <button class="topbtn">Methodology</button>
+    </div>
+
+    <div class="body">
+      <!-- map -->
+      <div class="map">
+        <svg viewBox="0 0 800 620" preserveAspectRatio="xMidYMid slice">
+          <polygon points="40,60 220,40 260,180 120,230 30,160" fill="var(--d2)"/>
+          <polygon points="220,40 430,55 440,170 260,180" fill="var(--d3)"/>
+          <polygon points="430,55 640,40 700,150 540,200 440,170" fill="var(--d1)"/>
+          <polygon points="640,40 770,70 760,210 700,150" fill="var(--d2)"/>
+          <polygon points="120,230 260,180 300,330 160,360 30,300 30,160" fill="var(--d4)"/>
+          <polygon points="260,180 440,170 470,330 300,330" fill="var(--d5)"/>
+          <polygon points="440,170 540,200 700,150 760,210 720,360 470,330" fill="var(--d3)"/>
+          <polygon points="160,360 300,330 330,500 180,540 60,470 30,300" fill="var(--d3)"/>
+          <polygon points="300,330 470,330 500,510 330,500" fill="var(--d4)"/>
+          <polygon points="470,330 720,360 700,520 500,510" fill="var(--d2)"/>
+          <polygon points="180,540 330,500 360,600 200,600" fill="var(--d1)"/>
+          <polygon points="330,500 500,510 520,600 360,600" fill="var(--d2)"/>
+          <polygon points="500,510 700,520 710,600 520,600" fill="var(--nodata)"/>
+          <!-- selected place outline -->
+          <polygon points="260,180 440,170 470,330 300,330" fill="none" stroke="var(--accent)" stroke-width="4"/>
+          <!-- roads -->
+          <path class="roads" d="M30,300 L760,210"/>
+          <path class="roads" d="M300,40 L470,600"/>
+          <path class="roads" d="M120,230 L720,360"/>
+          <!-- pins -->
+          <circle cx="360" cy="250" r="6" fill="#fff" stroke="var(--accent)" stroke-width="3"/>
+          <circle cx="520" cy="280" r="6" fill="#fff" stroke="var(--accent)" stroke-width="3"/>
+        </svg>
+        <div class="layerctl">
+          <div class="chip on">Overall score</div>
+          <div class="chip">Affordability</div>
+          <div class="chip">Transport</div>
+          <div class="chip">Safety</div>
+          <div class="chip">Health pins</div>
+        </div>
+        <div class="legend">
+          <div class="row">Liveability score</div>
+          <div class="sw"><span style="background:var(--d1)"></span><span style="background:var(--d2)"></span><span style="background:var(--d3)"></span><span style="background:var(--d4)"></span><span style="background:var(--d5)"></span></div>
+          <div class="lab num"><span>0</span><span>100</span></div>
+          <div class="row" style="margin-top:6px"><span class="sw" style="margin:0"><span style="background:var(--nodata);width:14px"></span></span>&nbsp;No resident data</div>
+        </div>
+      </div>
+
+      <!-- panel -->
+      <div class="panel">
+        <div class="panel-h">
+          <div class="place">Carlton</div>
+          <div class="meta">SA2 - City of Melbourne LGA <span class="badge">9/10 indicators</span></div>
+        </div>
+
+        <div class="scorebox">
+          <div class="score"><b class="num">82</b><small>score</small></div>
+          <div class="scoretxt">
+            <b>Strong inner-city pick</b>
+            <p>Ranks top 15% in Greater Melbourne for your current weights.</p>
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Score breakdown</h3>
+          <div class="bar"><div class="t"><b>Affordability</b><span class="v num">71 - 40%</span></div><div class="track"><div class="fill" style="width:71%;background:var(--d4)"></div></div></div>
+          <div class="bar"><div class="t"><b>Transport</b><span class="v num">94 - 24%</span></div><div class="track"><div class="fill" style="width:94%;background:var(--d5)"></div></div></div>
+          <div class="bar"><div class="t"><b>Safety</b><span class="v num">63 - 18%</span></div><div class="track"><div class="fill" style="width:63%;background:var(--d3)"></div></div></div>
+          <div class="bar"><div class="t"><b>Health access</b><span class="v num">88 - 18%</span></div><div class="track"><div class="fill" style="width:88%;background:var(--d5)"></div></div></div>
+        </div>
+
+        <div class="section" style="border-top:1px solid var(--border)">
+          <h3>Adjust priorities</h3>
+          <div class="presets">
+            <span class="preset on">Young professional</span>
+            <span class="preset">Family</span>
+            <span class="preset">Retiree</span>
+            <span class="preset">Student</span>
+          </div>
+          <div class="sliders" style="margin-top:12px">
+            <div class="srow"><span>Affordability</span><input type="range" value="40"><span class="w num">40</span></div>
+            <div class="srow"><span>Transport</span><input type="range" value="24"><span class="w num">24</span></div>
+            <div class="srow"><span>Safety</span><input type="range" value="18"><span class="w num">18</span></div>
+            <div class="srow"><span>Health</span><input type="range" value="18"><span class="w num">18</span></div>
+          </div>
+        </div>
+
+        <div class="caveat">
+          <b>Crime caveat:</b> resident-population rates can overstate inner-city areas with large daytime worker/visitor populations. Rent data as of 2024 Q4.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="descr" id="descr"></div>
+</div>
+
+<script>
+  var notes = {
+    warm: "<b>A - Anthropic warm-editorial.</b> Cream surfaces, clay accent, Fraunces serif headings (place names + brand). Calm, human, civic-credible - closest to analisa.pt restraint. Recommended: trustworthy without looking like a cold gov dashboard.",
+    neutral: "<b>B - Neutral utility.</b> Pure greys/white, Inter throughout, blue accent, tight radii. Maximum data neutrality, most 'tool-like'. Zero brand personality - safest for pure data reading.",
+    bold: "<b>C - Consumer-bold.</b> Violet accent, gradient score badge, big rounded cards, heavy weights. Mass-market engagement (Niche/AreaVibes vibe) but risks reading less 'official' for civic data."
+  };
+  document.getElementById('descr').innerHTML = notes.warm;
+  document.querySelectorAll('.tab').forEach(function(b){
+    b.onclick = function(){
+      document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active')});
+      b.classList.add('active');
+      document.body.className = 'theme-' + b.dataset.t;
+      document.getElementById('descr').innerHTML = notes[b.dataset.t];
+    };
+  });
+</script>
+</body>
+</html>

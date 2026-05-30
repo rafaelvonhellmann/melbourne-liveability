@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+html,
+body,
+:root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  @apply bg-surface text-slate-100 antialiased;
+}
+
+.maplibregl-ctrl-attrib {
+  font-size: 10px;
+}

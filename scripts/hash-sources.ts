@@ -1,0 +1,86 @@
+/**
+ * Computes sha256 of each raw source file and writes the hash into
+ * data/generated/sources.json (ULTRAPLAN §5.9 provenance manifest).
+ *
+ * Derived sources (no single raw file, e.g. composite ratios) are left blank
+ * and recorded in MISSING for visibility. Run after data:fetch / data:gtfs /
+ * data:hazards so the local raw files exist.
+ */
+import { readFile, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import path from "node:path";
+import { RAW, GENERATED } from "./lib/paths.js";
+
+/** sourceId → raw file (relative to data/raw, or data/generated for derived precompute). */
+const SOURCE_FILES: Record<string, { dir: "raw" | "generated"; file: string }> = {
+  "abs-sa2-income-dbr": { dir: "raw", file: "abs-sa2-income.json" },
+  "abs-census-rent-2021": { dir: "raw", file: "abs-sa2-rent.json" },
+  "abs-erp-sa2": { dir: "raw", file: "abs-sa2-erp.json" },
+  "vcsa-recorded-offences": { dir: "raw", file: "vcsa-lga-offences.xlsx" },
+  "ptv-gtfs": { dir: "generated", file: "gtfs-transport.json" },
+  "osm-pt": { dir: "raw", file: "osm-pt.json" },
+  "vic-mapshare-hospitals": { dir: "raw", file: "vic-hospitals.json" },
+  "osm-health": { dir: "raw", file: "osm-health.json" },
+  "abs-census-labour-2016": { dir: "raw", file: "abs-sa2-employment.json" },
+  "abs-census-preschool-2021": { dir: "raw", file: "abs-sa2-employment.json" },
+  "vic-planning-bpa": { dir: "raw", file: "vic-bpa.geojson" },
+  "vic-planning-flood": { dir: "raw", file: "vic-lsio.geojson" },
+  "osm-schools": { dir: "raw", file: "osm-schools.json" },
+  "abs-seifa-2021": { dir: "raw", file: "abs-sa2-seifa.json" },
+  "abs-census-community-2021": { dir: "raw", file: "abs-sa2-community.json" },
+};
+
+type Source = {
+  id: string;
+  sha256?: string;
+  derived?: boolean;
+  [k: string]: unknown;
+};
+
+async function sha256(file: string): Promise<string | null> {
+  try {
+    const buf = await readFile(file);
+    return createHash("sha256").update(buf).digest("hex");
+  } catch {
+    return null;
+  }
+}
+
+async function main() {
+  const sourcesPath = path.join(GENERATED, "sources.json");
+  const sources = JSON.parse(await readFile(sourcesPath, "utf8")) as Source[];
+
+  const missing: string[] = [];
+  let hashed = 0;
+
+  for (const s of sources) {
+    if (s.derived) {
+      s.sha256 = "";
+      continue;
+    }
+    const map = SOURCE_FILES[s.id];
+    if (!map) {
+      missing.push(`${s.id} (no file mapping)`);
+      continue;
+    }
+    const base = map.dir === "raw" ? RAW : GENERATED;
+    const hash = await sha256(path.join(base, map.file));
+    if (hash) {
+      s.sha256 = hash;
+      hashed++;
+    } else {
+      missing.push(`${s.id} (${map.file} not found — run fetch first)`);
+    }
+  }
+
+  await writeFile(sourcesPath, JSON.stringify(sources, null, 2) + "\n");
+  console.log(`Hashed ${hashed}/${sources.length} sources.`);
+  if (missing.length) {
+    console.warn("No hash for:\n  " + missing.join("\n  "));
+  }
+}
+
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

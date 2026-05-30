@@ -1,0 +1,147 @@
+[
+  {
+    "id": "abs-sa2-income-dbr",
+    "name": "ABS Data by Region — median equivalised household income (weekly)",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-05-29",
+    "sha256": "6d90892da6b33d8bec301643422e7c01bd4ffe33586f087a2b314a6d030939f3"
+  },
+  {
+    "id": "abs-census-rent-2021",
+    "name": "ABS Census 2021 — median weekly household rental payment (SA2)",
+    "url": "https://www.abs.gov.au/statistics/people/people-and-communities/data-region",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-05-29",
+    "sha256": "1eb64259a976579a990733f2d35172d5353dcb131a0b938377e65dc48eb87069"
+  },
+  {
+    "id": "abs-rent-to-income-2021",
+    "name": "Rent-to-income ratio — ABS Census 2021 median weekly rent ÷ ABS Data by Region equivalised household income",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-05-29",
+    "derived": true,
+    "sha256": ""
+  },
+  {
+    "id": "abs-erp-sa2",
+    "name": "ABS ERP by SA2",
+    "url": "https://www.abs.gov.au/statistics/people/population/regional-population",
+    "licence": "CC BY 4.0",
+    "period": "2023",
+    "fetchedAt": "2026-05-29",
+    "sha256": "747445f4e8078a98c8148c605fdd74f8c7fed023b722d954ec80695c4566e9e9"
+  },
+  {
+    "id": "vcsa-recorded-offences",
+    "name": "VCSA Recorded offences — suburb (Table 03) + LGA fallback (Table 02)",
+    "url": "https://www.crimestatistics.vic.gov.au/crime-statistics/latest-victorian-crime-data/download-data",
+    "licence": "CC BY 4.0",
+    "period": "2025 (latest year in export)",
+    "fetchedAt": "2026-05-29",
+    "sha256": "63575380bd8956834a28dc3f14aad4d6b844c72e945098bfd34c34c4566df95d"
+  },
+  {
+    "id": "ptv-gtfs",
+    "name": "PTV GTFS Schedule — metropolitan train, tram, bus (DTP)",
+    "url": "https://opendata.transport.vic.gov.au/dataset/gtfs-schedule",
+    "licence": "CC BY 4.0",
+    "period": "rolling schedule export",
+    "fetchedAt": "2026-05-29",
+    "sha256": "d7f97aaa622d40db02d2c864bd85230e80d8377e708d83141d98c5ce9d6ce333"
+  },
+  {
+    "id": "osm-pt",
+    "name": "OpenStreetMap — public transport stops (Overpass fallback only)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-05-29",
+    "sha256": "7f1e5c7737711eee5ddc9d26b113d148e96b81c8f5a72b40f73c0374c2b5dd8b"
+  },
+  {
+    "id": "vic-mapshare-hospitals",
+    "name": "Vicmap / MapShare — general hospitals (Emergency Services FOI)",
+    "url": "https://enterprise.mapshare.vic.gov.au/server/rest/services/Hosted/Emergency_Services__VMFEAT_FOI_POINT_/FeatureServer",
+    "licence": "CC BY 4.0 (Victoria)",
+    "period": "current",
+    "fetchedAt": "2026-05-29",
+    "sha256": "64b0ac01c3d33f671839b40108fd9209c0b7ded78e9c4887e60f910cc8f734de"
+  },
+  {
+    "id": "osm-health",
+    "name": "OpenStreetMap — GP/clinic points (Overpass; hospital fallback only)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-05-29",
+    "sha256": "e8bcee7c0171a5f086bc1f7a4cd74bd2bfd735e84a8a12a26fd5c546bba80bde"
+  },
+  {
+    "id": "abs-census-labour-2016",
+    "name": "ABS Census 2016 — labour force (employed, participation) by SA2",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2016",
+    "fetchedAt": "2026-05-29",
+    "sha256": "766ed1e0c2d0daa5f5b5d495900bf61225b083ee2ec901bee308a3ecb238c586"
+  },
+  {
+    "id": "vic-planning-bpa",
+    "name": "Vicmap Planning — Bushfire Prone Area (regulatory overlay)",
+    "url": "https://services-ap1.arcgis.com/P744lA0wf4LlBZ84/ArcGIS/rest/services/Vicmap_Planning/FeatureServer/9",
+    "licence": "CC BY 4.0 (Victoria)",
+    "period": "current",
+    "fetchedAt": "2026-05-29",
+    "sha256": "fc765e6a28a3fb171bfec51dd10d812b15c5a352944075c1db3e1e37f55d7b77"
+  },
+  {
+    "id": "vic-planning-flood",
+    "name": "Vicplan — Land Subject to Inundation overlay (LSIO; SBO unavailable from API)",
+    "url": "https://plan-gis.mapshare.vic.gov.au/arcgis/rest/services/Planning/Vicplan_PlanningSchemeOverlays/MapServer",
+    "licence": "CC BY 4.0 (Victoria)",
+    "period": "current",
+    "fetchedAt": "2026-05-29",
+    "sha256": "97fff03035f15e547b8d56b4e6adc81231b3bff952c37632eeeb1c3e23ab1116"
+  },
+  {
+    "id": "osm-schools",
+    "name": "OpenStreetMap — schools within 2 km (Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-05-29",
+    "sha256": "c3c37c7827a1dadb2c929cdc69b0c9e6e8d76dfcd159d9a14b59540e2522f5c9"
+  },
+  {
+    "id": "abs-census-preschool-2021",
+    "name": "ABS Census 2021 — children enrolled in preschool (SA2)",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-05-29",
+    "sha256": "766ed1e0c2d0daa5f5b5d495900bf61225b083ee2ec901bee308a3ecb238c586"
+  },
+  {
+    "id": "abs-seifa-2021",
+    "name": "ABS SEIFA 2021 — IRSAD and IRSD deciles (SA2)",
+    "url": "https://www.abs.gov.au/statistics/people/people-and-communities/socio-economic-indexes-areas",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-05-29",
+    "sha256": "84e096233a0886b571be87020a0741f5631c3d11eddbd567c020ea6f1e5aeeb7"
+  },
+  {
+    "id": "abs-census-community-2021",
+    "name": "ABS Census 2021 — tenure and dwelling structure (SA2)",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-05-29",
+    "sha256": "6b836f174b35ebd0f06f15c0e944210def0ee0edd8b16678918c1bc31095c0bf"
+  }
+]
