@@ -97,38 +97,50 @@ export default function AlertsPage() {
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
-          <label htmlFor="alert-email" className="text-sm text-ink-muted">
-            Email
+          <label
+            htmlFor="alert-email"
+            className="block text-sm font-medium text-ink"
+          >
+            Email address
           </label>
           <input
             id="alert-email"
+            name="email"
             type="email"
             required
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-ink placeholder:text-ink-muted"
+            aria-describedby="alert-email-help"
+            className="mt-1 w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-ink placeholder:text-ink-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
             placeholder="you@example.com"
           />
+          <p id="alert-email-help" className="mt-1 text-xs text-ink-muted">
+            We only use this to email you when your shortlisted suburbs get refreshed
+            data.
+          </p>
         </div>
-        <label className="flex items-start gap-2 text-sm text-ink-muted">
+        <div className="flex items-start gap-2">
           <input
+            id="alert-consent"
+            name="consent"
             type="checkbox"
             checked={consent}
             onChange={(e) => setConsent(e.target.checked)}
-            className="mt-1"
+            className="mt-1 h-4 w-4 rounded border-surface-border text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
           />
-          <span>
+          <label htmlFor="alert-consent" className="text-sm text-ink-muted">
             I agree to receive occasional update emails about my shortlisted suburbs. See{" "}
             <Link href="/disclaimer" className="text-accent hover:underline">
               disclaimer
             </Link>{" "}
             for privacy. Unsubscribe any time.
-          </span>
-        </label>
+          </label>
+        </div>
         <button
           type="submit"
           disabled={shortlist.length === 0 || !consent}
-          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-focus disabled:opacity-50"
+          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-focus focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:opacity-50"
         >
           {status === "sending" ? "Sending…" : "Register for alerts"}
         </button>

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { X } from "lucide-react";
 import { loadPlaces } from "@/lib/places-data";
 import type { Place, ScoreWeights } from "@/lib/types";
 import {
@@ -13,17 +14,19 @@ import {
 import { computeWeightedScore } from "@/lib/scoring";
 import { V1_SCORED_DOMAINS, getDomain } from "@/lib/domains";
 import { parseListParam, buildCompareUrl } from "@/lib/share-url";
-import { loadUserPrefs, saveUserPrefs } from "@/lib/user-prefs";
+import { loadUserPrefs } from "@/lib/user-prefs";
+import { buildSearchIndex } from "@/lib/search";
 import { percentileToColor, percentileTextColor } from "@/lib/colors";
 import { ShareViewButton } from "@/components/ShareViewButton";
-import { ShortlistPanel } from "@/components/ShortlistPanel";
+import { SearchBox } from "@/components/SearchBox";
 
 const V1 = V1_SCORED_DOMAINS;
+const MAX_COMPARE = 4;
 
 export default function ComparePage() {
   const searchParams = useSearchParams();
   const [places, setPlaces] = useState<Place[]>([]);
-  const [slugs, setSlugs] = useState<string[]>(["", "", ""]);
+  const [slugs, setSlugs] = useState<string[]>([]);
   const [weights, setWeights] = useState<ScoreWeights>(getDefaultWeights());
   const [savedShortlist, setSavedShortlist] = useState<string[]>([]);
 
@@ -38,11 +41,9 @@ export default function ComparePage() {
     const prefs = loadUserPrefs();
 
     if (list.length > 0) {
-      const padded = [...list, "", "", ""].slice(0, 3);
-      setSlugs(padded);
+      setSlugs(list.slice(0, MAX_COMPARE));
     } else if (prefs.shortlist.length >= 2) {
-      const fromPrefs = [...prefs.shortlist.slice(0, 3), "", "", ""].slice(0, 3);
-      setSlugs(fromPrefs);
+      setSlugs(prefs.shortlist.slice(0, MAX_COMPARE));
     }
 
     setWeights(
@@ -54,23 +55,46 @@ export default function ComparePage() {
     );
   }, [searchParams]);
 
+  // Reuse the same suburb/area search index as the map (data-area names plus
+  // suburb aliases). Selections resolve to a slug under the hood.
+  const searchIndex = useMemo(() => buildSearchIndex(places), [places]);
+
   const selected = useMemo(
     () =>
       slugs
         .map((s) => places.find((p) => p.slug === s || p.sa2Code === s))
         .filter((p): p is Place => !!p)
-        .slice(0, 4),
+        .slice(0, MAX_COMPARE),
     [slugs, places]
   );
 
-  const activeSlugs = slugs.filter(Boolean);
+  // Canonical slugs for sharing — guarantees only resolvable places are encoded.
+  const activeSlugs = selected.map((p) => p.slug);
+  const isFull = selected.length >= MAX_COMPARE;
+
+  function addSlug(slug: string) {
+    setSlugs((prev) => {
+      if (prev.includes(slug) || prev.length >= MAX_COMPARE) return prev;
+      return [...prev, slug];
+    });
+  }
+
+  function removeSlug(slug: string) {
+    setSlugs((prev) => prev.filter((s) => s !== slug));
+  }
+
+  // Saved shortlist places not yet in the comparison — offered as one-tap chips.
+  const shortlistChips = savedShortlist
+    .map((slug) => places.find((p) => p.slug === slug))
+    .filter((p): p is Place => !!p)
+    .filter((p) => !slugs.includes(p.slug));
 
   return (
     <div className="min-h-screen bg-bg text-ink">
       <header className="flex items-center gap-3 border-b border-surface-border bg-surface px-4 py-3">
         <Link
           href="/"
-          className="inline-flex items-center gap-1 rounded-full border border-surface-border bg-surface-sunken px-2.5 py-1 text-xs text-ink-muted transition-colors hover:border-accent hover:text-accent"
+          className="inline-flex items-center gap-1 rounded-full border border-surface-border bg-surface-sunken px-2.5 py-1 text-xs text-ink-muted transition-colors hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-surface"
         >
           ‹ Map
         </Link>
@@ -88,36 +112,90 @@ export default function ComparePage() {
       <main className="mx-auto max-w-5xl px-4 py-6">
         <h1 className="font-display text-2xl font-semibold text-ink">Compare places</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          Up to four areas side-by-side. Uses your saved weights when shared via link.
+          Search a suburb to add it — up to four areas side-by-side. Uses your saved
+          weights when shared via link.
         </p>
 
-        <div className="mt-5 grid gap-4 lg:grid-cols-2">
-          <div className="flex flex-col gap-2 sm:flex-row">
-            {slugs.map((s, i) => (
-              <input
-                key={i}
-                value={s}
-                onChange={(e) => {
-                  const next = [...slugs];
-                  next[i] = e.target.value;
-                  setSlugs(next);
-                }}
-                placeholder={`Place ${i + 1} slug`}
-                className="flex-1 rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-muted"
-              />
-            ))}
+        <div className="mt-5 max-w-xl space-y-4">
+          <div>
+            <label
+              htmlFor="compare-search"
+              className="block text-sm font-medium text-ink"
+            >
+              Add a place by suburb name
+            </label>
+            <p id="compare-search-help" className="mt-0.5 text-xs text-ink-muted">
+              Type a Melbourne suburb or area name. Add up to {MAX_COMPARE}.
+            </p>
+            {isFull ? (
+              <p className="mt-2 rounded-lg border border-surface-border bg-surface-sunken px-3 py-2 text-sm text-ink-muted">
+                You have added the maximum of {MAX_COMPARE} places. Remove one to add
+                another.
+              </p>
+            ) : (
+              <div className="mt-2">
+                <SearchBox
+                  index={searchIndex}
+                  onSelect={(entry) => addSlug(entry.slug)}
+                />
+              </div>
+            )}
           </div>
-          <ShortlistPanel
-            slugs={savedShortlist}
-            places={places}
-            onChange={(next) => {
-              saveUserPrefs({ ...loadUserPrefs(), shortlist: next });
-              setSavedShortlist(next);
-              if (next.length >= 2) {
-                setSlugs([...next.slice(0, 3), "", "", ""].slice(0, 3));
-              }
-            }}
-          />
+
+          {shortlistChips.length > 0 && (
+            <fieldset className="rounded-lg border border-surface-border bg-surface p-3">
+              <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                Quick add from your shortlist
+              </legend>
+              <div className="mt-1 flex flex-wrap gap-2">
+                {shortlistChips.map((p) => (
+                  <button
+                    key={p.slug}
+                    type="button"
+                    onClick={() => addSlug(p.slug)}
+                    disabled={isFull}
+                    aria-label={`Add ${p.name} to comparison`}
+                    className="inline-flex items-center gap-1 rounded-full border border-surface-border bg-surface-sunken px-3 py-1 text-sm text-ink transition-colors hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <span aria-hidden>+</span> {p.name}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          )}
+
+          <div>
+            <h2 className="text-sm font-medium text-ink">
+              Comparing{" "}
+              <span className="text-ink-muted">
+                ({selected.length}/{MAX_COMPARE})
+              </span>
+            </h2>
+            {selected.length === 0 ? (
+              <p className="mt-2 text-sm text-ink-muted">
+                No places yet — search above or add one from your shortlist. Add at
+                least two to see the comparison.
+              </p>
+            ) : (
+              <ul className="mt-2 flex flex-wrap gap-2" aria-label="Selected places">
+                {selected.map((p) => (
+                  <li key={p.slug}>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 py-1 pl-3 pr-1 text-sm text-ink">
+                      {p.name}
+                      <button
+                        type="button"
+                        onClick={() => removeSlug(p.slug)}
+                        aria-label={`Remove ${p.name} from comparison`}
+                        className="inline-flex h-5 w-5 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-accent hover:text-accent-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-surface"
+                      >
+                        <X className="h-3.5 w-3.5" aria-hidden />
+                      </button>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         {selected.length >= 2 && (
