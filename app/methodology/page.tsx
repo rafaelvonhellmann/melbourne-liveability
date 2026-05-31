@@ -1,4 +1,31 @@
 import Link from "next/link";
+import { allSources, getSource } from "@/lib/sources";
+import { getDomain } from "@/lib/domains";
+import { metricsForDomain } from "@/lib/metric-catalog";
+import {
+  SCORED_DOMAIN_ORDER,
+  SCORED_INDICATOR_SOURCING,
+  CONTEXT_SOURCING,
+} from "@/lib/methodology-reference";
+
+export const metadata = {
+  title: "Methodology & data reference · Melbourne Liveability",
+  description:
+    "Every dataset we use, where it comes from, its licence and vintage, and exactly how it is joined to an SA2 — plus scoring, crosswalk, and caveats.",
+};
+
+const TOC: { id: string; label: string }[] = [
+  { id: "reference", label: "Data reference (what / where / how)" },
+  { id: "manifest", label: "Full source manifest" },
+  { id: "scoring", label: "Scoring & percentiles" },
+  { id: "crosswalk", label: "Geography crosswalk" },
+  { id: "profile", label: "Profile drawer & benchmark bands" },
+  { id: "context", label: "Context layers (never scored)" },
+  { id: "confidence", label: "Data confidence & coverage" },
+  { id: "refresh", label: "Provenance & automated refresh" },
+  { id: "caveats", label: "Caveats" },
+  { id: "attribution", label: "Attribution & licences" },
+];
 
 export default function MethodologyPage() {
   return (
@@ -6,263 +33,443 @@ export default function MethodologyPage() {
       <Link href="/" className="text-sm text-accent no-underline hover:underline">
         ← Map
       </Link>
-      <h1 className="mt-4 font-display text-2xl font-semibold text-ink">Methodology</h1>
-      <section className="mt-6 space-y-4 text-ink">
+      <h1 className="mt-4 font-display text-2xl font-semibold text-ink">
+        Methodology &amp; data reference
+      </h1>
+      <p className="mt-2 text-sm text-ink-muted">
+        This site compiles Australian government / official open data (with attributed
+        OpenStreetMap as a labelled fallback) into one transparent map. Scores are{" "}
+        <strong className="text-ink">percentile ranks within Greater Melbourne</strong>{" "}
+        (GCCSA 2GMEL), not absolute national benchmarks. The canonical geography is
+        ABS <strong className="text-ink">SA2</strong>; suburb names are search aliases
+        resolved to SA2 via a population- or area-weighted crosswalk.
+      </p>
+
+      {/* Table of contents */}
+      <nav
+        aria-label="On this page"
+        className="mt-6 rounded-lg border border-surface-border bg-surface p-4 shadow-card"
+      >
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          On this page
+        </h2>
+        <ol className="mt-2 grid gap-1 sm:grid-cols-2">
+          {TOC.map((t, i) => (
+            <li key={t.id} className="text-sm">
+              <a href={`#${t.id}`} className="text-accent hover:underline">
+                {i + 1}. {t.label}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* 1. Data reference                                                */}
+      {/* ---------------------------------------------------------------- */}
+      <Section id="reference" title="1. Data reference — what we hold, where it's from, how we use it">
         <p>
-          Scores are percentile ranks within Greater Melbourne (GCCSA 2GMEL), not
-          absolute national benchmarks. Canonical geography is ABS SA2; suburb names
-          are search aliases resolved via population- or area-weighted crosswalk.
+          The seven <strong className="text-ink">scored</strong> domains below blend to the
+          composite (default ULTRAPLAN §1 weights shown). Each row names the underlying
+          dataset, the data&apos;s <em>real</em> granularity before we attribute it to an
+          SA2, and the join method. Direction records the honest reading
+          (&ldquo;higher / lower is better&rdquo;).
         </p>
-        <h2 className="font-display text-lg font-medium text-ink">Scored domains & weights</h2>
+
+        {SCORED_DOMAIN_ORDER.map(({ id, weight }) => {
+          const cfg = getDomain(id);
+          const metrics = metricsForDomain(id);
+          return (
+            <div key={id} className="mt-5">
+              <h3 className="text-sm font-semibold text-ink">
+                {cfg?.label ?? id}{" "}
+                <span className="num font-normal text-ink-muted">· weight {weight}</span>
+              </h3>
+              <div className="mt-2 overflow-x-auto rounded-lg border border-surface-border">
+                <table className="w-full min-w-[640px] border-collapse text-left text-xs">
+                  <thead className="bg-surface-sunken text-ink-muted">
+                    <tr>
+                      <Th>Indicator</Th>
+                      <Th>Source</Th>
+                      <Th>Vintage</Th>
+                      <Th>Real geography</Th>
+                      <Th>Join method</Th>
+                      <Th>Direction</Th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {metrics.map((m) => {
+                      const src = SCORED_INDICATOR_SOURCING[m.key];
+                      const rec = src ? getSource(src.sourceId) : undefined;
+                      return (
+                        <tr key={m.key} className="border-t border-surface-border align-top">
+                          <Td>
+                            <span className="font-medium text-ink">{m.label}</span>
+                            <span className="block text-ink-muted">{m.unit}</span>
+                          </Td>
+                          <Td>
+                            {rec ? (
+                              <a
+                                href={rec.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-ink underline decoration-dotted underline-offset-2 hover:text-accent"
+                              >
+                                {rec.name.split(" — ")[0]}
+                              </a>
+                            ) : (
+                              "—"
+                            )}
+                          </Td>
+                          <Td className="num">{rec?.period ?? "—"}</Td>
+                          <Td>{src?.geography ?? "—"}</Td>
+                          <Td>{src?.method ?? "—"}</Td>
+                          <Td>{m.higherIsBetter ? "Higher better" : "Lower better"}</Td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })}
+
+        <h3 className="mt-6 text-sm font-semibold text-ink">
+          Context layers &amp; pins — never scored
+        </h3>
         <p className="text-sm text-ink-muted">
-          Default weights follow ULTRAPLAN §1: Affordability 30, Transport 18, Crime/Safety
-          14, Health 14, Hazards 8, Education 8, Income/Economy 8. Sliders and persona
-          presets re-normalise at runtime.
+          These are compiled for transparency and exploration. They never enter the
+          composite, the weights, or the data-confidence index.
         </p>
-        <ul className="list-disc space-y-1 pl-5">
+        <div className="mt-2 overflow-x-auto rounded-lg border border-surface-border">
+          <table className="w-full min-w-[640px] border-collapse text-left text-xs">
+            <thead className="bg-surface-sunken text-ink-muted">
+              <tr>
+                <Th>Layer</Th>
+                <Th>Source</Th>
+                <Th>Vintage</Th>
+                <Th>Real geography</Th>
+                <Th>How used</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {CONTEXT_SOURCING.map((c) => {
+                const rec = getSource(c.sourceId);
+                return (
+                  <tr key={c.label} className="border-t border-surface-border align-top">
+                    <Td className="font-medium text-ink">{c.label}</Td>
+                    <Td>
+                      {rec ? (
+                        <a
+                          href={rec.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-ink underline decoration-dotted underline-offset-2 hover:text-accent"
+                        >
+                          {rec.name.split(" — ")[0]}
+                        </a>
+                      ) : (
+                        "—"
+                      )}
+                    </Td>
+                    <Td className="num">{rec?.period ?? "—"}</Td>
+                    <Td>{c.geography}</Td>
+                    <Td>{c.use}</Td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* 2. Full source manifest                                          */}
+      {/* ---------------------------------------------------------------- */}
+      <Section id="manifest" title="2. Full source manifest">
+        <p>
+          Every dataset in the build, rendered straight from the committed manifest
+          (<code className="text-xs">data/generated/sources.json</code>). Each non-derived
+          source records a sha256 of its raw file (see{" "}
+          <a href="#refresh" className="text-accent hover:underline">
+            provenance
+          </a>
+          ). &ldquo;Derived&rdquo; rows are computed from other sources and carry no raw
+          file of their own.
+        </p>
+        <div className="mt-3 overflow-x-auto rounded-lg border border-surface-border">
+          <table className="w-full min-w-[640px] border-collapse text-left text-xs">
+            <thead className="bg-surface-sunken text-ink-muted">
+              <tr>
+                <Th>Dataset</Th>
+                <Th>Licence</Th>
+                <Th>Vintage</Th>
+                <Th>Last fetch</Th>
+                <Th>Provenance</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {allSources().map((s) => {
+                const derived = (s as { derived?: boolean }).derived;
+                const hash = s.sha256 && s.sha256.length > 0;
+                return (
+                  <tr key={s.id} className="border-t border-surface-border align-top">
+                    <Td>
+                      <a
+                        href={s.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-medium text-ink underline decoration-dotted underline-offset-2 hover:text-accent"
+                      >
+                        {s.name}
+                      </a>
+                    </Td>
+                    <Td>{s.licence}</Td>
+                    <Td className="num">{s.period ?? "—"}</Td>
+                    <Td className="num">{s.fetchedAt ?? "—"}</Td>
+                    <Td>
+                      {derived
+                        ? "derived"
+                        : hash
+                          ? `sha256 ${s.sha256!.slice(0, 8)}…`
+                          : "pending next build"}
+                    </Td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* 3. Scoring                                                       */}
+      {/* ---------------------------------------------------------------- */}
+      <Section id="scoring" title="3. Scoring & percentiles">
+        <p>
+          Each scored indicator is percentile-ranked <strong className="text-ink">within
+          Greater Melbourne</strong> (relative, not absolute), inverting indicators where
+          higher is worse (rent, crime, hazard overlay). A domain score is the sub-weighted
+          blend of its indicators; the composite is the weight-blend of the seven scored
+          domains. Default weights: Affordability 30, Transport 18, Crime/Safety 14, Health
+          14, Hazards 8, Education 8, Income/Economy 8 — adjustable by sliders / persona
+          presets, which re-normalise at runtime.
+        </p>
+        <p>
+          Missing data is never imputed: a missing indicator gets a null percentile, is
+          excluded from the weighted total, and its weight is re-distributed across the
+          present scored domains. The composite and persona scores are{" "}
+          <strong className="text-ink">optional lenses</strong>, never a definitive ranking.
+        </p>
+      </Section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* 4. Crosswalk                                                     */}
+      {/* ---------------------------------------------------------------- */}
+      <Section id="crosswalk" title="4. Geography crosswalk">
+        <p>
+          Sources arrive at different geographies. SA2-direct ABS series are used as-is.
+          Suburb/LGA series (VCSA crime) are aggregated to SA2 by{" "}
+          <strong className="text-ink">population-weighted</strong> spatial intersection
+          (area-weighted fallback where mesh-block population is unavailable); every
+          aggregated value records which method it used. Point data (hospitals, GP,
+          schools, pins) needs no crosswalk — it is assigned to the SA2 it falls in, with
+          proximity measured from the SA2 centroid. Polygon overlays (hazards) are
+          area-weighted against each SA2.
+        </p>
+        <p>
+          <strong className="text-ink">Non-residential SA2s</strong> (estimated resident
+          population &lt; 200 — airports, parkland, industrial, water) are excluded from
+          percentile baselines and rankings, and drawn in neutral no-data grey
+          (<code className="text-xs">#d9d6cf</code>) rather than a misleading score.
+        </p>
+      </Section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* 5. Profile drawer                                                */}
+      {/* ---------------------------------------------------------------- */}
+      <Section id="profile" title="5. Profile drawer & benchmark bands">
+        <p>
+          Each place profile is a tabbed drawer (adapted from the Analisa.pt
+          municipality-drawer pattern): an Overview tab (composite breakdown, key facts,
+          resident-population trend), one tab per persona lens (Family, Young professional,
+          Retiree, Student) that re-weights the same seven domains, one tab per scored
+          domain, and context tabs (Home buyer, Walk &amp; cycle, Equity &amp; community,
+          Data coverage).
+        </p>
+        <p>
+          Inside a domain tab, each indicator card shows its value, unit, honest direction,
+          Greater-Melbourne percentile, source, and a <strong className="text-ink">benchmark
+          band</strong> — this area&apos;s raw value against the GM median and P25–P75
+          range across residential SA2s, computed at build from the full dataset.{" "}
+          <strong className="text-ink">Time-series</strong> are shown only where we hold
+          ≥3 real points (population; property &amp; violent crime, labelled LGA-level so
+          they are not misread as SA2-precise); every trend line states its geography,
+          period range, and any boundary break. Other indicators say
+          &ldquo;single period — no trend data held&rdquo; rather than fabricating one.
+        </p>
+      </Section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* 6. Context layers                                                */}
+      {/* ---------------------------------------------------------------- */}
+      <Section id="context" title="6. Context layers (never scored)">
+        <p>
+          <strong className="text-ink">Equity</strong> (SEIFA IRSAD/IRSD deciles),{" "}
+          <strong className="text-ink">community</strong> (renter %, apartment %, First
+          Nations %), <strong className="text-ink">population trend</strong>, and{" "}
+          <strong className="text-ink">home-buyer index</strong> appear for transparency
+          only. The home-buyer index blends indicators we already hold (cost-pressure 28%,
+          safety 18%, schools 16%, transport 14%, low hazard 14%, walk access 10%) into a
+          GM percentile — using <strong className="text-ink">no sale-price data</strong>,
+          so it is not a price or capital-growth estimate.
+        </p>
+        <p>
+          <strong className="text-ink">15-minute access</strong> counts how many of eight
+          everyday-amenity categories sit within ~1.2 km of the SA2 centroid (straight-line,
+          not street-network). <strong className="text-ink">Cyclability</strong> is the
+          density of OSM cycle infrastructure per km² (an infrastructure measure, not a
+          safety/comfort rating). Both are OSM-derived (ODbL), community-maintained and
+          uneven in coverage, and appear as a profile panel plus an optional map layer.
+        </p>
+        <p>
+          <strong className="text-ink">Map pins</strong> (hospitals, GP, pharmacy, police,
+          schools, childcare, post, pathology/NDIS, supermarkets, parks, gyms, cafes) are
+          off by default and toggled per category, colour-coded by a categorical palette
+          kept separate from the YlGnBu choropleth ramp. NDIS and pathology are sparsely
+          tagged in OSM — treat their coverage as indicative, not complete.
+        </p>
+      </Section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* 7. Data confidence                                               */}
+      {/* ---------------------------------------------------------------- */}
+      <Section id="confidence" title="7. Data confidence & coverage">
+        <p>
+          Each SA2 carries a 0–100 data-confidence index combining domain coverage,
+          completeness (non-missing sub-indicators), freshness, and aggregation-method
+          confidence (directly measured &gt; crosswalk-estimated &gt; proximity). It
+          describes how well-<em>measured</em> an area is — a property of our pipeline, not
+          a judgement of the place — and is shown as an optional map layer and a per-area
+          report card. Across Greater Melbourne it is near-uniform (≈86–95) and shows no
+          correlation with income or SEIFA (r ≈ 0). The profile&apos;s Data-coverage panel
+          states, per domain, what the data actually represents and which indicators are
+          measured, missing, or stale.
+        </p>
+      </Section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* 8. Provenance / refresh                                          */}
+      {/* ---------------------------------------------------------------- */}
+      <Section id="refresh" title="8. Provenance & automated refresh">
+        <p>
+          Each source records a cadence and, where the upstream API exposes it, a
+          last-updated date plus a <strong className="text-ink">sha256</strong> of its raw
+          file. A scheduled job re-fetches, rebuilds, and re-hashes monthly; when a raw
+          file&apos;s hash changes the map redeploys, and when upstream is unchanged the
+          build is a no-op. A blank hash in the manifest above means that source was added
+          to the manifest and will be stamped on the next full build.
+        </p>
+      </Section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* 9. Caveats                                                       */}
+      {/* ---------------------------------------------------------------- */}
+      <Section id="caveats" title="9. Caveats">
+        <ul className="list-disc space-y-1.5 pl-5">
           <li>
-            <strong>Affordability</strong> — rent-to-income: ABS Census 2021 median
-            weekly rent ÷ ABS Data by Region median equivalised household income (SA2).
-            Lower ratio scores higher.
+            Crime is recorded at suburb/LGA level and allocated to SA2 by crosswalk — not
+            resident point-level. Resident-population rates can overstate inner-city areas
+            with large daytime worker/visitor populations.
           </li>
           <li>
-            <strong>Transport</strong> — PTV GTFS Schedule: stops within 800 m,
-            weekday AM-peak scheduled trip count (07:00–09:59), mode mix (train / tram / bus).
-            OpenStreetMap stop count is a labelled fallback only if GTFS precompute is
-            missing.
+            Hazard scores reflect designated regulatory overlay land, not insurance-grade
+            fire/flood likelihood. An SA2 may be partly overlaid yet most dwellings
+            unaffected. The SBO flood layer is currently unavailable from the Vicplan API
+            (LSIO only).
           </li>
           <li>
-            <strong>Crime / Safety</strong> — VCSA Table 03 suburb/town offence counts
-            aggregated to SA2 via crosswalk; LGA Table 02 fallback when suburb match
-            fails.
+            <strong className="text-ink">GP/clinic count is OSM nodes only</strong> — by
+            design, so widening the map-pin query never shifts the scored Health composite.
+            This excludes clinics mapped as building polygons (ways), so it can undercount.
           </li>
           <li>
-            <strong>Health</strong> — distance to nearest general hospital (Vic
-            MapShare); GP/clinic count within 2 km from OpenStreetMap. NDIS is not
-            scored (no reliable public point-level dataset).
+            Schools and GP use community-maintained OpenStreetMap; preschool uses Census
+            counts. NDIS and pathology pins are sparsely tagged in OSM.
           </li>
           <li>
-            <strong>Hazards</strong> — % of SA2 area in bushfire-prone area (Vicmap
-            Planning) and flood overlay (LSIO; SBO layer unavailable from Vicplan API).
-            These are regulatory planning
-            overlays, not probabilistic risk models. Lower overlay share scores higher.
+            Labour-force indicators are Census 2016 — older than income/rent (2021). GTFS
+            is a static timetable export, not real-time service quality.
           </li>
           <li>
-            <strong>Education</strong> — count of schools within 2 km (OpenStreetMap)
-            and children enrolled in preschool (ABS Census 2021, SA2).
-          </li>
-          <li>
-            <strong>Income / Economy</strong> — median equivalised household income
-            (ABS 2021); employment-to-population and participation (ABS Census 2016).
+            15-minute access distances are straight-line, not street-network; rivers,
+            freeways and rail crossings are not modelled.
           </li>
         </ul>
+      </Section>
 
-        <h2 className="font-display text-lg font-medium text-ink">
-          Place profile: tabbed drawer &amp; metric benchmark bands
-        </h2>
+      {/* ---------------------------------------------------------------- */}
+      {/* 10. Attribution                                                  */}
+      {/* ---------------------------------------------------------------- */}
+      <Section id="attribution" title="10. Attribution & licences">
         <p>
-          Each place profile is organised as a tabbed drawer (adapted from the
-          Analisa.pt municipality-drawer pattern): an <strong>Overview</strong>{" "}
-          tab (composite breakdown, key facts, and entry points to the context
-          cards), one tab per <strong>persona lens</strong> (Family, Young
-          professional, Retiree, Student) that re-weights the same seven scored
-          domains, and one tab per <strong>scored domain</strong> plus context
-          groups (Home buyer, Walk &amp; cycle, Equity &amp; community, Data
-          coverage). The composite and persona scores are presented as{" "}
-          <strong>optional lenses</strong>, never a definitive ranking, and
-          context metrics are never folded into the locked seven-domain composite.
+          ABS, PTV GTFS, VCSA, Victoria planning &amp; MapShare data are CC BY 4.0 (some
+          marked CC BY 4.0 Victoria) — see the per-dataset licences in the{" "}
+          <a href="#manifest" className="text-accent hover:underline">
+            manifest
+          </a>{" "}
+          above. Schools, GP/clinics, transport fallback, everyday amenities, cycle
+          infrastructure, post offices and pathology/NDIS points are © OpenStreetMap
+          contributors, licensed ODbL. This product charges for tooling and presentation,
+          never for reselling the underlying open data, and retains attribution.
         </p>
-        <p>
-          Inside each scored-domain tab, every indicator is a metric card showing
-          its current value and unit, its honest direction (&ldquo;higher is
-          better&rdquo; / &ldquo;lower is better&rdquo;), its Greater-Melbourne
-          percentile, the indicator source, and a <strong>benchmark band</strong>.
-          The band plots this area&apos;s raw value against the Greater-Melbourne
-          distribution for that raw indicator — the median and the
-          inter-quartile (P25–P75) range across residential SA2s — computed at
-          build from the full dataset (no extra data file). Cards explicitly state{" "}
-          <strong>&ldquo;single period — no trend data held&rdquo;</strong>: we
-          hold one vintage per indicator and therefore show <strong>no
-          time-series or trend direction</strong> rather than fabricating one.
+        <p className="mt-3 text-sm text-ink-muted">
+          Spotted a data problem or want a dataset added? Use the{" "}
+          <strong className="text-ink">Feedback</strong> button in the top bar — reports
+          are reviewed against the next refresh and never folded directly into scores.
         </p>
+      </Section>
 
-        <h2 className="font-display text-lg font-medium text-ink">Context panels (not scored)</h2>
-        <p>
-          Equity (ABS SEIFA IRSAD/IRSD deciles), community (renter %, apartment
-          dwelling %, First Nations %), environment, and politics appear on place
-          profiles for transparency only. They never change the liveability rank.
-        </p>
-
-        <h2 className="font-display text-lg font-medium text-ink">
-          15-minute access (context, not scored)
-        </h2>
-        <p>
-          Inspired by Melbourne&apos;s &ldquo;20-minute neighbourhood&rdquo; and
-          Paris&apos;s &ldquo;15-minute city&rdquo; programs, we compile how many
-          of eight everyday-amenity categories — supermarket/grocery, pharmacy,
-          GP/clinic, school, childcare/kinder, park/open space, cafe/restaurant,
-          and gym/leisure — sit within about a 15-minute walk (~1.2 km at 5 km/h)
-          of each SA2&apos;s population-weighted centroid. We also report a coarse
-          walkability index that blends category coverage with local amenity
-          density. Both appear as a profile panel and an optional
-          &ldquo;15-min walk access&rdquo; map layer.
-        </p>
-        <p className="text-sm text-ink-muted">
-          This is a <strong>data-compilation / accessibility feature</strong>, not
-          a routing engine, and it is <strong>never part of the liveability
-          score, its weights, or the data-confidence index</strong>. Caveats:
-          distances are <strong>straight-line</strong> (&ldquo;as the crow
-          flies&rdquo;), so they overstate real walking access — the street
-          network, rivers, freeways and rail crossings are not modelled; and
-          amenity data is © OpenStreetMap contributors (ODbL), which is
-          community-maintained and uneven in coverage.
-        </p>
-
-        <h2 className="font-display text-lg font-medium text-ink">
-          Cyclability (context, not scored)
-        </h2>
-        <p>
-          For each SA2 we compile the total length of OpenStreetMap cycling
-          infrastructure — dedicated cycleways (<code>highway=cycleway</code>),
-          on-road bike lanes (<code>cycleway=*</code> tags) and
-          bicycle-designated paths (<code>bicycle=designated</code>) — whose
-          midpoint falls inside the SA2, then divide by the SA2&apos;s land area
-          to get a cycle-infrastructure density (km per km²). A coarse 0–100
-          cyclability index saturates that density so dense inner suburbs reach
-          the top without a single outlier dominating. It appears as a profile
-          panel and an optional &ldquo;Cyclability&rdquo; map layer.
-        </p>
-        <p className="text-sm text-ink-muted">
-          This is an <strong>infrastructure-density</strong> measure, not a
-          safety, comfort or connectivity rating, and it is{" "}
-          <strong>never part of the liveability score, its weights, or the
-          data-confidence index</strong>. Caveats: separated paths and painted
-          on-road lanes are both counted equally; long trails crossing two SA2s
-          are attributed wholly to the SA2 containing their midpoint; the
-          Overpass query is capped to the Greater Melbourne envelope; and OSM
-          cycle tagging is © OpenStreetMap contributors (ODbL),
-          community-maintained and uneven.
-        </p>
-
-        <h2 className="font-display text-lg font-medium text-ink">
-          Home buyer index (context lens, not scored)
-        </h2>
-        <p>
-          A buyer-oriented <strong>context lens</strong> that blends indicators we
-          already hold into a single 0–100 figure: affordability/cost-pressure
-          (28%), safety (18%), schools &amp; education (16%), transport (14%), low
-          hazard exposure (14%) and 15-minute walk access (10%). The figure shown
-          on a profile is the composite&apos;s <strong>percentile within Greater
-          Melbourne</strong>; missing factors are handled by renormalising the
-          present weights.
-        </p>
-        <p className="text-sm text-ink-muted">
-          It is a <strong>context lens, never part of the locked seven-domain
-          liveability score, its weights, or the data-confidence index</strong>.
-          Crucially it uses <strong>no dwelling sale-price data</strong> —
-          &ldquo;affordability&rdquo; is the existing rent-to-income cost-pressure
-          proxy, so this is <strong>not</strong> a price, value-for-money, or
-          capital-growth estimate. It is also available as a &ldquo;Home buyer&rdquo;
-          interest view that tilts the map weights toward those priorities.
-        </p>
-
-        <h2 className="font-display text-lg font-medium text-ink">
-          Data coverage vs drawn geography
-        </h2>
-        <p>
-          Everything is joined to ABS SA2 polygons, but the underlying data is
-          collected at a range of real granularities — e.g. crime is recorded at
-          suburb/LGA level and allocated to the SA2 via crosswalk; rent-to-income
-          and income are SA2-direct; health and school access are proximity
-          measures; hazards are area-weighted overlay shares. The profile&apos;s{" "}
-          <strong>Data coverage</strong> panel states, per domain, what the data
-          actually represents, which indicators are measured vs missing, and which
-          carry an older (stale) vintage, alongside the overall data-confidence
-          tier. SA2s with low/no resident population are flagged and drawn in the
-          neutral <strong>no-data grey</strong> (<code>#d9d6cf</code>) on the map —
-          distinct from a genuinely low score — and excluded from rankings and
-          percentile baselines.
-        </p>
-
-        <h2 className="font-display text-lg font-medium text-ink">
-          Map pins (points of interest)
-        </h2>
-        <p>
-          Pins (hospitals, GPs, pharmacies, police, schools, childcare,
-          supermarkets, parks, gyms/leisure, cafes/restaurants) are{" "}
-          <strong>off by default</strong> and switched on individually in the layer
-          control. They are colour-coded by category using a{" "}
-          <strong>distinct categorical palette</strong> (a qualitative
-          ColorBrewer-style set) kept deliberately separate from the YlGnBu
-          sequential data ramp, which remains reserved for the choropleth data
-          channel. Hospital/GP/police/school points come from Vic MapShare and
-          OpenStreetMap; everyday-amenity points are © OpenStreetMap contributors
-          (ODbL).
-        </p>
-
-        <h2 className="font-display text-lg font-medium text-ink">Data confidence</h2>
-        <p>
-          Each SA2 carries a data-confidence index (0–100) combining domain
-          coverage, completeness (non-missing sub-indicators), freshness, and
-          aggregation-method confidence (directly measured &gt; crosswalk-estimated
-          &gt; proximity). It describes how well-measured an area is — a property of
-          our pipeline, not a judgement of the place — and is shown as an optional
-          map layer and a per-area report card. It is never part of the liveability
-          score. Across Greater Melbourne it is near-uniform (≈86–95) and shows no
-          correlation with income or SEIFA (r ≈ 0).
-        </p>
-
-        <h2 className="font-display text-lg font-medium text-ink">Automated refresh</h2>
-        <p>
-          Each source records a cadence (rolling / quarterly / annual / census) and,
-          where the upstream API exposes it, a last-updated date. A scheduled job
-          re-fetches, rebuilds, and re-hashes the data monthly; when a raw file&apos;s
-          sha256 changes the map redeploys automatically, and when upstream is
-          unchanged the build is a no-op.
-        </p>
-
-        <h2 className="font-display text-lg font-medium text-ink">Caveats</h2>
-        <ul className="list-disc space-y-1 pl-5">
-          <li>
-            Crime is suburb-level, allocated to SA2 by crosswalk — not resident
-            point-level.
-          </li>
-          <li>
-            Hazard scores reflect designated overlay land, not insurance-grade flood or
-            fire likelihood.
-          </li>
-          <li>
-            Schools use community-maintained OpenStreetMap; preschool uses Census counts.
-          </li>
-          <li>
-            Labour-force indicators are Census 2016 — older than income/rent (2021).
-          </li>
-          <li>GTFS is a static timetable export, not real-time service quality.</li>
-          <li>
-            No time-series: we hold a single vintage per indicator, so metric
-            cards show benchmark bands but <strong>no trend direction</strong> —
-            trends are never fabricated.
-          </li>
-        </ul>
-
-        <h2 className="font-display text-lg font-medium text-ink">Crosswalk</h2>
-        <p>
-          Suburb (SAL) indicators aggregated to SA2 using area-weighted spatial
-          intersection (population-weighted when mesh-block population CSV is supplied).
-        </p>
-        <h2 className="font-display text-lg font-medium text-ink">Non-residential SA2</h2>
-        <p>
-          SA2s with estimated resident population below 200 are excluded from percentile
-          baselines and rankings.
-        </p>
-        <h2 className="font-display text-lg font-medium text-ink">Attribution & licences</h2>
-        <p>
-          ABS (CC BY 4.0); PTV GTFS (CC BY 4.0); VCSA (CC BY 4.0); Victoria planning and
-          MapShare (CC BY 4.0); © OpenStreetMap contributors (ODbL) for schools, GP,
-          transport fallback, 15-minute-access everyday amenities, and
-          cyclability cycle-infrastructure.
-        </p>
-      </section>
+      <p className="mt-8 text-xs text-ink-muted">
+        Not relocation or financial advice. Scores are one optional lens over open data,
+        not a definitive ranking of where to live.
+      </p>
     </div>
   );
+}
+
+function Section({
+  id,
+  title,
+  children,
+}: {
+  id: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section id={id} className="mt-8 scroll-mt-4">
+      <h2 className="font-display text-lg font-medium text-ink">{title}</h2>
+      <div className="mt-3 space-y-3 text-sm leading-relaxed text-ink">{children}</div>
+    </section>
+  );
+}
+
+function Th({ children }: { children: React.ReactNode }) {
+  return (
+    <th className="whitespace-nowrap px-3 py-2 font-semibold uppercase tracking-wide">
+      {children}
+    </th>
+  );
+}
+
+function Td({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return <td className={`px-3 py-2 text-ink-muted ${className}`}>{children}</td>;
 }
