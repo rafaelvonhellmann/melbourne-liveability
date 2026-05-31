@@ -119,6 +119,11 @@ export function Sparkline({ series, format, width = 132, height = 34 }: Sparklin
           </figcaption>
         </div>
       </div>
+      {series.boundaryNote && (
+        <figcaption className="mt-1.5 text-[10px] leading-tight text-ink-muted">
+          {series.boundaryNote}
+        </figcaption>
+      )}
     </figure>
   );
 }

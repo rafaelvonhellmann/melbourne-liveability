@@ -7,4 +7,12 @@ const __dirname = dirname(__filename);
 
 const compat = new FlatCompat({ baseDirectory: __dirname });
 
-export default [...compat.extends("next/core-web-vitals")];
+// `eslint .` (our lint script) does not apply Next's built-in ignores, so skip
+// build output explicitly — otherwise generated bundles in .next/ and out/ trip
+// rules like no-assign-module-variable.
+const config = [
+  { ignores: [".next/**", "out/**"] },
+  ...compat.extends("next/core-web-vitals"),
+];
+
+export default config;

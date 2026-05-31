@@ -7,11 +7,13 @@ import { computeWeightedScore } from "@/lib/scoring";
 import { getDefaultWeights } from "@/lib/weights";
 import { V1_SCORED_DOMAINS, getDomain } from "@/lib/domains";
 import { PERSONA_PRESETS, personaWeights, type PersonaId } from "@/lib/personas";
-import { sourcesForIndicatorIds } from "@/lib/sources";
+import { sourcesForIndicatorIds, getSource } from "@/lib/sources";
 import { percentileToColor } from "@/lib/colors";
 import { metricsForDomain } from "@/lib/metric-catalog";
 import type { GmBenchmarks } from "@/lib/benchmarks";
 import type { PlaceSeries } from "@/lib/timeseries";
+import { MIN_TREND_POINTS } from "@/lib/timeseries";
+import { Sparkline } from "./Sparkline";
 import { ScoreBadge, DomainBar } from "./ScoreVisuals";
 import { MetricCard } from "./MetricCard";
 import { ContextPanels } from "./ContextPanels";
@@ -145,6 +147,7 @@ export function PlaceProfileClient({
               breakdown={breakdown}
               measured={measured}
               total={domains.length}
+              series={series}
               onNavigate={setActiveId}
             />
           )}
@@ -273,12 +276,14 @@ function OverviewPanel({
   breakdown,
   measured,
   total,
+  series,
   onNavigate,
 }: {
   place: Place;
   breakdown: ReturnType<typeof computeWeightedScore>;
   measured: number;
   total: number;
+  series: Record<string, PlaceSeries>;
   onNavigate: (id: string) => void;
 }) {
   const entryPoints: { id: string; label: string; blurb: string }[] = [
@@ -345,6 +350,7 @@ function OverviewPanel({
             <Fact key={f.k} k={f.k} v={f.v} swatch={f.pct} />
           ))}
         </div>
+        <PopulationTrendCard series={series.population} />
       </div>
     </div>
   );
@@ -560,6 +566,50 @@ function MiniMapCard() {
         </span>
       </div>
     </Link>
+  );
+}
+
+/**
+ * Resident-population trend for the SA2 (ABS ERP series). The richest trend we
+ * hold — annual, real SA2 geography — but it is not a scored domain metric, so
+ * it renders here in Overview rather than on a domain card. Context only, never
+ * folded into any score. The Sparkline states geography, period and any
+ * boundary note.
+ */
+function PopulationTrendCard({ series }: { series?: PlaceSeries }) {
+  if (!series || series.points.length < MIN_TREND_POINTS) return null;
+  const latest = series.points[series.points.length - 1];
+  const source = getSource(series.sourceId);
+  const fmt = (v: number) => Math.round(v).toLocaleString("en-AU");
+  return (
+    <div className="rounded-lg border border-surface-border bg-surface p-4 shadow-card">
+      <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+        Population trend
+      </h3>
+      <div className="flex items-baseline gap-1.5">
+        <span className="num text-2xl font-semibold leading-none text-ink">
+          {fmt(latest.value)}
+        </span>
+        <span className="text-[11px] text-ink-muted">people · {latest.period}</span>
+      </div>
+      <Sparkline series={series} format={fmt} width={232} />
+      <p className="mt-2 border-t border-surface-border pt-2 text-[11px] text-ink-muted">
+        <span>Source: </span>
+        {source ? (
+          <a
+            href={source.url}
+            target="_blank"
+            rel="noreferrer"
+            className="underline decoration-dotted underline-offset-2 hover:text-accent"
+          >
+            {source.name.split(" — ")[0]}
+          </a>
+        ) : (
+          <span>{series.sourceId}</span>
+        )}{" "}
+        · context only — not in the score.
+      </p>
+    </div>
   );
 }
 
