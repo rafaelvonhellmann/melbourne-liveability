@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import type { DomainId } from "@/lib/types";
-import { MELBOURNE_BOUNDS, MELBOURNE_CENTER } from "@/lib/region";
+import { MELBOURNE_BOUNDS, MELBOURNE_CENTER, MELBOURNE_MAX_BOUNDS } from "@/lib/region";
 import { choroplethFillColor, choroplethFillColorByProp } from "@/lib/map-expressions";
 import { withBase } from "@/lib/asset-path";
 import { poiCircleColorExpression } from "@/lib/poi-categories";
@@ -79,10 +79,9 @@ export function MelbourneMap({
       style: BASEMAP,
       center: MELBOURNE_CENTER,
       zoom: 9,
-      maxBounds: [
-        [MELBOURNE_BOUNDS[0][0] - 0.2, MELBOURNE_BOUNDS[0][1] - 0.2],
-        [MELBOURNE_BOUNDS[1][0] + 0.2, MELBOURNE_BOUNDS[1][1] + 0.2],
-      ],
+      // Generous envelope (see region.ts) so panning is free in every
+      // direction; the initial fitBounds below still frames Greater Melbourne.
+      maxBounds: MELBOURNE_MAX_BOUNDS,
     });
 
     // Nav (+/–) lives top-left so it never collides with the floating layer
@@ -116,6 +115,56 @@ export function MelbourneMap({
         paint: {
           "line-color": "#9a948a",
           "line-width": 0.5,
+        },
+      });
+
+      // Faint, zoom-revealed SA2 area-name labels. Drawn beneath the POI pins
+      // (added next) so pins always sit on top; collision-culled at low zoom
+      // (text-allow-overlap:false) and held near-invisible until the user zooms
+      // in, so the default state stays uncluttered (warm-editorial, subtle).
+      map.addLayer({
+        id: "sa2-labels",
+        type: "symbol",
+        source: "sa2",
+        layout: {
+          "text-field": ["coalesce", ["get", "name"], ""],
+          // Fonts known to exist in the basemap's glyph server.
+          "text-font": ["Open Sans Regular", "Noto Sans Regular"],
+          "text-size": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            9,
+            9,
+            12,
+            11,
+            15,
+            13,
+          ],
+          "text-max-width": 7,
+          "text-padding": 6,
+          "text-allow-overlap": false,
+          "text-transform": "none",
+          "symbol-placement": "point",
+        },
+        paint: {
+          "text-color": "#3a3733",
+          "text-halo-color": "#faf9f5",
+          "text-halo-width": 1.4,
+          "text-halo-blur": 0.4,
+          // Invisible until ~z10.5, then a gentle fade-in; capped low so labels
+          // stay faint and never dominate the choropleth or the pins.
+          "text-opacity": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            10,
+            0,
+            11.5,
+            0.45,
+            14,
+            0.7,
+          ],
         },
       });
 
