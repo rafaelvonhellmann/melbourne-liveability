@@ -71,3 +71,26 @@ body {
 .maplibregl-ctrl-attrib {
   font-size: 10px;
 }
+
+/* Warm-editorial styling for the map hover preview tooltip */
+.mlv-hover-popup .maplibregl-popup-content {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 6px 9px;
+  font-size: 12px;
+  line-height: 1.3;
+}
+.mlv-hover-popup .maplibregl-popup-tip {
+  border-top-color: var(--surface);
+  border-bottom-color: var(--surface);
+}
+.mlv-hover-popup .mlv-hover-name {
+  font-weight: 600;
+}
+.mlv-hover-popup .mlv-hover-meta {
+  color: var(--muted);
+  margin-top: 1px;
+}

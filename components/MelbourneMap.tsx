@@ -27,6 +27,12 @@ type MelbourneMapProps = {
    * do NOT set this, so selecting an area on the map preserves the view.
    */
   focusTarget?: { center: [number, number]; nonce: number } | null;
+  /** Slug of the currently-selected SA2 — drawn with a highlight outline. */
+  selectedSlug?: string | null;
+  /** Feature property currently painted on the choropleth (e.g. "pct_affordability"). */
+  hoverProp?: string;
+  /** Human label for the painted layer, used in the hover tooltip. */
+  hoverLabel?: string;
 };
 
 function prefersReducedMotion(): boolean {
@@ -35,6 +41,14 @@ function prefersReducedMotion(): boolean {
     typeof window.matchMedia === "function" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 function fillColorFor(
@@ -58,9 +72,13 @@ export function MelbourneMap({
   visiblePins = {},
   onPlaceSelect,
   focusTarget = null,
+  selectedSlug = null,
+  hoverProp,
+  hoverLabel,
 }: MelbourneMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const hoverPopupRef = useRef<maplibregl.Popup | null>(null);
 
   // Keep the latest select handler in a ref so the map is initialised exactly
   // once. Putting `onPlaceSelect` in the init effect's deps caused the whole
@@ -70,6 +88,15 @@ export function MelbourneMap({
   useEffect(() => {
     onPlaceSelectRef.current = onPlaceSelect;
   }, [onPlaceSelect]);
+
+  // Hover-tooltip inputs read through a ref so the map still initialises once.
+  const hoverInfoRef = useRef<{ prop?: string; label?: string }>({
+    prop: hoverProp,
+    label: hoverLabel,
+  });
+  useEffect(() => {
+    hoverInfoRef.current = { prop: hoverProp, label: hoverLabel };
+  }, [hoverProp, hoverLabel]);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -115,6 +142,22 @@ export function MelbourneMap({
         paint: {
           "line-color": "#9a948a",
           "line-width": 0.5,
+        },
+      });
+
+      // Highlight outline for the selected SA2 — a distinct warm accent line,
+      // wider than the base mesh, so the active area is obvious over the
+      // YlGnBu choropleth. Filter starts matching nothing; the selectedSlug
+      // effect below sets it.
+      map.addLayer({
+        id: "sa2-selected",
+        type: "line",
+        source: "sa2",
+        filter: ["==", ["get", "slug"], "__none__"],
+        paint: {
+          "line-color": "#B65A3C",
+          "line-width": 3.5,
+          "line-opacity": 0.95,
         },
       });
 
@@ -199,8 +242,49 @@ export function MelbourneMap({
       });
     });
 
+    // Lightweight hover preview (desktop pointers only — touch never fires
+    // mousemove). Shows the area name and the value of whatever layer is
+    // currently painted, so users can scan the choropleth without clicking.
+    const popup = new maplibregl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+      offset: 8,
+      className: "mlv-hover-popup",
+    });
+    hoverPopupRef.current = popup;
+
+    map.on("mousemove", "sa2-fill", (e) => {
+      const f = e.features?.[0];
+      if (!f?.properties) return;
+      map.getCanvas().style.cursor = "pointer";
+      const name = (f.properties.name as string | undefined) ?? "Area";
+      const { prop, label } = hoverInfoRef.current;
+      const raw = prop != null ? f.properties[prop] : null;
+      const valueText =
+        raw == null || raw === ""
+          ? "No / low resident data"
+          : `${Math.round(Number(raw))}/100`;
+      const labelText = label ? escapeHtml(label) : "Value";
+      popup
+        .setLngLat(e.lngLat)
+        .setHTML(
+          `<div class="mlv-hover-name">${escapeHtml(name)}</div>` +
+            `<div class="mlv-hover-meta">${labelText}: <span class="num">${escapeHtml(
+              valueText
+            )}</span></div>`
+        )
+        .addTo(map);
+    });
+
+    map.on("mouseleave", "sa2-fill", () => {
+      map.getCanvas().style.cursor = "";
+      popup.remove();
+    });
+
     mapRef.current = map;
     return () => {
+      hoverPopupRef.current?.remove();
+      hoverPopupRef.current = null;
       map.remove();
       mapRef.current = null;
     };
@@ -251,6 +335,27 @@ export function MelbourneMap({
     }
     applyFilter();
   }, [visiblePins]);
+
+  // Highlight the selected SA2 by filtering the dedicated outline layer to its
+  // slug. Updating a filter (not re-adding sources/layers) keeps the map view,
+  // choropleth, and pins fully intact — selecting never reloads the map.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const applyFilter = () => {
+      if (!map.getLayer("sa2-selected")) return;
+      map.setFilter("sa2-selected", [
+        "==",
+        ["get", "slug"],
+        selectedSlug ?? "__none__",
+      ]);
+    };
+    if (!map.isStyleLoaded()) {
+      map.once("idle", applyFilter);
+      return;
+    }
+    applyFilter();
+  }, [selectedSlug]);
 
   // Area search drives an in-app pan/zoom (no reload). Triggered only via the
   // `focusTarget` nonce; map clicks never set it, so clicking preserves view.

@@ -12,15 +12,19 @@ import { ShortlistPanel } from "@/components/ShortlistPanel";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { ShareViewButton } from "@/components/ShareViewButton";
 import { ResultsList } from "@/components/ResultsList";
-import { BottomSheet } from "@/components/BottomSheet";
+import { MobileSheet } from "@/components/MobileSheet";
 import { MapLegend } from "@/components/MapLegend";
 import { Attribution } from "@/components/Attribution";
-import { ScoreBreakdownPanel } from "@/components/ScoreBreakdownPanel";
-import { AddToShortlistButton } from "@/components/AddToShortlistButton";
+import { SelectedSummaryCard } from "@/components/SelectedSummaryCard";
 import type { Place } from "@/lib/types";
 import { loadPlaces, getPlaceBySlug } from "@/lib/places-data";
 import { buildSearchIndex } from "@/lib/search";
-import { DOMAIN_LABELS, percentileToColor, percentileTextColor } from "@/lib/colors";
+import {
+  DOMAIN_LABELS,
+  domainProperty,
+  percentileToColor,
+  percentileTextColor,
+} from "@/lib/colors";
 import { rankPlaces } from "@/lib/scoring";
 import { useMapPersonalisation } from "@/lib/use-map-personalisation";
 
@@ -113,6 +117,27 @@ export default function MapPage() {
         ? "Data confidence (context, not in score)"
         : DOMAIN_LABELS[activeDomain];
 
+  // The GeoJSON property currently painted on the choropleth — feeds the map
+  // hover tooltip so it always reports the value the user is looking at.
+  const paintedProp = walkAccessMode
+    ? "pct_walkaccess"
+    : cyclabilityMode
+      ? "pct_cyclability"
+      : confidenceMode
+        ? "pct_confidence"
+        : domainProperty(activeDomain);
+
+  // Short label (no "context" suffix) for the selected-area mini-summary.
+  const activeLayerLabel = walkAccessMode
+    ? "15-min walk access"
+    : cyclabilityMode
+      ? "Cyclability"
+      : confidenceMode
+        ? "Data confidence"
+        : DOMAIN_LABELS[activeDomain];
+
+  const isHomeBuyer = interestView === "homeBuyer";
+
   return (
     <main className="flex h-screen w-screen flex-col overflow-hidden bg-bg text-ink">
       <TopBar
@@ -135,6 +160,9 @@ export default function MapPage() {
             cyclabilityMode={cyclabilityMode}
             visiblePins={visiblePins}
             focusTarget={focusTarget}
+            selectedSlug={selected?.slug ?? null}
+            hoverProp={paintedProp}
+            hoverLabel={activeLayerLabel}
             onPlaceSelect={(props) => {
               const p = places.find(
                 (x) => x.slug === props.slug || x.sa2Code === props.sa2Code
@@ -142,6 +170,19 @@ export default function MapPage() {
               if (p) selectPlace(p);
             }}
           />
+
+          {/* Home-buyer caveat — visible on the map (not only the profile) so
+              users never read the buyer lens as purchase-price guidance. */}
+          {isHomeBuyer && (
+            <div className="pointer-events-none absolute left-1/2 top-4 z-10 w-[min(92%,30rem)] -translate-x-1/2">
+              <p className="pointer-events-auto rounded-lg border border-surface-border border-l-[3px] border-l-accent bg-surface/95 px-3 py-2 text-xs leading-snug text-ink-muted shadow-card backdrop-blur">
+                <span className="font-medium text-ink">Home-buyer lens:</span>{" "}
+                context only — sale/purchase prices are{" "}
+                <span className="font-medium text-ink">not</span> included. This
+                ranks liveability factors, not property value.
+              </p>
+            </div>
+          )}
 
           {/* Floating layer-control card (top-right) */}
           <div className="absolute right-4 top-4 z-10 hidden max-h-[calc(100%-2rem)] w-56 overflow-y-auto md:block">
@@ -168,6 +209,20 @@ export default function MapPage() {
             <Attribution />
           </div>
 
+          {/* Persistent selected-area mini-summary (desktop) — a lightweight
+              map-side quick view; the rich profile lives on its own page. */}
+          {selected && (
+            <div className="absolute bottom-4 left-1/2 z-10 hidden w-[22rem] max-w-[calc(100%-2rem)] -translate-x-1/2 md:block">
+              <SelectedSummaryCard
+                place={selected}
+                weights={weights}
+                activeLayerLabel={activeLayerLabel}
+                onClose={() => setSelected(null)}
+                onShortlistChange={updateShortlist}
+              />
+            </div>
+          )}
+
           {showTable && (
             <div className="absolute inset-0 z-20 overflow-auto bg-bg/97 p-6">
               <PlacesTable places={places} weights={weights} />
@@ -175,60 +230,103 @@ export default function MapPage() {
           )}
         </div>
 
-        {/* Right panel — swaps between ranked results and the selected profile */}
+        {/* Right panel — the ranked results stay mounted and always visible;
+            selecting a place highlights its row and opens the map mini-summary
+            (no panel swap, so the list never disappears). */}
         <aside className="hidden w-[372px] shrink-0 flex-col border-l border-surface-border bg-surface md:flex">
-          {selected ? (
-            <ProfilePanel
-              place={selected}
-              weights={weights}
-              onBack={() => setSelected(null)}
-              onShortlistChange={updateShortlist}
-              controls={personalisationControls}
-            />
-          ) : (
-            <ResultsPanel
-              places={places}
-              weights={weights}
-              onSelect={focusPlace}
-              controls={personalisationControls}
-              extra={
-                <>
-                  <ShortlistPanel
-                    slugs={shortlist}
-                    places={places}
-                    onChange={updateShortlist}
-                    onOpen={focusPlace}
-                  />
-                  <RecentlyViewed recent={recent} />
-                  <ShareViewButton getUrl={getShareUrl} label="Copy map link" />
-                </>
-              }
-            />
-          )}
+          <ResultsPanel
+            places={places}
+            weights={weights}
+            onSelect={focusPlace}
+            selectedSlug={selected?.slug}
+            controls={personalisationControls}
+            extra={
+              <>
+                <ShortlistPanel
+                  slugs={shortlist}
+                  places={places}
+                  onChange={updateShortlist}
+                  onOpen={focusPlace}
+                />
+                <RecentlyViewed recent={recent} />
+                <ShareViewButton getUrl={getShareUrl} label="Copy map link" />
+              </>
+            }
+          />
         </aside>
       </div>
 
-      <BottomSheet>
-        <div className="space-y-3">{personalisationControls}</div>
-        {selected && (
-          <div className="mt-3 space-y-2">
-            <ScoreBreakdownPanel place={selected} weights={weights} />
-            <AddToShortlistButton
-              slug={selected.slug}
-              onShortlistChange={updateShortlist}
-            />
+      <MobileSheet
+        results={
+          <div className="space-y-3">
+            {selected && (
+              <SelectedSummaryCard
+                place={selected}
+                weights={weights}
+                activeLayerLabel={activeLayerLabel}
+                onClose={() => setSelected(null)}
+                onShortlistChange={updateShortlist}
+              />
+            )}
+            <div className="overflow-hidden rounded-lg border border-surface-border">
+              <ResultsList
+                places={places}
+                weights={weights}
+                limit={50}
+                onSelect={focusPlace}
+                selectedSlug={selected?.slug}
+              />
+            </div>
           </div>
-        )}
-        <div className="mt-3 overflow-hidden rounded-lg border border-surface-border">
-          <ResultsList
-            places={places}
-            weights={weights}
-            limit={8}
-            onSelect={focusPlace}
-            selectedSlug={selected?.slug}
-          />
-        </div>
-      </BottomSheet>
+        }
+        search={
+          <div className="space-y-3">
+            <SearchBox
+              index={searchIndex}
+              onSelect={(e) => {
+                const p = getPlaceBySlug(places, e.slug);
+                if (p) focusPlace(p);
+              }}
+            />
+            <p className="text-xs leading-snug text-ink-muted">
+              Search a suburb or data area (SA2) to jump the map there.
+            </p>
+            <ShortlistPanel
+              slugs={shortlist}
+              places={places}
+              onChange={updateShortlist}
+              onOpen={focusPlace}
+            />
+            <RecentlyViewed recent={recent} />
+          </div>
+        }
+        layers={
+          <div className="space-y-3">
+            <LayerToggle
+              activeDomain={activeDomain}
+              onDomainChange={setActiveDomain}
+              visiblePins={visiblePins}
+              onPinToggle={(pin) =>
+                setVisiblePins((v) => ({ ...v, [pin]: !v[pin] }))
+              }
+              onClearPins={() => setVisiblePins({})}
+              confidenceMode={confidenceMode}
+              onConfidenceToggle={toggleConfidenceMode}
+              walkAccessMode={walkAccessMode}
+              onWalkAccessToggle={toggleWalkAccessMode}
+              cyclabilityMode={cyclabilityMode}
+              onCyclabilityToggle={toggleCyclabilityMode}
+            />
+            <MapLegend domainLabel={legendLabel} visiblePins={visiblePins} />
+          </div>
+        }
+        weights={
+          <div className="space-y-3">
+            {personalisationControls}
+            <ShareViewButton getUrl={getShareUrl} label="Copy map link" />
+          </div>
+        }
+      />
     </main>
   );
 }
@@ -278,26 +376,42 @@ function ResultsPanel({
   places,
   weights,
   onSelect,
+  selectedSlug,
   controls,
   extra,
 }: {
   places: Place[];
   weights: import("@/lib/types").ScoreWeights;
   onSelect: (p: Place) => void;
+  selectedSlug?: string;
   controls: React.ReactNode;
   extra: React.ReactNode;
 }) {
-  const count = places.filter((p) => !p.nonResidential).length;
+  const total = places.length;
+  const residential = places.filter((p) => !p.nonResidential).length;
   return (
+    // Three stacked regions in a min-h-0 column. The header is fixed, the
+    // ranked list is the priority `flex-1 min-h-0 overflow` region (so it is
+    // ALWAYS visible and scrolls on its own), and the controls live in their
+    // own height-capped scroll region. Previously the controls block had no
+    // height bound, so a tall stack (presets + sliders + shortlist) ate the
+    // whole panel and collapsed the results list to 0px.
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex items-baseline justify-between border-b border-surface-border px-4 py-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-          Ranked results
-        </h2>
-        {count > 0 && (
-          <span className="num rounded-full border border-surface-border bg-surface-sunken px-2 py-0.5 text-xs text-ink-muted">
-            {count} suburbs
-          </span>
+      <div className="shrink-0 border-b border-surface-border px-4 py-3">
+        <div className="flex items-baseline justify-between gap-2">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            Ranked results
+          </h2>
+          {residential > 0 && (
+            <span className="num rounded-full border border-surface-border bg-surface-sunken px-2 py-0.5 text-xs text-ink-muted">
+              {residential} of {total}
+            </span>
+          )}
+        </div>
+        {residential > 0 && (
+          <p className="mt-1 text-[11px] leading-snug text-ink-muted">
+            Ranking {residential} residential SA2 suburbs (of {total} SA2s total).
+          </p>
         )}
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
@@ -306,44 +420,12 @@ function ResultsPanel({
           weights={weights}
           limit={50}
           onSelect={onSelect}
+          selectedSlug={selectedSlug}
         />
       </div>
-      <div className="space-y-3 border-t border-surface-border bg-surface-sunken/60 p-3">
+      <div className="max-h-[42%] shrink-0 space-y-3 overflow-y-auto border-t border-surface-border bg-surface-sunken/60 p-3">
         {controls}
         {extra}
-      </div>
-    </div>
-  );
-}
-
-function ProfilePanel({
-  place,
-  weights,
-  onBack,
-  onShortlistChange,
-  controls,
-}: {
-  place: Place;
-  weights: import("@/lib/types").ScoreWeights;
-  onBack: () => void;
-  onShortlistChange: (slugs: string[]) => void;
-  controls: React.ReactNode;
-}) {
-  return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="border-b border-surface-border px-4 py-3">
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex items-center gap-1 rounded-full border border-surface-border bg-surface-sunken px-2.5 py-1 text-xs text-ink-muted transition-colors hover:border-accent hover:text-accent"
-        >
-          ‹ Back to results
-        </button>
-      </div>
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
-        <ScoreBreakdownPanel place={place} weights={weights} />
-        <AddToShortlistButton slug={place.slug} onShortlistChange={onShortlistChange} />
-        <div className="space-y-3">{controls}</div>
       </div>
     </div>
   );

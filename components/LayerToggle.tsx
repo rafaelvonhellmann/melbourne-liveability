@@ -1,7 +1,7 @@
 "use client";
 
 import { Layers, MapPin } from "lucide-react";
-import { DOMAIN_REGISTRY } from "@/lib/domains";
+import { DOMAIN_REGISTRY, getDomain } from "@/lib/domains";
 import type { DomainId } from "@/lib/types";
 import { POI_CATEGORIES } from "@/lib/poi-categories";
 
@@ -35,16 +35,28 @@ export function LayerToggle({
   const activePinCount = POI_CATEGORIES.filter(
     (c) => visiblePins[c.id]
   ).length;
+  const activeContext = walkAccessMode || cyclabilityMode || confidenceMode;
+  const activeLabel = activeContext
+    ? walkAccessMode
+      ? "15-min walk access"
+      : cyclabilityMode
+        ? "Cyclability"
+        : "Data confidence"
+    : (getDomain(activeDomain)?.label ?? activeDomain);
   return (
     <div
       className="rounded-lg border border-surface-border bg-surface/95 p-2.5 shadow-card backdrop-blur"
       role="group"
-      aria-label="Map layers"
+      aria-label="Map layer (what is painted on the map)"
     >
-      <div className="mb-2 flex items-center gap-2 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+      <div className="mb-0.5 flex items-center gap-2 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
         <Layers className="h-3.5 w-3.5" aria-hidden />
-        Map layer
+        Showing on map
       </div>
+      <p className="mb-2 px-1 text-[11px] leading-snug text-ink-muted">
+        Recolours the map only — this does not change your ranking.{" "}
+        <span className="text-ink">{activeLabel}</span>
+      </p>
       <ul className="space-y-1">
         {DOMAIN_REGISTRY.filter((d) => d.scored && d.layer !== "context").map((d) => (
           <li key={d.id}>
@@ -52,20 +64,18 @@ export function LayerToggle({
               type="button"
               onClick={() => onDomainChange(d.id)}
               className={`flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-left text-sm transition-colors ${
-                activeDomain === d.id
+                !activeContext && activeDomain === d.id
                   ? "bg-accent font-semibold text-accent-ink"
                   : "text-ink hover:bg-surface-sunken"
               }`}
-              aria-pressed={activeDomain === d.id}
+              aria-pressed={!activeContext && activeDomain === d.id}
             >
               <span>{d.label}</span>
-              <span
-                className={`num text-xs ${
-                  activeDomain === d.id ? "text-accent-ink/80" : "text-ink-muted"
-                }`}
-              >
-                {d.defaultWeight}%
-              </span>
+              {!activeContext && activeDomain === d.id && (
+                <span className="text-[10px] font-medium uppercase tracking-wide text-accent-ink/80">
+                  On map
+                </span>
+              )}
             </button>
           </li>
         ))}

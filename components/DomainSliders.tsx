@@ -12,9 +12,9 @@ type DomainSlidersProps = {
 export function DomainSliders({ weights, onChange, onReset }: DomainSlidersProps) {
   return (
     <div className="rounded-lg border border-surface-border bg-surface p-3 shadow-card">
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-1 flex items-center justify-between">
         <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-          Adjust priorities
+          Your priorities
         </span>
         <button
           type="button"
@@ -24,6 +24,10 @@ export function DomainSliders({ weights, onChange, onReset }: DomainSlidersProps
           Reset defaults
         </button>
       </div>
+      <p className="mb-2 text-[11px] leading-snug text-ink-muted">
+        These weights drive the ranked list. They are separate from which layer
+        is painted on the map.
+      </p>
       <ul className="space-y-3">
         {V1_SCORED_DOMAINS.map((id) => {
           const cfg = getDomain(id)!;
