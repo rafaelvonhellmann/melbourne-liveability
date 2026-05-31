@@ -24,6 +24,7 @@ import { DataCoverageCard } from "./DataCoverageCard";
 import { HomeBuyerCard } from "./HomeBuyerCard";
 import { SourceDrawer } from "./SourceDrawer";
 import { ProfileEngagement } from "./ProfileEngagement";
+import { FeedbackButton } from "./FeedbackButton";
 
 type Props = {
   place: Place;
@@ -99,12 +100,15 @@ export function PlaceProfileClient({
         >
           ‹ Map
         </Link>
-        <Link
-          href="/"
-          className="ml-auto font-display text-base font-medium tracking-tight text-ink"
-        >
-          liveable<span className="text-accent">.</span>melbourne
-        </Link>
+        <div className="ml-auto flex items-center gap-2">
+          <FeedbackButton context={`${place.name} — SA2 ${place.sa2Code}`} />
+          <Link
+            href="/"
+            className="font-display text-base font-medium tracking-tight text-ink"
+          >
+            liveable<span className="text-accent">.</span>melbourne
+          </Link>
+        </div>
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-6">

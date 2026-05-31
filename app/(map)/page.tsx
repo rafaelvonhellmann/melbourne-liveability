@@ -16,6 +16,7 @@ import { MapLegend } from "@/components/MapLegend";
 import { Attribution } from "@/components/Attribution";
 import { SelectedSummaryCard } from "@/components/SelectedSummaryCard";
 import { ResultsList } from "@/components/ResultsList";
+import { FeedbackButton } from "@/components/FeedbackButton";
 import type { Place } from "@/lib/types";
 import { loadPlaces, getPlaceBySlug } from "@/lib/places-data";
 import { buildSearchIndex } from "@/lib/search";
@@ -345,6 +346,7 @@ function TopBar({
         />
       </div>
       <nav className="ml-auto flex flex-wrap items-center gap-2 text-sm">
+        <FeedbackButton />
         <NavLink href="/compare">Compare</NavLink>
         <NavLink href="/alerts">Alerts</NavLink>
         <NavLink href="/methodology">Methodology</NavLink>
