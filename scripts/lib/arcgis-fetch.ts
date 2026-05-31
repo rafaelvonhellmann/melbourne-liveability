@@ -58,6 +58,41 @@ export async function fetchArcGisTable(
   return rows;
 }
 
+/** Public Overpass mirrors, tried in rotation across retry attempts. */
+const OVERPASS_ENDPOINTS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+];
+
+const OVERPASS_MAX_ATTEMPTS = 5;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Pure retry decision for an Overpass response — kept separate so it is unit
+ * testable without real network or timers. Overpass commonly returns 429 (rate
+ * limit) and 504/502/503 (gateway / query timeout) under load; those are
+ * transient and worth retrying with exponential backoff. A `Retry-After` header
+ * (seconds) is honoured when present. Non-transient statuses (e.g. 400 bad
+ * query) fail fast.
+ */
+export function overpassRetryPlan(
+  status: number | "network",
+  attempt: number,
+  retryAfterSec?: number
+): { retry: boolean; waitMs: number } {
+  const transient =
+    status === "network" || [429, 502, 503, 504].includes(status as number);
+  if (!transient) return { retry: false, waitMs: 0 };
+  const waitMs =
+    retryAfterSec && retryAfterSec > 0
+      ? Math.min(60_000, retryAfterSec * 1000)
+      : Math.min(30_000, 2_000 * 2 ** attempt);
+  return { retry: true, waitMs };
+}
+
 export async function overpassMelbourne(
   query: string,
   opts: { out?: "center" | "geom" } = {}
@@ -73,14 +108,53 @@ export async function overpassMelbourne(
 );
 ${outClause}
 `;
-  const res = await fetch("https://overpass-api.de/api/interpreter", {
-    method: "POST",
-    body: `data=${encodeURIComponent(q)}`,
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      "User-Agent": UA,
-    },
-  });
-  if (!res.ok) throw new Error(`Overpass ${res.status}`);
-  return res.json();
+  const body = `data=${encodeURIComponent(q)}`;
+  let lastError = "unknown error";
+
+  for (let attempt = 0; attempt < OVERPASS_MAX_ATTEMPTS; attempt++) {
+    const endpoint = OVERPASS_ENDPOINTS[attempt % OVERPASS_ENDPOINTS.length];
+    let res: Response;
+    try {
+      res = await fetch(endpoint, {
+        method: "POST",
+        body,
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "User-Agent": UA,
+        },
+      });
+    } catch (e) {
+      // Network / DNS / abort — treat as transient and back off.
+      lastError = (e as Error).message;
+      const plan = overpassRetryPlan("network", attempt);
+      if (!plan.retry || attempt === OVERPASS_MAX_ATTEMPTS - 1) break;
+      console.warn(
+        `  Overpass network error (attempt ${attempt + 1}/${OVERPASS_MAX_ATTEMPTS}): ${lastError} — retrying in ${Math.round(plan.waitMs / 1000)}s`
+      );
+      await sleep(plan.waitMs);
+      continue;
+    }
+
+    if (res.ok) return res.json();
+
+    lastError = `HTTP ${res.status}`;
+    const retryAfter = Number(res.headers.get("retry-after"));
+    const plan = overpassRetryPlan(
+      res.status,
+      attempt,
+      Number.isFinite(retryAfter) ? retryAfter : undefined
+    );
+    if (!plan.retry || attempt === OVERPASS_MAX_ATTEMPTS - 1) {
+      if (!plan.retry) throw new Error(`Overpass ${res.status} (non-retryable)`);
+      break;
+    }
+    console.warn(
+      `  Overpass ${res.status} (attempt ${attempt + 1}/${OVERPASS_MAX_ATTEMPTS}) — retrying in ${Math.round(plan.waitMs / 1000)}s`
+    );
+    await sleep(plan.waitMs);
+  }
+
+  throw new Error(
+    `Overpass failed after ${OVERPASS_MAX_ATTEMPTS} attempts: ${lastError}`
+  );
 }
