@@ -7,6 +7,7 @@ import { MELBOURNE_BOUNDS, MELBOURNE_CENTER, MELBOURNE_MAX_BOUNDS } from "@/lib/
 import { choroplethFillColor, choroplethFillColorByProp } from "@/lib/map-expressions";
 import { withBase } from "@/lib/asset-path";
 import { poiCircleColorExpression } from "@/lib/poi-categories";
+import { buildPoiPopupHtml, type PoiFeatureProps } from "@/lib/poi-feature";
 
 // Light basemap to sit under the warm-editorial chrome; the YlGnBu choropleth
 // remains the independent data channel on top.
@@ -79,6 +80,7 @@ export function MelbourneMap({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const hoverPopupRef = useRef<maplibregl.Popup | null>(null);
+  const poiPopupRef = useRef<maplibregl.Popup | null>(null);
 
   // Keep the latest select handler in a ref so the map is initialised exactly
   // once. Putting `onPlaceSelect` in the init effect's deps caused the whole
@@ -161,42 +163,39 @@ export function MelbourneMap({
         },
       });
 
-      // Faint, zoom-revealed SA2 area-name labels. Drawn beneath the POI pins
-      // (added next) so pins always sit on top; collision-culled at low zoom
-      // (text-allow-overlap:false) and held near-invisible until the user zooms
-      // in, so the default state stays uncluttered (warm-editorial, subtle).
+      // Zoom-revealed SA2 labels: hidden until zoomed in, then crisp (opaque ink +
+      // solid white halo) so names stay readable over the choropleth.
       map.addLayer({
         id: "sa2-labels",
         type: "symbol",
         source: "sa2",
         layout: {
           "text-field": ["coalesce", ["get", "name"], ""],
-          // Fonts known to exist in the basemap's glyph server.
-          "text-font": ["Open Sans Regular", "Noto Sans Regular"],
+          "text-font": ["Open Sans Bold", "Open Sans Regular", "Noto Sans Bold"],
           "text-size": [
             "interpolate",
             ["linear"],
             ["zoom"],
-            9,
-            9,
+            10,
+            10,
             12,
             11,
-            15,
+            14,
             13,
+            16,
+            14,
           ],
-          "text-max-width": 7,
-          "text-padding": 6,
+          "text-max-width": 8,
+          "text-padding": 4,
           "text-allow-overlap": false,
           "text-transform": "none",
           "symbol-placement": "point",
         },
         paint: {
-          "text-color": "#3a3733",
-          "text-halo-color": "#faf9f5",
-          "text-halo-width": 1.4,
-          "text-halo-blur": 0.4,
-          // Invisible until ~z10.5, then a gentle fade-in; capped low so labels
-          // stay faint and never dominate the choropleth or the pins.
+          "text-color": "#1a1a18",
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 2.5,
+          "text-halo-blur": 0,
           "text-opacity": [
             "interpolate",
             ["linear"],
@@ -204,9 +203,11 @@ export function MelbourneMap({
             10,
             0,
             11.5,
-            0.45,
-            14,
-            0.7,
+            0.55,
+            13,
+            0.9,
+            15,
+            1,
           ],
         },
       });
@@ -232,7 +233,42 @@ export function MelbourneMap({
       });
     });
 
+    const closePoiPopup = () => {
+      poiPopupRef.current?.remove();
+      poiPopupRef.current = null;
+    };
+
+    const showPoiPopup = (
+      lngLat: maplibregl.LngLatLike,
+      props: PoiFeatureProps
+    ) => {
+      closePoiPopup();
+      const popup = new maplibregl.Popup({
+        closeButton: true,
+        closeOnClick: true,
+        maxWidth: "280px",
+        className: "poi-popup-container",
+      })
+        .setLngLat(lngLat)
+        .setHTML(buildPoiPopupHtml(props))
+        .addTo(map);
+      poiPopupRef.current = popup;
+    };
+
+    map.on("click", "poi-circles", (e) => {
+      const f = e.features?.[0];
+      if (!f?.properties) return;
+      const pinType = String(f.properties.pinType ?? "");
+      const name = String(f.properties.name ?? pinType);
+      const url = f.properties.url ? String(f.properties.url) : undefined;
+      const osmUrl = f.properties.osmUrl
+        ? String(f.properties.osmUrl)
+        : undefined;
+      showPoiPopup(e.lngLat, { pinType, name, url, osmUrl });
+    });
+
     map.on("click", "sa2-fill", (e) => {
+      closePoiPopup();
       const f = e.features?.[0];
       if (!f?.properties) return;
       onPlaceSelectRef.current?.({
@@ -240,6 +276,13 @@ export function MelbourneMap({
         name: f.properties.name as string | undefined,
         sa2Code: f.properties.sa2Code as string | undefined,
       });
+    });
+
+    map.on("mouseenter", "poi-circles", () => {
+      map.getCanvas().style.cursor = "pointer";
+    });
+    map.on("mouseleave", "poi-circles", () => {
+      map.getCanvas().style.cursor = "";
     });
 
     // Lightweight hover preview (desktop pointers only — touch never fires
@@ -283,6 +326,7 @@ export function MelbourneMap({
 
     mapRef.current = map;
     return () => {
+      closePoiPopup();
       hoverPopupRef.current?.remove();
       hoverPopupRef.current = null;
       map.remove();

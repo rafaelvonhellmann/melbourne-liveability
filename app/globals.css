@@ -94,3 +94,70 @@ body {
   color: var(--muted);
   margin-top: 1px;
 }
+
+/* POI pin popups */
+.poi-popup-container.maplibregl-popup .maplibregl-popup-content {
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.poi-popup-category {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.poi-popup-name {
+  margin: 0 0 10px;
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.poi-popup-links {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.poi-popup-link {
+  color: var(--accent);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.poi-popup-link:hover {
+  text-decoration: underline;
+}
+
+.poi-popup-link--muted {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 12px;
+}
+
+.poi-popup-note,
+.poi-popup-source {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.poi-popup-source {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}

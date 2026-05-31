@@ -6,6 +6,8 @@ import { computeWeightedScore } from "@/lib/scoring";
 import { getDefaultWeights } from "@/lib/weights";
 import { rankHomeBuyerPercentiles } from "@/lib/home-buyer";
 import { computeGmBenchmarks } from "@/lib/benchmarks";
+import type { TimeseriesFile } from "@/lib/types";
+import { resolvePlaceSeries } from "@/lib/timeseries";
 import { PlaceProfileClient } from "@/components/PlaceProfileClient";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -20,6 +22,17 @@ async function loadPlacesFile(): Promise<PlacesFile> {
     );
   }
   return _placesFile;
+}
+
+let _timeseries: Promise<TimeseriesFile | null> | null = null;
+async function loadTimeseries(): Promise<TimeseriesFile | null> {
+  if (!_timeseries) {
+    const file = path.join(process.cwd(), "public", "data", "timeseries.json");
+    _timeseries = readFile(file, "utf8")
+      .then((txt) => JSON.parse(txt) as TimeseriesFile)
+      .catch(() => null);
+  }
+  return _timeseries;
 }
 
 let _benchmarks: ReturnType<typeof computeGmBenchmarks> | null = null;
@@ -81,12 +94,15 @@ export default async function PlaceProfilePage({ params }: Props) {
   // build from the full dataset (residential SA2s) and passed to the client —
   // no extra fetched data file.
   const benchmarks = gmBenchmarks(data.places);
+  const timeseries = await loadTimeseries();
+  const series = resolvePlaceSeries(place, timeseries);
 
   return (
     <PlaceProfileClient
       place={place}
       homeBuyerPercentile={homeBuyerPercentile}
       benchmarks={benchmarks}
+      series={series}
     />
   );
 }

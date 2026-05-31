@@ -20,7 +20,10 @@ export type PoiCategoryId =
   | "hospital"
   | "gp"
   | "pharmacy"
+  | "pathology_lab"
+  | "ndis_provider"
   | "police"
+  | "post_office"
   | "school"
   | "childcare"
   | "supermarket"
@@ -44,7 +47,10 @@ export const POI_CATEGORIES: PoiCategory[] = [
   { id: "hospital", label: "Hospitals", color: "#E31A1C" },
   { id: "gp", label: "GPs / clinics", color: "#377EB8" },
   { id: "pharmacy", label: "Pharmacies", color: "#1B9E77" },
+  { id: "pathology_lab", label: "Pathology / labs", color: "#6A3D9A" },
+  { id: "ndis_provider", label: "NDIS / disability services", color: "#B15928" },
   { id: "police", label: "Police", color: "#7570B3" },
+  { id: "post_office", label: "Post offices / LPO", color: "#984EA3" },
   { id: "school", label: "Schools", color: "#E7298A" },
   { id: "childcare", label: "Childcare / kinder", color: "#D95F02" },
   { id: "supermarket", label: "Supermarkets", color: "#66A61E" },

@@ -46,6 +46,7 @@
     "data:score": "tsx scripts/score.ts",
     "data:geo": "tsx scripts/build-geo.ts",
     "data:poi": "tsx scripts/build-poi.ts",
+    "data:timeseries": "tsx scripts/build-timeseries.ts",
     "data:walkaccess": "tsx scripts/apply-walk-access.ts",
     "data:cyclability": "tsx scripts/apply-cyclability.ts",
     "data:hash": "tsx scripts/hash-sources.ts",

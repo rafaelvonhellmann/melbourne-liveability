@@ -11,6 +11,7 @@ import { sourcesForIndicatorIds } from "@/lib/sources";
 import { percentileToColor } from "@/lib/colors";
 import { metricsForDomain } from "@/lib/metric-catalog";
 import type { GmBenchmarks } from "@/lib/benchmarks";
+import type { PlaceSeries } from "@/lib/timeseries";
 import { ScoreBadge, DomainBar } from "./ScoreVisuals";
 import { MetricCard } from "./MetricCard";
 import { ContextPanels } from "./ContextPanels";
@@ -22,7 +23,12 @@ import { HomeBuyerCard } from "./HomeBuyerCard";
 import { SourceDrawer } from "./SourceDrawer";
 import { ProfileEngagement } from "./ProfileEngagement";
 
-type Props = { place: Place; homeBuyerPercentile?: number | null; benchmarks?: GmBenchmarks };
+type Props = {
+  place: Place;
+  homeBuyerPercentile?: number | null;
+  benchmarks?: GmBenchmarks;
+  series?: Record<string, PlaceSeries>;
+};
 
 type TabKind = "overview" | "persona" | "domain" | "context";
 type ContextId = "homebuyer" | "coverage" | "equity" | "walkcycle";
@@ -42,6 +48,7 @@ export function PlaceProfileClient({
   place,
   homeBuyerPercentile = null,
   benchmarks = {},
+  series = {},
 }: Props) {
   const weights = getDefaultWeights();
   const breakdown = computeWeightedScore(place, weights);
@@ -145,7 +152,12 @@ export function PlaceProfileClient({
             <PersonaPanel place={place} persona={activeTab.persona} />
           )}
           {activeTab.kind === "domain" && activeTab.domain && (
-            <DomainPanel place={place} domain={activeTab.domain} benchmarks={benchmarks} />
+            <DomainPanel
+              place={place}
+              domain={activeTab.domain}
+              benchmarks={benchmarks}
+              series={series}
+            />
           )}
           {activeTab.kind === "context" && activeTab.context && (
             <ContextTabPanel
@@ -400,10 +412,12 @@ function DomainPanel({
   place,
   domain,
   benchmarks,
+  series,
 }: {
   place: Place;
   domain: DomainId;
   benchmarks: GmBenchmarks;
+  series: Record<string, PlaceSeries>;
 }) {
   const cfg = getDomain(domain);
   const ds = place.domains[domain];
@@ -435,6 +449,7 @@ function DomainPanel({
             def={def}
             value={ds?.subIndicators?.[def.key]}
             benchmark={domainBenchmarks[def.key]}
+            series={series[def.key]}
             mapHref={`/?layer=${domain}`}
           />
         ))}

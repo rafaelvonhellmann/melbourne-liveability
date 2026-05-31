@@ -127,16 +127,30 @@ async function main() {
   console.log("Overpass hospitals + GP + police...");
   const health = await overpassMelbourne(`
     node["amenity"="hospital"](-38.35,144.45,-37.45,145.65);
-    node["amenity"~"doctors|clinic"](-38.35,144.45,-37.45,145.65);
+    node["amenity"~"doctors|clinic|health_centre"](-38.35,144.45,-37.45,145.65);
+    way["amenity"~"doctors|clinic|health_centre"](-38.35,144.45,-37.45,145.65);
+    node["healthcare"~"doctor|clinic|centre"](-38.35,144.45,-37.45,145.65);
     node["amenity"="police"](-38.35,144.45,-37.45,145.65);
+    way["amenity"="police"](-38.35,144.45,-37.45,145.65);
+    node["office"="police"](-38.35,144.45,-37.45,145.65);
   `);
   await writeFile(path.join(RAW, "osm-health.json"), JSON.stringify(health));
+
+  console.log("Overpass post offices (Australia Post / LPO)...");
+  const post = await overpassMelbourne(`
+    node["amenity"="post_office"](-38.35,144.45,-37.45,145.65);
+    way["amenity"="post_office"](-38.35,144.45,-37.45,145.65);
+    node["shop"="post_office"](-38.35,144.45,-37.45,145.65);
+    node["post_office"="post_partner"](-38.35,144.45,-37.45,145.65);
+  `);
+  await writeFile(path.join(RAW, "osm-post.json"), JSON.stringify(post));
 
   console.log("Overpass schools + childcare...");
   const schools = await overpassMelbourne(`
     node["amenity"="school"](-38.35,144.45,-37.45,145.65);
     way["amenity"="school"](-38.35,144.45,-37.45,145.65);
-    node["amenity"="kindergarten"](-38.35,144.45,-37.45,145.65);
+    node["amenity"~"kindergarten|childcare|preschool"](-38.35,144.45,-37.45,145.65);
+    way["amenity"~"kindergarten|childcare|preschool"](-38.35,144.45,-37.45,145.65);
   `);
   await writeFile(path.join(RAW, "osm-schools.json"), JSON.stringify(schools));
 

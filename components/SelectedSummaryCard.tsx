@@ -48,7 +48,7 @@ export function SelectedSummaryCard({
 
   return (
     <div
-      className={`rounded-lg border border-surface-border bg-surface/97 p-3 shadow-card backdrop-blur ${
+      className={`rounded-lg border border-surface-border bg-surface p-3 shadow-card ${
         className ?? ""
       }`}
       role="region"

@@ -3,7 +3,7 @@
 import { useId, useRef, useState, type ReactNode } from "react";
 import { ListOrdered, Search, Layers, SlidersHorizontal } from "lucide-react";
 
-export type MobileTabId = "results" | "search" | "layers" | "weights";
+export type MobileTabId = "explore" | "search" | "layers" | "weights";
 
 type TabDef = {
   id: MobileTabId;
@@ -11,35 +11,33 @@ type TabDef = {
   icon: typeof ListOrdered;
 };
 
-// Results first — the review flagged that mobile buried the ranked list behind
-// sliders/controls. Order here is the visible tab order, left to right.
 const TABS: TabDef[] = [
-  { id: "results", label: "Results", icon: ListOrdered },
+  { id: "explore", label: "Explore", icon: ListOrdered },
   { id: "search", label: "Search", icon: Search },
   { id: "layers", label: "Layers", icon: Layers },
   { id: "weights", label: "Weights", icon: SlidersHorizontal },
 ];
 
 type MobileSheetProps = {
-  results: ReactNode;
+  explore: ReactNode;
   search: ReactNode;
   layers: ReactNode;
   weights: ReactNode;
 };
 
 /**
- * Compact mobile bottom sheet with explicit tabs (Results / Search / Layers /
- * Weights). Results is the default so the ranked list is reachable first.
+ * Compact mobile bottom sheet with explicit tabs (Explore / Search / Layers /
+ * Weights).
  * Tabs follow the WAI-ARIA tabs pattern (tablist/tab/tabpanel + roving arrow
  * keys) and rely on the global focus-visible ring / reduced-motion handling.
  */
-export function MobileSheet({ results, search, layers, weights }: MobileSheetProps) {
-  const [active, setActive] = useState<MobileTabId>("results");
+export function MobileSheet({ explore, search, layers, weights }: MobileSheetProps) {
+  const [active, setActive] = useState<MobileTabId>("explore");
   const baseId = useId();
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   const panels: Record<MobileTabId, ReactNode> = {
-    results,
+    explore,
     search,
     layers,
     weights,

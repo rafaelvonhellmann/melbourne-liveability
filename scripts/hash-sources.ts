@@ -21,6 +21,7 @@ const SOURCE_FILES: Record<string, { dir: "raw" | "generated"; file: string }> =
   "osm-pt": { dir: "raw", file: "osm-pt.json" },
   "vic-mapshare-hospitals": { dir: "raw", file: "vic-hospitals.json" },
   "osm-health": { dir: "raw", file: "osm-health.json" },
+  "osm-post": { dir: "raw", file: "osm-post.json" },
   "abs-census-labour-2016": { dir: "raw", file: "abs-sa2-employment.json" },
   "abs-census-preschool-2021": { dir: "raw", file: "abs-sa2-employment.json" },
   "vic-planning-bpa": { dir: "raw", file: "vic-bpa.geojson" },

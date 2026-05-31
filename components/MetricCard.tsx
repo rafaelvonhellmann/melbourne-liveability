@@ -3,29 +3,25 @@ import type { IndicatorValue } from "@/lib/types";
 import type { MetricDef } from "@/lib/metric-catalog";
 import { formatMetricValue } from "@/lib/metric-catalog";
 import type { BenchmarkStats } from "@/lib/benchmarks";
+import type { PlaceSeries } from "@/lib/timeseries";
+import { MIN_TREND_POINTS } from "@/lib/timeseries";
 import { getSource } from "@/lib/sources";
 import { percentileToColor } from "@/lib/colors";
 import { StalenessBadge } from "./StalenessBadge";
+import { Sparkline } from "./Sparkline";
 
 type MetricCardProps = {
   def: MetricDef;
-  /** This SA2's indicator value (raw + percentile + provenance). */
   value?: IndicatorValue;
-  /** Greater-Melbourne distribution for the raw indicator. */
   benchmark?: BenchmarkStats;
-  /** Optional deep-link to view this domain layer on the map. */
+  series?: PlaceSeries;
   mapHref?: string | null;
 };
 
-/**
- * Rich metric card adapted from the Analisa.pt category-tab card anatomy:
- * name + value + unit, honest direction, a Greater-Melbourne benchmark band
- * (GM median + P25–P75 range with this area's value and percentile), source +
- * staleness, and an explicit "no trend data" note (we hold a single period).
- */
-export function MetricCard({ def, value, benchmark, mapHref }: MetricCardProps) {
+export function MetricCard({ def, value, benchmark, series, mapHref }: MetricCardProps) {
   const source = getSource(value?.sourceId);
   const measured = value != null && !value.missing && value.raw != null;
+  const hasTrend = series != null && series.points.length >= MIN_TREND_POINTS;
   const directionLabel = def.higherIsBetter
     ? "Higher is better"
     : "Lower is better";
@@ -84,9 +80,16 @@ export function MetricCard({ def, value, benchmark, mapHref }: MetricCardProps) 
         <StalenessBadge period={source?.period} stale={value?.stale} />
       </div>
 
-      <p className="mt-2 text-[11px] text-ink-muted">
-        <span aria-hidden>•</span> Single period — no trend data held.
-      </p>
+      {hasTrend ? (
+        <Sparkline
+          series={series!}
+          format={(v) => formatMetricValue(v, def.format)}
+        />
+      ) : (
+        <p className="mt-2 text-[11px] text-ink-muted">
+          <span aria-hidden>•</span> Single period — no trend data held.
+        </p>
+      )}
 
       {mapHref && (
         <Link
@@ -119,58 +122,48 @@ function BenchmarkBand({
   const { min, p25, median, p75, max } = benchmark;
   const valuePos = pos(raw, min, max);
   const p25Pos = pos(p25, min, max);
+  const medPos = pos(median, min, max);
   const p75Pos = pos(p75, min, max);
-  const medianPos = pos(median, min, max);
-  const fmt = (v: number) => formatMetricValue(v, def.format);
+  const dotColor =
+    percentile != null ? percentileToColor(percentile) : "var(--ink-muted)";
 
   return (
     <div className="mt-3">
-      <div className="mb-1.5 flex items-baseline justify-between text-[11px] text-ink-muted">
-        <span>vs Greater Melbourne ({benchmark.count} SA2s)</span>
+      <div className="mb-1 flex items-baseline justify-between text-[11px] text-ink-muted">
+        <span>Greater Melbourne</span>
         {percentile != null && (
-          <span className="num font-medium text-ink">
-            {percentile.toFixed(0)} percentile
-          </span>
+          <span className="num font-medium text-ink">{Math.round(percentile)}th pct</span>
         )}
       </div>
-
       <div
         className="relative h-3 rounded bg-surface-sunken"
         role="img"
-        aria-label={`${def.label}: this area ${fmt(raw)} ${def.unit}${
-          percentile != null ? `, ${percentile.toFixed(0)}th percentile` : ""
-        }. Greater Melbourne P25 ${fmt(p25)}, median ${fmt(median)}, P75 ${fmt(
-          p75
-        )}, range ${fmt(min)} to ${fmt(max)}.`}
+        aria-label={`${def.label}: this area ${formatMetricValue(raw, def.format)} ${def.unit}${
+          percentile != null ? `, ${Math.round(percentile)}th percentile` : ""
+        }. GM median ${formatMetricValue(median, def.format)}, P25–P75 ${formatMetricValue(
+          p25,
+          def.format
+        )}–${formatMetricValue(p75, def.format)}.`}
       >
-        {/* P25–P75 interquartile range */}
-        <span
+        <div
           className="absolute top-0 h-full rounded bg-ink-muted/25"
           style={{ left: `${p25Pos}%`, width: `${Math.max(0, p75Pos - p25Pos)}%` }}
         />
-        {/* GM median marker */}
-        <span
+        <div
           className="absolute top-[-2px] h-[calc(100%+4px)] w-px bg-ink-muted"
-          style={{ left: `${medianPos}%` }}
-          aria-hidden
+          style={{ left: `${medPos}%` }}
+          title={`GM median: ${formatMetricValue(median, def.format)}`}
         />
-        {/* This area's value */}
-        <span
-          className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-surface"
-          style={{
-            left: `${valuePos}%`,
-            background: percentileToColor(percentile),
-          }}
-          aria-hidden
+        <div
+          className="absolute top-[-3px] h-[calc(100%+6px)] w-1.5 rounded-full border border-white shadow-sm"
+          style={{ left: `${valuePos}%`, marginLeft: -3, background: dotColor }}
+          title="This area"
         />
       </div>
-
-      <div className="num mt-1.5 flex justify-between text-[10px] text-ink-muted">
-        <span>{fmt(min)}</span>
-        <span>
-          P25 {fmt(p25)} · med {fmt(median)} · P75 {fmt(p75)}
-        </span>
-        <span>{fmt(max)}</span>
+      <div className="num mt-1 flex justify-between text-[10px] text-ink-muted">
+        <span>P25 {formatMetricValue(p25, def.format)}</span>
+        <span>Median {formatMetricValue(median, def.format)}</span>
+        <span>P75 {formatMetricValue(p75, def.format)}</span>
       </div>
     </div>
   );

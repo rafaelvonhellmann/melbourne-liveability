@@ -25,7 +25,7 @@ export function DomainSliders({ weights, onChange, onReset }: DomainSlidersProps
         </button>
       </div>
       <p className="mb-2 text-[11px] leading-snug text-ink-muted">
-        These weights drive the ranked list. They are separate from which layer
+        These weights shape your match score when you select an area. They are separate from which layer
         is painted on the map.
       </p>
       <ul className="space-y-3">

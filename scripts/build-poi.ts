@@ -8,15 +8,92 @@ import { RAW, PUBLIC_DATA } from "./lib/paths.js";
 import { classifyOsmAmenity } from "../lib/walk-access.js";
 
 type OsmEl = {
+  id?: number;
+  type?: string;
   lat?: number;
   lon?: number;
   center?: { lat: number; lon: number };
   tags?: Record<string, string>;
 };
 
+function normalizeWebsite(tags: Record<string, string>): string | undefined {
+  const raw = tags.website ?? tags["contact:website"];
+  if (!raw?.trim()) return undefined;
+  const t = raw.trim();
+  if (/^https?:\/\//i.test(t)) return t;
+  return `https://${t}`;
+}
+
+function osmFeatureUrl(el: OsmEl): string | undefined {
+  if (el.id == null || !el.type) return undefined;
+  if (el.type !== "node" && el.type !== "way" && el.type !== "relation") {
+    return undefined;
+  }
+  return `https://www.openstreetmap.org/${el.type}/${el.id}`;
+}
+
+function poiProperties(
+  el: OsmEl,
+  pinType: string,
+  tags: Record<string, string>
+): { pinType: string; name: string; url?: string; osmUrl?: string } {
+  const props: { pinType: string; name: string; url?: string; osmUrl?: string } = {
+    pinType,
+    name: tags.name ?? tags.brand ?? pinType.replace(/_/g, " "),
+  };
+  const url = normalizeWebsite(tags);
+  if (url) props.url = url;
+  const osmUrl = osmFeatureUrl(el);
+  if (osmUrl) props.osmUrl = osmUrl;
+  return props;
+}
+
+function isPolice(tags: Record<string, string>): boolean {
+  return (
+    tags.amenity === "police" ||
+    tags.office === "police" ||
+    tags.building === "police"
+  );
+}
+
+function isPathologyLab(tags: Record<string, string>): boolean {
+  const hc = tags.healthcare ?? "";
+  const spec = tags["healthcare:speciality"] ?? tags.healthcare_speciality ?? "";
+  return (
+    /laboratory|sample_collection/i.test(hc) ||
+    /pathology|diagnostic/i.test(spec) ||
+    /pathology|laboratory|diagnostic/i.test(tags.name ?? "")
+  );
+}
+
+function isNdisProvider(tags: Record<string, string>): boolean {
+  const name = tags.name ?? "";
+  const brand = tags.brand ?? "";
+  const operator = tags.operator ?? "";
+  const combined = `${name} ${brand} ${operator}`;
+  return (
+    /\bndis\b/i.test(combined) ||
+    /national disability/i.test(combined) ||
+    tags["social_facility:for"] === "disabled" ||
+    tags.social_facility === "day_care" ||
+    (tags.social_facility != null && /disability|ndis/i.test(combined))
+  );
+}
+
+function isPostOffice(tags: Record<string, string>): boolean {
+  return (
+    tags.amenity === "post_office" ||
+    tags.shop === "post_office" ||
+    tags.post_office === "post_partner" ||
+    /australia\s*post/i.test(tags.brand ?? "") ||
+    /australia\s*post/i.test(tags.operator ?? "") ||
+    /\bLPO\b/i.test(tags.name ?? "")
+  );
+}
+
 function osmToFeatures(
   data: { elements?: OsmEl[] } | null,
-  type: string,
+  pinType: string,
   filter: (tags: Record<string, string>) => boolean
 ): Feature<Point>[] {
   const out: Feature<Point>[] = [];
@@ -28,10 +105,7 @@ function osmToFeatures(
     if (!filter(tags)) continue;
     out.push({
       type: "Feature",
-      properties: {
-        pinType: type,
-        name: tags.name ?? type,
-      },
+      properties: poiProperties(el, pinType, tags),
       geometry: { type: "Point", coordinates: [lon, lat] },
     });
   }
@@ -52,9 +126,24 @@ function amenitiesToFeatures(
     if (!cat) continue;
     out.push({
       type: "Feature",
-      properties: { pinType: cat, name: tags.name ?? cat },
+      properties: poiProperties(el, cat, tags),
       geometry: { type: "Point", coordinates: [lon, lat] },
     });
+  }
+  return out;
+}
+
+function dedupeFeatures(features: Feature<Point>[]): Feature<Point>[] {
+  const seen = new Set<string>();
+  const out: Feature<Point>[] = [];
+  for (const f of features) {
+    const p = f.properties as { osmUrl?: string; pinType?: string; name?: string };
+    const key =
+      p.osmUrl ??
+      `${p.pinType}:${p.name}:${f.geometry.coordinates[0]},${f.geometry.coordinates[1]}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(f);
   }
   return out;
 }
@@ -66,22 +155,41 @@ async function main() {
   const schools = JSON.parse(
     await readFile(path.join(RAW, "osm-schools.json"), "utf8").catch(() => "{}")
   );
+  const post = JSON.parse(
+    await readFile(path.join(RAW, "osm-post.json"), "utf8").catch(() => "{}")
+  );
   const vic = JSON.parse(
     await readFile(path.join(RAW, "vic-hospitals.json"), "utf8").catch(() => "{}")
   ) as { points?: [number, number][] };
   const amenities = JSON.parse(
     await readFile(path.join(RAW, "osm-amenities.json"), "utf8").catch(() => "{}")
   );
+  const clinical = JSON.parse(
+    await readFile(path.join(RAW, "osm-clinical-social.json"), "utf8").catch(() => "{}")
+  );
 
-  const features: Feature<Point>[] = [
-    ...osmToFeatures(health, "police", (t) => t.amenity === "police"),
-    ...osmToFeatures(health, "gp", (t) => /doctors|clinic/.test(t.amenity ?? "")),
+  const features = dedupeFeatures([
+    ...osmToFeatures(health, "police", isPolice),
+    ...osmToFeatures(
+      health,
+      "gp",
+      (t) =>
+        t.amenity !== "hospital" &&
+        (/doctors|clinic|health_centre/.test(t.amenity ?? "") ||
+          /doctor|clinic|centre/.test(t.healthcare ?? ""))
+    ),
     ...osmToFeatures(health, "hospital", (t) => t.amenity === "hospital"),
     ...osmToFeatures(schools, "school", (t) => t.amenity === "school"),
-    ...osmToFeatures(schools, "childcare", (t) => t.amenity === "kindergarten"),
-    // 15-minute access everyday amenities (context layer; OSM ODbL).
+    ...osmToFeatures(
+      schools,
+      "childcare",
+      (t) => /kindergarten|childcare|preschool/.test(t.amenity ?? "")
+    ),
+    ...osmToFeatures(post, "post_office", isPostOffice),
+    ...osmToFeatures(clinical, "pathology_lab", isPathologyLab),
+    ...osmToFeatures(clinical, "ndis_provider", isNdisProvider),
     ...amenitiesToFeatures(amenities),
-  ];
+  ]);
 
   for (const [lon, lat] of vic.points ?? []) {
     features.push({

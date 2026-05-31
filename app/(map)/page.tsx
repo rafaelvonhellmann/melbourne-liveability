@@ -11,7 +11,6 @@ import { InterestViews } from "@/components/InterestViews";
 import { ShortlistPanel } from "@/components/ShortlistPanel";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { ShareViewButton } from "@/components/ShareViewButton";
-import { ResultsList } from "@/components/ResultsList";
 import { MobileSheet } from "@/components/MobileSheet";
 import { MapLegend } from "@/components/MapLegend";
 import { Attribution } from "@/components/Attribution";
@@ -19,19 +18,12 @@ import { SelectedSummaryCard } from "@/components/SelectedSummaryCard";
 import type { Place } from "@/lib/types";
 import { loadPlaces, getPlaceBySlug } from "@/lib/places-data";
 import { buildSearchIndex } from "@/lib/search";
-import {
-  DOMAIN_LABELS,
-  domainProperty,
-  percentileToColor,
-  percentileTextColor,
-} from "@/lib/colors";
-import { rankPlaces } from "@/lib/scoring";
+import { DOMAIN_LABELS, domainProperty } from "@/lib/colors";
 import { useMapPersonalisation } from "@/lib/use-map-personalisation";
 
 export default function MapPage() {
   const [places, setPlaces] = useState<Place[]>([]);
   const [selected, setSelected] = useState<Place | null>(null);
-  const [showTable, setShowTable] = useState(false);
   // Pins are OFF by default — they only appear when the user enables a category.
   const [visiblePins, setVisiblePins] = useState<Record<string, boolean>>({});
   // Camera target for the area search / list selections. Map clicks never set
@@ -146,8 +138,6 @@ export default function MapPage() {
           const p = getPlaceBySlug(places, slug);
           if (p) focusPlace(p);
         }}
-        showTable={showTable}
-        onToggleTable={() => setShowTable((v) => !v)}
       />
 
       <div className="flex min-h-0 flex-1">
@@ -175,7 +165,7 @@ export default function MapPage() {
               users never read the buyer lens as purchase-price guidance. */}
           {isHomeBuyer && (
             <div className="pointer-events-none absolute left-1/2 top-4 z-10 w-[min(92%,30rem)] -translate-x-1/2">
-              <p className="pointer-events-auto rounded-lg border border-surface-border border-l-[3px] border-l-accent bg-surface/95 px-3 py-2 text-xs leading-snug text-ink-muted shadow-card backdrop-blur">
+              <p className="pointer-events-auto rounded-lg border border-surface-border border-l-[3px] border-l-accent bg-surface px-3 py-2 text-xs leading-snug text-ink shadow-card">
                 <span className="font-medium text-ink">Home-buyer lens:</span>{" "}
                 context only — sale/purchase prices are{" "}
                 <span className="font-medium text-ink">not</span> included. This
@@ -223,41 +213,25 @@ export default function MapPage() {
             </div>
           )}
 
-          {showTable && (
-            <div className="absolute inset-0 z-20 overflow-auto bg-bg/97 p-6">
-              <PlacesTable places={places} weights={weights} />
-            </div>
-          )}
         </div>
 
-        {/* Right panel — the ranked results stay mounted and always visible;
-            selecting a place highlights its row and opens the map mini-summary
-            (no panel swap, so the list never disappears). */}
+        {/* Desktop sidebar — explore tools only; ranked suburb lists are deferred
+            to a future signed-in profile feature. */}
         <aside className="hidden w-[372px] shrink-0 flex-col border-l border-surface-border bg-surface md:flex">
-          <ResultsPanel
+          <MapSidebar
             places={places}
-            weights={weights}
-            onSelect={focusPlace}
-            selectedSlug={selected?.slug}
+            onFocusPlace={focusPlace}
             controls={personalisationControls}
-            extra={
-              <>
-                <ShortlistPanel
-                  slugs={shortlist}
-                  places={places}
-                  onChange={updateShortlist}
-                  onOpen={focusPlace}
-                />
-                <RecentlyViewed recent={recent} />
-                <ShareViewButton getUrl={getShareUrl} label="Copy map link" />
-              </>
-            }
+            shortlist={shortlist}
+            recent={recent}
+            onShortlistChange={updateShortlist}
+            getShareUrl={getShareUrl}
           />
         </aside>
       </div>
 
       <MobileSheet
-        results={
+        explore={
           <div className="space-y-3">
             {selected && (
               <SelectedSummaryCard
@@ -268,15 +242,7 @@ export default function MapPage() {
                 onShortlistChange={updateShortlist}
               />
             )}
-            <div className="overflow-hidden rounded-lg border border-surface-border">
-              <ResultsList
-                places={places}
-                weights={weights}
-                limit={50}
-                onSelect={focusPlace}
-                selectedSlug={selected?.slug}
-              />
-            </div>
+            <ExploreHint residentialCount={places.filter((p) => !p.nonResidential).length} />
           </div>
         }
         search={
@@ -334,13 +300,9 @@ export default function MapPage() {
 function TopBar({
   searchIndex,
   onSearchSelect,
-  showTable,
-  onToggleTable,
 }: {
   searchIndex: ReturnType<typeof buildSearchIndex>;
   onSearchSelect: (slug: string) => void;
-  showTable: boolean;
-  onToggleTable: () => void;
 }) {
   return (
     <header className="z-20 flex shrink-0 items-center gap-3 border-b border-surface-border bg-surface px-4 py-3">
@@ -354,13 +316,6 @@ function TopBar({
         />
       </div>
       <nav className="ml-auto flex flex-wrap items-center gap-2 text-sm">
-        <button
-          type="button"
-          onClick={onToggleTable}
-          className="rounded-md border border-surface-border px-3 py-1.5 text-ink transition-colors hover:border-accent hover:text-accent"
-        >
-          {showTable ? "Map view" : "Table view"}
-        </button>
         <NavLink href="/compare">Compare</NavLink>
         <NavLink href="/alerts">Alerts</NavLink>
         <NavLink href="/methodology">Methodology</NavLink>
@@ -372,62 +327,77 @@ function TopBar({
   );
 }
 
-function ResultsPanel({
+function MapSidebar({
   places,
-  weights,
-  onSelect,
-  selectedSlug,
+  onFocusPlace,
   controls,
-  extra,
+  shortlist,
+  recent,
+  onShortlistChange,
+  getShareUrl,
 }: {
   places: Place[];
-  weights: import("@/lib/types").ScoreWeights;
-  onSelect: (p: Place) => void;
-  selectedSlug?: string;
+  onFocusPlace: (p: Place) => void;
   controls: React.ReactNode;
-  extra: React.ReactNode;
+  shortlist: string[];
+  recent: import("@/lib/user-prefs").RecentPlace[];
+  onShortlistChange: (slugs: string[]) => void;
+  getShareUrl: () => string;
 }) {
   const total = places.length;
   const residential = places.filter((p) => !p.nonResidential).length;
+
   return (
-    // Three stacked regions in a min-h-0 column. The header is fixed, the
-    // ranked list is the priority `flex-1 min-h-0 overflow` region (so it is
-    // ALWAYS visible and scrolls on its own), and the controls live in their
-    // own height-capped scroll region. Previously the controls block had no
-    // height bound, so a tall stack (presets + sliders + shortlist) ate the
-    // whole panel and collapsed the results list to 0px.
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
       <div className="shrink-0 border-b border-surface-border px-4 py-3">
-        <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-            Ranked results
-          </h2>
-          {residential > 0 && (
-            <span className="num rounded-full border border-surface-border bg-surface-sunken px-2 py-0.5 text-xs text-ink-muted">
-              {residential} of {total}
-            </span>
-          )}
-        </div>
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          Explore
+        </h2>
+        <p className="mt-1 text-sm leading-snug text-ink">
+          Search a suburb, click the map, or use your shortlist. Priority sliders
+          shape the match score for the area you select.
+        </p>
         {residential > 0 && (
-          <p className="mt-1 text-[11px] leading-snug text-ink-muted">
-            Ranking {residential} residential SA2 suburbs (of {total} SA2s total).
+          <p className="mt-2 text-[11px] text-ink-muted">
+            {residential} residential SA2 suburbs in view (of {total} SA2s total).
+            Personalised ranked lists are planned for signed-in profiles.
           </p>
         )}
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <ResultsList
-          places={places}
-          weights={weights}
-          limit={50}
-          onSelect={onSelect}
-          selectedSlug={selectedSlug}
+      <div className="space-y-3 border-b border-surface-border p-3">
+        <SearchBox
+          index={buildSearchIndex(places)}
+          onSelect={(e) => {
+            const p = getPlaceBySlug(places, e.slug);
+            if (p) onFocusPlace(p);
+          }}
         />
+        <ShortlistPanel
+          slugs={shortlist}
+          places={places}
+          onChange={onShortlistChange}
+          onOpen={onFocusPlace}
+        />
+        <RecentlyViewed recent={recent} />
+        <ShareViewButton getUrl={getShareUrl} label="Copy map link" />
       </div>
-      <div className="max-h-[42%] shrink-0 space-y-3 overflow-y-auto border-t border-surface-border bg-surface-sunken/60 p-3">
-        {controls}
-        {extra}
-      </div>
+      <div className="space-y-3 p-3">{controls}</div>
     </div>
+  );
+}
+
+function ExploreHint({ residentialCount }: { residentialCount: number }) {
+  return (
+    <p className="rounded-lg border border-surface-border bg-surface-sunken px-3 py-2 text-xs leading-relaxed text-ink-muted">
+      Tap the map or use Search to pick an area.
+      {residentialCount > 0 && (
+        <>
+          {" "}
+          We hold {residentialCount} residential SA2 suburbs — personalised ranked
+          lists are planned for signed-in profiles.
+        </>
+      )}
+    </p>
   );
 }
 
@@ -452,55 +422,3 @@ function NavLink({
   );
 }
 
-function PlacesTable({
-  places,
-  weights,
-}: {
-  places: Place[];
-  weights: import("@/lib/types").ScoreWeights;
-}) {
-  const ranked = rankPlaces(places, weights);
-
-  return (
-    <table className="w-full text-left text-sm text-ink">
-      <thead>
-        <tr className="border-b border-surface-border text-xs uppercase tracking-wide text-ink-muted">
-          <th className="py-2 pr-4 font-semibold">Rank</th>
-          <th className="py-2 pr-4 font-semibold">Area</th>
-          <th className="py-2 pr-4 font-semibold">Score</th>
-          <th className="py-2 pr-4 font-semibold">LGA</th>
-        </tr>
-      </thead>
-      <tbody>
-        {ranked.map((p, i) => {
-          const total = p.breakdown.total;
-          return (
-            <tr key={p.sa2Code} className="border-b border-surface-border/60">
-              <td className="num py-2 pr-4 text-ink-muted">{i + 1}</td>
-              <td className="py-2 pr-4">
-                <Link
-                  href={`/places/${p.slug}`}
-                  className="font-medium text-accent hover:underline"
-                >
-                  {p.name}
-                </Link>
-              </td>
-              <td className="py-2 pr-4">
-                <span
-                  className="num inline-flex h-7 w-9 items-center justify-center rounded-md text-xs font-semibold"
-                  style={{
-                    background: percentileToColor(total),
-                    color: percentileTextColor(total),
-                  }}
-                >
-                  {total.toFixed(0)}
-                </span>
-              </td>
-              <td className="py-2 pr-4 text-ink-muted">{p.lga}</td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
-  );
-}

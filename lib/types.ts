@@ -149,6 +149,35 @@ export type Place = {
   dataConfidence?: DataConfidence;
 };
 
+/** Geography at which a trend series is held — never mislabel LGA data as SA2. */
+export type TimeseriesGeo = "sa2" | "lga" | "suburb";
+export type TimeseriesCadence = "annual" | "quarterly" | "census-5yr";
+export type TimeseriesCompareMode = "value" | "decile-only";
+
+export type TimeseriesPoint = {
+  period: string;
+  values: Record<string, number>;
+};
+
+export type IndicatorSeries = {
+  indicator: string;
+  label: string;
+  unit: string;
+  geo: TimeseriesGeo;
+  cadence: TimeseriesCadence;
+  compareMode: TimeseriesCompareMode;
+  higherIsBetter: boolean;
+  periodLabel: string;
+  sourceId: string;
+  boundaryNote: string;
+  points: TimeseriesPoint[];
+};
+
+export type TimeseriesFile = {
+  generatedAt: string;
+  series: Record<string, IndicatorSeries>;
+};
+
 export type PoiType =
   | "hospital"
   | "gp"

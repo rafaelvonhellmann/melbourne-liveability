@@ -11,6 +11,7 @@ const steps = [
   "data:score",
   "data:geo",
   "data:poi",
+  "data:timeseries",
   "data:hash",
 ];
 
