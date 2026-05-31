@@ -9,5 +9,14 @@ data/raw/
 tsconfig.tsbuildinfo
 .vercel
 
+# Playwright E2E artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Claude Code local config (e.g. preview launch.json)
+.claude/
+
 # Design handoff bundle (not part of the app)
 .design-handoff/
