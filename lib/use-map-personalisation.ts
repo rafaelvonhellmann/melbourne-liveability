@@ -70,6 +70,16 @@ export function useMapPersonalisation() {
       setWalkAccessMode(false);
       setCyclabilityMode(false);
     }
+
+    // One-shot deep link (e.g. /?layer=transport from a profile metric card):
+    // activate the requested choropleth domain. Only present when arriving via
+    // such a link — plain weight/shortlist edits never carry it.
+    if (url.layer) {
+      setActiveDomain(url.layer);
+      setConfidenceMode(false);
+      setWalkAccessMode(false);
+      setCyclabilityMode(false);
+    }
   }, [searchParams]);
 
   // Context layers are mutually exclusive — only one choropleth basis at a time.

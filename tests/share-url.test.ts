@@ -34,6 +34,17 @@ describe("share-url", () => {
     expect(url).toContain("list=x");
   });
 
+  it("parses a valid layer deep-link and rejects unknown layers", () => {
+    expect(parseMapUrlState("layer=transport").layer).toBe("transport");
+    expect(parseMapUrlState("layer=bogus").layer).toBeNull();
+    expect(parseMapUrlState("").layer).toBeNull();
+  });
+
+  it("serializes the layer param", () => {
+    const url = buildMapUrl("/", { layer: "safety" });
+    expect(url).toContain("layer=safety");
+  });
+
   it("builds compare url", () => {
     const url = buildCompareUrl(["a", "b"]);
     const list = new URL(url, "http://localhost").searchParams.get("list");

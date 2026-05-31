@@ -1,5 +1,6 @@
-import type { ScoreWeights } from "./types";
+import type { DomainId, ScoreWeights } from "./types";
 import type { PersonaId } from "./personas";
+import { V1_SCORED_DOMAINS } from "./domains";
 import { parseWeightsFromSearchParams, serializeWeights } from "./weights";
 import { parseInterestView, type InterestViewId } from "./interest-views";
 
@@ -8,7 +9,16 @@ export type MapUrlState = {
   shortlist: string[];
   persona: PersonaId | null;
   view: InterestViewId | null;
+  /** Optional one-shot deep-link to activate a specific choropleth domain. */
+  layer: DomainId | null;
 };
+
+function parseLayer(raw: string | null): DomainId | null {
+  if (!raw) return null;
+  return (V1_SCORED_DOMAINS as string[]).includes(raw)
+    ? (raw as DomainId)
+    : null;
+}
 
 export function parseListParam(raw: string | null): string[] {
   if (!raw) return [];
@@ -35,6 +45,7 @@ export function parseMapUrlState(search: string): MapUrlState {
         ? (persona as PersonaId)
         : null,
     view: parseInterestView(params.get("view")),
+    layer: parseLayer(params.get("layer")),
   };
 }
 
@@ -51,6 +62,7 @@ export function buildMapUrl(
   }
   if (state.persona) params.set("persona", state.persona);
   if (state.view && state.view !== "general") params.set("view", state.view);
+  if (state.layer) params.set("layer", state.layer);
   const q = params.toString();
   return q ? `${base}?${q}` : base;
 }

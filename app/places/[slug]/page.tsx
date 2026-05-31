@@ -5,13 +5,29 @@ import type { PlacesFile } from "@/lib/places-data";
 import { computeWeightedScore } from "@/lib/scoring";
 import { getDefaultWeights } from "@/lib/weights";
 import { rankHomeBuyerPercentiles } from "@/lib/home-buyer";
+import { computeGmBenchmarks } from "@/lib/benchmarks";
 import { PlaceProfileClient } from "@/components/PlaceProfileClient";
 
 type Props = { params: Promise<{ slug: string }> };
 
+let _placesFile: Promise<PlacesFile> | null = null;
 async function loadPlacesFile(): Promise<PlacesFile> {
-  const file = path.join(process.cwd(), "public", "data", "places.json");
-  return JSON.parse(await readFile(file, "utf8")) as PlacesFile;
+  // Memoised across the many per-slug static builds (read the dataset once).
+  if (!_placesFile) {
+    const file = path.join(process.cwd(), "public", "data", "places.json");
+    _placesFile = readFile(file, "utf8").then(
+      (txt) => JSON.parse(txt) as PlacesFile
+    );
+  }
+  return _placesFile;
+}
+
+let _benchmarks: ReturnType<typeof computeGmBenchmarks> | null = null;
+function gmBenchmarks(places: PlacesFile["places"]) {
+  // Greater-Melbourne benchmark distribution per indicator — identical for every
+  // page, so compute it once for the whole static export.
+  if (!_benchmarks) _benchmarks = computeGmBenchmarks(places);
+  return _benchmarks;
 }
 
 export async function generateStaticParams() {
@@ -61,7 +77,16 @@ export default async function PlaceProfilePage({ params }: Props) {
   const homeBuyerPercentile =
     rankHomeBuyerPercentiles(data.places).get(place.slug) ?? null;
 
+  // Greater-Melbourne benchmark distribution per indicator, computed once at
+  // build from the full dataset (residential SA2s) and passed to the client —
+  // no extra fetched data file.
+  const benchmarks = gmBenchmarks(data.places);
+
   return (
-    <PlaceProfileClient place={place} homeBuyerPercentile={homeBuyerPercentile} />
+    <PlaceProfileClient
+      place={place}
+      homeBuyerPercentile={homeBuyerPercentile}
+      benchmarks={benchmarks}
+    />
   );
 }

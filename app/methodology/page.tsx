@@ -57,6 +57,35 @@ export default function MethodologyPage() {
           </li>
         </ul>
 
+        <h2 className="font-display text-lg font-medium text-ink">
+          Place profile: tabbed drawer &amp; metric benchmark bands
+        </h2>
+        <p>
+          Each place profile is organised as a tabbed drawer (adapted from the
+          Analisa.pt municipality-drawer pattern): an <strong>Overview</strong>{" "}
+          tab (composite breakdown, key facts, and entry points to the context
+          cards), one tab per <strong>persona lens</strong> (Family, Young
+          professional, Retiree, Student) that re-weights the same seven scored
+          domains, and one tab per <strong>scored domain</strong> plus context
+          groups (Home buyer, Walk &amp; cycle, Equity &amp; community, Data
+          coverage). The composite and persona scores are presented as{" "}
+          <strong>optional lenses</strong>, never a definitive ranking, and
+          context metrics are never folded into the locked seven-domain composite.
+        </p>
+        <p>
+          Inside each scored-domain tab, every indicator is a metric card showing
+          its current value and unit, its honest direction (&ldquo;higher is
+          better&rdquo; / &ldquo;lower is better&rdquo;), its Greater-Melbourne
+          percentile, the indicator source, and a <strong>benchmark band</strong>.
+          The band plots this area&apos;s raw value against the Greater-Melbourne
+          distribution for that raw indicator — the median and the
+          inter-quartile (P25–P75) range across residential SA2s — computed at
+          build from the full dataset (no extra data file). Cards explicitly state{" "}
+          <strong>&ldquo;single period — no trend data held&rdquo;</strong>: we
+          hold one vintage per indicator and therefore show <strong>no
+          time-series or trend direction</strong> rather than fabricating one.
+        </p>
+
         <h2 className="font-display text-lg font-medium text-ink">Context panels (not scored)</h2>
         <p>
           Equity (ABS SEIFA IRSAD/IRSD deciles), community (renter %, apartment
@@ -209,6 +238,11 @@ export default function MethodologyPage() {
             Labour-force indicators are Census 2016 — older than income/rent (2021).
           </li>
           <li>GTFS is a static timetable export, not real-time service quality.</li>
+          <li>
+            No time-series: we hold a single vintage per indicator, so metric
+            cards show benchmark bands but <strong>no trend direction</strong> —
+            trends are never fabricated.
+          </li>
         </ul>
 
         <h2 className="font-display text-lg font-medium text-ink">Crosswalk</h2>
