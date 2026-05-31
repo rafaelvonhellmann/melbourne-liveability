@@ -43,6 +43,14 @@ function gmBenchmarks(places: PlacesFile["places"]) {
   return _benchmarks;
 }
 
+let _homeBuyerRanks: ReturnType<typeof rankHomeBuyerPercentiles> | null = null;
+function homeBuyerRanks(places: PlacesFile["places"]) {
+  // Buyer-index percentiles rank the whole dataset — identical for every page,
+  // so compute once for the static export instead of per slug (O(n) each → O(n^2)).
+  if (!_homeBuyerRanks) _homeBuyerRanks = rankHomeBuyerPercentiles(places);
+  return _homeBuyerRanks;
+}
+
 export async function generateStaticParams() {
   try {
     const data = await loadPlacesFile();
@@ -88,7 +96,7 @@ export default async function PlaceProfilePage({ params }: Props) {
   }
 
   const homeBuyerPercentile =
-    rankHomeBuyerPercentiles(data.places).get(place.slug) ?? null;
+    homeBuyerRanks(data.places).get(place.slug) ?? null;
 
   // Greater-Melbourne benchmark distribution per indicator, computed once at
   // build from the full dataset (residential SA2s) and passed to the client —
