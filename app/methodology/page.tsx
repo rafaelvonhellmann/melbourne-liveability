@@ -115,6 +115,62 @@ export default function MethodologyPage() {
           community-maintained and uneven.
         </p>
 
+        <h2 className="font-display text-lg font-medium text-ink">
+          Home buyer index (context lens, not scored)
+        </h2>
+        <p>
+          A buyer-oriented <strong>context lens</strong> that blends indicators we
+          already hold into a single 0–100 figure: affordability/cost-pressure
+          (28%), safety (18%), schools &amp; education (16%), transport (14%), low
+          hazard exposure (14%) and 15-minute walk access (10%). The figure shown
+          on a profile is the composite&apos;s <strong>percentile within Greater
+          Melbourne</strong>; missing factors are handled by renormalising the
+          present weights.
+        </p>
+        <p className="text-sm text-ink-muted">
+          It is a <strong>context lens, never part of the locked seven-domain
+          liveability score, its weights, or the data-confidence index</strong>.
+          Crucially it uses <strong>no dwelling sale-price data</strong> —
+          &ldquo;affordability&rdquo; is the existing rent-to-income cost-pressure
+          proxy, so this is <strong>not</strong> a price, value-for-money, or
+          capital-growth estimate. It is also available as a &ldquo;Home buyer&rdquo;
+          interest view that tilts the map weights toward those priorities.
+        </p>
+
+        <h2 className="font-display text-lg font-medium text-ink">
+          Data coverage vs drawn geography
+        </h2>
+        <p>
+          Everything is joined to ABS SA2 polygons, but the underlying data is
+          collected at a range of real granularities — e.g. crime is recorded at
+          suburb/LGA level and allocated to the SA2 via crosswalk; rent-to-income
+          and income are SA2-direct; health and school access are proximity
+          measures; hazards are area-weighted overlay shares. The profile&apos;s{" "}
+          <strong>Data coverage</strong> panel states, per domain, what the data
+          actually represents, which indicators are measured vs missing, and which
+          carry an older (stale) vintage, alongside the overall data-confidence
+          tier. SA2s with low/no resident population are flagged and drawn in the
+          neutral <strong>no-data grey</strong> (<code>#d9d6cf</code>) on the map —
+          distinct from a genuinely low score — and excluded from rankings and
+          percentile baselines.
+        </p>
+
+        <h2 className="font-display text-lg font-medium text-ink">
+          Map pins (points of interest)
+        </h2>
+        <p>
+          Pins (hospitals, GPs, pharmacies, police, schools, childcare,
+          supermarkets, parks, gyms/leisure, cafes/restaurants) are{" "}
+          <strong>off by default</strong> and switched on individually in the layer
+          control. They are colour-coded by category using a{" "}
+          <strong>distinct categorical palette</strong> (a qualitative
+          ColorBrewer-style set) kept deliberately separate from the YlGnBu
+          sequential data ramp, which remains reserved for the choropleth data
+          channel. Hospital/GP/police/school points come from Vic MapShare and
+          OpenStreetMap; everyday-amenity points are © OpenStreetMap contributors
+          (ODbL).
+        </p>
+
         <h2 className="font-display text-lg font-medium text-ink">Data confidence</h2>
         <p>
           Each SA2 carries a data-confidence index (0–100) combining domain

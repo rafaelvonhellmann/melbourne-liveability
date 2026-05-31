@@ -4,6 +4,7 @@ import path from "node:path";
 import type { PlacesFile } from "@/lib/places-data";
 import { computeWeightedScore } from "@/lib/scoring";
 import { getDefaultWeights } from "@/lib/weights";
+import { rankHomeBuyerPercentiles } from "@/lib/home-buyer";
 import { PlaceProfileClient } from "@/components/PlaceProfileClient";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -57,5 +58,10 @@ export default async function PlaceProfilePage({ params }: Props) {
     );
   }
 
-  return <PlaceProfileClient place={place} />;
+  const homeBuyerPercentile =
+    rankHomeBuyerPercentiles(data.places).get(place.slug) ?? null;
+
+  return (
+    <PlaceProfileClient place={place} homeBuyerPercentile={homeBuyerPercentile} />
+  );
 }

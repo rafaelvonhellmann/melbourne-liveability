@@ -13,12 +13,14 @@ import { ContextPanels } from "./ContextPanels";
 import { WalkAccessPanel } from "./WalkAccessPanel";
 import { CyclabilityPanel } from "./CyclabilityPanel";
 import { DataConfidenceCard } from "./DataConfidenceCard";
+import { DataCoverageCard } from "./DataCoverageCard";
+import { HomeBuyerCard } from "./HomeBuyerCard";
 import { SourceDrawer } from "./SourceDrawer";
 import { ProfileEngagement } from "./ProfileEngagement";
 
-type Props = { place: Place };
+type Props = { place: Place; homeBuyerPercentile?: number | null };
 
-export function PlaceProfileClient({ place }: Props) {
+export function PlaceProfileClient({ place, homeBuyerPercentile = null }: Props) {
   const [comprehensive, setComprehensive] = useState(false);
   const weights = getDefaultWeights();
   const breakdown = computeWeightedScore(place, weights);
@@ -125,8 +127,9 @@ export function PlaceProfileClient({ place }: Props) {
                 </p>
                 <p className="mt-1 max-w-md text-sm leading-relaxed text-ink-muted">
                   Switch to <b className="text-ink">Comprehensive</b> to reveal every
-                  sub-indicator, the property/violent crime split, staleness flags, and
-                  the Equity · Community · Politics context panels.
+                  sub-indicator, the property/violent crime split, staleness flags, the{" "}
+                  <b className="text-ink">Data coverage</b> breakdown (what we actually
+                  hold per area), and the Equity · Community · Politics context panels.
                 </p>
                 {place.domains.safety && (
                   <Caveat className="mt-3">
@@ -137,6 +140,8 @@ export function PlaceProfileClient({ place }: Props) {
               </div>
             ) : (
               <div className="mt-4 space-y-4">
+                <HomeBuyerCard place={place} gmPercentile={homeBuyerPercentile} />
+                <DataCoverageCard place={place} />
                 <ContextPanels context={place.context} />
                 <WalkAccessPanel walkAccess={place.context?.walkAccess} />
                 <CyclabilityPanel cyclability={place.context?.cyclability} />

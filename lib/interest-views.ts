@@ -2,7 +2,12 @@ import type { DomainId, ScoreWeights } from "./types";
 import { normalizeWeights } from "./weights";
 
 /** Mover interest lenses — set default map layer + optional weight skew. */
-export type InterestViewId = "general" | "rental" | "education" | "dataQuality";
+export type InterestViewId =
+  | "general"
+  | "rental"
+  | "homeBuyer"
+  | "education"
+  | "dataQuality";
 
 export type InterestViewConfig = {
   id: InterestViewId;
@@ -36,6 +41,23 @@ export const INTEREST_VIEWS: Record<InterestViewId, InterestViewConfig> = {
       health: 10,
       hazards: 6,
       education: 4,
+      income: 2,
+    }),
+  },
+  homeBuyer: {
+    id: "homeBuyer",
+    label: "Home buyer",
+    description:
+      "Context lens for buyers: affordability/cost-pressure, safety, schools, transport, low hazards. No sale-price data.",
+    defaultDomain: "affordability",
+    confidenceMode: false,
+    weights: normalizeWeights({
+      affordability: 30,
+      safety: 18,
+      education: 16,
+      transport: 14,
+      hazards: 14,
+      health: 6,
       income: 2,
     }),
   },

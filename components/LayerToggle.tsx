@@ -1,14 +1,16 @@
 "use client";
 
-import { Layers } from "lucide-react";
+import { Layers, MapPin } from "lucide-react";
 import { DOMAIN_REGISTRY } from "@/lib/domains";
 import type { DomainId } from "@/lib/types";
+import { POI_CATEGORIES } from "@/lib/poi-categories";
 
 type LayerToggleProps = {
   activeDomain: DomainId;
   onDomainChange: (id: DomainId) => void;
   visiblePins: Record<string, boolean>;
   onPinToggle: (pinType: string) => void;
+  onClearPins?: () => void;
   confidenceMode?: boolean;
   onConfidenceToggle?: () => void;
   walkAccessMode?: boolean;
@@ -22,6 +24,7 @@ export function LayerToggle({
   onDomainChange,
   visiblePins,
   onPinToggle,
+  onClearPins,
   confidenceMode = false,
   onConfidenceToggle,
   walkAccessMode = false,
@@ -29,6 +32,9 @@ export function LayerToggle({
   cyclabilityMode = false,
   onCyclabilityToggle,
 }: LayerToggleProps) {
+  const activePinCount = POI_CATEGORIES.filter(
+    (c) => visiblePins[c.id]
+  ).length;
   return (
     <div
       className="rounded-lg border border-surface-border bg-surface/95 p-2.5 shadow-card backdrop-blur"
@@ -61,26 +67,57 @@ export function LayerToggle({
                 {d.defaultWeight}%
               </span>
             </button>
-            {d.pinTypes && d.pinTypes.length > 0 && activeDomain === d.id && (
-              <ul className="ml-3 mt-1 space-y-0.5 border-l border-surface-border pl-2">
-                {d.pinTypes.map((pin) => (
-                  <li key={pin}>
-                    <label className="flex cursor-pointer items-center gap-2 text-xs text-ink-muted">
-                      <input
-                        type="checkbox"
-                        checked={visiblePins[pin] ?? true}
-                        onChange={() => onPinToggle(pin)}
-                        className="rounded border-surface-border accent-accent"
-                      />
-                      {pin} pins
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            )}
           </li>
         ))}
       </ul>
+
+      {/* Points of interest — user-controlled, off by default, colour-coded by
+          category (a categorical palette, separate from the YlGnBu data ramp). */}
+      <div className="mt-2.5 border-t border-surface-border pt-2.5">
+        <div className="mb-1.5 flex items-center justify-between gap-2 px-1">
+          <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            <MapPin className="h-3.5 w-3.5" aria-hidden />
+            Pins
+          </span>
+          {activePinCount > 0 && onClearPins && (
+            <button
+              type="button"
+              onClick={onClearPins}
+              className="rounded px-1.5 py-0.5 text-[11px] text-ink-muted transition-colors hover:text-accent"
+            >
+              Clear ({activePinCount})
+            </button>
+          )}
+        </div>
+        {activePinCount === 0 && (
+          <p className="mb-1.5 px-1 text-[11px] leading-snug text-ink-muted">
+            None shown. Tick a category to drop its pins on the map.
+          </p>
+        )}
+        <ul className="space-y-0.5">
+          {POI_CATEGORIES.map((cat) => {
+            const on = visiblePins[cat.id] ?? false;
+            return (
+              <li key={cat.id}>
+                <label className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-sm text-ink hover:bg-surface-sunken">
+                  <input
+                    type="checkbox"
+                    checked={on}
+                    onChange={() => onPinToggle(cat.id)}
+                    className="rounded border-surface-border accent-accent"
+                  />
+                  <span
+                    className="h-3 w-3 shrink-0 rounded-full border border-white shadow-[0_0_0_1px_rgba(0,0,0,0.12)]"
+                    style={{ background: cat.color }}
+                    aria-hidden
+                  />
+                  <span className="flex-1">{cat.label}</span>
+                </label>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
 
       {(onConfidenceToggle || onWalkAccessToggle || onCyclabilityToggle) && (
         <div className="mt-2.5 space-y-1.5 border-t border-surface-border pt-2.5">

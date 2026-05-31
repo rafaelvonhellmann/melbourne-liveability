@@ -5,8 +5,8 @@ import maplibregl from "maplibre-gl";
 import type { DomainId } from "@/lib/types";
 import { MELBOURNE_BOUNDS, MELBOURNE_CENTER } from "@/lib/region";
 import { choroplethFillColor, choroplethFillColorByProp } from "@/lib/map-expressions";
-import { getDomain } from "@/lib/domains";
 import { withBase } from "@/lib/asset-path";
+import { poiCircleColorExpression } from "@/lib/poi-categories";
 
 // Light basemap to sit under the warm-editorial chrome; the YlGnBu choropleth
 // remains the independent data channel on top.
@@ -101,11 +101,14 @@ export function MelbourneMap({
         id: "poi-circles",
         type: "circle",
         source: "pois",
+        // Hidden until the user enables a category (all pins off by default).
+        filter: ["==", ["get", "pinType"], "__none__"],
         paint: {
-          "circle-radius": 4,
-          "circle-color": "#ffffff",
-          "circle-stroke-width": 2,
-          "circle-stroke-color": "#D97757",
+          "circle-radius": 4.5,
+          // Categorical colour-by-category — independent of the YlGnBu data ramp.
+          "circle-color": poiCircleColorExpression() as maplibregl.ExpressionSpecification,
+          "circle-stroke-width": 1.5,
+          "circle-stroke-color": "#ffffff",
           "circle-opacity": 0.95,
         },
       });
@@ -153,18 +156,24 @@ export function MelbourneMap({
     const map = mapRef.current;
     if (!map || !map.getLayer("poi-circles")) return;
 
-    const cfg = getDomain(activeDomain);
-    const allowed = (cfg?.pinTypes ?? []).filter((pin) => visiblePins[pin] !== false);
-    if (allowed.length === 0) {
-      map.setFilter("poi-circles", ["==", ["get", "pinType"], ""]);
+    // Pins are user-controlled per category and independent of the active
+    // choropleth domain. Show only the categories explicitly enabled.
+    const allowed = Object.keys(visiblePins).filter((k) => visiblePins[k]);
+    const applyFilter = () => {
+      if (!map.getLayer("poi-circles")) return;
+      map.setFilter(
+        "poi-circles",
+        allowed.length === 0
+          ? ["==", ["get", "pinType"], "__none__"]
+          : ["in", ["get", "pinType"], ["literal", allowed]]
+      );
+    };
+    if (!map.isStyleLoaded()) {
+      map.once("idle", applyFilter);
       return;
     }
-    map.setFilter("poi-circles", [
-      "in",
-      ["get", "pinType"],
-      ["literal", allowed],
-    ]);
-  }, [activeDomain, visiblePins]);
+    applyFilter();
+  }, [visiblePins]);
 
   return (
     <div

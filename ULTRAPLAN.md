@@ -9,7 +9,12 @@
 ### ⚠️ Product framing (authoritative — read this before adding metrics)
 **The product is a data-access / compilation tool, NOT a scoring engine.** The point is to **compile open government (and attributed open) data into an accessible, transparent website** so ordinary people can easily find and understand it for where they live or want to move. Generating "the score" is a convenience entry point, not the mission.
 
-Consequence for new work: **new metrics are added as context — display panels + optional toggleable map layers — NOT folded into the scored composite, the weights, or the Data Confidence scoring.** The scored composite stays the locked v1 set (Affordability/Transport/Safety/Health/Hazards/Education/Income). Context layers (Equity, Community, Environment, Politics, Data Confidence, **15-minute access / walkability / cyclability**) are first-class deliverables in their own right — the website's value is the breadth and honesty of the compiled data, not one ranking number. Every metric still needs a verified licence, a source record (version+hash), and a caveat.
+Consequence for new work: **new metrics are added as context — display panels + optional toggleable map layers — NOT folded into the scored composite, the weights, or the Data Confidence scoring.** The scored composite stays the locked v1 set (Affordability/Transport/Safety/Health/Hazards/Education/Income). Context layers (Equity, Community, Environment, Politics, Data Confidence, **15-minute access / walkability / cyclability**, **Home buyer index**) are first-class deliverables in their own right — the website's value is the breadth and honesty of the compiled data, not one ranking number. Every metric still needs a verified licence, a source record (version+hash), and a caveat.
+
+> **Context lenses & transparency (v1.x additions):**
+> - **Home buyer index** (`lib/home-buyer.ts`) — a buyer-oriented **context lens** blending EXISTING indicators (affordability/cost-pressure, safety, schools, transport, low hazards, walk access) into a 0–100 Greater-Melbourne percentile. Explicitly **not** in the locked composite/weights and uses **no sale-price data**. Surfaced as a profile card + a "Home buyer" interest view.
+> - **Data coverage** (`lib/data-coverage.ts`, `DataCoverageCard`) — honest, per-area statement of what the data actually represents (real granularity/aggregation per domain, measured vs missing, stale vintage, no/low resident data) vs the drawn SA2 geography. Transparency only; introduces no new numbers.
+> - **POI pins** — off by default, user-toggled per category, colour-coded by a **categorical** palette (`lib/poi-categories.ts`) kept separate from the YlGnBu data ramp.
 
 ---
 

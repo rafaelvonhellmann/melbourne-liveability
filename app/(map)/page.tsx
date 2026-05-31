@@ -28,13 +28,8 @@ export default function MapPage() {
   const [places, setPlaces] = useState<Place[]>([]);
   const [selected, setSelected] = useState<Place | null>(null);
   const [showTable, setShowTable] = useState(false);
-  const [visiblePins, setVisiblePins] = useState<Record<string, boolean>>({
-    police: true,
-    hospital: true,
-    gp: true,
-    school: true,
-    childcare: true,
-  });
+  // Pins are OFF by default — they only appear when the user enables a category.
+  const [visiblePins, setVisiblePins] = useState<Record<string, boolean>>({});
 
   const {
     weights,
@@ -127,6 +122,7 @@ export default function MapPage() {
               onPinToggle={(pin) =>
                 setVisiblePins((v) => ({ ...v, [pin]: !v[pin] }))
               }
+              onClearPins={() => setVisiblePins({})}
               confidenceMode={confidenceMode}
               onConfidenceToggle={toggleConfidenceMode}
               walkAccessMode={walkAccessMode}
@@ -138,7 +134,7 @@ export default function MapPage() {
 
           {/* Legend card (bottom-left) */}
           <div className="absolute bottom-4 left-4 z-10 hidden max-w-[16rem] space-y-2 md:block">
-            <MapLegend domainLabel={legendLabel} />
+            <MapLegend domainLabel={legendLabel} visiblePins={visiblePins} />
             <Attribution />
           </div>
 
