@@ -91,6 +91,34 @@ function osmPoints(
   return pts;
 }
 
+/**
+ * SCORED GP/clinic points — a LOCKED, narrow definition: OSM *nodes* tagged
+ * amenity=doctors|clinic. Deliberately decoupled from the broader map-pin fetch
+ * (build-poi can widen pins with clinic *ways* / healthcare=* tags), because
+ * widening context pins must NEVER move the scored Health composite
+ * (ULTRAPLAN: "context never changes the score"). Ways carry `center` rather
+ * than top-level lat/lon, so the node check reproduces the original node-only
+ * GP fetch exactly and keeps gpCount2km stable across pin-query changes.
+ */
+function scoredGpPoints(
+  data: {
+    elements?: {
+      type?: string;
+      lat?: number;
+      lon?: number;
+      tags?: Record<string, string>;
+    }[];
+  } | null
+): [number, number][] {
+  const pts: [number, number][] = [];
+  for (const el of data?.elements ?? []) {
+    if (el.type !== "node" || el.lat == null || el.lon == null) continue;
+    if (!/doctors|clinic/.test(el.tags?.amenity ?? "")) continue;
+    pts.push([el.lon, el.lat]);
+  }
+  return pts;
+}
+
 async function main() {
   const cw = JSON.parse(
     await readFile(path.join(GENERATED, "crosswalk.json"), "utf8")
@@ -305,9 +333,8 @@ async function main() {
       "{}"
   );
   const osmHospitals = osmPoints(healthJson, (t) => t.amenity === "hospital");
-  const gps = osmPoints(healthJson, (t) =>
-    /doctors|clinic/.test(t.amenity ?? "")
-  );
+  // Locked, pin-independent scored GP set (see scoredGpPoints).
+  const gps = scoredGpPoints(healthJson);
 
   let hospitalSource: "vic-mapshare-hospitals" | "osm-health" = "osm-health";
   const hospitalPts = vicHospitals.length > 0 ? vicHospitals : osmHospitals;
@@ -322,7 +349,7 @@ async function main() {
     p.gpCount2km = countWithinKm(p.centroid, gps, 2);
   }
   console.log(
-    `Health: hospitals from ${hospitalSource} (${hospitalPts.length} points), GP from osm-health`
+    `Health: hospitals from ${hospitalSource} (${hospitalPts.length} points), GP from osm-health nodes (${gps.length}, locked scored set)`
   );
 
   const schoolsJson = JSON.parse(
