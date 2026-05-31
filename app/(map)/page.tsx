@@ -30,6 +30,12 @@ export default function MapPage() {
   const [showTable, setShowTable] = useState(false);
   // Pins are OFF by default — they only appear when the user enables a category.
   const [visiblePins, setVisiblePins] = useState<Record<string, boolean>>({});
+  // Camera target for the area search / list selections. Map clicks never set
+  // this, so clicking a place on the map preserves the current view.
+  const [focusTarget, setFocusTarget] = useState<{
+    center: [number, number];
+    nonce: number;
+  } | null>(null);
 
   const {
     weights,
@@ -59,21 +65,44 @@ export default function MapPage() {
 
   const searchIndex = useMemo(() => buildSearchIndex(places), [places]);
 
+  // Map-click selection: update the side panel only, preserving map view.
   const selectPlace = (p: Place) => {
     setSelected(p);
     noteRecentView(p.slug, p.name);
   };
 
+  // Search / list selection: select AND pan/zoom the map in-app (no reload).
+  const focusPlace = (p: Place) => {
+    selectPlace(p);
+    setFocusTarget({ center: p.centroid, nonce: Date.now() });
+  };
+
   const personalisationControls = (
-    <>
-      <InterestViews active={interestView} onSelect={selectInterestView} />
-      <PersonaPresets onSelect={selectPersona} />
-      <DomainSliders
-        weights={weights}
-        onChange={setWeightsAndSync}
-        onReset={resetWeights}
-      />
-    </>
+    <div className="space-y-3">
+      {/* Presets — quick, one-tap starting points (kept distinct from the
+          manual priority sliders below to reduce confusion). */}
+      <section aria-label="Presets" className="space-y-2">
+        <h3 className="px-1 text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
+          Presets
+        </h3>
+        <InterestViews active={interestView} onSelect={selectInterestView} />
+        <PersonaPresets onSelect={selectPersona} />
+      </section>
+
+      <div className="border-t border-surface-border" aria-hidden />
+
+      {/* Adjust priorities — manual fine-tuning, separated from presets. */}
+      <section aria-label="Adjust priorities" className="space-y-2">
+        <h3 className="px-1 text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
+          Fine-tune priorities
+        </h3>
+        <DomainSliders
+          weights={weights}
+          onChange={setWeightsAndSync}
+          onReset={resetWeights}
+        />
+      </section>
+    </div>
   );
 
   const legendLabel = walkAccessMode
@@ -90,7 +119,7 @@ export default function MapPage() {
         searchIndex={searchIndex}
         onSearchSelect={(slug) => {
           const p = getPlaceBySlug(places, slug);
-          if (p) selectPlace(p);
+          if (p) focusPlace(p);
         }}
         showTable={showTable}
         onToggleTable={() => setShowTable((v) => !v)}
@@ -105,6 +134,7 @@ export default function MapPage() {
             walkAccessMode={walkAccessMode}
             cyclabilityMode={cyclabilityMode}
             visiblePins={visiblePins}
+            focusTarget={focusTarget}
             onPlaceSelect={(props) => {
               const p = places.find(
                 (x) => x.slug === props.slug || x.sa2Code === props.sa2Code
@@ -159,7 +189,7 @@ export default function MapPage() {
             <ResultsPanel
               places={places}
               weights={weights}
-              onSelect={selectPlace}
+              onSelect={focusPlace}
               controls={personalisationControls}
               extra={
                 <>
@@ -167,6 +197,7 @@ export default function MapPage() {
                     slugs={shortlist}
                     places={places}
                     onChange={updateShortlist}
+                    onOpen={focusPlace}
                   />
                   <RecentlyViewed recent={recent} />
                   <ShareViewButton getUrl={getShareUrl} label="Copy map link" />
@@ -193,7 +224,7 @@ export default function MapPage() {
             places={places}
             weights={weights}
             limit={8}
-            onSelect={selectPlace}
+            onSelect={focusPlace}
             selectedSlug={selected?.slug}
           />
         </div>

@@ -21,7 +21,21 @@ type MelbourneMapProps = {
   cyclabilityMode?: boolean;
   visiblePins?: Record<string, boolean>;
   onPlaceSelect?: (props: { slug?: string; name?: string; sa2Code?: string }) => void;
+  /**
+   * In-app camera target used by the area search (pan/zoom to a result) — a
+   * `nonce` lets the same place re-trigger a fly-to. Map *clicks* deliberately
+   * do NOT set this, so selecting an area on the map preserves the view.
+   */
+  focusTarget?: { center: [number, number]; nonce: number } | null;
 };
+
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
 
 function fillColorFor(
   activeDomain: DomainId,
@@ -43,9 +57,19 @@ export function MelbourneMap({
   cyclabilityMode = false,
   visiblePins = {},
   onPlaceSelect,
+  focusTarget = null,
 }: MelbourneMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+
+  // Keep the latest select handler in a ref so the map is initialised exactly
+  // once. Putting `onPlaceSelect` in the init effect's deps caused the whole
+  // map to be torn down and rebuilt on every parent re-render (the "everything
+  // refreshes the map" bug), resetting the view and layers on every click.
+  const onPlaceSelectRef = useRef(onPlaceSelect);
+  useEffect(() => {
+    onPlaceSelectRef.current = onPlaceSelect;
+  }, [onPlaceSelect]);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -61,7 +85,9 @@ export function MelbourneMap({
       ],
     });
 
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    // Nav (+/–) lives top-left so it never collides with the floating layer
+    // control / legend card pinned to the top-right.
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
     map.fitBounds(MELBOURNE_BOUNDS, { padding: 40, duration: 0 });
 
     map.on("load", () => {
@@ -116,8 +142,8 @@ export function MelbourneMap({
 
     map.on("click", "sa2-fill", (e) => {
       const f = e.features?.[0];
-      if (!f?.properties || !onPlaceSelect) return;
-      onPlaceSelect({
+      if (!f?.properties) return;
+      onPlaceSelectRef.current?.({
         slug: f.properties.slug as string | undefined,
         name: f.properties.name as string | undefined,
         sa2Code: f.properties.sa2Code as string | undefined,
@@ -129,8 +155,10 @@ export function MelbourneMap({
       map.remove();
       mapRef.current = null;
     };
+  // Initialise the map exactly once; the click handler reads the latest
+  // callback from a ref (see above), so no init-time dependencies are needed.
   // eslint-disable-next-line react-hooks/exhaustive-deps -- map init once
-  }, [onPlaceSelect]);
+  }, []);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -174,6 +202,20 @@ export function MelbourneMap({
     }
     applyFilter();
   }, [visiblePins]);
+
+  // Area search drives an in-app pan/zoom (no reload). Triggered only via the
+  // `focusTarget` nonce; map clicks never set it, so clicking preserves view.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !focusTarget) return;
+    map.flyTo({
+      center: focusTarget.center,
+      zoom: Math.max(map.getZoom(), 12),
+      duration: prefersReducedMotion() ? 0 : 900,
+      essential: true,
+    });
+    // Re-run when the nonce changes (same place can be searched twice).
+  }, [focusTarget]);
 
   return (
     <div

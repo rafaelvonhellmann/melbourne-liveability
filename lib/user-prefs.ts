@@ -6,6 +6,13 @@ const STORAGE_KEY = "mlv-user-prefs-v1";
 const MAX_SHORTLIST = 12;
 const MAX_RECENT = 8;
 
+/**
+ * Same-tab notification that persisted prefs changed. The native `storage`
+ * event only fires in *other* tabs, so we dispatch this for in-tab listeners
+ * (e.g. the shortlist panel) to re-hydrate without a reload.
+ */
+export const PREFS_CHANGED_EVENT = "mlv:prefs-changed";
+
 export type RecentPlace = {
   slug: string;
   name: string;
@@ -64,6 +71,7 @@ export function saveUserPrefs(prefs: UserPrefs): void {
       recent: prefs.recent.slice(0, MAX_RECENT),
     })
   );
+  window.dispatchEvent(new Event(PREFS_CHANGED_EVENT));
 }
 
 export function addToShortlist(slug: string): UserPrefs {
