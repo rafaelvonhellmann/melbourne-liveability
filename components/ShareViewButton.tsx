@@ -21,7 +21,7 @@ export function ShareViewButton({
       type="button"
       className={
         className ||
-        "rounded border border-surface-border px-2 py-1 text-xs text-slate-300 hover:border-emerald-700 hover:text-emerald-200"
+        "rounded-md border border-surface-border px-2.5 py-1 text-xs text-ink transition-colors hover:border-accent hover:text-accent"
       }
       onClick={async () => {
         const ok = await copyToClipboard(

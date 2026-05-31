@@ -1,5 +1,5 @@
 import type { DomainId } from "./types";
-import { domainProperty } from "./colors";
+import { domainProperty, DATA_PALETTE, NO_DATA_COLOR } from "./colors";
 
 export function choroplethFillColor(domain: DomainId): unknown[] {
   return choroplethFillColorByProp(domainProperty(domain));
@@ -10,23 +10,22 @@ export function choroplethFillColorByProp(property: string): unknown[] {
   return [
     "case",
     ["==", ["get", "nonResidential"], true],
-    "#4a5568",
+    NO_DATA_COLOR,
     ["==", prop, null],
-    "#64748b",
+    NO_DATA_COLOR,
+    // 5 discrete colorblind-safe YlGnBu bands — floor(p/20)
     [
-      "interpolate",
-      ["linear"],
+      "step",
       prop,
-      0,
-      "#440154",
-      25,
-      "#3b528b",
-      50,
-      "#21918c",
-      75,
-      "#5ec962",
-      100,
-      "#fde725",
+      DATA_PALETTE[0],
+      20,
+      DATA_PALETTE[1],
+      40,
+      DATA_PALETTE[2],
+      60,
+      DATA_PALETTE[3],
+      80,
+      DATA_PALETTE[4],
     ],
   ];
 }

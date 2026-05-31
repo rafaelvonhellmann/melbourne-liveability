@@ -2,19 +2,19 @@ import Link from "next/link";
 
 export default function MethodologyPage() {
   return (
-    <div className="prose prose-invert mx-auto max-w-3xl px-4 py-8">
-      <Link href="/" className="text-sm text-emerald-400 no-underline hover:underline">
+    <div className="mx-auto min-h-screen max-w-3xl bg-bg px-4 py-8 text-ink">
+      <Link href="/" className="text-sm text-accent no-underline hover:underline">
         ← Map
       </Link>
-      <h1 className="mt-4 text-2xl font-semibold text-slate-100">Methodology</h1>
-      <section className="mt-6 space-y-4 text-slate-300">
+      <h1 className="mt-4 font-display text-2xl font-semibold text-ink">Methodology</h1>
+      <section className="mt-6 space-y-4 text-ink">
         <p>
           Scores are percentile ranks within Greater Melbourne (GCCSA 2GMEL), not
           absolute national benchmarks. Canonical geography is ABS SA2; suburb names
           are search aliases resolved via population- or area-weighted crosswalk.
         </p>
-        <h2 className="text-lg font-medium text-slate-100">Scored domains & weights</h2>
-        <p className="text-sm text-slate-500">
+        <h2 className="font-display text-lg font-medium text-ink">Scored domains & weights</h2>
+        <p className="text-sm text-ink-muted">
           Default weights follow ULTRAPLAN §1: Affordability 30, Transport 18, Crime/Safety
           14, Health 14, Hazards 8, Education 8, Income/Economy 8. Sliders and persona
           presets re-normalise at runtime.
@@ -57,14 +57,14 @@ export default function MethodologyPage() {
           </li>
         </ul>
 
-        <h2 className="text-lg font-medium text-slate-100">Context panels (not scored)</h2>
+        <h2 className="font-display text-lg font-medium text-ink">Context panels (not scored)</h2>
         <p>
           Equity (ABS SEIFA IRSAD/IRSD deciles), community (renter %, apartment
           dwelling %, First Nations %), environment, and politics appear on place
           profiles for transparency only. They never change the liveability rank.
         </p>
 
-        <h2 className="text-lg font-medium text-slate-100">
+        <h2 className="font-display text-lg font-medium text-ink">
           15-minute access (context, not scored)
         </h2>
         <p>
@@ -78,7 +78,7 @@ export default function MethodologyPage() {
           density. Both appear as a profile panel and an optional
           &ldquo;15-min walk access&rdquo; map layer.
         </p>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-ink-muted">
           This is a <strong>data-compilation / accessibility feature</strong>, not
           a routing engine, and it is <strong>never part of the liveability
           score, its weights, or the data-confidence index</strong>. Caveats:
@@ -89,7 +89,7 @@ export default function MethodologyPage() {
           community-maintained and uneven in coverage.
         </p>
 
-        <h2 className="text-lg font-medium text-slate-100">
+        <h2 className="font-display text-lg font-medium text-ink">
           Cyclability (context, not scored)
         </h2>
         <p>
@@ -103,7 +103,7 @@ export default function MethodologyPage() {
           the top without a single outlier dominating. It appears as a profile
           panel and an optional &ldquo;Cyclability&rdquo; map layer.
         </p>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-ink-muted">
           This is an <strong>infrastructure-density</strong> measure, not a
           safety, comfort or connectivity rating, and it is{" "}
           <strong>never part of the liveability score, its weights, or the
@@ -115,7 +115,7 @@ export default function MethodologyPage() {
           community-maintained and uneven.
         </p>
 
-        <h2 className="text-lg font-medium text-slate-100">Data confidence</h2>
+        <h2 className="font-display text-lg font-medium text-ink">Data confidence</h2>
         <p>
           Each SA2 carries a data-confidence index (0–100) combining domain
           coverage, completeness (non-missing sub-indicators), freshness, and
@@ -127,7 +127,7 @@ export default function MethodologyPage() {
           correlation with income or SEIFA (r ≈ 0).
         </p>
 
-        <h2 className="text-lg font-medium text-slate-100">Automated refresh</h2>
+        <h2 className="font-display text-lg font-medium text-ink">Automated refresh</h2>
         <p>
           Each source records a cadence (rolling / quarterly / annual / census) and,
           where the upstream API exposes it, a last-updated date. A scheduled job
@@ -136,7 +136,7 @@ export default function MethodologyPage() {
           unchanged the build is a no-op.
         </p>
 
-        <h2 className="text-lg font-medium text-slate-100">Caveats</h2>
+        <h2 className="font-display text-lg font-medium text-ink">Caveats</h2>
         <ul className="list-disc space-y-1 pl-5">
           <li>
             Crime is suburb-level, allocated to SA2 by crosswalk — not resident
@@ -155,17 +155,17 @@ export default function MethodologyPage() {
           <li>GTFS is a static timetable export, not real-time service quality.</li>
         </ul>
 
-        <h2 className="text-lg font-medium text-slate-100">Crosswalk</h2>
+        <h2 className="font-display text-lg font-medium text-ink">Crosswalk</h2>
         <p>
           Suburb (SAL) indicators aggregated to SA2 using area-weighted spatial
           intersection (population-weighted when mesh-block population CSV is supplied).
         </p>
-        <h2 className="text-lg font-medium text-slate-100">Non-residential SA2</h2>
+        <h2 className="font-display text-lg font-medium text-ink">Non-residential SA2</h2>
         <p>
           SA2s with estimated resident population below 200 are excluded from percentile
           baselines and rankings.
         </p>
-        <h2 className="text-lg font-medium text-slate-100">Attribution & licences</h2>
+        <h2 className="font-display text-lg font-medium text-ink">Attribution & licences</h2>
         <p>
           ABS (CC BY 4.0); PTV GTFS (CC BY 4.0); VCSA (CC BY 4.0); Victoria planning and
           MapShare (CC BY 4.0); © OpenStreetMap contributors (ODbL) for schools, GP,

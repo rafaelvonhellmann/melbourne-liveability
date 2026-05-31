@@ -4,10 +4,10 @@ function pct(n: number): string {
   return `${Math.round(n * 100)}%`;
 }
 
-function tier(score: number): { label: string; cls: string } {
-  if (score >= 90) return { label: "High", cls: "text-emerald-300" };
-  if (score >= 75) return { label: "Moderate", cls: "text-amber-200" };
-  return { label: "Limited", cls: "text-orange-300" };
+function tier(score: number): { label: string } {
+  if (score >= 90) return { label: "High" };
+  if (score >= 75) return { label: "Moderate" };
+  return { label: "Limited" };
 }
 
 export function DataConfidenceCard({ confidence }: { confidence?: DataConfidence }) {
@@ -16,20 +16,26 @@ export function DataConfidenceCard({ confidence }: { confidence?: DataConfidence
   const c = confidence.counts;
 
   return (
-    <section className="mt-8 rounded-lg border border-surface-border bg-surface-raised/40 p-4">
-      <div className="flex items-baseline justify-between gap-4">
-        <h2 className="text-lg font-medium text-slate-100">Data confidence</h2>
-        <span className={`text-2xl font-bold ${t.cls}`}>
+    <section className="rounded-lg border border-surface-border bg-surface p-4 shadow-card">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="font-display text-lg font-medium text-ink">Data confidence</h2>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-surface-border bg-surface-sunken px-2.5 py-0.5 text-[10px] text-ink-muted">
+            <span className="h-1.5 w-1.5 rounded-full bg-ink-muted" aria-hidden />
+            context only · not in score
+          </span>
+        </div>
+        <span className="num text-2xl font-bold text-ink">
           {confidence.score.toFixed(0)}
-          <span className="ml-2 text-sm font-normal text-slate-500">{t.label}</span>
+          <span className="ml-2 text-sm font-normal text-ink-muted">{t.label}</span>
         </span>
       </div>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-ink-muted">
         How well-measured this area is — about our data pipeline, not a judgement of
         the place. Never affects the liveability rank.
       </p>
 
-      <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-4">
+      <dl className="num mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-4">
         <Stat label="Coverage" value={pct(confidence.coverage)} />
         <Stat label="Complete" value={pct(confidence.completeness)} />
         <Stat label="Fresh" value={pct(confidence.freshness)} />
@@ -37,19 +43,11 @@ export function DataConfidenceCard({ confidence }: { confidence?: DataConfidence
       </dl>
 
       <ul className="mt-3 flex flex-wrap gap-2 text-xs">
-        <Pill label={`${c.direct} directly measured`} cls="bg-emerald-900/40 text-emerald-200" />
-        {c.estimated > 0 && (
-          <Pill label={`${c.estimated} area-estimated`} cls="bg-sky-900/40 text-sky-200" />
-        )}
-        {c.proximity > 0 && (
-          <Pill label={`${c.proximity} proximity`} cls="bg-slate-700/50 text-slate-300" />
-        )}
-        {c.missing > 0 && (
-          <Pill label={`${c.missing} missing`} cls="bg-orange-900/40 text-orange-200" />
-        )}
-        {c.stale > 0 && (
-          <Pill label={`${c.stale} stale`} cls="bg-amber-900/40 text-amber-200" />
-        )}
+        <Pill label={`${c.direct} directly measured`} />
+        {c.estimated > 0 && <Pill label={`${c.estimated} area-estimated`} />}
+        {c.proximity > 0 && <Pill label={`${c.proximity} proximity`} />}
+        {c.missing > 0 && <Pill label={`${c.missing} missing`} warn />}
+        {c.stale > 0 && <Pill label={`${c.stale} stale`} warn />}
       </ul>
     </section>
   );
@@ -58,12 +56,22 @@ export function DataConfidenceCard({ confidence }: { confidence?: DataConfidence
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-slate-500">{label}</dt>
-      <dd className="text-slate-200">{value}</dd>
+      <dt className="text-ink-muted">{label}</dt>
+      <dd className="text-ink">{value}</dd>
     </div>
   );
 }
 
-function Pill({ label, cls }: { label: string; cls: string }) {
-  return <li className={`rounded px-2 py-0.5 ${cls}`}>{label}</li>;
+function Pill({ label, warn }: { label: string; warn?: boolean }) {
+  return (
+    <li
+      className={`rounded-full px-2.5 py-0.5 ${
+        warn
+          ? "border border-[#E9C8B4] bg-[#FBEEE6] text-[#9A552F]"
+          : "border border-surface-border bg-surface-sunken text-ink-muted"
+      }`}
+    >
+      {label}
+    </li>
+  );
 }

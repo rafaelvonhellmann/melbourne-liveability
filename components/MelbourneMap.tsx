@@ -8,8 +8,10 @@ import { choroplethFillColor, choroplethFillColorByProp } from "@/lib/map-expres
 import { getDomain } from "@/lib/domains";
 import { withBase } from "@/lib/asset-path";
 
+// Light basemap to sit under the warm-editorial chrome; the YlGnBu choropleth
+// remains the independent data channel on top.
 const BASEMAP =
-  "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
+  "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
 
 type MelbourneMapProps = {
   className?: string;
@@ -86,7 +88,7 @@ export function MelbourneMap({
         type: "line",
         source: "sa2",
         paint: {
-          "line-color": "#1e293b",
+          "line-color": "#9a948a",
           "line-width": 0.5,
         },
       });
@@ -101,10 +103,10 @@ export function MelbourneMap({
         source: "pois",
         paint: {
           "circle-radius": 4,
-          "circle-color": "#fbbf24",
-          "circle-stroke-width": 1,
-          "circle-stroke-color": "#1e293b",
-          "circle-opacity": 0.85,
+          "circle-color": "#ffffff",
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#D97757",
+          "circle-opacity": 0.95,
         },
       });
     });

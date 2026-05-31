@@ -26,10 +26,10 @@ export function AddToShortlistButton({
         setSaved(next.shortlist.includes(slug));
         onShortlistChange?.(next.shortlist);
       }}
-      className={`rounded border px-3 py-1.5 text-sm ${
+      className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
         saved
-          ? "border-emerald-700 bg-emerald-900/30 text-emerald-200"
-          : "border-surface-border text-slate-300 hover:border-emerald-700"
+          ? "border-accent bg-accent text-accent-ink"
+          : "border-surface-border text-ink hover:border-accent hover:text-accent"
       }`}
     >
       {saved ? "On shortlist ✓" : "Add to shortlist"}

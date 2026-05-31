@@ -9,9 +9,11 @@ type InterestViewsProps = {
 
 export function InterestViews({ active, onSelect }: InterestViewsProps) {
   return (
-    <div className="rounded-lg border border-surface-border bg-surface-raised/95 p-3 backdrop-blur">
-      <p className="text-sm font-medium text-slate-200">Interest view</p>
-      <p className="mt-0.5 text-xs text-slate-500">
+    <div className="rounded-lg border border-surface-border bg-surface p-3 shadow-card">
+      <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+        Interest view
+      </p>
+      <p className="mt-1 text-xs text-ink-muted">
         Tailors default layer and weights to how you are exploring.
       </p>
       <div className="mt-2 flex flex-wrap gap-2">
@@ -23,10 +25,10 @@ export function InterestViews({ active, onSelect }: InterestViewsProps) {
               type="button"
               title={v.description}
               onClick={() => onSelect(id)}
-              className={`rounded border px-2 py-1 text-xs ${
+              className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
                 active === id
-                  ? "border-emerald-700 bg-emerald-900/40 text-emerald-100"
-                  : "border-surface-border text-slate-300 hover:border-emerald-700"
+                  ? "border-accent bg-accent font-medium text-accent-ink"
+                  : "border-surface-border bg-surface-sunken text-ink hover:border-accent hover:text-accent"
               }`}
             >
               {v.label}

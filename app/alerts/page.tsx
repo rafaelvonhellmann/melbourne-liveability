@@ -71,24 +71,24 @@ export default function AlertsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-8 text-slate-300">
-      <Link href="/" className="text-sm text-emerald-400 hover:underline">
+    <div className="mx-auto min-h-screen max-w-xl bg-bg px-4 py-8 text-ink">
+      <Link href="/" className="text-sm text-accent hover:underline">
         ← Map
       </Link>
-      <h1 className="mt-4 text-2xl font-semibold text-slate-100">Update alerts</h1>
-      <p className="mt-2 text-sm text-slate-400">
+      <h1 className="mt-4 font-display text-2xl font-semibold text-ink">Update alerts</h1>
+      <p className="mt-2 text-sm text-ink-muted">
         Get notified when government open data refreshes for suburbs on your shortlist.
         Free — no account required. Our pipeline checks upstream sources monthly (
         {latestFetch ? `last build ${latestFetch}` : "see methodology"}).
       </p>
 
       {shortlist.length === 0 ? (
-        <p className="mt-6 rounded-lg border border-amber-900/50 bg-amber-950/30 p-4 text-sm text-amber-100">
+        <p className="mt-6 rounded-lg border border-[#E9C8B4] bg-[#FBEEE6] p-4 text-sm text-[#9A552F]">
           Add areas to your shortlist on the map first, then return here to register for
           alerts.
         </p>
       ) : (
-        <ul className="mt-4 list-inside list-disc text-sm text-slate-400">
+        <ul className="mt-4 list-inside list-disc text-sm text-ink-muted">
           {resolved.map((p) => (
             <li key={p.slug}>{p.name}</li>
           ))}
@@ -97,7 +97,7 @@ export default function AlertsPage() {
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
-          <label htmlFor="alert-email" className="text-sm text-slate-400">
+          <label htmlFor="alert-email" className="text-sm text-ink-muted">
             Email
           </label>
           <input
@@ -106,11 +106,11 @@ export default function AlertsPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded border border-surface-border bg-surface-raised px-3 py-2 text-slate-100"
+            className="mt-1 w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-ink placeholder:text-ink-muted"
             placeholder="you@example.com"
           />
         </div>
-        <label className="flex items-start gap-2 text-sm text-slate-400">
+        <label className="flex items-start gap-2 text-sm text-ink-muted">
           <input
             type="checkbox"
             checked={consent}
@@ -119,7 +119,7 @@ export default function AlertsPage() {
           />
           <span>
             I agree to receive occasional update emails about my shortlisted suburbs. See{" "}
-            <Link href="/disclaimer" className="text-emerald-400 hover:underline">
+            <Link href="/disclaimer" className="text-accent hover:underline">
               disclaimer
             </Link>{" "}
             for privacy. Unsubscribe any time.
@@ -128,32 +128,32 @@ export default function AlertsPage() {
         <button
           type="submit"
           disabled={shortlist.length === 0 || !consent}
-          className="rounded bg-emerald-800 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-focus disabled:opacity-50"
         >
           {status === "sending" ? "Sending…" : "Register for alerts"}
         </button>
       </form>
 
       {status === "ok" && (
-        <p className="mt-4 text-sm text-emerald-300">
+        <p className="mt-4 text-sm text-accent">
           Thanks — you are on the list. We will email when data for your suburbs is refreshed.
         </p>
       )}
       {status === "saved-local" && (
-        <p className="mt-4 text-sm text-amber-200">
+        <p className="mt-4 text-sm text-[#9A552F]">
           Preference saved on this device. To enable email delivery, set{" "}
           <code className="text-xs">NEXT_PUBLIC_FORMSPREE_ALERTS_ID</code> in your deploy
           environment (Formspree or similar).
         </p>
       )}
       {status === "error" && (
-        <p className="mt-4 text-sm text-red-300">
+        <p className="mt-4 text-sm text-accent-focus">
           Could not submit. Try again or save your shortlist link and check back after the
           next data refresh.
         </p>
       )}
 
-      <p className="mt-8 text-xs text-slate-500">
+      <p className="mt-8 text-xs text-ink-muted">
         Automated refresh runs via GitHub Actions when upstream ABS/VCSA/planning data
         changes. Alerts compare your shortlist against the new build.
       </p>

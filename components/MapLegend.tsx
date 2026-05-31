@@ -1,3 +1,5 @@
+import { DATA_PALETTE, NO_DATA_COLOR } from "@/lib/colors";
+
 type MapLegendProps = {
   domainLabel: string;
 };
@@ -5,30 +7,29 @@ type MapLegendProps = {
 export function MapLegend({ domainLabel }: MapLegendProps) {
   return (
     <div
-      className="rounded-lg border border-surface-border bg-surface-raised/95 px-3 py-2 text-xs backdrop-blur"
+      className="rounded-lg border border-surface-border bg-surface/95 px-3 py-2 text-xs text-ink-muted shadow-card backdrop-blur"
       aria-label="Map legend"
     >
-      <div className="mb-1 font-medium text-slate-200">{domainLabel}</div>
-      <div className="flex items-center gap-2">
-        <span className="text-slate-500">Low</span>
-        <div
-          className="h-2 flex-1 rounded"
-          style={{
-            background:
-              "linear-gradient(to right, #440154, #3b528b, #21918c, #5ec962, #fde725)",
-          }}
-        />
-        <span className="text-slate-500">High</span>
+      <div className="mb-1 font-medium text-ink">{domainLabel}</div>
+      <div className="flex gap-0.5">
+        {DATA_PALETTE.map((c) => (
+          <span
+            key={c}
+            className="h-2.5 w-6 rounded-sm"
+            style={{ background: c }}
+          />
+        ))}
       </div>
-      <div className="mt-1 flex gap-3 text-slate-500">
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-2 w-2 rounded-sm bg-slate-600" />
-          No data
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-2 w-2 rounded-sm bg-slate-500" />
-          Non-residential
-        </span>
+      <div className="num mt-1 flex justify-between">
+        <span>0</span>
+        <span>100</span>
+      </div>
+      <div className="mt-1.5 flex items-center gap-1.5">
+        <span
+          className="inline-block h-2.5 w-3 rounded-sm"
+          style={{ background: NO_DATA_COLOR }}
+        />
+        No resident data
       </div>
     </div>
   );

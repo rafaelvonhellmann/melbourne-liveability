@@ -8,9 +8,13 @@ type PersonaPresetsProps = {
 
 export function PersonaPresets({ onSelect }: PersonaPresetsProps) {
   return (
-    <div className="rounded-lg border border-surface-border bg-surface-raised/95 p-3 backdrop-blur">
-      <p className="text-sm font-medium text-slate-200">Persona presets</p>
-      <p className="mt-0.5 text-xs text-slate-500">One-tap weight profiles for common movers.</p>
+    <div className="rounded-lg border border-surface-border bg-surface p-3 shadow-card">
+      <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+        Persona presets
+      </p>
+      <p className="mt-1 text-xs text-ink-muted">
+        One-tap weight profiles for common movers.
+      </p>
       <div className="mt-2 flex flex-wrap gap-2">
         {(Object.keys(PERSONA_PRESETS) as PersonaId[]).map((id) => {
           const p = PERSONA_PRESETS[id];
@@ -20,7 +24,7 @@ export function PersonaPresets({ onSelect }: PersonaPresetsProps) {
               type="button"
               title={p.description}
               onClick={() => onSelect(id)}
-              className="rounded border border-surface-border px-2 py-1 text-xs text-slate-300 hover:border-emerald-700 hover:text-emerald-200"
+              className="rounded-full border border-surface-border bg-surface-sunken px-3 py-1.5 text-xs text-ink transition-colors hover:border-accent hover:text-accent"
             >
               {p.label}
             </button>

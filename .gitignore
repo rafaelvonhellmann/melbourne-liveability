@@ -8,3 +8,6 @@ data/raw/
 .DS_Store
 tsconfig.tsbuildinfo
 .vercel
+
+# Design handoff bundle (not part of the app)
+.design-handoff/

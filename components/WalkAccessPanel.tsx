@@ -5,19 +5,25 @@ export function WalkAccessPanel({ walkAccess }: { walkAccess?: WalkAccess }) {
   if (!walkAccess) return null;
 
   return (
-    <section className="mt-8 rounded-lg border border-surface-border bg-surface-raised/40 p-4">
-      <div className="flex items-baseline justify-between gap-4">
-        <h2 className="text-lg font-medium text-slate-100">
-          15-minute walk access
-        </h2>
-        <span className="text-2xl font-bold text-emerald-300">
+    <section className="rounded-lg border border-surface-border bg-surface p-4 shadow-card">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="font-display text-lg font-medium text-ink">
+            15-minute walk access
+          </h2>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-surface-border bg-surface-sunken px-2.5 py-0.5 text-[10px] text-ink-muted">
+            <span className="h-1.5 w-1.5 rounded-full bg-ink-muted" aria-hidden />
+            context only · not in score
+          </span>
+        </div>
+        <span className="num text-2xl font-bold text-ink">
           {walkAccess.reachable}
-          <span className="text-base font-normal text-slate-500">
+          <span className="text-base font-normal text-ink-muted">
             /{walkAccess.total}
           </span>
         </span>
       </div>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-ink-muted">
         Everyday amenities reachable within about a 15-minute walk
         (~{walkAccess.thresholdKm} km). Context only — never part of the
         liveability score.
@@ -30,14 +36,12 @@ export function WalkAccessPanel({ walkAccess }: { walkAccess?: WalkAccess }) {
           return (
             <li
               key={c.id}
-              className="flex items-center justify-between gap-3 border-b border-surface-border/40 py-0.5"
+              className="flex items-center justify-between gap-3 border-b border-surface-border py-1 last:border-0"
             >
-              <span
-                className={reachable ? "text-slate-200" : "text-slate-500"}
-              >
+              <span className={reachable ? "text-ink" : "text-ink-muted"}>
                 {reachable ? "✓" : "·"} {c.label}
               </span>
-              <span className="text-xs text-slate-500">
+              <span className="num text-xs text-ink-muted">
                 {reachable ? `${n} nearby` : "none"}
               </span>
             </li>
@@ -45,18 +49,18 @@ export function WalkAccessPanel({ walkAccess }: { walkAccess?: WalkAccess }) {
         })}
       </ul>
 
-      <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+      <dl className="num mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
         <div>
-          <dt className="text-slate-500">Categories reachable</dt>
-          <dd className="text-slate-200">{walkAccess.accessPct.toFixed(0)}%</dd>
+          <dt className="text-ink-muted">Categories reachable</dt>
+          <dd className="text-ink">{walkAccess.accessPct.toFixed(0)}%</dd>
         </div>
         <div>
-          <dt className="text-slate-500">Walkability index</dt>
-          <dd className="text-slate-200">{walkAccess.walkabilityIndex}/100</dd>
+          <dt className="text-ink-muted">Walkability index</dt>
+          <dd className="text-ink">{walkAccess.walkabilityIndex}/100</dd>
         </div>
       </dl>
 
-      <p className="mt-3 text-xs text-slate-500">
+      <p className="mt-3 text-xs text-ink-muted">
         Method: straight-line distance from the SA2 population-weighted centroid
         to OpenStreetMap amenities — it overstates real walking access (street
         network, rivers, freeways and rail crossings are not modelled) and OSM

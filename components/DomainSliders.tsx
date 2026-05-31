@@ -1,7 +1,7 @@
 "use client";
 
 import { V1_SCORED_DOMAINS, getDomain } from "@/lib/domains";
-import type { DomainId, ScoreWeights } from "@/lib/types";
+import type { ScoreWeights } from "@/lib/types";
 
 type DomainSlidersProps = {
   weights: ScoreWeights;
@@ -11,13 +11,15 @@ type DomainSlidersProps = {
 
 export function DomainSliders({ weights, onChange, onReset }: DomainSlidersProps) {
   return (
-    <div className="rounded-lg border border-surface-border bg-surface-raised/95 p-3 backdrop-blur">
+    <div className="rounded-lg border border-surface-border bg-surface p-3 shadow-card">
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-sm font-medium text-slate-200">Your weights</span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          Adjust priorities
+        </span>
         <button
           type="button"
           onClick={onReset}
-          className="text-xs text-emerald-400 hover:underline"
+          className="text-xs font-medium text-accent hover:underline"
         >
           Reset defaults
         </button>
@@ -28,16 +30,16 @@ export function DomainSliders({ weights, onChange, onReset }: DomainSlidersProps
           const val = weights[id] ?? cfg.defaultWeight;
           return (
             <li key={id}>
-              <label className="flex justify-between text-xs text-slate-400">
+              <label className="flex justify-between text-xs text-ink-muted">
                 <span>{cfg.label}</span>
-                <span>{val}%</span>
+                <span className="num">{val}%</span>
               </label>
               <input
                 type="range"
                 min={0}
                 max={60}
                 value={val}
-                className="mt-1 w-full accent-emerald-500"
+                className="mt-1 w-full accent-accent"
                 onChange={(e) =>
                   onChange({ ...weights, [id]: Number(e.target.value) })
                 }

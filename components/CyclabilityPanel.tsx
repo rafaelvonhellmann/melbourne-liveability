@@ -7,41 +7,45 @@ export function CyclabilityPanel({ cyclability }: { cyclability?: Cyclability })
     cyclability;
 
   return (
-    <section className="mt-8 rounded-lg border border-surface-border bg-surface-raised/40 p-4">
-      <div className="flex items-baseline justify-between gap-4">
-        <h2 className="text-lg font-medium text-slate-100">Cyclability</h2>
-        <span className="text-2xl font-bold text-sky-300">
+    <section className="rounded-lg border border-surface-border bg-surface p-4 shadow-card">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="font-display text-lg font-medium text-ink">Cyclability</h2>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-surface-border bg-surface-sunken px-2.5 py-0.5 text-[10px] text-ink-muted">
+            <span className="h-1.5 w-1.5 rounded-full bg-ink-muted" aria-hidden />
+            context only · not in score
+          </span>
+        </div>
+        <span className="num text-2xl font-bold text-ink">
           {index}
-          <span className="text-base font-normal text-slate-500">/100</span>
+          <span className="text-base font-normal text-ink-muted">/100</span>
         </span>
       </div>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-ink-muted">
         Mapped cycling infrastructure density in this SA2. Context only — never
         part of the liveability score.
       </p>
 
-      <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+      <dl className="num mt-3 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
         <div>
-          <dt className="text-slate-500">Cycle infrastructure</dt>
-          <dd className="text-slate-200">{cyclewayKm.toFixed(1)} km</dd>
+          <dt className="text-ink-muted">Cycle infrastructure</dt>
+          <dd className="text-ink">{cyclewayKm.toFixed(1)} km</dd>
         </div>
         <div>
-          <dt className="text-slate-500">Density</dt>
-          <dd className="text-slate-200">
-            {densityKmPerKm2.toFixed(2)} km/km²
-          </dd>
+          <dt className="text-ink-muted">Density</dt>
+          <dd className="text-ink">{densityKmPerKm2.toFixed(2)} km/km²</dd>
         </div>
         <div>
-          <dt className="text-slate-500">Separated paths</dt>
-          <dd className="text-slate-200">{separatedKm.toFixed(1)} km</dd>
+          <dt className="text-ink-muted">Separated paths</dt>
+          <dd className="text-ink">{separatedKm.toFixed(1)} km</dd>
         </div>
         <div>
-          <dt className="text-slate-500">On-road lanes</dt>
-          <dd className="text-slate-200">{onRoadKm.toFixed(1)} km</dd>
+          <dt className="text-ink-muted">On-road lanes</dt>
+          <dd className="text-ink">{onRoadKm.toFixed(1)} km</dd>
         </div>
       </dl>
 
-      <p className="mt-3 text-xs text-slate-500">
+      <p className="mt-3 text-xs text-ink-muted">
         Method: total length of OpenStreetMap cycleways, on-road bike lanes
         (<code>cycleway=*</code>) and bicycle-designated paths whose midpoint
         falls in this SA2 ({segments} segments), divided by SA2 land area. It is

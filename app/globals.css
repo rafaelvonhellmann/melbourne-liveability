@@ -4,6 +4,29 @@
 
 @import "maplibre-gl/dist/maplibre-gl.css";
 
+:root {
+  /* Chrome — Theme A warm-editorial */
+  --bg: #f0eee6;
+  --surface: #faf9f5;
+  --surface2: #f3f1e9;
+  --ink: #1a1a18;
+  --muted: #6b6862;
+  --border: #e3dfd3;
+  --accent: #d97757;
+  --accent-ink: #fff;
+  --focus: #b65a3c;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(40, 35, 25, 0.08), 0 8px 24px rgba(40, 35, 25, 0.06);
+
+  /* Data palette — colorblind-safe YlGnBu, never themed */
+  --d1: #ffffcc;
+  --d2: #a1dab4;
+  --d3: #41b6c4;
+  --d4: #2c7fb8;
+  --d5: #253494;
+  --nodata: #d9d6cf;
+}
+
 html,
 body,
 :root {
@@ -12,7 +35,37 @@ body,
 }
 
 body {
-  @apply bg-surface text-slate-100 antialiased;
+  @apply bg-bg text-ink antialiased;
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+/* Headings, brand and place names use Fraunces */
+.font-display {
+  font-family: var(--font-fraunces), Georgia, serif;
+}
+
+/* Tabular numerals for all numeric readouts */
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Visible focus ring using the warm focus token */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Respect reduced-motion for all transitions/animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 .maplibregl-ctrl-attrib {

@@ -20,7 +20,7 @@ import { AddToShortlistButton } from "@/components/AddToShortlistButton";
 import type { Place } from "@/lib/types";
 import { loadPlaces, getPlaceBySlug } from "@/lib/places-data";
 import { buildSearchIndex } from "@/lib/search";
-import { DOMAIN_LABELS } from "@/lib/colors";
+import { DOMAIN_LABELS, percentileToColor, percentileTextColor } from "@/lib/colors";
 import { rankPlaces } from "@/lib/scoring";
 import { useMapPersonalisation } from "@/lib/use-map-personalisation";
 
@@ -69,7 +69,7 @@ export default function MapPage() {
     noteRecentView(p.slug, p.name);
   };
 
-  const sidebarControls = (
+  const personalisationControls = (
     <>
       <InterestViews active={interestView} onSelect={selectInterestView} />
       <PersonaPresets onSelect={selectPersona} />
@@ -78,148 +78,265 @@ export default function MapPage() {
         onChange={setWeightsAndSync}
         onReset={resetWeights}
       />
-      <ShortlistPanel
-        slugs={shortlist}
-        places={places}
-        onChange={updateShortlist}
-      />
-      <RecentlyViewed recent={recent} />
-      <ShareViewButton getUrl={getShareUrl} label="Copy map link" />
     </>
   );
 
+  const legendLabel = walkAccessMode
+    ? "15-min walk access (context, not in score)"
+    : cyclabilityMode
+      ? "Cyclability (context, not in score)"
+      : confidenceMode
+        ? "Data confidence (context, not in score)"
+        : DOMAIN_LABELS[activeDomain];
+
   return (
-    <main className="relative h-screen w-screen overflow-hidden">
-      <MelbourneMap
-        className="absolute inset-0"
-        activeDomain={activeDomain}
-        confidenceMode={confidenceMode}
-        walkAccessMode={walkAccessMode}
-        cyclabilityMode={cyclabilityMode}
-        visiblePins={visiblePins}
-        onPlaceSelect={(props) => {
-          const p = places.find(
-            (x) => x.slug === props.slug || x.sa2Code === props.sa2Code
-          );
+    <main className="flex h-screen w-screen flex-col overflow-hidden bg-bg text-ink">
+      <TopBar
+        searchIndex={searchIndex}
+        onSearchSelect={(slug) => {
+          const p = getPlaceBySlug(places, slug);
           if (p) selectPlace(p);
         }}
+        showTable={showTable}
+        onToggleTable={() => setShowTable((v) => !v)}
       />
 
-      <header className="pointer-events-none absolute left-0 right-0 top-0 z-10 flex flex-col gap-3 p-4 md:flex-row md:items-start md:justify-between">
-        <div className="pointer-events-auto max-w-sm flex-1 space-y-2">
-          <div className="rounded-lg border border-surface-border bg-surface-raised/95 px-4 py-2 backdrop-blur">
-            <h1 className="text-lg font-semibold text-slate-100">
-              Melbourne Liveability
-            </h1>
-            <p className="text-xs text-slate-400">Greater Melbourne · free · v1.x</p>
-          </div>
-          <SearchBox
-            index={searchIndex}
-            onSelect={(e) => {
-              const p = getPlaceBySlug(places, e.slug);
+      <div className="flex min-h-0 flex-1">
+        <div className="relative min-w-0 flex-1">
+          <MelbourneMap
+            className="absolute inset-0"
+            activeDomain={activeDomain}
+            confidenceMode={confidenceMode}
+            walkAccessMode={walkAccessMode}
+            cyclabilityMode={cyclabilityMode}
+            visiblePins={visiblePins}
+            onPlaceSelect={(props) => {
+              const p = places.find(
+                (x) => x.slug === props.slug || x.sa2Code === props.sa2Code
+              );
               if (p) selectPlace(p);
             }}
           />
+
+          {/* Floating layer-control card (top-right) */}
+          <div className="absolute right-4 top-4 z-10 hidden max-h-[calc(100%-2rem)] w-56 overflow-y-auto md:block">
+            <LayerToggle
+              activeDomain={activeDomain}
+              onDomainChange={setActiveDomain}
+              visiblePins={visiblePins}
+              onPinToggle={(pin) =>
+                setVisiblePins((v) => ({ ...v, [pin]: !v[pin] }))
+              }
+              confidenceMode={confidenceMode}
+              onConfidenceToggle={toggleConfidenceMode}
+              walkAccessMode={walkAccessMode}
+              onWalkAccessToggle={toggleWalkAccessMode}
+              cyclabilityMode={cyclabilityMode}
+              onCyclabilityToggle={toggleCyclabilityMode}
+            />
+          </div>
+
+          {/* Legend card (bottom-left) */}
+          <div className="absolute bottom-4 left-4 z-10 hidden max-w-[16rem] space-y-2 md:block">
+            <MapLegend domainLabel={legendLabel} />
+            <Attribution />
+          </div>
+
+          {showTable && (
+            <div className="absolute inset-0 z-20 overflow-auto bg-bg/97 p-6">
+              <PlacesTable places={places} weights={weights} />
+            </div>
+          )}
         </div>
-        <nav className="pointer-events-auto flex flex-wrap gap-2 text-sm">
-          <button
-            type="button"
-            onClick={() => setShowTable((v) => !v)}
-            className="rounded border border-surface-border bg-surface-raised/95 px-3 py-1.5 text-slate-300 backdrop-blur hover:text-white"
-          >
-            {showTable ? "Map view" : "Table view"}
-          </button>
-          <NavLink href="/compare">Compare</NavLink>
-          <NavLink href="/alerts">Alerts</NavLink>
-          <NavLink href="/methodology">Methodology</NavLink>
-          <NavLink href="/disclaimer">Disclaimer</NavLink>
-        </nav>
-      </header>
 
-      {showTable ? (
-        <div className="absolute inset-0 z-10 overflow-auto bg-surface/95 p-4 pt-28">
-          <PlacesTable places={places} weights={weights} />
+        {/* Right panel — swaps between ranked results and the selected profile */}
+        <aside className="hidden w-[372px] shrink-0 flex-col border-l border-surface-border bg-surface md:flex">
+          {selected ? (
+            <ProfilePanel
+              place={selected}
+              weights={weights}
+              onBack={() => setSelected(null)}
+              onShortlistChange={updateShortlist}
+              controls={personalisationControls}
+            />
+          ) : (
+            <ResultsPanel
+              places={places}
+              weights={weights}
+              onSelect={selectPlace}
+              controls={personalisationControls}
+              extra={
+                <>
+                  <ShortlistPanel
+                    slugs={shortlist}
+                    places={places}
+                    onChange={updateShortlist}
+                  />
+                  <RecentlyViewed recent={recent} />
+                  <ShareViewButton getUrl={getShareUrl} label="Copy map link" />
+                </>
+              }
+            />
+          )}
+        </aside>
+      </div>
+
+      <BottomSheet>
+        <div className="space-y-3">{personalisationControls}</div>
+        {selected && (
+          <div className="mt-3 space-y-2">
+            <ScoreBreakdownPanel place={selected} weights={weights} />
+            <AddToShortlistButton
+              slug={selected.slug}
+              onShortlistChange={updateShortlist}
+            />
+          </div>
+        )}
+        <div className="mt-3 overflow-hidden rounded-lg border border-surface-border">
+          <ResultsList
+            places={places}
+            weights={weights}
+            limit={8}
+            onSelect={selectPlace}
+            selectedSlug={selected?.slug}
+          />
         </div>
-      ) : (
-        <>
-          <aside className="pointer-events-none absolute bottom-4 left-4 z-10 hidden max-h-[calc(100vh-6rem)] w-72 space-y-3 overflow-y-auto md:block">
-            <div className="pointer-events-auto">
-              <LayerToggle
-                activeDomain={activeDomain}
-                onDomainChange={setActiveDomain}
-                visiblePins={visiblePins}
-                onPinToggle={(pin) =>
-                  setVisiblePins((v) => ({ ...v, [pin]: !v[pin] }))
-                }
-                confidenceMode={confidenceMode}
-                onConfidenceToggle={toggleConfidenceMode}
-                walkAccessMode={walkAccessMode}
-                onWalkAccessToggle={toggleWalkAccessMode}
-                cyclabilityMode={cyclabilityMode}
-                onCyclabilityToggle={toggleCyclabilityMode}
-              />
-            </div>
-            <div className="pointer-events-auto space-y-3">{sidebarControls}</div>
-          </aside>
-
-          <aside className="pointer-events-none absolute bottom-4 right-4 z-10 hidden w-80 space-y-3 md:block">
-            {selected && (
-              <div className="pointer-events-auto space-y-2">
-                <ScoreBreakdownPanel place={selected} weights={weights} />
-                <AddToShortlistButton
-                  slug={selected.slug}
-                  onShortlistChange={updateShortlist}
-                />
-              </div>
-            )}
-            <div className="pointer-events-auto max-h-64 overflow-auto rounded-lg border border-surface-border bg-surface-raised/95 p-3 backdrop-blur">
-              <h2 className="mb-2 text-sm font-medium text-slate-200">Top areas</h2>
-              <ResultsList places={places} weights={weights} />
-            </div>
-            <div className="pointer-events-auto">
-              <MapLegend
-                domainLabel={
-                  walkAccessMode
-                    ? "15-min walk access (context, not in score)"
-                    : cyclabilityMode
-                      ? "Cyclability (context, not in score)"
-                      : confidenceMode
-                        ? "Data confidence (context, not in score)"
-                        : DOMAIN_LABELS[activeDomain]
-                }
-              />
-            </div>
-            <div className="pointer-events-auto">
-              <Attribution />
-            </div>
-          </aside>
-
-          <BottomSheet>
-            <div className="space-y-3">{sidebarControls}</div>
-            {selected && (
-              <div className="mt-3 space-y-2">
-                <ScoreBreakdownPanel place={selected} weights={weights} />
-                <AddToShortlistButton
-                  slug={selected.slug}
-                  onShortlistChange={updateShortlist}
-                />
-              </div>
-            )}
-            <div className="mt-3">
-              <ResultsList places={places} weights={weights} limit={8} />
-            </div>
-          </BottomSheet>
-        </>
-      )}
+      </BottomSheet>
     </main>
   );
 }
 
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+function TopBar({
+  searchIndex,
+  onSearchSelect,
+  showTable,
+  onToggleTable,
+}: {
+  searchIndex: ReturnType<typeof buildSearchIndex>;
+  onSearchSelect: (slug: string) => void;
+  showTable: boolean;
+  onToggleTable: () => void;
+}) {
+  return (
+    <header className="z-20 flex shrink-0 items-center gap-3 border-b border-surface-border bg-surface px-4 py-3">
+      <Link href="/" className="font-display text-lg font-medium tracking-tight text-ink">
+        liveable<span className="text-accent">.</span>melbourne
+      </Link>
+      <div className="hidden w-full max-w-sm flex-1 sm:block">
+        <SearchBox
+          index={searchIndex}
+          onSelect={(e) => onSearchSelect(e.slug)}
+        />
+      </div>
+      <nav className="ml-auto flex flex-wrap items-center gap-2 text-sm">
+        <button
+          type="button"
+          onClick={onToggleTable}
+          className="rounded-md border border-surface-border px-3 py-1.5 text-ink transition-colors hover:border-accent hover:text-accent"
+        >
+          {showTable ? "Map view" : "Table view"}
+        </button>
+        <NavLink href="/compare">Compare</NavLink>
+        <NavLink href="/alerts">Alerts</NavLink>
+        <NavLink href="/methodology">Methodology</NavLink>
+        <NavLink href="/disclaimer" hideOnSmall>
+          Disclaimer
+        </NavLink>
+      </nav>
+    </header>
+  );
+}
+
+function ResultsPanel({
+  places,
+  weights,
+  onSelect,
+  controls,
+  extra,
+}: {
+  places: Place[];
+  weights: import("@/lib/types").ScoreWeights;
+  onSelect: (p: Place) => void;
+  controls: React.ReactNode;
+  extra: React.ReactNode;
+}) {
+  const count = places.filter((p) => !p.nonResidential).length;
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex items-baseline justify-between border-b border-surface-border px-4 py-3">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          Ranked results
+        </h2>
+        {count > 0 && (
+          <span className="num rounded-full border border-surface-border bg-surface-sunken px-2 py-0.5 text-xs text-ink-muted">
+            {count} suburbs
+          </span>
+        )}
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <ResultsList
+          places={places}
+          weights={weights}
+          limit={50}
+          onSelect={onSelect}
+        />
+      </div>
+      <div className="space-y-3 border-t border-surface-border bg-surface-sunken/60 p-3">
+        {controls}
+        {extra}
+      </div>
+    </div>
+  );
+}
+
+function ProfilePanel({
+  place,
+  weights,
+  onBack,
+  onShortlistChange,
+  controls,
+}: {
+  place: Place;
+  weights: import("@/lib/types").ScoreWeights;
+  onBack: () => void;
+  onShortlistChange: (slugs: string[]) => void;
+  controls: React.ReactNode;
+}) {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="border-b border-surface-border px-4 py-3">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-1 rounded-full border border-surface-border bg-surface-sunken px-2.5 py-1 text-xs text-ink-muted transition-colors hover:border-accent hover:text-accent"
+        >
+          ‹ Back to results
+        </button>
+      </div>
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
+        <ScoreBreakdownPanel place={place} weights={weights} />
+        <AddToShortlistButton slug={place.slug} onShortlistChange={onShortlistChange} />
+        <div className="space-y-3">{controls}</div>
+      </div>
+    </div>
+  );
+}
+
+function NavLink({
+  href,
+  children,
+  hideOnSmall,
+}: {
+  href: string;
+  children: React.ReactNode;
+  hideOnSmall?: boolean;
+}) {
   return (
     <Link
       href={href}
-      className="rounded border border-surface-border bg-surface-raised/95 px-3 py-1.5 text-slate-300 backdrop-blur hover:text-white"
+      className={`rounded-md border border-surface-border px-3 py-1.5 text-ink transition-colors hover:border-accent hover:text-accent ${
+        hideOnSmall ? "hidden lg:inline-block" : ""
+      }`}
     >
       {children}
     </Link>
@@ -236,28 +353,44 @@ function PlacesTable({
   const ranked = rankPlaces(places, weights);
 
   return (
-    <table className="w-full text-left text-sm text-slate-300">
+    <table className="w-full text-left text-sm text-ink">
       <thead>
-        <tr className="border-b border-surface-border text-slate-400">
-          <th className="py-2 pr-4">Rank</th>
-          <th className="py-2 pr-4">Area</th>
-          <th className="py-2 pr-4">Score</th>
-          <th className="py-2 pr-4">LGA</th>
+        <tr className="border-b border-surface-border text-xs uppercase tracking-wide text-ink-muted">
+          <th className="py-2 pr-4 font-semibold">Rank</th>
+          <th className="py-2 pr-4 font-semibold">Area</th>
+          <th className="py-2 pr-4 font-semibold">Score</th>
+          <th className="py-2 pr-4 font-semibold">LGA</th>
         </tr>
       </thead>
       <tbody>
-        {ranked.map((p, i) => (
-          <tr key={p.sa2Code} className="border-b border-surface-border/40">
-            <td className="py-2 pr-4">{i + 1}</td>
-            <td className="py-2 pr-4">
-              <Link href={`/places/${p.slug}`} className="text-emerald-400 hover:underline">
-                {p.name}
-              </Link>
-            </td>
-            <td className="py-2 pr-4">{p.breakdown.total.toFixed(0)}</td>
-            <td className="py-2 pr-4">{p.lga}</td>
-          </tr>
-        ))}
+        {ranked.map((p, i) => {
+          const total = p.breakdown.total;
+          return (
+            <tr key={p.sa2Code} className="border-b border-surface-border/60">
+              <td className="num py-2 pr-4 text-ink-muted">{i + 1}</td>
+              <td className="py-2 pr-4">
+                <Link
+                  href={`/places/${p.slug}`}
+                  className="font-medium text-accent hover:underline"
+                >
+                  {p.name}
+                </Link>
+              </td>
+              <td className="py-2 pr-4">
+                <span
+                  className="num inline-flex h-7 w-9 items-center justify-center rounded-md text-xs font-semibold"
+                  style={{
+                    background: percentileToColor(total),
+                    color: percentileTextColor(total),
+                  }}
+                >
+                  {total.toFixed(0)}
+                </span>
+              </td>
+              <td className="py-2 pr-4 text-ink-muted">{p.lga}</td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
