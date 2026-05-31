@@ -7,6 +7,7 @@ import {
   SCORED_INDICATOR_SOURCING,
   CONTEXT_SOURCING,
 } from "@/lib/methodology-reference";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata = {
   title: "Methodology & data reference · Melbourne Liveability",
@@ -29,10 +30,11 @@ const TOC: { id: string; label: string }[] = [
 
 export default function MethodologyPage() {
   return (
-    <div className="mx-auto min-h-screen max-w-3xl bg-bg px-4 py-8 text-ink">
-      <Link href="/" className="text-sm text-accent no-underline hover:underline">
-        ← Map
-      </Link>
+    <div className="flex min-h-screen flex-col bg-bg text-ink">
+      <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
+        <Link href="/" className="text-sm text-accent no-underline hover:underline">
+          ← Map
+        </Link>
       <h1 className="mt-4 font-display text-2xl font-semibold text-ink">
         Methodology &amp; data reference
       </h1>
@@ -435,6 +437,8 @@ export default function MethodologyPage() {
         Not relocation or financial advice. Scores are one optional lens over open data,
         not a definitive ranking of where to live.
       </p>
+      </div>
+      <SiteFooter />
     </div>
   );
 }

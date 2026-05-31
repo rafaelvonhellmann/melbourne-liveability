@@ -17,6 +17,7 @@ import { Attribution } from "@/components/Attribution";
 import { SelectedSummaryCard } from "@/components/SelectedSummaryCard";
 import { ResultsList } from "@/components/ResultsList";
 import { FeedbackButton } from "@/components/FeedbackButton";
+import { OnboardingModal } from "@/components/OnboardingModal";
 import type { Place } from "@/lib/types";
 import { loadPlaces, getPlaceBySlug } from "@/lib/places-data";
 import { buildSearchIndex } from "@/lib/search";
@@ -166,6 +167,8 @@ export default function MapPage() {
           if (p) focusPlace(p);
         }}
       />
+
+      <OnboardingModal onPick={selectInterestView} />
 
       <div className="flex min-h-0 flex-1">
         <div className="relative min-w-0 flex-1">
@@ -348,8 +351,16 @@ function TopBar({
       <nav className="ml-auto flex flex-wrap items-center gap-2 text-sm">
         <FeedbackButton />
         <NavLink href="/compare">Compare</NavLink>
-        <NavLink href="/alerts">Alerts</NavLink>
-        <NavLink href="/methodology">Methodology</NavLink>
+        <NavLink href="/pricing">Pricing</NavLink>
+        <NavLink href="/account" hideOnSmall>
+          Your data
+        </NavLink>
+        <NavLink href="/alerts" hideOnSmall>
+          Alerts
+        </NavLink>
+        <NavLink href="/methodology" hideOnSmall>
+          Methodology
+        </NavLink>
         <NavLink href="/disclaimer" hideOnSmall>
           Disclaimer
         </NavLink>
