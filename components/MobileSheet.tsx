@@ -1,9 +1,9 @@
 "use client";
 
 import { useId, useRef, useState, type ReactNode } from "react";
-import { ListOrdered, Search, Layers, SlidersHorizontal } from "lucide-react";
+import { ListOrdered, Search, Layers, SlidersHorizontal, Trophy } from "lucide-react";
 
-export type MobileTabId = "explore" | "search" | "layers" | "weights";
+export type MobileTabId = "explore" | "results" | "search" | "layers" | "weights";
 
 type TabDef = {
   id: MobileTabId;
@@ -13,6 +13,7 @@ type TabDef = {
 
 const TABS: TabDef[] = [
   { id: "explore", label: "Explore", icon: ListOrdered },
+  { id: "results", label: "Results", icon: Trophy },
   { id: "search", label: "Search", icon: Search },
   { id: "layers", label: "Layers", icon: Layers },
   { id: "weights", label: "Weights", icon: SlidersHorizontal },
@@ -20,6 +21,7 @@ const TABS: TabDef[] = [
 
 type MobileSheetProps = {
   explore: ReactNode;
+  results: ReactNode;
   search: ReactNode;
   layers: ReactNode;
   weights: ReactNode;
@@ -31,13 +33,14 @@ type MobileSheetProps = {
  * Tabs follow the WAI-ARIA tabs pattern (tablist/tab/tabpanel + roving arrow
  * keys) and rely on the global focus-visible ring / reduced-motion handling.
  */
-export function MobileSheet({ explore, search, layers, weights }: MobileSheetProps) {
+export function MobileSheet({ explore, results, search, layers, weights }: MobileSheetProps) {
   const [active, setActive] = useState<MobileTabId>("explore");
   const baseId = useId();
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   const panels: Record<MobileTabId, ReactNode> = {
     explore,
+    results,
     search,
     layers,
     weights,

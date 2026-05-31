@@ -15,6 +15,7 @@ import { MobileSheet } from "@/components/MobileSheet";
 import { MapLegend } from "@/components/MapLegend";
 import { Attribution } from "@/components/Attribution";
 import { SelectedSummaryCard } from "@/components/SelectedSummaryCard";
+import { ResultsList } from "@/components/ResultsList";
 import type { Place } from "@/lib/types";
 import { loadPlaces, getPlaceBySlug } from "@/lib/places-data";
 import { buildSearchIndex } from "@/lib/search";
@@ -98,6 +99,31 @@ export default function MapPage() {
           onReset={resetWeights}
         />
       </section>
+    </div>
+  );
+
+  // Ranked results — decision-support, not the map hero. A re-weightable lens
+  // surfaced in its own tab/section, driven by the current priority weights.
+  const rankedResults = (
+    <div className="space-y-2">
+      <div>
+        <h3 className="px-1 text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
+          Ranked for your priorities
+        </h3>
+        <p className="px-1 text-[11px] leading-snug text-ink-muted">
+          Top residential areas by your current weights — one lens, not an
+          objective ranking. Re-weight to re-rank; tap a row to focus it.
+        </p>
+      </div>
+      <div className="overflow-hidden rounded-lg border border-surface-border bg-surface">
+        <ResultsList
+          places={places}
+          weights={weights}
+          limit={20}
+          onSelect={focusPlace}
+          selectedSlug={selected?.slug ?? undefined}
+        />
+      </div>
     </div>
   );
 
@@ -223,6 +249,7 @@ export default function MapPage() {
             searchIndex={searchIndex}
             onFocusPlace={focusPlace}
             controls={personalisationControls}
+            results={rankedResults}
             shortlist={shortlist}
             recent={recent}
             onShortlistChange={updateShortlist}
@@ -246,6 +273,7 @@ export default function MapPage() {
             <ExploreHint residentialCount={places.filter((p) => !p.nonResidential).length} />
           </div>
         }
+        results={rankedResults}
         search={
           <div className="space-y-3">
             <SearchBox
@@ -333,6 +361,7 @@ function MapSidebar({
   searchIndex,
   onFocusPlace,
   controls,
+  results,
   shortlist,
   recent,
   onShortlistChange,
@@ -342,6 +371,7 @@ function MapSidebar({
   searchIndex: ReturnType<typeof buildSearchIndex>;
   onFocusPlace: (p: Place) => void;
   controls: React.ReactNode;
+  results: React.ReactNode;
   shortlist: string[];
   recent: import("@/lib/user-prefs").RecentPlace[];
   onShortlistChange: (slugs: string[]) => void;
@@ -384,6 +414,7 @@ function MapSidebar({
         <RecentlyViewed recent={recent} />
         <ShareViewButton getUrl={getShareUrl} label="Copy map link" />
       </div>
+      <div className="border-b border-surface-border p-3">{results}</div>
       <div className="space-y-3 p-3">{controls}</div>
     </div>
   );
