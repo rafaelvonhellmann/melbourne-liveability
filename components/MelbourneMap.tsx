@@ -7,7 +7,7 @@ import { MELBOURNE_BOUNDS, MELBOURNE_CENTER, MELBOURNE_MAX_BOUNDS } from "@/lib/
 import { choroplethFillColor, choroplethFillColorByProp } from "@/lib/map-expressions";
 import { withBase } from "@/lib/asset-path";
 import { poiCircleColorExpression } from "@/lib/poi-categories";
-import { buildPoiPopupHtml, type PoiFeatureProps } from "@/lib/poi-feature";
+import { buildPoiPopupHtml, escapeHtml, type PoiFeatureProps } from "@/lib/poi-feature";
 
 // Light basemap to sit under the warm-editorial chrome; the YlGnBu choropleth
 // remains the independent data channel on top.
@@ -42,14 +42,6 @@ function prefersReducedMotion(): boolean {
     typeof window.matchMedia === "function" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }
 
 function fillColorFor(
@@ -268,6 +260,18 @@ export function MelbourneMap({
     });
 
     map.on("click", "sa2-fill", (e) => {
+      // A single click on a pin hits BOTH the poi-circles and sa2-fill layers
+      // (pins are drawn on top), and MapLibre dispatches the two layer handlers
+      // independently. Without this guard the poi-circles handler opens the
+      // popup and this handler then immediately closes it + selects the SA2
+      // underneath, so the popup never stays visible. If the click also landed
+      // on a visible pin, let the pin popup own it.
+      if (
+        map.getLayer("poi-circles") &&
+        map.queryRenderedFeatures(e.point, { layers: ["poi-circles"] }).length > 0
+      ) {
+        return;
+      }
       closePoiPopup();
       const f = e.features?.[0];
       if (!f?.properties) return;

@@ -37,6 +37,15 @@
     "sha256": "747445f4e8078a98c8148c605fdd74f8c7fed023b722d954ec80695c4566e9e9"
   },
   {
+    "id": "abs-erp-sa2-series",
+    "name": "ABS ERP by SA2 — full annual series (2001–2023)",
+    "url": "https://www.abs.gov.au/statistics/people/population/regional-population",
+    "licence": "CC BY 4.0",
+    "period": "2001–2023",
+    "fetchedAt": "2026-05-29",
+    "sha256": ""
+  },
+  {
     "id": "vcsa-recorded-offences",
     "name": "VCSA Recorded offences — suburb (Table 03) + LGA fallback (Table 02)",
     "url": "https://www.crimestatistics.vic.gov.au/crime-statistics/latest-victorian-crime-data/download-data",
@@ -80,6 +89,24 @@
     "period": "current",
     "fetchedAt": "2026-05-29",
     "sha256": "e8bcee7c0171a5f086bc1f7a4cd74bd2bfd735e84a8a12a26fd5c546bba80bde"
+  },
+  {
+    "id": "osm-post",
+    "name": "OpenStreetMap — post offices / LPO points (Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-05-29",
+    "sha256": ""
+  },
+  {
+    "id": "osm-clinical-social",
+    "name": "OpenStreetMap — pathology labs + NDIS/disability-related providers (Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-05-29",
+    "sha256": ""
   },
   {
     "id": "abs-census-labour-2016",

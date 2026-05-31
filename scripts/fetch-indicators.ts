@@ -145,6 +145,23 @@ async function main() {
   `);
   await writeFile(path.join(RAW, "osm-post.json"), JSON.stringify(post));
 
+  // Pathology collection centres + NDIS/disability-related providers for the
+  // context pin layers. Tagged sparsely in OSM (honest coverage caveat); these
+  // pins are context-only and never scored. Classified in build-poi.ts.
+  console.log("Overpass pathology labs + NDIS-related providers...");
+  const clinical = await overpassMelbourne(`
+    node["healthcare"~"laboratory|sample_collection"](-38.35,144.45,-37.45,145.65);
+    way["healthcare"~"laboratory|sample_collection"](-38.35,144.45,-37.45,145.65);
+    node["amenity"="clinic"]["healthcare:speciality"~"pathology|diagnostic"](-38.35,144.45,-37.45,145.65);
+    node["social_facility"](-38.35,144.45,-37.45,145.65);
+    node["office"~"association|ngo"](-38.35,144.45,-37.45,145.65);
+    node["healthcare"="counselling"](-38.35,144.45,-37.45,145.65);
+  `);
+  await writeFile(
+    path.join(RAW, "osm-clinical-social.json"),
+    JSON.stringify(clinical)
+  );
+
   console.log("Overpass schools + childcare...");
   const schools = await overpassMelbourne(`
     node["amenity"="school"](-38.35,144.45,-37.45,145.65);

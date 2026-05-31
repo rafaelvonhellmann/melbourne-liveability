@@ -6,6 +6,14 @@ import path from "node:path";
 import type { Feature, FeatureCollection, Point } from "geojson";
 import { RAW, PUBLIC_DATA } from "./lib/paths.js";
 import { classifyOsmAmenity } from "../lib/walk-access.js";
+import {
+  isPolice,
+  isPathologyLab,
+  isNdisProvider,
+  isPostOffice,
+  isGpClinic,
+  dedupeFeatures,
+} from "./lib/poi-classify.js";
 
 type OsmEl = {
   id?: number;
@@ -46,49 +54,6 @@ function poiProperties(
   const osmUrl = osmFeatureUrl(el);
   if (osmUrl) props.osmUrl = osmUrl;
   return props;
-}
-
-function isPolice(tags: Record<string, string>): boolean {
-  return (
-    tags.amenity === "police" ||
-    tags.office === "police" ||
-    tags.building === "police"
-  );
-}
-
-function isPathologyLab(tags: Record<string, string>): boolean {
-  const hc = tags.healthcare ?? "";
-  const spec = tags["healthcare:speciality"] ?? tags.healthcare_speciality ?? "";
-  return (
-    /laboratory|sample_collection/i.test(hc) ||
-    /pathology|diagnostic/i.test(spec) ||
-    /pathology|laboratory|diagnostic/i.test(tags.name ?? "")
-  );
-}
-
-function isNdisProvider(tags: Record<string, string>): boolean {
-  const name = tags.name ?? "";
-  const brand = tags.brand ?? "";
-  const operator = tags.operator ?? "";
-  const combined = `${name} ${brand} ${operator}`;
-  return (
-    /\bndis\b/i.test(combined) ||
-    /national disability/i.test(combined) ||
-    tags["social_facility:for"] === "disabled" ||
-    tags.social_facility === "day_care" ||
-    (tags.social_facility != null && /disability|ndis/i.test(combined))
-  );
-}
-
-function isPostOffice(tags: Record<string, string>): boolean {
-  return (
-    tags.amenity === "post_office" ||
-    tags.shop === "post_office" ||
-    tags.post_office === "post_partner" ||
-    /australia\s*post/i.test(tags.brand ?? "") ||
-    /australia\s*post/i.test(tags.operator ?? "") ||
-    /\bLPO\b/i.test(tags.name ?? "")
-  );
 }
 
 function osmToFeatures(
@@ -133,21 +98,6 @@ function amenitiesToFeatures(
   return out;
 }
 
-function dedupeFeatures(features: Feature<Point>[]): Feature<Point>[] {
-  const seen = new Set<string>();
-  const out: Feature<Point>[] = [];
-  for (const f of features) {
-    const p = f.properties as { osmUrl?: string; pinType?: string; name?: string };
-    const key =
-      p.osmUrl ??
-      `${p.pinType}:${p.name}:${f.geometry.coordinates[0]},${f.geometry.coordinates[1]}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(f);
-  }
-  return out;
-}
-
 async function main() {
   const health = JSON.parse(
     await readFile(path.join(RAW, "osm-health.json"), "utf8").catch(() => "{}")
@@ -170,14 +120,7 @@ async function main() {
 
   const features = dedupeFeatures([
     ...osmToFeatures(health, "police", isPolice),
-    ...osmToFeatures(
-      health,
-      "gp",
-      (t) =>
-        t.amenity !== "hospital" &&
-        (/doctors|clinic|health_centre/.test(t.amenity ?? "") ||
-          /doctor|clinic|centre/.test(t.healthcare ?? ""))
-    ),
+    ...osmToFeatures(health, "gp", isGpClinic),
     ...osmToFeatures(health, "hospital", (t) => t.amenity === "hospital"),
     ...osmToFeatures(schools, "school", (t) => t.amenity === "school"),
     ...osmToFeatures(

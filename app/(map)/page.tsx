@@ -220,6 +220,7 @@ export default function MapPage() {
         <aside className="hidden w-[372px] shrink-0 flex-col border-l border-surface-border bg-surface md:flex">
           <MapSidebar
             places={places}
+            searchIndex={searchIndex}
             onFocusPlace={focusPlace}
             controls={personalisationControls}
             shortlist={shortlist}
@@ -329,6 +330,7 @@ function TopBar({
 
 function MapSidebar({
   places,
+  searchIndex,
   onFocusPlace,
   controls,
   shortlist,
@@ -337,6 +339,7 @@ function MapSidebar({
   getShareUrl,
 }: {
   places: Place[];
+  searchIndex: ReturnType<typeof buildSearchIndex>;
   onFocusPlace: (p: Place) => void;
   controls: React.ReactNode;
   shortlist: string[];
@@ -366,7 +369,7 @@ function MapSidebar({
       </div>
       <div className="space-y-3 border-b border-surface-border p-3">
         <SearchBox
-          index={buildSearchIndex(places)}
+          index={searchIndex}
           onSelect={(e) => {
             const p = getPlaceBySlug(places, e.slug);
             if (p) onFocusPlace(p);
