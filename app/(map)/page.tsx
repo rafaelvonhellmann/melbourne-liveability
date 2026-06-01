@@ -26,6 +26,7 @@ import { useMapPersonalisation } from "@/lib/use-map-personalisation";
 
 export default function MapPage() {
   const [places, setPlaces] = useState<Place[]>([]);
+  const [loadError, setLoadError] = useState(false);
   const [selected, setSelected] = useState<Place | null>(null);
   // Pins are OFF by default — they only appear when the user enables a category.
   const [visiblePins, setVisiblePins] = useState<Record<string, boolean>>({});
@@ -59,7 +60,15 @@ export default function MapPage() {
   } = useMapPersonalisation();
 
   useEffect(() => {
-    loadPlaces().then(setPlaces).catch(console.error);
+    loadPlaces()
+      .then((p) => {
+        setPlaces(p);
+        setLoadError(false);
+      })
+      .catch((e) => {
+        console.error(e);
+        setLoadError(true);
+      });
   }, []);
 
   const searchIndex = useMemo(() => buildSearchIndex(places), [places]);
@@ -190,6 +199,27 @@ export default function MapPage() {
               if (p) selectPlace(p);
             }}
           />
+
+          {/* Data-load failure — visible, recoverable (never a silent empty map). */}
+          {loadError && (
+            <div className="pointer-events-none absolute left-1/2 top-4 z-20 w-[min(92%,30rem)] -translate-x-1/2">
+              <div
+                role="alert"
+                className="pointer-events-auto rounded-lg border border-[#E9C8B4] bg-[#FBEEE6] px-3 py-2 text-xs leading-snug text-[#9A552F] shadow-card"
+              >
+                <span className="font-medium">Could not load area data.</span> Check your
+                connection and{" "}
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="font-medium underline underline-offset-2"
+                >
+                  reload
+                </button>
+                .
+              </div>
+            </div>
+          )}
 
           {/* Home-buyer caveat — visible on the map (not only the profile) so
               users never read the buyer lens as purchase-price guidance. */}

@@ -78,4 +78,11 @@ test.describe("map", () => {
     // search results render as a listbox / options
     await expect(page.getByText(/Carlton/i).first()).toBeVisible({ timeout: 10_000 });
   });
+
+  test("shows a recoverable error when area data fails to load", async ({ page }) => {
+    // Simulate the data fetch failing — the map must not silently render empty.
+    await page.route("**/data/places.json", (route) => route.abort());
+    await page.goto("/");
+    await expect(page.getByText("Could not load area data")).toBeVisible({ timeout: 15_000 });
+  });
 });
