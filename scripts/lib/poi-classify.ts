@@ -108,3 +108,38 @@ export function dedupeFeatures(features: Feature<Point>[]): Feature<Point>[] {
   }
   return out;
 }
+
+type OsmElement = {
+  type?: string;
+  lat?: number;
+  lon?: number;
+  center?: { lat: number; lon: number };
+  tags?: OsmTags;
+};
+
+/**
+ * SCORED GP/clinic points — a LOCKED, deliberately narrow definition: OSM
+ * *nodes* tagged amenity=doctors|clinic, returned as [lon, lat]. Clinics/doctors
+ * mapped as building *ways* are intentionally EXCLUDED.
+ *
+ * Why: commit 32c5c83 widened the osm-health Overpass query to also fetch
+ * `way[amenity~doctors|clinic]` (emitted with `out center`), which silently
+ * raised the SCORED gpCount2km. Pinning the scored set to nodes keeps the
+ * locked seven-domain Health composite independent of the (broader) map-pin
+ * fetch. NOTE honestly: this is NARROWER than counting nodes+ways — it reverts
+ * the scored basis to the pre-32c5c83 node-only set, so it lowers gpCount2km vs
+ * a build that counted ways. This is the agreed "isolate" choice and is
+ * documented in /methodology. CONTEXT layers (e.g. 15-minute walk access) must
+ * use the full node+way set, NOT this scored set.
+ */
+export function scoredGpPoints(
+  data: { elements?: OsmElement[] } | null
+): [number, number][] {
+  const pts: [number, number][] = [];
+  for (const el of data?.elements ?? []) {
+    if (el.type !== "node" || el.lat == null || el.lon == null) continue;
+    if (!/doctors|clinic/.test(el.tags?.amenity ?? "")) continue;
+    pts.push([el.lon, el.lat]);
+  }
+  return pts;
+}

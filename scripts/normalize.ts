@@ -15,6 +15,7 @@ import {
   parseSuburbCrimeTable03,
 } from "./lib/vcsa-crime.js";
 import { countWithinKm, minDistanceKm } from "./lib/proximity.js";
+import { scoredGpPoints } from "./lib/poi-classify.js";
 import { buildHazardIndex, overlayPctInSa2 } from "./lib/sa2-overlay-pct.js";
 import { computeCyclabilityByCode } from "./lib/cyclability-compute.js";
 import type { Cyclability, PlaceContext, WalkAccess } from "../lib/types.js";
@@ -87,34 +88,6 @@ function osmPoints(
     const tags = el.tags ?? {};
     if (filter && !filter(tags)) continue;
     pts.push([lon, lat]);
-  }
-  return pts;
-}
-
-/**
- * SCORED GP/clinic points — a LOCKED, narrow definition: OSM *nodes* tagged
- * amenity=doctors|clinic. Deliberately decoupled from the broader map-pin fetch
- * (build-poi can widen pins with clinic *ways* / healthcare=* tags), because
- * widening context pins must NEVER move the scored Health composite
- * (ULTRAPLAN: "context never changes the score"). Ways carry `center` rather
- * than top-level lat/lon, so the node check reproduces the original node-only
- * GP fetch exactly and keeps gpCount2km stable across pin-query changes.
- */
-function scoredGpPoints(
-  data: {
-    elements?: {
-      type?: string;
-      lat?: number;
-      lon?: number;
-      tags?: Record<string, string>;
-    }[];
-  } | null
-): [number, number][] {
-  const pts: [number, number][] = [];
-  for (const el of data?.elements ?? []) {
-    if (el.type !== "node" || el.lat == null || el.lon == null) continue;
-    if (!/doctors|clinic/.test(el.tags?.amenity ?? "")) continue;
-    pts.push([el.lon, el.lat]);
   }
   return pts;
 }
@@ -333,8 +306,13 @@ async function main() {
       "{}"
   );
   const osmHospitals = osmPoints(healthJson, (t) => t.amenity === "hospital");
-  // Locked, pin-independent scored GP set (see scoredGpPoints).
+  // Locked, pin-independent SCORED GP set (nodes only) — feeds gpCount2km.
   const gps = scoredGpPoints(healthJson);
+  // Broader GP/clinic set (nodes + ways) for CONTEXT only (15-min walk access),
+  // which is never scored, so it may include clinics mapped as building ways.
+  const gpsContext = osmPoints(healthJson, (t) =>
+    /doctors|clinic/.test(t.amenity ?? "")
+  );
 
   let hospitalSource: "vic-mapshare-hospitals" | "osm-health" = "osm-health";
   const hospitalPts = vicHospitals.length > 0 ? vicHospitals : osmHospitals;
@@ -381,7 +359,7 @@ async function main() {
   const walkPoints: Record<WalkCategoryId, [number, number][]> = {
     supermarket: [],
     pharmacy: [],
-    gp: gps,
+    gp: gpsContext,
     school: schoolPts,
     childcare: osmPoints(schoolsJson, (t) => t.amenity === "kindergarten"),
     park: [],

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildPoiPopupHtml, escapeHtml, poiCategoryLabel } from "@/lib/poi-feature";
+import {
+  buildPoiPopupHtml,
+  escapeHtml,
+  poiCategoryLabel,
+  safeHttpUrl,
+} from "@/lib/poi-feature";
 
 describe("poi-feature", () => {
   it("escapes HTML in names", () => {
@@ -22,5 +27,24 @@ describe("poi-feature", () => {
 
   it("labels police category", () => {
     expect(poiCategoryLabel("police")).toBe("Police");
+  });
+
+  it("only allows http(s) popup links (blocks javascript: / data:)", () => {
+    expect(safeHttpUrl("https://auspost.com.au")).toBe("https://auspost.com.au/");
+    expect(safeHttpUrl("http://example.org/x")).toBe("http://example.org/x");
+    expect(safeHttpUrl("javascript:alert(1)")).toBeNull();
+    expect(safeHttpUrl("data:text/html,<script>1</script>")).toBeNull();
+    expect(safeHttpUrl("not a url")).toBeNull();
+    expect(safeHttpUrl(undefined)).toBeNull();
+  });
+
+  it("drops a malicious website URL from the popup HTML", () => {
+    const html = buildPoiPopupHtml({
+      pinType: "gp",
+      name: "Evil Clinic",
+      url: "javascript:alert(document.cookie)",
+    });
+    expect(html).not.toContain("javascript:");
+    expect(html).toContain("No website listed");
   });
 });

@@ -6,6 +6,7 @@ import {
   isPathologyLab,
   dedupeFeatures,
   poiDedupeKey,
+  scoredGpPoints,
 } from "@/scripts/lib/poi-classify";
 
 function poi(pinType: string, osmUrl: string, lon = 145, lat = -37): Feature<Point> {
@@ -90,5 +91,29 @@ describe("dedupeFeatures / poiDedupeKey (bug 4)", () => {
     expect(poiDedupeKey({ pinType: "gp", osmUrl: u }, "145,-37")).not.toBe(
       poiDedupeKey({ pinType: "pathology_lab", osmUrl: u }, "145,-37")
     );
+  });
+});
+
+describe("scoredGpPoints (locked scored GP = nodes only)", () => {
+  it("counts doctors/clinic NODES and EXCLUDES ways + non-GP", () => {
+    const pts = scoredGpPoints({
+      elements: [
+        { type: "node", lat: -37.8, lon: 144.9, tags: { amenity: "doctors" } },
+        { type: "node", lat: -37.81, lon: 144.91, tags: { amenity: "clinic" } },
+        // way (clinic mapped as building) — intentionally excluded from the score
+        { type: "way", center: { lat: -37.82, lon: 144.92 }, tags: { amenity: "clinic" } },
+        // non-GP node
+        { type: "node", lat: -37.83, lon: 144.93, tags: { amenity: "hospital" } },
+        { type: "node", lat: -37.84, lon: 144.94, tags: { amenity: "doctors" } },
+      ],
+    });
+    expect(pts).toHaveLength(3);
+    expect(pts).toContainEqual([144.9, -37.8]);
+    expect(pts).not.toContainEqual([144.92, -37.82]); // the way is excluded
+  });
+
+  it("handles empty / null input", () => {
+    expect(scoredGpPoints(null)).toEqual([]);
+    expect(scoredGpPoints({})).toEqual([]);
   });
 });

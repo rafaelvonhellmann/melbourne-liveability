@@ -20,19 +20,37 @@ export function escapeHtml(text: string): string {
     .replace(/"/g, "&quot;");
 }
 
+/**
+ * Returns the URL only if it is a safe http(s) link, else null. POI website
+ * values come from community OpenStreetMap tags, so a hostile `website` tag
+ * could carry a `javascript:` (or `data:`) URI that would execute on click even
+ * though escapeHtml prevents attribute breakout. Restrict to http/https.
+ */
+export function safeHttpUrl(url: string | undefined): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url.trim());
+    return u.protocol === "http:" || u.protocol === "https:" ? u.href : null;
+  } catch {
+    return null;
+  }
+}
+
 export function buildPoiPopupHtml(props: PoiFeatureProps): string {
   const name = escapeHtml(props.name?.trim() || "Unnamed place");
   const category = escapeHtml(poiCategoryLabel(props.pinType));
   const links: string[] = [];
 
-  if (props.url) {
-    const href = escapeHtml(props.url);
+  const websiteUrl = safeHttpUrl(props.url);
+  if (websiteUrl) {
+    const href = escapeHtml(websiteUrl);
     links.push(
       `<a class="poi-popup-link" href="${href}" target="_blank" rel="noopener noreferrer">Visit website</a>`
     );
   }
-  if (props.osmUrl) {
-    const href = escapeHtml(props.osmUrl);
+  const osmHref = safeHttpUrl(props.osmUrl);
+  if (osmHref) {
+    const href = escapeHtml(osmHref);
     links.push(
       `<a class="poi-popup-link poi-popup-link--muted" href="${href}" target="_blank" rel="noopener noreferrer">View on OpenStreetMap</a>`
     );

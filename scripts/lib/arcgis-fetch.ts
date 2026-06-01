@@ -135,7 +135,25 @@ ${outClause}
       continue;
     }
 
-    if (res.ok) return res.json();
+    if (res.ok) {
+      const json = (await res.json()) as { remark?: string };
+      // Overpass returns HTTP 200 with a "remark" when the query failed
+      // server-side (timeout / runtime error / out of memory). Treat that as a
+      // transient gateway-timeout and retry rather than silently accepting an
+      // empty/partial result set.
+      const remark = typeof json.remark === "string" ? json.remark : "";
+      if (/timed out|runtime error|out of memory/i.test(remark)) {
+        lastError = `Overpass remark: ${remark.slice(0, 80)}`;
+        const plan = overpassRetryPlan(504, attempt);
+        if (!plan.retry || attempt === OVERPASS_MAX_ATTEMPTS - 1) break;
+        console.warn(
+          `  Overpass soft error (attempt ${attempt + 1}/${OVERPASS_MAX_ATTEMPTS}): ${remark.slice(0, 60)} — retrying in ${Math.round(plan.waitMs / 1000)}s`
+        );
+        await sleep(plan.waitMs);
+        continue;
+      }
+      return json;
+    }
 
     lastError = `HTTP ${res.status}`;
     const retryAfter = Number(res.headers.get("retry-after"));
