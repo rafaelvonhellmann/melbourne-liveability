@@ -42,8 +42,8 @@
     "url": "https://www.abs.gov.au/statistics/people/population/regional-population",
     "licence": "CC BY 4.0",
     "period": "2001–2023",
-    "fetchedAt": "2026-05-29",
-    "sha256": ""
+    "fetchedAt": "2026-06-01",
+    "sha256": "c92104ab3b584e59cfe979ed52edf28a92e24af6e6fbcc77445b0d0ba226cfc1"
   },
   {
     "id": "vcsa-recorded-offences",
@@ -60,8 +60,8 @@
     "url": "https://opendata.transport.vic.gov.au/dataset/gtfs-schedule",
     "licence": "CC BY 4.0",
     "period": "rolling schedule export",
-    "fetchedAt": "2026-05-30",
-    "sha256": "6bd9f83c6ce39763072f3dd49aa671783cc21937bef4829f921b6eec16b1e43a"
+    "fetchedAt": "2026-06-01",
+    "sha256": "71f16b77f8235977f24c9c310765b71eacb9fb85f8ec0bb7cef31bf2ecc52b0c"
   },
   {
     "id": "osm-pt",
@@ -69,8 +69,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-05-29",
-    "sha256": "7f1e5c7737711eee5ddc9d26b113d148e96b81c8f5a72b40f73c0374c2b5dd8b"
+    "fetchedAt": "2026-06-01",
+    "sha256": "6b45c24c48143124445478a4b041a6d4468c732e8edac50d7265832cd8a1e505"
   },
   {
     "id": "vic-mapshare-hospitals",
@@ -87,8 +87,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-05-29",
-    "sha256": "e8bcee7c0171a5f086bc1f7a4cd74bd2bfd735e84a8a12a26fd5c546bba80bde"
+    "fetchedAt": "2026-06-01",
+    "sha256": "38e2af7777db2e0669f93104e66c9810dd22da4bc5709dda432a03fc36711ee2"
   },
   {
     "id": "osm-post",
@@ -96,8 +96,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-05-29",
-    "sha256": ""
+    "fetchedAt": "2026-06-01",
+    "sha256": "353779243308ae688d30618aa07f1f83c4b8d29c60cd514e3e274be05316ee34"
   },
   {
     "id": "osm-clinical-social",
@@ -105,8 +105,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-05-29",
-    "sha256": ""
+    "fetchedAt": "2026-06-01",
+    "sha256": "94218198333290eb0e51c1e5502d0f8e19c957059bc41bc5810e2da9bce4c46f"
   },
   {
     "id": "abs-census-labour-2016",
@@ -141,8 +141,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-05-29",
-    "sha256": "c3c37c7827a1dadb2c929cdc69b0c9e6e8d76dfcd159d9a14b59540e2522f5c9"
+    "fetchedAt": "2026-06-01",
+    "sha256": "2b15d2aac1042c37dc41306fa7b02f5d88beaeb077a72c45a57347edcedeef6d"
   },
   {
     "id": "abs-census-preschool-2021",
