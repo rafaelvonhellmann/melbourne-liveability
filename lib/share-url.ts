@@ -11,7 +11,25 @@ export type MapUrlState = {
   view: InterestViewId | null;
   /** Optional one-shot deep-link to activate a specific choropleth domain. */
   layer: DomainId | null;
+  /** Buyer "Location Check" mode active (?buyer=1). */
+  buyer: boolean;
+  /** Dropped buyer pin as [lng, lat], or null. Restored from ?lat=&lng=. */
+  pin: [number, number] | null;
 };
+
+// Generous Greater-Melbourne bounding box — rejects junk / out-of-region coords
+// so a crafted URL cannot drop a pin in the ocean or interstate.
+const MEL_BBOX = { minLng: 143.0, maxLng: 147.0, minLat: -39.5, maxLat: -36.5 };
+
+function parsePin(latRaw: string | null, lngRaw: string | null): [number, number] | null {
+  if (latRaw == null || lngRaw == null) return null;
+  const lat = Number(latRaw);
+  const lng = Number(lngRaw);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (lat < MEL_BBOX.minLat || lat > MEL_BBOX.maxLat) return null;
+  if (lng < MEL_BBOX.minLng || lng > MEL_BBOX.maxLng) return null;
+  return [lng, lat];
+}
 
 function parseLayer(raw: string | null): DomainId | null {
   if (!raw) return null;
@@ -46,6 +64,8 @@ export function parseMapUrlState(search: string): MapUrlState {
         : null,
     view: parseInterestView(params.get("view")),
     layer: parseLayer(params.get("layer")),
+    buyer: params.get("buyer") === "1",
+    pin: parsePin(params.get("lat"), params.get("lng")),
   };
 }
 
@@ -63,6 +83,12 @@ export function buildMapUrl(
   if (state.persona) params.set("persona", state.persona);
   if (state.view && state.view !== "general") params.set("view", state.view);
   if (state.layer) params.set("layer", state.layer);
+  if (state.buyer) params.set("buyer", "1");
+  if (state.pin) {
+    // URL exposes lat/lng (human-readable); pin is stored [lng, lat] internally.
+    params.set("lat", state.pin[1].toFixed(6));
+    params.set("lng", state.pin[0].toFixed(6));
+  }
   const q = params.toString();
   return q ? `${base}?${q}` : base;
 }

@@ -50,4 +50,20 @@ describe("share-url", () => {
     const list = new URL(url, "http://localhost").searchParams.get("list");
     expect(parseListParam(list)).toEqual(["a", "b"]);
   });
+
+  it("round-trips buyer mode + pin", () => {
+    const url = buildMapUrl("/", { buyer: true, pin: [144.9876, -37.8001] });
+    expect(url).toContain("buyer=1");
+    const state = parseMapUrlState(new URL(url, "http://localhost").search.slice(1));
+    expect(state.buyer).toBe(true);
+    expect(state.pin?.[0]).toBeCloseTo(144.9876, 3);
+    expect(state.pin?.[1]).toBeCloseTo(-37.8001, 3);
+  });
+
+  it("rejects out-of-region / junk pins", () => {
+    expect(parseMapUrlState("buyer=1&lat=0&lng=0").pin).toBeNull(); // gulf of guinea
+    expect(parseMapUrlState("buyer=1&lat=-33.8&lng=151.2").pin).toBeNull(); // sydney
+    expect(parseMapUrlState("buyer=1&lat=foo&lng=bar").pin).toBeNull();
+    expect(parseMapUrlState("buyer=1").pin).toBeNull();
+  });
 });

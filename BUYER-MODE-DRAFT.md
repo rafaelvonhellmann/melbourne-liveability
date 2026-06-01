@@ -167,6 +167,8 @@ Defer the hardest (per-council DA scraping, licensed price feeds) until WTP is p
    power feature, vs bivariate choropleths or saved layer sets?
 8. Pin-a-property: ship as **click-to-drop** (no geocoding) first? Is straight-line 15-min
    walk honest enough, or does the paid tier need street-network routing?
+   *(Resolved for the prototype: free tier stays straight-line + caveat; the paid tier opts into
+   a street-network walk isochrone — see §10.2.)*
 
 ---
 
@@ -205,6 +207,24 @@ a paid geocoder suits the paid tier), and street-network 15-min routing is a pai
 over straight-line. This is arguably the **single most differentiated** buyer interaction:
 portals show the listing; nobody gives an honest, sourced "what's actually around this exact
 spot, on foot."
+
+**Street-network routing — prototype (paid tier, opt-in).** Both options were evaluated:
+- *Client-side router over the OSM ways we already ship* — **rejected.** The only road geometry
+  in the repo is `data/raw/osm-cycleways.json`, a cycle-biased Overpass extract: of its 46,132
+  ways, 22,814 are `highway=cycleway` and the rest are mostly main roads carrying `cycleway:*`
+  lane tags — only ~4,400 residential and ~1,356 footway ways. Most residential streets and
+  footpaths people actually walk on are absent, so it cannot route a pedestrian; a full
+  Greater-Melbourne walk graph is too large to ship for arbitrary-pin routing, and
+  `output: "export"` rules out a server router.
+- *External isochrone API, opt-in at runtime* — **chosen.** `lib/walk-isochrone.ts` calls the
+  OpenRouteService `foot-walking` isochrone (env-keyed via `NEXT_PUBLIC_ORS_API_KEY`; optional
+  `NEXT_PUBLIC_WALK_ISOCHRONE_URL` to self-host / proxy / swap backend), and `buildBuyerReport`
+  filters the same already-loaded POIs by point-in-polygon instead of a radius. It is a
+  client-side fetch, so static export is intact. The free tier stays straight-line with its
+  caveat; the buyer panel shows a "Use precise walk routing (beta)" button only when a key is
+  configured, and the report's `accessMode` flips the copy from "within ~1.2 km" to a
+  street-network walk. (A `NEXT_PUBLIC_*` key is visible client-side — fine for the prototype;
+  production hardening is a thin key-hiding proxy behind the same URL override.)
 
 > **More data (Rafael: "grasp more from census/other docs"):** the around-this-point view
 > gets richer as we add the §3 buyer layers (catchments, development pipeline, social

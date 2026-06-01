@@ -161,3 +161,45 @@ body {
   padding-top: 8px;
   border-top: 1px solid var(--border);
 }
+
+/*
+ * Buyer report printing. The Buyer Location Check report can be printed / saved
+ * to PDF from any page (the full-screen map, the profile, the sample page). We
+ * isolate the report by hiding everything else via `visibility`, then surface
+ * only `.buyer-print-root` at the top of the page — a robust pattern that does
+ * not depend on the surrounding (often fixed / clipped) app shell.
+ */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  /* When a buyer report is present, print only it. */
+  body:has(.buyer-print-root) * {
+    visibility: hidden;
+  }
+  body:has(.buyer-print-root) .buyer-print-root,
+  body:has(.buyer-print-root) .buyer-print-root * {
+    visibility: visible;
+  }
+  body:has(.buyer-print-root) .buyer-print-root {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    padding: 16px;
+    background: #fff;
+  }
+
+  /* Let fixed / overflow-hidden shells flow naturally onto paper. */
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Report cards: avoid awkward page breaks mid-finding. */
+  .buyer-print-root section,
+  .buyer-print-root .rounded-md {
+    break-inside: avoid;
+  }
+}

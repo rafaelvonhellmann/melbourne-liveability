@@ -31,7 +31,7 @@ export default function MapLayout({ children }: { children: React.ReactNode }) {
             <span className="text-ink-muted" aria-hidden>
               ·
             </span>
-            <Link href="/buyer/sample" className="text-accent hover:underline">
+            <Link href="/buyer/sample-report" className="text-accent hover:underline">
               See a sample report
             </Link>
           </div>

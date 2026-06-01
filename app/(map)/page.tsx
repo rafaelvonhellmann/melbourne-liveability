@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { MapPin } from "lucide-react";
 import { MelbourneMap } from "@/components/MelbourneMap";
 import { LayerToggle } from "@/components/LayerToggle";
@@ -19,10 +20,13 @@ import { SelectedSummaryCard } from "@/components/SelectedSummaryCard";
 import { ResultsList } from "@/components/ResultsList";
 import { FeedbackButton } from "@/components/FeedbackButton";
 import { OnboardingModal } from "@/components/OnboardingModal";
-import { BuyerReport, type AmenityByCat } from "@/components/BuyerReport";
-import { amenitiesNear } from "@/lib/buyer-location";
+import { BuyerReportPanel } from "@/components/buyer/BuyerReportPanel";
+import { buildBuyerReport, type BuyerReport as BuyerReportData } from "@/lib/buyer-report";
+import { findSa2ForPoint } from "@/lib/buyer-location";
+import { fetchWalkIsochrone, isPreciseWalkConfigured, WALK_MINUTES } from "@/lib/walk-isochrone";
 import { withBase } from "@/lib/asset-path";
-import type { Feature, Point } from "geojson";
+import { parseMapUrlState, buildMapUrl } from "@/lib/share-url";
+import type { Feature, FeatureCollection, Point } from "geojson";
 import type { Place } from "@/lib/types";
 import { loadPlaces, getPlaceBySlug } from "@/lib/places-data";
 import { buildSearchIndex } from "@/lib/search";
@@ -91,14 +95,19 @@ export default function MapPage() {
   };
 
   // ---- Buyer "Location Check" mode ------------------------------------
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [buyerMode, setBuyerMode] = useState(false);
   const [buyerPin, setBuyerPin] = useState<[number, number] | null>(null);
   const [buyerSa2, setBuyerSa2] = useState<{ slug?: string; sa2Code?: string } | null>(null);
-  const [buyerAmenities, setBuyerAmenities] = useState<AmenityByCat | null>(null);
-  // POIs are loaded into MapLibre as a source; for the "what's on foot" maths we
-  // also need them as JS. Lazy-load once on first pin drop (kept out of the
-  // initial bundle / first paint).
+  const [buyerReport, setBuyerReport] = useState<BuyerReportData | null>(null);
+  // Paid-tier "precise walk routing" fetch status (idle until the user opts in).
+  const [preciseStatus, setPreciseStatus] = useState<"idle" | "loading" | "error">("idle");
+
+  // POIs + SA2 polygons live in the MapLibre sources; for the report maths we
+  // also need them as JS. Lazy-load each once (kept out of the initial bundle).
   const poiFeaturesRef = useRef<Feature<Point>[] | null>(null);
+  const sa2GeoRef = useRef<FeatureCollection | null>(null);
 
   async function ensurePois(): Promise<Feature<Point>[]> {
     if (poiFeaturesRef.current) return poiFeaturesRef.current;
@@ -107,36 +116,12 @@ export default function MapPage() {
     poiFeaturesRef.current = fc.features ?? [];
     return poiFeaturesRef.current;
   }
-
-  const onPinDrop = (
-    lngLat: [number, number],
-    sa2: { slug?: string; name?: string; sa2Code?: string } | null
-  ) => {
-    setBuyerPin(lngLat);
-    setBuyerSa2(sa2);
-    setBuyerAmenities(null); // "computing" until pois resolve
-    ensurePois()
-      .then((feats) => {
-        const byCat = amenitiesNear(lngLat, feats, 1.2);
-        const rec: AmenityByCat = {};
-        for (const [k, v] of byCat) rec[k] = { count: v.count, nearestKm: v.nearestKm };
-        setBuyerAmenities(rec);
-      })
-      .catch(() => setBuyerAmenities({}));
-  };
-
-  const toggleBuyerMode = () => {
-    setBuyerMode((on) => {
-      const next = !on;
-      if (next) setSelected(null);
-      else {
-        setBuyerPin(null);
-        setBuyerSa2(null);
-        setBuyerAmenities(null);
-      }
-      return next;
-    });
-  };
+  async function ensureSa2Geo(): Promise<FeatureCollection> {
+    if (sa2GeoRef.current) return sa2GeoRef.current;
+    const res = await fetch(withBase("/data/places.geojson"));
+    sa2GeoRef.current = (await res.json()) as FeatureCollection;
+    return sa2GeoRef.current;
+  }
 
   const buyerPlace = useMemo(
     () =>
@@ -144,6 +129,130 @@ export default function MapPage() {
         ? places.find((p) => p.slug === buyerSa2.slug || p.sa2Code === buyerSa2.sa2Code) ?? null
         : null,
     [buyerSa2, places]
+  );
+
+  // Persist buyer mode + pin to the URL so a report is shareable / restorable.
+  const syncBuyerUrl = (mode: boolean, pin: [number, number] | null) => {
+    router.replace(
+      buildMapUrl("/", {
+        weights,
+        shortlist,
+        view: interestView,
+        buyer: mode,
+        pin: mode ? pin : null,
+      }),
+      { scroll: false }
+    );
+  };
+
+  const buildReportFor = async (
+    lngLat: [number, number],
+    sa2: { slug?: string; sa2Code?: string } | null
+  ) => {
+    // A new/moved pin (or a "revert") always starts from the free straight-line
+    // report — any prior precise result no longer applies to this point.
+    setPreciseStatus("idle");
+    const feats = await ensurePois().catch(() => [] as Feature<Point>[]);
+    const place = sa2
+      ? places.find((p) => p.slug === sa2.slug || p.sa2Code === sa2.sa2Code) ?? null
+      : null;
+    setBuyerReport(
+      buildBuyerReport({ lat: lngLat[1], lng: lngLat[0], place, pois: feats })
+    );
+  };
+
+  // Paid-tier opt-in: recompute "nearby on foot" against a real street-network
+  // walk isochrone (OpenRouteService) instead of the straight-line radius. It is
+  // a runtime, client-side, env-gated fetch (so static export is untouched) and
+  // never runs on the free tier — the button is hidden without a configured key.
+  const recomputePrecise = async () => {
+    if (!buyerPin) return;
+    setPreciseStatus("loading");
+    const iso = await fetchWalkIsochrone(buyerPin, WALK_MINUTES);
+    if (!iso.ok) {
+      setPreciseStatus("error");
+      return;
+    }
+    const feats = await ensurePois().catch(() => [] as Feature<Point>[]);
+    setBuyerReport(
+      buildBuyerReport({
+        lat: buyerPin[1],
+        lng: buyerPin[0],
+        place: buyerPlace,
+        pois: feats,
+        isochrone: iso.geom,
+      })
+    );
+    setPreciseStatus("idle");
+  };
+
+  // Live map click in buyer mode (SA2 comes from the clicked map feature).
+  const onPinDrop = (
+    lngLat: [number, number],
+    sa2: { slug?: string; name?: string; sa2Code?: string } | null
+  ) => {
+    setBuyerPin(lngLat);
+    setBuyerSa2(sa2);
+    setBuyerReport(null); // "computing" until pois resolve
+    syncBuyerUrl(true, lngLat);
+    void buildReportFor(lngLat, sa2);
+  };
+
+  // Restore a pin from a shared URL (no map click → resolve the SA2 from geometry).
+  const restorePin = async (lngLat: [number, number]) => {
+    setBuyerPin(lngLat);
+    setBuyerReport(null);
+    const fc = await ensureSa2Geo().catch(() => null);
+    const sa2 = fc ? findSa2ForPoint(lngLat, fc) : null;
+    setBuyerSa2(sa2);
+    void buildReportFor(lngLat, sa2);
+  };
+
+  const clearBuyerPin = () => {
+    setBuyerPin(null);
+    setBuyerSa2(null);
+    setBuyerReport(null);
+    syncBuyerUrl(true, null);
+  };
+
+  const toggleBuyerMode = () => {
+    const next = !buyerMode;
+    if (next) setSelected(null);
+    else {
+      setBuyerPin(null);
+      setBuyerSa2(null);
+      setBuyerReport(null);
+    }
+    setBuyerMode(next);
+    syncBuyerUrl(next, next ? buyerPin : null);
+  };
+
+  // One-shot restore from ?buyer=1&lat&lng once place data is available.
+  const buyerRestoredRef = useRef(false);
+  useEffect(() => {
+    if (buyerRestoredRef.current || places.length === 0) return;
+    buyerRestoredRef.current = true;
+    const url = parseMapUrlState(searchParams.toString());
+    if (url.buyer) {
+      setBuyerMode(true);
+      setSelected(null);
+      if (url.pin) void restorePin(url.pin);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [places]);
+
+  const buyerShareUrl = useMemo(
+    () =>
+      buyerPin
+        ? buildMapUrl(withBase("/"), {
+            weights,
+            shortlist,
+            view: interestView,
+            buyer: true,
+            pin: buyerPin,
+          })
+        : undefined,
+    [buyerPin, weights, shortlist, interestView]
   );
 
   const personalisationControls = (
@@ -215,21 +324,70 @@ export default function MapPage() {
         <p className="rounded-lg border border-dashed border-surface-border bg-surface px-3 py-4 text-sm text-ink-muted">
           Click the map to drop a pin on a property and get a second-opinion report.
         </p>
-      ) : !buyerAmenities ? (
+      ) : !buyerReport ? (
         <p className="text-sm text-ink-muted">Computing what&apos;s nearby…</p>
-      ) : buyerPlace ? (
-        <>
-          <p className="text-xs text-ink-muted">
-            Pinned in <b className="text-ink">{buyerPlace.name}</b>, {buyerPlace.lga}. Click
-            elsewhere on the map to move the pin.
-          </p>
-          <BuyerReport place={buyerPlace} amenitiesByCat={buyerAmenities} variant="live" />
-        </>
       ) : (
-        <p className="text-sm text-ink-muted">
-          That pin is outside our Greater Melbourne SA2 coverage — drop it on a Melbourne
-          property.
-        </p>
+        <>
+          {buyerPlace ? (
+            <p className="text-xs text-ink-muted">
+              Pinned in <b className="text-ink">{buyerPlace.name}</b>, {buyerPlace.lga}. Click
+              elsewhere on the map to move the pin.
+            </p>
+          ) : (
+            <p className="text-xs text-ink-muted">
+              This pin is outside our Greater Melbourne SA2 coverage — drop it on a Melbourne
+              property for the full report.
+            </p>
+          )}
+          {isPreciseWalkConfigured() && (
+            <div className="rounded-lg border border-surface-border bg-surface px-3 py-2 text-xs">
+              {buyerReport.accessMode === "precise" ? (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-ink-muted">
+                    <b className="text-ink">Precise walk routing on</b> — &ldquo;nearby&rdquo; reflects
+                    a street-network ~15-min walk.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (buyerPin) void buildReportFor(buyerPin, buyerSa2);
+                    }}
+                    className="shrink-0 text-accent hover:underline"
+                  >
+                    Revert
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-ink-muted">
+                    Free check uses straight-line distance. Recompute on the real street network?
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => void recomputePrecise()}
+                    disabled={preciseStatus === "loading"}
+                    className="shrink-0 rounded-md border border-accent bg-accent px-2.5 py-1 font-medium text-accent-ink transition-colors hover:bg-accent-focus disabled:opacity-60"
+                  >
+                    {preciseStatus === "loading" ? "Routing…" : "Use precise walk routing (beta)"}
+                  </button>
+                </div>
+              )}
+              {preciseStatus === "error" && (
+                <p className="mt-1 text-[11px] text-[#9A552F]">
+                  Couldn&apos;t fetch the walk isochrone just now — still showing straight-line. Try
+                  again shortly.
+                </p>
+              )}
+            </div>
+          )}
+          <BuyerReportPanel
+            report={buyerReport}
+            place={buyerPlace}
+            variant="live"
+            shareUrl={buyerShareUrl}
+            onClear={clearBuyerPin}
+          />
+        </>
       )}
     </div>
   );

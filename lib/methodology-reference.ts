@@ -125,7 +125,7 @@ export const CONTEXT_SOURCING: ContextSourcing[] = [
     label: "15-minute access — everyday amenities",
     sourceId: "osm-amenities",
     geography: "Points → SA2 centroid (straight-line)",
-    use: "Walk-access panel + map layer",
+    use: "Walk-access panel + map layer. Buyer pin check is straight-line on the free tier; the paid tier can opt into an OpenRouteService street-network walk isochrone for precise reachability.",
   },
   {
     label: "Cyclability — cycle infrastructure",

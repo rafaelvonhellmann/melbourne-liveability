@@ -1,6 +1,3 @@
-// Legacy route — the canonical sample lives at /buyer/sample-report. Both render
-// the same static sample report (shared implementation) so existing links keep
-// working without a runtime redirect (not available under static export).
 export { default } from "@/components/buyer/SampleReportPage";
 
 export const metadata = {

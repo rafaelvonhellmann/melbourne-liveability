@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin, ShieldAlert, Footprints, Users, ClipboardCheck } from "lucide-react";
+import { MapPin, ShieldAlert, Footprints, BarChart3 } from "lucide-react";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata = {
@@ -8,26 +8,39 @@ export const metadata = {
     "Drop a pin on any Melbourne property and see the hidden liveability, hazard and planning context: nearby amenities on foot, risk indicators, community context, and what to verify before you inspect or bid. Built from open government data. Not advice.",
 };
 
-const WHAT_YOU_GET = [
-  {
-    icon: Footprints,
-    title: "What's actually on foot",
-    body: "Supermarkets, GP, schools, parks, transport and more within a ~15-minute walk of the exact spot — not the suburb average.",
-  },
+type CardItem = { label: string; soon?: boolean; note?: boolean };
+const CARDS: { icon: typeof ShieldAlert; title: string; items: CardItem[] }[] = [
   {
     icon: ShieldAlert,
-    title: "Risk indicators",
-    body: "Bushfire and flood planning-overlay exposure and crime context — surfaced honestly, with what to verify with council and your insurer.",
+    title: "Red flags to verify",
+    items: [
+      { label: "Hazard overlays" },
+      { label: "Planning / heritage / flood / bushfire indicators where available" },
+      { label: "Crime and safety context where available" },
+      { label: "Data-confidence caveats" },
+    ],
   },
   {
-    icon: Users,
-    title: "Liveability & community trade-offs",
-    body: "Transport, health, education, affordability and tenure mix for the area — one transparent lens, never a single 'score'.",
+    icon: Footprints,
+    title: "What is actually nearby",
+    items: [
+      { label: "Public transport" },
+      { label: "Schools / education" },
+      { label: "Parks / open space" },
+      { label: "Health services" },
+      { label: "Shops / amenities" },
+      { label: "15-minute access caveat", note: true },
+    ],
   },
   {
-    icon: ClipboardCheck,
-    title: "A verify-before-you-offer checklist",
-    body: "The due-diligence this tool can't do for you: overlays, inspections, school zones, title, body corporate.",
+    icon: BarChart3,
+    title: "Area context",
+    items: [
+      { label: "Liveability score and domains" },
+      { label: "Demographic / community context" },
+      { label: "Affordability / rental context where already available" },
+      { label: "School catchments, building approvals, zoning overlays", soon: true },
+    ],
   },
 ];
 
@@ -45,45 +58,69 @@ export default function BuyerLandingPage() {
             <MapPin className="h-3.5 w-3.5 text-accent" aria-hidden /> Buyer location check
           </span>
           <h1 className="mt-3 max-w-3xl font-display text-4xl font-semibold leading-tight tracking-tight text-ink">
-            Check the hidden liveability, risk and planning context around any Melbourne
-            property.
+            A second opinion on the location before you make an offer.
           </h1>
           <p className="mt-4 max-w-2xl text-lg leading-relaxed text-ink-muted">
             Found a place on Domain or realestate.com.au? Before you inspect, bid, or make an
-            offer, <b className="text-ink">drop a pin</b> and get a second opinion — nearby
-            amenities, liveability trade-offs, hazard indicators, community context, and what to
-            verify before you commit.
+            offer, <b className="text-ink">drop a pin</b> and get a sourced screening report —
+            nearby amenities, liveability trade-offs, hazard indicators, community context, and
+            what to verify before you commit.
+          </p>
+          <p className="mt-3 max-w-2xl text-xs leading-relaxed text-ink-muted">
+            Independent open-data location intelligence. No listings. No agent spin. Information
+            only — not financial, property, legal, insurance or planning advice.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
-              href="/"
+              href="/?buyer=1"
               className="rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-focus"
             >
-              Check a location on the map →
+              Check a property →
             </Link>
             <Link
-              href="/buyer/sample"
+              href="/"
               className="rounded-md border border-surface-border px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent"
             >
-              See a sample report
+              Explore the map
+            </Link>
+            <Link
+              href="/buyer/sample-report"
+              className="rounded-md border border-surface-border px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent"
+            >
+              View sample report
             </Link>
           </div>
         </section>
 
-        {/* What you get */}
+        {/* What you get — three cards */}
         <section className="mt-12">
           <h2 className="font-display text-xl font-medium text-ink">What you get</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            {WHAT_YOU_GET.map((f) => {
-              const Icon = f.icon;
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            {CARDS.map((c) => {
+              const Icon = c.icon;
               return (
                 <div
-                  key={f.title}
+                  key={c.title}
                   className="rounded-lg border border-surface-border bg-surface p-4 shadow-card"
                 >
                   <Icon className="h-5 w-5 text-accent" aria-hidden />
-                  <h3 className="mt-2 font-display text-base font-medium text-ink">{f.title}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-ink-muted">{f.body}</p>
+                  <h3 className="mt-2 font-display text-base font-medium text-ink">{c.title}</h3>
+                  <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-ink-muted">
+                    {c.items.map((it) => (
+                      <li key={it.label} className="flex items-start gap-1.5">
+                        <span className="mt-1.5 inline-block h-1 w-1 shrink-0 rounded-full bg-accent" aria-hidden />
+                        <span>
+                          {it.label}
+                          {it.soon && (
+                            <span className="ml-1.5 rounded border border-surface-border bg-surface-sunken px-1 py-0.5 text-[10px] font-medium uppercase tracking-wide text-ink-muted">
+                              Coming soon
+                            </span>
+                          )}
+                          {it.note && <span className="text-ink-muted"> (straight-line, not routing)</span>}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               );
             })}
@@ -93,11 +130,12 @@ export default function BuyerLandingPage() {
         {/* How it works */}
         <section className="mt-12">
           <h2 className="font-display text-xl font-medium text-ink">How it works</h2>
-          <ol className="mt-4 grid gap-4 sm:grid-cols-3">
+          <ol className="mt-4 grid gap-4 sm:grid-cols-4">
             {[
               ["1", "Drop a pin", "Click the exact property location on the map."],
-              ["2", "Read the second opinion", "Amenities, risk indicators and context for that spot."],
-              ["3", "Verify before you offer", "Use the checklist with council, conveyancer and insurer."],
+              ["2", "Review risks & trade-offs", "Amenities, risk indicators and context for that spot."],
+              ["3", "Print / share the report", "Save it as a PDF or send the link."],
+              ["4", "Verify before you offer", "Use the checklist with council, conveyancer and insurer."],
             ].map(([n, t, b]) => (
               <li key={n} className="rounded-lg border border-surface-border bg-surface p-4">
                 <span className="num inline-flex h-7 w-7 items-center justify-center rounded-full bg-accent text-sm font-semibold text-accent-ink">
@@ -117,8 +155,9 @@ export default function BuyerLandingPage() {
             It <b className="text-ink">is</b> an independent, sourced due-diligence layer built
             from open government and OpenStreetMap data — the risks and context that
             agent-funded listing sites do not surface. It is <b className="text-ink">not</b> a
-            listings portal, not a price/valuation estimate, and not financial, property, legal
-            or insurance advice. Always verify anything material with the relevant professional.
+            listings portal, not a price/valuation estimate, and not financial, property, legal,
+            insurance or planning advice. Always verify anything material with the relevant
+            professional.
           </p>
           <p className="mt-3 text-sm text-ink-muted">
             The core liveability map stays free.{" "}

@@ -25,6 +25,7 @@ import { HomeBuyerCard } from "./HomeBuyerCard";
 import { SourceDrawer } from "./SourceDrawer";
 import { ProfileEngagement } from "./ProfileEngagement";
 import { FeedbackButton } from "./FeedbackButton";
+import { BuyerHereCard } from "@/components/buyer/BuyerHereCard";
 
 type Props = {
   place: Place;
@@ -136,6 +137,10 @@ export function PlaceProfileClient({
             </span>
             <ProfileEngagement slug={place.slug} name={place.name} />
           </div>
+        </div>
+
+        <div className="mt-5">
+          <BuyerHereCard place={place} />
         </div>
 
         <div className="mt-5 flex items-end gap-3 border-b border-surface-border">
