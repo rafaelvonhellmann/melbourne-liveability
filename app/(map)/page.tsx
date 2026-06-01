@@ -576,6 +576,7 @@ export default function MapPage() {
       </div>
 
       <MobileSheet
+        buyerMode={buyerMode}
         explore={
           buyerMode ? (
             buyerPanel

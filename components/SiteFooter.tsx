@@ -3,6 +3,7 @@ import Link from "next/link";
 const LINKS: { href: string; label: string }[] = [
   { href: "/", label: "Map" },
   { href: "/buyer", label: "Buyer check" },
+  { href: "/about", label: "About & trust" },
   { href: "/compare", label: "Compare" },
   { href: "/pricing", label: "Pricing" },
   { href: "/account", label: "Your data" },

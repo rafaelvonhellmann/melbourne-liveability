@@ -16,9 +16,18 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Melbourne Liveability Map",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://rafaelvonhellmann.github.io/melbourne-liveability"
+  ),
+  title: "liveable.melbourne — check a location before you buy or rent in Melbourne",
   description:
-    "Map-first liveability scores for Greater Melbourne from Australian government open data.",
+    "Drop a pin on any Melbourne property for an independent, sourced second opinion before you offer: what's nearby on foot, hazard and planning context, liveability trade-offs and community context — built from open government data. Not financial, property or legal advice.",
+  openGraph: {
+    title: "liveable.melbourne — check a location before you buy",
+    description:
+      "An independent, open-data second opinion on any Melbourne location: amenities on foot, risk indicators, liveability and community context. Not advice.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

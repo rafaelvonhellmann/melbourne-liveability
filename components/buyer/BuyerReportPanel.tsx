@@ -5,6 +5,7 @@ import { Printer, X, ShieldAlert, CheckCircle2, HelpCircle, Info } from "lucide-
 import type { BuyerReport, BuyerFinding, BuyerConfidence, BuyerGeography } from "@/lib/buyer-report";
 import { AMENITY_GROUPS } from "@/lib/buyer-report";
 import { formatSourceDate } from "@/lib/source-manifest";
+import { withBase } from "@/lib/asset-path";
 import { POI_CATEGORY_BY_ID, type PoiCategoryId } from "@/lib/poi-categories";
 import type { Place } from "@/lib/types";
 import { V1_SCORED_DOMAINS, getDomain } from "@/lib/domains";
@@ -287,7 +288,7 @@ export function BuyerReportPanel({
               <li key={s.id} className="text-xs leading-snug">
                 {s.url ? (
                   <a
-                    href={s.url}
+                    href={s.url.startsWith("http") ? s.url : withBase(s.url)}
                     className="font-medium text-accent hover:underline"
                     target={s.url.startsWith("http") ? "_blank" : undefined}
                     rel={s.url.startsWith("http") ? "noopener noreferrer" : undefined}

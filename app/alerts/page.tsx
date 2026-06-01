@@ -129,11 +129,12 @@ export default function AlertsPage() {
             className="mt-1 h-4 w-4 rounded border-surface-border text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-bg"
           />
           <label htmlFor="alert-consent" className="text-sm text-ink-muted">
-            I agree to receive occasional update emails about my shortlisted suburbs. See{" "}
-            <Link href="/disclaimer" className="text-accent hover:underline">
-              disclaimer
-            </Link>{" "}
-            for privacy. Unsubscribe any time.
+            I agree to receive occasional update emails about my shortlisted suburbs. My email and
+            shortlist are sent to our third-party form processor (Formspree); see the{" "}
+            <Link href="/privacy" className="text-accent hover:underline">
+              privacy policy
+            </Link>
+            . Unsubscribe any time.
           </label>
         </div>
         <button

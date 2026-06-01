@@ -14,10 +14,10 @@ const CARDS: { icon: typeof ShieldAlert; title: string; items: CardItem[] }[] = 
     icon: ShieldAlert,
     title: "Red flags to verify",
     items: [
-      { label: "Hazard overlays" },
-      { label: "Planning / heritage / flood / bushfire indicators where available" },
-      { label: "Crime and safety context where available" },
-      { label: "Data-confidence caveats" },
+      { label: "Flood & bushfire planning-overlay exposure (where mapped)" },
+      { label: "Crime & safety context (where available)" },
+      { label: "Data-confidence caveats on every finding" },
+      { label: "Zoning, heritage & planning-scheme overlays", soon: true },
     ],
   },
   {

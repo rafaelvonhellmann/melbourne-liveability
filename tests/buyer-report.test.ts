@@ -201,3 +201,27 @@ describe("buildBuyerReport with a walk isochrone (paid-tier precise mode)", () =
     expect(amenityFinding?.caveat).toMatch(/street-network walk isochrone/i);
   });
 });
+
+describe("buildBuyerReport provenance discipline", () => {
+  it("every finding carries confidence, geography, and either a source or a caveat", () => {
+    for (const place of [samplePlace(), null]) {
+      const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place, pois: POIS, generatedAt: "t" });
+      for (const f of r.findings) {
+        expect(["high", "medium", "low", "unknown"], `confidence on ${f.id}`).toContain(f.confidence);
+        expect(
+          ["pin", "poi-radius", "sa2", "lga", "gccsa", "unknown"],
+          `geography on ${f.id}`
+        ).toContain(f.geography);
+        const hasProvenance = (f.sourceRefs?.length ?? 0) > 0 || (f.caveat?.length ?? 0) > 0;
+        expect(hasProvenance, `finding "${f.id}" must cite a source or state a caveat`).toBe(true);
+      }
+    }
+  });
+
+  it("off-coverage (no SA2) downgrades the safety finding precision to unknown", () => {
+    const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: null, pois: POIS, generatedAt: "t" });
+    const safety = r.findings.find((f) => f.id === "safety-context");
+    expect(safety?.confidence).toBe("unknown");
+    expect(safety?.geography).toBe("unknown");
+  });
+});

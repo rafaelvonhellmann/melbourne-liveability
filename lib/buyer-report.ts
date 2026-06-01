@@ -127,6 +127,12 @@ const METHODOLOGY_REF: BuyerSourceRef = {
   url: "/methodology",
 };
 
+const SCHOOL_ZONE_REF: BuyerSourceRef = {
+  id: "vic-school-zones",
+  label: "Find My School — official Victorian school zones",
+  url: "https://www.findmyschool.vic.gov.au/",
+};
+
 /** Display grouping of raw POI `pinType`s into buyer-facing amenity groups. */
 export const AMENITY_GROUPS: { id: string; label: string; categories: PoiCategoryId[] }[] = [
   { id: "education", label: "Education", categories: ["school", "childcare"] },
@@ -350,7 +356,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         severity: "info",
         title: "Good access to daily amenities",
         summary: `${reachableEveryday} of ${WALK_CATEGORY_IDS.length} everyday-amenity types were found ${walkPhrase} of this point.`,
-        whyItMatters: "Day-to-day convenience reduces car dependence and supports resale appeal.",
+        whyItMatters: "Day-to-day convenience reduces car dependence and time spent driving for errands.",
         confidence: "medium",
         geography: "poi-radius",
         caveat: amenityCaveat,
@@ -482,20 +488,22 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     sourceRefs: getSourcesByIds(["vic-planning-bpa", "vic-planning-flood"]),
   });
 
-  // 6) Local safety / crime context (LGA).
+  // 6) Local safety / crime context (LGA). Off-coverage pins (no SA2 match) have
+  //    no local crime data, so precision/confidence drop to "unknown".
   const propCrimePct = place?.domains?.safety?.subIndicators?.propertyCrime?.percentile ?? null;
   findings.push({
     id: "safety-context",
     kind: "verify",
     severity: "low",
     title: "Review local safety context",
-    summary:
-      typeof propCrimePct === "number"
+    summary: !place
+      ? "This point is outside our Greater Melbourne coverage, so no local crime context is available here. Recorded offences are published at suburb/LGA level — check the VCSA data for the actual area."
+      : typeof propCrimePct === "number"
         ? `Recorded property-offence rates sit around the ${Math.round(propCrimePct)}th percentile for Greater Melbourne, measured at suburb/LGA level — not the specific street.`
         : "Recorded-offence rates are published at suburb/LGA level — not at the specific street or property.",
     verifyAction: "Walk the immediate street at different times and check recent local reports.",
-    confidence: "medium",
-    geography: "lga",
+    confidence: place ? "medium" : "unknown",
+    geography: place ? "lga" : "unknown",
     sourceRefs: getSourcesByIds(["vcsa-recorded-offences"]),
   });
 
@@ -511,6 +519,8 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       "Confirm the address using the official Victorian school-zone tool before relying on school access.",
     confidence: "unknown",
     geography: "unknown",
+    caveat: "We do not hold official school-catchment boundaries; zones change yearly and must be checked at the exact address.",
+    sourceRefs: [SCHOOL_ZONE_REF],
   });
 
   // 8) Price / sales context (NOT included).
@@ -523,6 +533,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       "This MVP does not estimate property value or price growth. Future versions may add transparent price-context data where licensing allows.",
     confidence: "unknown",
     geography: "unknown",
+    caveat: "Sale prices, valuations and rental yields are not open data we can license — check a listing portal, recent comparable sales, or an agent for indicative pricing.",
   });
 
   // 9) Data confidence (meta; neutral).
