@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { MapPin } from "lucide-react";
 import { MelbourneMap } from "@/components/MelbourneMap";
 import { LayerToggle } from "@/components/LayerToggle";
 import { SearchBox } from "@/components/SearchBox";
@@ -18,6 +19,10 @@ import { SelectedSummaryCard } from "@/components/SelectedSummaryCard";
 import { ResultsList } from "@/components/ResultsList";
 import { FeedbackButton } from "@/components/FeedbackButton";
 import { OnboardingModal } from "@/components/OnboardingModal";
+import { BuyerReport, type AmenityByCat } from "@/components/BuyerReport";
+import { amenitiesNear } from "@/lib/buyer-location";
+import { withBase } from "@/lib/asset-path";
+import type { Feature, Point } from "geojson";
 import type { Place } from "@/lib/types";
 import { loadPlaces, getPlaceBySlug } from "@/lib/places-data";
 import { buildSearchIndex } from "@/lib/search";
@@ -85,6 +90,62 @@ export default function MapPage() {
     setFocusTarget({ center: p.centroid, nonce: Date.now() });
   };
 
+  // ---- Buyer "Location Check" mode ------------------------------------
+  const [buyerMode, setBuyerMode] = useState(false);
+  const [buyerPin, setBuyerPin] = useState<[number, number] | null>(null);
+  const [buyerSa2, setBuyerSa2] = useState<{ slug?: string; sa2Code?: string } | null>(null);
+  const [buyerAmenities, setBuyerAmenities] = useState<AmenityByCat | null>(null);
+  // POIs are loaded into MapLibre as a source; for the "what's on foot" maths we
+  // also need them as JS. Lazy-load once on first pin drop (kept out of the
+  // initial bundle / first paint).
+  const poiFeaturesRef = useRef<Feature<Point>[] | null>(null);
+
+  async function ensurePois(): Promise<Feature<Point>[]> {
+    if (poiFeaturesRef.current) return poiFeaturesRef.current;
+    const res = await fetch(withBase("/data/pois.geojson"));
+    const fc = (await res.json()) as { features?: Feature<Point>[] };
+    poiFeaturesRef.current = fc.features ?? [];
+    return poiFeaturesRef.current;
+  }
+
+  const onPinDrop = (
+    lngLat: [number, number],
+    sa2: { slug?: string; name?: string; sa2Code?: string } | null
+  ) => {
+    setBuyerPin(lngLat);
+    setBuyerSa2(sa2);
+    setBuyerAmenities(null); // "computing" until pois resolve
+    ensurePois()
+      .then((feats) => {
+        const byCat = amenitiesNear(lngLat, feats, 1.2);
+        const rec: AmenityByCat = {};
+        for (const [k, v] of byCat) rec[k] = { count: v.count, nearestKm: v.nearestKm };
+        setBuyerAmenities(rec);
+      })
+      .catch(() => setBuyerAmenities({}));
+  };
+
+  const toggleBuyerMode = () => {
+    setBuyerMode((on) => {
+      const next = !on;
+      if (next) setSelected(null);
+      else {
+        setBuyerPin(null);
+        setBuyerSa2(null);
+        setBuyerAmenities(null);
+      }
+      return next;
+    });
+  };
+
+  const buyerPlace = useMemo(
+    () =>
+      buyerSa2
+        ? places.find((p) => p.slug === buyerSa2.slug || p.sa2Code === buyerSa2.sa2Code) ?? null
+        : null,
+    [buyerSa2, places]
+  );
+
   const personalisationControls = (
     <div className="space-y-3">
       {/* Presets — quick, one-tap starting points (kept distinct from the
@@ -135,6 +196,41 @@ export default function MapPage() {
           selectedSlug={selected?.slug ?? undefined}
         />
       </div>
+    </div>
+  );
+
+  const buyerPanel = (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="font-display text-base font-medium text-ink">Location check</h2>
+        <button
+          type="button"
+          onClick={toggleBuyerMode}
+          className="rounded-md border border-surface-border px-2.5 py-1 text-xs text-ink-muted transition-colors hover:border-accent hover:text-accent"
+        >
+          Exit
+        </button>
+      </div>
+      {!buyerPin ? (
+        <p className="rounded-lg border border-dashed border-surface-border bg-surface px-3 py-4 text-sm text-ink-muted">
+          Click the map to drop a pin on a property and get a second-opinion report.
+        </p>
+      ) : !buyerAmenities ? (
+        <p className="text-sm text-ink-muted">Computing what&apos;s nearby…</p>
+      ) : buyerPlace ? (
+        <>
+          <p className="text-xs text-ink-muted">
+            Pinned in <b className="text-ink">{buyerPlace.name}</b>, {buyerPlace.lga}. Click
+            elsewhere on the map to move the pin.
+          </p>
+          <BuyerReport place={buyerPlace} amenitiesByCat={buyerAmenities} variant="live" />
+        </>
+      ) : (
+        <p className="text-sm text-ink-muted">
+          That pin is outside our Greater Melbourne SA2 coverage — drop it on a Melbourne
+          property.
+        </p>
+      )}
     </div>
   );
 
@@ -192,6 +288,9 @@ export default function MapPage() {
             selectedSlug={selected?.slug ?? null}
             hoverProp={paintedProp}
             hoverLabel={activeLayerLabel}
+            buyerMode={buyerMode}
+            buyerPin={buyerPin}
+            onPinDrop={onPinDrop}
             onPlaceSelect={(props) => {
               const p = places.find(
                 (x) => x.slug === props.slug || x.sa2Code === props.sa2Code
@@ -200,9 +299,31 @@ export default function MapPage() {
             }}
           />
 
+          {/* Buyer "Location Check" toggle — the headline interaction. */}
+          <div className="absolute left-1/2 top-3 z-10 -translate-x-1/2">
+            <button
+              type="button"
+              onClick={toggleBuyerMode}
+              aria-pressed={buyerMode}
+              className={`pointer-events-auto inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium shadow-card transition-colors ${
+                buyerMode
+                  ? "border-accent bg-accent text-accent-ink"
+                  : "border-surface-border bg-surface text-ink hover:border-accent hover:text-accent"
+              }`}
+            >
+              <MapPin className="h-4 w-4" aria-hidden />
+              {buyerMode ? "Exit location check" : "Check a location"}
+            </button>
+            {buyerMode && !buyerPin && (
+              <p className="mt-2 rounded-lg border border-surface-border bg-surface px-3 py-1.5 text-center text-xs text-ink-muted shadow-card">
+                Click the map to drop a pin on a property
+              </p>
+            )}
+          </div>
+
           {/* Data-load failure — visible, recoverable (never a silent empty map). */}
           {loadError && (
-            <div className="pointer-events-none absolute left-1/2 top-4 z-20 w-[min(92%,30rem)] -translate-x-1/2">
+            <div className="pointer-events-none absolute left-1/2 top-16 z-20 w-[min(92%,30rem)] -translate-x-1/2">
               <div
                 role="alert"
                 className="pointer-events-auto rounded-lg border border-[#E9C8B4] bg-[#FBEEE6] px-3 py-2 text-xs leading-snug text-[#9A552F] shadow-card"
@@ -223,8 +344,8 @@ export default function MapPage() {
 
           {/* Home-buyer caveat — visible on the map (not only the profile) so
               users never read the buyer lens as purchase-price guidance. */}
-          {isHomeBuyer && (
-            <div className="pointer-events-none absolute left-1/2 top-4 z-10 w-[min(92%,30rem)] -translate-x-1/2">
+          {isHomeBuyer && !buyerMode && (
+            <div className="pointer-events-none absolute left-1/2 top-16 z-10 w-[min(92%,30rem)] -translate-x-1/2">
               <p className="pointer-events-auto rounded-lg border border-surface-border border-l-[3px] border-l-accent bg-surface px-3 py-2 text-xs leading-snug text-ink shadow-card">
                 <span className="font-medium text-ink">Home-buyer lens:</span>{" "}
                 context only — sale/purchase prices are{" "}
@@ -278,34 +399,42 @@ export default function MapPage() {
         {/* Desktop sidebar — explore tools only; ranked suburb lists are deferred
             to a future signed-in profile feature. */}
         <aside className="hidden w-[372px] shrink-0 flex-col border-l border-surface-border bg-surface md:flex">
-          <MapSidebar
-            places={places}
-            searchIndex={searchIndex}
-            onFocusPlace={focusPlace}
-            controls={personalisationControls}
-            results={rankedResults}
-            shortlist={shortlist}
-            recent={recent}
-            onShortlistChange={updateShortlist}
-            getShareUrl={getShareUrl}
-          />
+          {buyerMode ? (
+            <div className="min-h-0 flex-1 overflow-y-auto p-3">{buyerPanel}</div>
+          ) : (
+            <MapSidebar
+              places={places}
+              searchIndex={searchIndex}
+              onFocusPlace={focusPlace}
+              controls={personalisationControls}
+              results={rankedResults}
+              shortlist={shortlist}
+              recent={recent}
+              onShortlistChange={updateShortlist}
+              getShareUrl={getShareUrl}
+            />
+          )}
         </aside>
       </div>
 
       <MobileSheet
         explore={
-          <div className="space-y-3">
-            {selected && (
-              <SelectedSummaryCard
-                place={selected}
-                weights={weights}
-                activeLayerLabel={activeLayerLabel}
-                onClose={() => setSelected(null)}
-                onShortlistChange={updateShortlist}
-              />
-            )}
-            <ExploreHint residentialCount={places.filter((p) => !p.nonResidential).length} />
-          </div>
+          buyerMode ? (
+            buyerPanel
+          ) : (
+            <div className="space-y-3">
+              {selected && (
+                <SelectedSummaryCard
+                  place={selected}
+                  weights={weights}
+                  activeLayerLabel={activeLayerLabel}
+                  onClose={() => setSelected(null)}
+                  onShortlistChange={updateShortlist}
+                />
+              )}
+              <ExploreHint residentialCount={places.filter((p) => !p.nonResidential).length} />
+            </div>
+          )
         }
         results={rankedResults}
         search={
@@ -380,6 +509,7 @@ function TopBar({
       </div>
       <nav className="ml-auto flex flex-wrap items-center gap-2 text-sm">
         <FeedbackButton />
+        <NavLink href="/buyer">Buyer check</NavLink>
         <NavLink href="/compare">Compare</NavLink>
         <NavLink href="/pricing">Pricing</NavLink>
         <NavLink href="/account" hideOnSmall>

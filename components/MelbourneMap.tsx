@@ -34,6 +34,15 @@ type MelbourneMapProps = {
   hoverProp?: string;
   /** Human label for the painted layer, used in the hover tooltip. */
   hoverLabel?: string;
+  /** Buyer "Location Check": a map click drops a pin instead of selecting an SA2. */
+  buyerMode?: boolean;
+  /** Coordinates of the dropped buyer pin to render ([lng, lat]). */
+  buyerPin?: [number, number] | null;
+  /** Called with the dropped pin + the SA2 it falls in (from the fill layer). */
+  onPinDrop?: (
+    lngLat: [number, number],
+    sa2: { slug?: string; name?: string; sa2Code?: string } | null
+  ) => void;
 };
 
 function prefersReducedMotion(): boolean {
@@ -68,11 +77,23 @@ export function MelbourneMap({
   selectedSlug = null,
   hoverProp,
   hoverLabel,
+  buyerMode = false,
+  buyerPin = null,
+  onPinDrop,
 }: MelbourneMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const hoverPopupRef = useRef<maplibregl.Popup | null>(null);
   const poiPopupRef = useRef<maplibregl.Popup | null>(null);
+  const pinMarkerRef = useRef<maplibregl.Marker | null>(null);
+
+  // Buyer-mode handlers via refs so the map still initialises exactly once.
+  const buyerModeRef = useRef(buyerMode);
+  const onPinDropRef = useRef(onPinDrop);
+  useEffect(() => {
+    buyerModeRef.current = buyerMode;
+    onPinDropRef.current = onPinDrop;
+  }, [buyerMode, onPinDrop]);
 
   // Keep the latest select handler in a ref so the map is initialised exactly
   // once. Putting `onPlaceSelect` in the init effect's deps caused the whole
@@ -260,6 +281,22 @@ export function MelbourneMap({
     });
 
     map.on("click", "sa2-fill", (e) => {
+      // Buyer "Location Check": a click drops a pin (the property location) and
+      // reports the SA2 it falls in, instead of the normal area selection.
+      if (buyerModeRef.current) {
+        const bf = e.features?.[0];
+        onPinDropRef.current?.(
+          [e.lngLat.lng, e.lngLat.lat],
+          bf?.properties
+            ? {
+                slug: bf.properties.slug as string | undefined,
+                name: bf.properties.name as string | undefined,
+                sa2Code: bf.properties.sa2Code as string | undefined,
+              }
+            : null
+        );
+        return;
+      }
       // A single click on a pin hits BOTH the poi-circles and sa2-fill layers
       // (pins are drawn on top), and MapLibre dispatches the two layer handlers
       // independently. Without this guard the poi-circles handler opens the
@@ -333,6 +370,8 @@ export function MelbourneMap({
       closePoiPopup();
       hoverPopupRef.current?.remove();
       hoverPopupRef.current = null;
+      pinMarkerRef.current?.remove();
+      pinMarkerRef.current = null;
       map.remove();
       mapRef.current = null;
     };
@@ -340,6 +379,31 @@ export function MelbourneMap({
   // callback from a ref (see above), so no init-time dependencies are needed.
   // eslint-disable-next-line react-hooks/exhaustive-deps -- map init once
   }, []);
+
+  // Buyer pin marker — add / move / remove a coral marker at the dropped point.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (!buyerPin) {
+      pinMarkerRef.current?.remove();
+      pinMarkerRef.current = null;
+      return;
+    }
+    if (!pinMarkerRef.current) {
+      pinMarkerRef.current = new maplibregl.Marker({ color: "#D97757" })
+        .setLngLat(buyerPin)
+        .addTo(map);
+    } else {
+      pinMarkerRef.current.setLngLat(buyerPin);
+    }
+  }, [buyerPin]);
+
+  // Crosshair cursor in buyer mode to signal "click to drop a pin".
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.getCanvas().style.cursor = buyerMode ? "crosshair" : "";
+  }, [buyerMode]);
 
   useEffect(() => {
     const map = mapRef.current;
