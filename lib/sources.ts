@@ -22,6 +22,11 @@ export function allSources(): SourceRecord[] {
   return SOURCES;
 }
 
+/** Short display name: the part before the " — " qualifier (e.g. "ABS ERP by SA2"). */
+export function shortSourceName(name: string): string {
+  return name.split(" — ")[0];
+}
+
 /** Resolve the unique set of source records used by an indicator map. */
 export function sourcesForIndicatorIds(ids: (string | undefined)[]): SourceRecord[] {
   const seen = new Set<string>();

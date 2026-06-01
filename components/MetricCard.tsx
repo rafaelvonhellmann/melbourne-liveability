@@ -5,7 +5,7 @@ import { formatMetricValue } from "@/lib/metric-catalog";
 import type { BenchmarkStats } from "@/lib/benchmarks";
 import type { PlaceSeries } from "@/lib/timeseries";
 import { MIN_TREND_POINTS } from "@/lib/timeseries";
-import { getSource } from "@/lib/sources";
+import { getSource, shortSourceName } from "@/lib/sources";
 import { percentileToColor } from "@/lib/colors";
 import { StalenessBadge } from "./StalenessBadge";
 import { Sparkline } from "./Sparkline";
@@ -71,7 +71,7 @@ export function MetricCard({ def, value, benchmark, series, mapHref }: MetricCar
               rel="noreferrer"
               className="text-ink-muted underline decoration-dotted underline-offset-2 hover:text-accent"
             >
-              {source.name.split(" — ")[0]}
+              {shortSourceName(source.name)}
             </a>
           ) : (
             <span className="text-ink">{value?.sourceId ?? "—"}</span>

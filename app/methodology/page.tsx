@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { allSources, getSource } from "@/lib/sources";
+import { allSources, getSource, shortSourceName } from "@/lib/sources";
 import { getDomain } from "@/lib/domains";
 import { metricsForDomain } from "@/lib/metric-catalog";
 import {
@@ -117,7 +117,7 @@ export default function MethodologyPage() {
                                 rel="noreferrer"
                                 className="text-ink underline decoration-dotted underline-offset-2 hover:text-accent"
                               >
-                                {rec.name.split(" — ")[0]}
+                                {shortSourceName(rec.name)}
                               </a>
                             ) : (
                               "—"
@@ -169,7 +169,7 @@ export default function MethodologyPage() {
                           rel="noreferrer"
                           className="text-ink underline decoration-dotted underline-offset-2 hover:text-accent"
                         >
-                          {rec.name.split(" — ")[0]}
+                          {shortSourceName(rec.name)}
                         </a>
                       ) : (
                         "—"

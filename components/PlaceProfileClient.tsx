@@ -7,7 +7,7 @@ import { computeWeightedScore } from "@/lib/scoring";
 import { getDefaultWeights } from "@/lib/weights";
 import { V1_SCORED_DOMAINS, getDomain } from "@/lib/domains";
 import { PERSONA_PRESETS, personaWeights, type PersonaId } from "@/lib/personas";
-import { sourcesForIndicatorIds, getSource } from "@/lib/sources";
+import { sourcesForIndicatorIds, getSource, shortSourceName } from "@/lib/sources";
 import { percentileToColor } from "@/lib/colors";
 import { metricsForDomain } from "@/lib/metric-catalog";
 import type { GmBenchmarks } from "@/lib/benchmarks";
@@ -606,7 +606,7 @@ function PopulationTrendCard({ series }: { series?: PlaceSeries }) {
             rel="noreferrer"
             className="underline decoration-dotted underline-offset-2 hover:text-accent"
           >
-            {source.name.split(" — ")[0]}
+            {shortSourceName(source.name)}
           </a>
         ) : (
           <span>{series.sourceId}</span>
