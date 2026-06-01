@@ -225,3 +225,28 @@ describe("buildBuyerReport provenance discipline", () => {
     expect(safety?.geography).toBe("unknown");
   });
 });
+
+describe("buildBuyerReport hazard conditionality", () => {
+  function placeWithHazards(bushfirePct: number, floodPct: number): Place {
+    const p = samplePlace();
+    p.domains.hazards = {
+      domain: "hazards",
+      scored: true,
+      percentile: 50,
+      subIndicators: { bushfirePct: ind(bushfirePct, 50), floodPct: ind(floodPct, 50) },
+    };
+    return p;
+  }
+
+  it("surfaces a calm neutral note when overlays are negligible (central area)", () => {
+    const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: placeWithHazards(0, 0), pois: POIS, generatedAt: "t" });
+    const hz = r.findings.find((f) => f.id === "hazard-overlays");
+    expect(hz?.kind).toBe("neutral");
+    expect(hz?.title).toMatch(/no significant/i);
+  });
+
+  it("raises a red_flag when overlay share is elevated", () => {
+    const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: placeWithHazards(0, 20), pois: POIS, generatedAt: "t" });
+    expect(r.findings.find((f) => f.id === "hazard-overlays")?.kind).toBe("red_flag");
+  });
+});

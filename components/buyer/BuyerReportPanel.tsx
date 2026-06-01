@@ -262,8 +262,12 @@ export function BuyerReportPanel({
             {community?.year12Pct != null && (
               <Row k="Completed Year 12" v={fmtPct(community.year12Pct) ?? "—"} />
             )}
-            <Row k="SEIFA IRSAD decile" v={equity?.irsadDecile != null ? `${equity.irsadDecile}/10` : "—"} />
+            <Row k="Socio-economic ranking (SEIFA)" v={equity?.irsadDecile != null ? `${equity.irsadDecile}/10` : "—"} />
             <p className="mt-2 text-[11px] leading-snug text-ink-muted">
+              SEIFA decile: 1 = most disadvantaged, 10 = most advantaged, ranked against all of
+              Australia (ABS) — area context, not a judgement of residents.
+            </p>
+            <p className="mt-1.5 text-[11px] leading-snug text-ink-muted">
               This describes area-level demographic and tenure context. It is not a judgement about
               residents or future price performance.
             </p>

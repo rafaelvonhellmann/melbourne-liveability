@@ -466,27 +466,48 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
   }
 
   // 5) Hazard & planning overlays (SA2 share; parcel-level NOT matched).
+  //    Established/inner SA2s typically have ~no bushfire/flood overlay — there we
+  //    surface a calm "none mapped" note rather than a "verify" flag (a flood/fire
+  //    warning in the CBD is noise). Material overlay share keeps the verify/red-flag.
   const bushfire = rawOf(place, "hazards", "bushfirePct");
   const flood = rawOf(place, "hazards", "floodPct");
+  const haveHazardData = bushfire != null || flood != null;
+  const negligibleHazard = (bushfire ?? 0) < 1 && (flood ?? 0) < 1;
   const elevatedHazard = (bushfire != null && bushfire >= 50) || (flood != null && flood >= 10);
   const hazardBits: string[] = [];
   if (bushfire != null) hazardBits.push(`about ${Math.round(bushfire)}% mapped as bushfire-prone overlay`);
   if (flood != null) hazardBits.push(`about ${Math.round(flood)}% under a flood (LSIO) overlay`);
-  findings.push({
-    id: "hazard-overlays",
-    kind: elevatedHazard ? "red_flag" : "verify",
-    severity: elevatedHazard ? "high" : "medium",
-    title: "Check hazard and planning overlays",
-    summary: hazardBits.length
-      ? `Of this SA2, ${hazardBits.join(" and ")}. Whether THIS parcel is affected needs a parcel-level check — pin-level overlay matching is not yet available in this MVP.`
-      : "Hazard/planning overlay checks matter for this location, but exact pin-level overlay matching is not yet available in this MVP.",
-    whyItMatters: "Overlays drive building controls, insurance cost and what you can do with the land.",
-    verifyAction:
-      "Check the relevant council planning certificate, VicPlan and an insurance quote before buying.",
-    confidence: hazardBits.length ? "medium" : "unknown",
-    geography: hazardBits.length ? "sa2" : "unknown",
-    sourceRefs: getSourcesByIds(["vic-planning-bpa", "vic-planning-flood"]),
-  });
+  if (haveHazardData && negligibleHazard) {
+    findings.push({
+      id: "hazard-overlays",
+      kind: "neutral",
+      severity: "info",
+      title: "No significant bushfire or flood overlay mapped here",
+      summary:
+        "This SA2 has little or no bushfire-prone or flood (LSIO) planning overlay. Overlays still apply parcel by parcel, so confirm the exact property if it matters to you.",
+      confidence: "medium",
+      geography: "sa2",
+      caveat:
+        "Absence of a mapped planning overlay is not a guarantee — flood or fire risk can exist without one.",
+      sourceRefs: getSourcesByIds(["vic-planning-bpa", "vic-planning-flood"]),
+    });
+  } else {
+    findings.push({
+      id: "hazard-overlays",
+      kind: elevatedHazard ? "red_flag" : "verify",
+      severity: elevatedHazard ? "high" : "medium",
+      title: "Check hazard and planning overlays",
+      summary: hazardBits.length
+        ? `Of this SA2, ${hazardBits.join(" and ")}. Whether THIS parcel is affected needs a parcel-level check — pin-level overlay matching is not yet available in this MVP.`
+        : "Hazard/planning overlay checks matter for this location, but exact pin-level overlay matching is not yet available in this MVP.",
+      whyItMatters: "Overlays drive building controls, insurance cost and what you can do with the land.",
+      verifyAction:
+        "Check the relevant council planning certificate, VicPlan and an insurance quote before buying.",
+      confidence: hazardBits.length ? "medium" : "unknown",
+      geography: hazardBits.length ? "sa2" : "unknown",
+      sourceRefs: getSourcesByIds(["vic-planning-bpa", "vic-planning-flood"]),
+    });
+  }
 
   // 6) Local safety / crime context (LGA). Off-coverage pins (no SA2 match) have
   //    no local crime data, so precision/confidence drop to "unknown".
