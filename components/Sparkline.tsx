@@ -120,9 +120,9 @@ export function Sparkline({ series, format, width = 132, height = 34 }: Sparklin
         </div>
       </div>
       {series.boundaryNote && (
-        <figcaption className="mt-1.5 text-[10px] leading-tight text-ink-muted">
+        <p className="mt-1.5 text-[10px] leading-tight text-ink-muted">
           {series.boundaryNote}
-        </figcaption>
+        </p>
       )}
     </figure>
   );

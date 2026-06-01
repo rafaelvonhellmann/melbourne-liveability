@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { X } from "lucide-react";
-import { loadPlaces } from "@/lib/places-data";
+import { usePlaces } from "@/lib/use-places";
 import type { Place, ScoreWeights } from "@/lib/types";
 import {
   getDefaultWeights,
@@ -25,13 +25,12 @@ const MAX_COMPARE = 4;
 
 export default function ComparePage() {
   const searchParams = useSearchParams();
-  const [places, setPlaces] = useState<Place[]>([]);
+  const { places, error: placesError } = usePlaces();
   const [slugs, setSlugs] = useState<string[]>([]);
   const [weights, setWeights] = useState<ScoreWeights>(getDefaultWeights());
   const [savedShortlist, setSavedShortlist] = useState<string[]>([]);
 
   useEffect(() => {
-    loadPlaces().then(setPlaces);
     setSavedShortlist(loadUserPrefs().shortlist);
   }, []);
 
@@ -115,6 +114,12 @@ export default function ComparePage() {
           Search a suburb to add it — up to four areas side-by-side. Uses your saved
           weights when shared via link.
         </p>
+
+        {placesError && (
+          <p className="mt-3 max-w-xl rounded-lg border border-[#E9C8B4] bg-[#FBEEE6] px-3 py-2 text-sm text-[#9A552F]">
+            Could not load area data. Check your connection and reload the page.
+          </p>
+        )}
 
         <div className="mt-5 max-w-xl space-y-4">
           <div>

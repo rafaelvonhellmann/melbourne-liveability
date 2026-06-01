@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Download, Trash2, Lock } from "lucide-react";
-import { loadPlaces } from "@/lib/places-data";
-import type { Place } from "@/lib/types";
+import { usePlaces } from "@/lib/use-places";
 import {
   loadUserPrefs,
   saveUserPrefs,
@@ -18,12 +17,11 @@ import { SiteFooter } from "@/components/SiteFooter";
 
 export default function AccountPage() {
   const [prefs, setPrefs] = useState<UserPrefs>(DEFAULT_PREFS);
-  const [places, setPlaces] = useState<Place[]>([]);
+  const { places, error: placesError } = usePlaces();
   const [cleared, setCleared] = useState(false);
 
   useEffect(() => {
     setPrefs(loadUserPrefs());
-    loadPlaces().then(setPlaces).catch(() => {});
   }, []);
 
   const name = (slug: string) =>
@@ -97,7 +95,13 @@ export default function AccountPage() {
           </p>
         )}
 
-        {!hasAny && !cleared ? (
+        {placesError && (
+          <p className="mt-4 rounded-lg border border-[#E9C8B4] bg-[#FBEEE6] px-3 py-2 text-sm text-[#9A552F]">
+            Could not load suburb names — showing area IDs. Reload to retry.
+          </p>
+        )}
+
+        {!hasAny ? (
           <p className="mt-6 rounded-lg border border-dashed border-surface-border bg-surface px-3 py-4 text-sm text-ink-muted">
             No saved preferences yet. Pick a lens, adjust weights, or shortlist suburbs on
             the <Link href="/" className="text-accent hover:underline">map</Link> and they

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import type { Place, ScoreWeights } from "@/lib/types";
 import { computeWeightedScore } from "@/lib/scoring";
@@ -23,11 +24,26 @@ export function ResultsList({
   onSelect,
   selectedSlug,
 }: ResultsListProps) {
-  const ranked: RankedPlace[] = places
-    .filter((p) => !p.nonResidential)
-    .map((p) => ({ ...p, total: computeWeightedScore(p, weights).total }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, limit);
+  // Ranking is O(n·domains) over ~354 places; memoise so it only recomputes when
+  // places or weights actually change (not on every parent re-render / hover /
+  // selection). This component is mounted twice (sidebar + mobile sheet).
+  const ranked: RankedPlace[] = useMemo(
+    () =>
+      places
+        .filter((p) => !p.nonResidential)
+        .map((p) => ({ ...p, total: computeWeightedScore(p, weights).total }))
+        .sort((a, b) => b.total - a.total)
+        .slice(0, limit),
+    [places, weights, limit]
+  );
+
+  if (ranked.length === 0) {
+    return (
+      <p className="px-4 py-3 text-sm text-ink-muted">
+        Loading ranked areas…
+      </p>
+    );
+  }
 
   return (
     <ol aria-label="Ranked places">

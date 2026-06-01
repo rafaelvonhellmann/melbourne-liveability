@@ -28,8 +28,8 @@ type MobileSheetProps = {
 };
 
 /**
- * Compact mobile bottom sheet with explicit tabs (Explore / Search / Layers /
- * Weights).
+ * Compact mobile bottom sheet with explicit tabs (Explore / Results / Search /
+ * Layers / Weights).
  * Tabs follow the WAI-ARIA tabs pattern (tablist/tab/tabpanel + roving arrow
  * keys) and rely on the global focus-visible ring / reduced-motion handling.
  */

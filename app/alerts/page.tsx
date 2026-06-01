@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { loadPlaces } from "@/lib/places-data";
+import { usePlaces } from "@/lib/use-places";
 import type { Place } from "@/lib/types";
 import { loadUserPrefs, saveUserPrefs } from "@/lib/user-prefs";
 import { allSources } from "@/lib/sources";
@@ -11,7 +11,7 @@ import { ShareViewButton } from "@/components/ShareViewButton";
 const FORMSPREE_ID = process.env.NEXT_PUBLIC_FORMSPREE_ALERTS_ID;
 
 export default function AlertsPage() {
-  const [places, setPlaces] = useState<Place[]>([]);
+  const { places } = usePlaces();
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
   const [status, setStatus] = useState<"idle" | "sending" | "ok" | "saved-local" | "error">(
@@ -20,7 +20,6 @@ export default function AlertsPage() {
   const [shortlist, setShortlist] = useState<string[]>([]);
 
   useEffect(() => {
-    loadPlaces().then(setPlaces);
     const prefs = loadUserPrefs();
     setShortlist(prefs.shortlist);
     if (prefs.alertEmail) setEmail(prefs.alertEmail);

@@ -435,8 +435,9 @@ function MapSidebar({
         </p>
         {residential > 0 && (
           <p className="mt-2 text-[11px] text-ink-muted">
-            {residential} residential SA2 suburbs in view (of {total} SA2s total).
-            Personalised ranked lists are planned for signed-in profiles.
+            {residential} residential SA2 suburbs in view (of {total} SA2s total),
+            ranked by your priorities below. Saved &amp; synced lists are planned for
+            signed-in profiles.
           </p>
         )}
       </div>
@@ -470,8 +471,9 @@ function ExploreHint({ residentialCount }: { residentialCount: number }) {
       {residentialCount > 0 && (
         <>
           {" "}
-          We hold {residentialCount} residential SA2 suburbs — personalised ranked
-          lists are planned for signed-in profiles.
+          We hold {residentialCount} residential SA2 suburbs — see the Results tab
+          for a live ranking. Saved &amp; synced lists are planned for signed-in
+          profiles.
         </>
       )}
     </p>
