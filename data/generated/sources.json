@@ -61,7 +61,7 @@
     "licence": "CC BY 4.0",
     "period": "rolling schedule export",
     "fetchedAt": "2026-06-01",
-    "sha256": "71f16b77f8235977f24c9c310765b71eacb9fb85f8ec0bb7cef31bf2ecc52b0c"
+    "sha256": "14a66b3fe76419217ba12703ab60face7ef935653966eee22200f0a6e0b6f280"
   },
   {
     "id": "osm-pt",
@@ -70,7 +70,7 @@
     "licence": "ODbL — attribute OSM",
     "period": "current",
     "fetchedAt": "2026-06-01",
-    "sha256": "6b45c24c48143124445478a4b041a6d4468c732e8edac50d7265832cd8a1e505"
+    "sha256": "117b81e8f3704a954aa1fcdf5357c51e6f3e9ed5dad99de459cfae0a7cea19d6"
   },
   {
     "id": "vic-mapshare-hospitals",
@@ -88,7 +88,7 @@
     "licence": "ODbL — attribute OSM",
     "period": "current",
     "fetchedAt": "2026-06-01",
-    "sha256": "38e2af7777db2e0669f93104e66c9810dd22da4bc5709dda432a03fc36711ee2"
+    "sha256": "d4cd545dd4e57b2b2e971ed26f55a85d8c8cfd9e4c48cbe070dec08b7aac543e"
   },
   {
     "id": "osm-post",
@@ -97,7 +97,7 @@
     "licence": "ODbL — attribute OSM",
     "period": "current",
     "fetchedAt": "2026-06-01",
-    "sha256": "353779243308ae688d30618aa07f1f83c4b8d29c60cd514e3e274be05316ee34"
+    "sha256": "3277751365b81234a85fd91357081ae1fedcd4327ea560f792ef189e0b4c7e58"
   },
   {
     "id": "osm-clinical-social",
@@ -106,7 +106,7 @@
     "licence": "ODbL — attribute OSM",
     "period": "current",
     "fetchedAt": "2026-06-01",
-    "sha256": "94218198333290eb0e51c1e5502d0f8e19c957059bc41bc5810e2da9bce4c46f"
+    "sha256": "ec27f37ce8c0fdf6f83988da35e149b24a0d1398aff02a617599cbe5693e934b"
   },
   {
     "id": "abs-census-labour-2016",
@@ -114,8 +114,8 @@
     "url": "https://dbr.abs.gov.au/",
     "licence": "CC BY 4.0",
     "period": "2016",
-    "fetchedAt": "2026-05-29",
-    "sha256": "766ed1e0c2d0daa5f5b5d495900bf61225b083ee2ec901bee308a3ecb238c586"
+    "fetchedAt": "2026-06-01",
+    "sha256": "7798efb43bc0c60015da0b131e306ae93314067beac01dace8a6023555a721f1"
   },
   {
     "id": "vic-planning-bpa",
@@ -142,7 +142,7 @@
     "licence": "ODbL — attribute OSM",
     "period": "current",
     "fetchedAt": "2026-06-01",
-    "sha256": "2b15d2aac1042c37dc41306fa7b02f5d88beaeb077a72c45a57347edcedeef6d"
+    "sha256": "e74c7c37d2dc9dd10626424018f9243f359b062d92ab9103ad1a5837a9ae1b8a"
   },
   {
     "id": "abs-census-preschool-2021",
@@ -150,8 +150,8 @@
     "url": "https://dbr.abs.gov.au/",
     "licence": "CC BY 4.0",
     "period": "2021",
-    "fetchedAt": "2026-05-29",
-    "sha256": "766ed1e0c2d0daa5f5b5d495900bf61225b083ee2ec901bee308a3ecb238c586"
+    "fetchedAt": "2026-06-01",
+    "sha256": "7798efb43bc0c60015da0b131e306ae93314067beac01dace8a6023555a721f1"
   },
   {
     "id": "abs-seifa-2021",
@@ -177,8 +177,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-05-30",
-    "sha256": "a884b87e5d59d8e17e9bee1a9ab70b10cf1b4122f4ba1452e12f039642ddc586"
+    "fetchedAt": "2026-06-01",
+    "sha256": "247ad96a902bb43af96f613c804546a04b3c0033424f57ff11124286dced07cd"
   },
   {
     "id": "osm-cycleways",
@@ -186,7 +186,7 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-05-30",
-    "sha256": "7c3059913cbaab1e297770c89bcce6c291fa32b62ccd61719463ba04f81504f8"
+    "fetchedAt": "2026-06-01",
+    "sha256": "34202973ef610c010c55213644c7960e3d2a7c5a4a48b0be57e4a6a6589bef23"
   }
 ]
