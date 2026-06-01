@@ -105,6 +105,8 @@ export type PlaceContext = {
     renterPct: number | null;
     apartmentPct: number | null;
     firstNationsPct: number | null;
+    /** % of residents who completed Year 12 or equivalent (ABS Census 2021). */
+    year12Pct?: number | null;
     sourceId: string;
     period: string;
   };

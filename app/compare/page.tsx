@@ -281,6 +281,10 @@ function CompareTable({
       label: "First Nations %",
       values: selected.map((p) => pctOrDash(p.context?.community?.firstNationsPct)),
     },
+    {
+      label: "Completed Year 12 %",
+      values: selected.map((p) => pctOrDash(p.context?.community?.year12Pct)),
+    },
   ];
 
   return (

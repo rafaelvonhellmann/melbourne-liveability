@@ -527,6 +527,16 @@ function DomainPanel({
           because residents earn more. It uses no sale or purchase prices.
         </Caveat>
       )}
+
+      {domain === "education" && place.context?.community?.year12Pct != null && (
+        <Caveat className="mt-4">
+          <b className="text-ink">Attainment (context, not scored):</b>{" "}
+          {place.context.community.year12Pct.toFixed(1)}% of residents completed Year 12 or
+          equivalent (ABS Census 2021). The scored Education domain measures school &amp;
+          preschool <i>access</i>, not attainment; university / postgraduate data is not in
+          our current source.
+        </Caveat>
+      )}
     </div>
   );
 }

@@ -40,6 +40,12 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
             label="First Nations %"
             value={fmtPct(context.community.firstNationsPct)}
           />
+          {context.community.year12Pct != null && (
+            <Row
+              label="Completed Year 12 %"
+              value={fmtPct(context.community.year12Pct)}
+            />
+          )}
           <p className="mt-2 text-xs text-ink-muted">
             Owner-occupied is the non-renter remainder (owned outright + with mortgage +
             other). ABS Census 2021 · {context.community.period}

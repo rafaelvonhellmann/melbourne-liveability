@@ -57,7 +57,8 @@ async function main() {
   console.log("ABS education & employment (Census 2016 labour force + 2021 preschool)...");
   const emp = await fetchArcGisTable("ABS_Education_and_employment_by_2021_SA2", 0, {
     codes,
-    outFields: "sa2_code_2021,lf_62016,lf_52016,lf_22016,presch_82021",
+    // high_22021 = % completed Year 12 or equivalent (education attainment, context).
+    outFields: "sa2_code_2021,lf_62016,lf_52016,lf_22016,presch_82021,high_22021",
   });
   await writeFile(path.join(RAW, "abs-sa2-employment.json"), JSON.stringify(emp));
 

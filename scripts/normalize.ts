@@ -57,6 +57,7 @@ type Sa2Raw = {
   renterPct: number | null;
   apartmentPct: number | null;
   firstNationsPct: number | null;
+  year12Pct: number | null;
   walkAccess?: WalkAccess;
   cyclability?: Cyclability;
   context?: PlaceContext;
@@ -143,6 +144,7 @@ async function main() {
       renterPct: null,
       apartmentPct: null,
       firstNationsPct: null,
+      year12Pct: null,
     });
   }
 
@@ -187,6 +189,9 @@ async function main() {
     }
     if (Number.isFinite(participation)) p.participationRate = participation;
     if (Number.isFinite(presch)) p.preschoolEnrolled = presch;
+    // Education attainment (context): % completed Year 12 or equivalent.
+    const year12 = Number(row.high_22021);
+    if (Number.isFinite(year12)) p.year12Pct = year12;
   }
 
   for (const row of await loadAttrJsonAsync("abs-sa2-seifa.json")) {
@@ -473,12 +478,14 @@ async function main() {
     if (
       p.renterPct != null ||
       p.apartmentPct != null ||
-      p.firstNationsPct != null
+      p.firstNationsPct != null ||
+      p.year12Pct != null
     ) {
       ctx.community = {
         renterPct: p.renterPct,
         apartmentPct: p.apartmentPct,
         firstNationsPct: p.firstNationsPct,
+        year12Pct: p.year12Pct,
         sourceId: "abs-census-community-2021",
         period: "2021",
       };

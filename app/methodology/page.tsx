@@ -319,8 +319,9 @@ export default function MethodologyPage() {
       <Section id="context" title="6. Context layers (never scored)">
         <p>
           <strong className="text-ink">Equity</strong> (SEIFA IRSAD/IRSD deciles),{" "}
-          <strong className="text-ink">community</strong> (renter %, apartment %, First
-          Nations %), <strong className="text-ink">population trend</strong>, and{" "}
+          <strong className="text-ink">community</strong> (tenure / renter %, apartment %,
+          First Nations %, Year-12 completion %),{" "}
+          <strong className="text-ink">population trend</strong>, and{" "}
           <strong className="text-ink">home-buyer index</strong> appear for transparency
           only. The home-buyer index blends indicators we already hold (cost-pressure 28%,
           safety 18%, schools 16%, transport 14%, low hazard 14%, walk access 10%) into a
