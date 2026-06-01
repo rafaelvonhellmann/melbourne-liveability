@@ -24,11 +24,12 @@ export const V1_SCORED_DOMAINS: DomainId[] = [
 export const DOMAIN_REGISTRY: DomainConfig[] = [
   {
     id: "affordability",
-    label: "Affordability",
+    label: "Rental affordability",
     scored: true,
     defaultWeight: 30,
     layer: "choropleth",
-    description: "Median rent to median disposable household income (DFFH + ABS).",
+    description:
+      "Median rent relative to LOCAL median income — a cost-pressure measure for residents, not a sale price. High-income suburbs can score well even with high rents, so it is not a guide to how cheap an area is to move into.",
   },
   {
     id: "transport",

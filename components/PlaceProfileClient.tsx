@@ -64,16 +64,17 @@ export function PlaceProfileClient({
     )
   );
 
-  const tabs: Tab[] = [
+  // Personas live in a dropdown (a "lens"), keeping the tab strip uncrowded.
+  const personaTabs: Tab[] = PERSONA_ORDER.map((p): Tab => ({
+    id: `persona-${p}`,
+    label: PERSONA_PRESETS[p].label,
+    kind: "persona",
+    persona: p,
+  }));
+
+  // Tabs shown in the strip: overview, the scored domains, then context groups.
+  const stripTabs: Tab[] = [
     { id: "overview", label: "Overview", kind: "overview" },
-    ...PERSONA_ORDER.map(
-      (p): Tab => ({
-        id: `persona-${p}`,
-        label: PERSONA_PRESETS[p].label,
-        kind: "persona",
-        persona: p,
-      })
-    ),
     ...domains.map(
       (d): Tab => ({
         id: `domain-${d}`,
@@ -88,8 +89,9 @@ export function PlaceProfileClient({
     { id: "ctx-coverage", label: "Data coverage", kind: "context", context: "coverage" },
   ];
 
+  const allTabs = [...stripTabs, ...personaTabs];
   const [activeId, setActiveId] = useState("overview");
-  const activeTab = tabs.find((t) => t.id === activeId) ?? tabs[0];
+  const activeTab = allTabs.find((t) => t.id === activeId) ?? stripTabs[0];
 
   return (
     <div className="min-h-screen bg-bg text-ink">
@@ -136,7 +138,10 @@ export function PlaceProfileClient({
           </div>
         </div>
 
-        <TabStrip tabs={tabs} activeId={activeId} onSelect={setActiveId} />
+        <div className="mt-5 flex items-end gap-3 border-b border-surface-border">
+          <TabStrip tabs={stripTabs} activeId={activeId} onSelect={setActiveId} />
+          <PersonaLens personas={personaTabs} activeId={activeId} onSelect={setActiveId} />
+        </div>
 
         <section
           id={`panel-${activeTab.id}`}
@@ -242,7 +247,7 @@ function TabStrip({
       aria-label="Place profile sections"
       aria-orientation="horizontal"
       onKeyDown={onKeyDown}
-      className="mt-5 flex gap-1.5 overflow-x-auto border-b border-surface-border pb-px [scrollbar-width:thin]"
+      className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto pb-px [scrollbar-width:thin]"
     >
       {tabs.map((t) => {
         const active = t.id === activeId;
@@ -269,6 +274,46 @@ function TabStrip({
           </button>
         );
       })}
+    </div>
+  );
+}
+
+/* ----------------------------- Persona lens --------------------------- */
+
+function PersonaLens({
+  personas,
+  activeId,
+  onSelect,
+}: {
+  personas: Tab[];
+  activeId: string;
+  onSelect: (id: string) => void;
+}) {
+  const active = personas.find((p) => p.id === activeId);
+  return (
+    <div className="shrink-0 pb-1.5">
+      <label htmlFor="persona-lens" className="sr-only">
+        Persona lens
+      </label>
+      <select
+        id="persona-lens"
+        value={active?.id ?? ""}
+        onChange={(e) => {
+          if (e.target.value) onSelect(e.target.value);
+        }}
+        className={`rounded-lg border bg-surface px-2.5 py-1.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+          active
+            ? "border-accent font-medium text-ink"
+            : "border-surface-border text-ink-muted hover:border-accent hover:text-ink"
+        }`}
+      >
+        <option value="">Persona lens…</option>
+        {personas.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.label}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
@@ -473,6 +518,15 @@ function DomainPanel({
           via crosswalk — not resident point-level.
         </Caveat>
       )}
+
+      {domain === "affordability" && (
+        <Caveat className="mt-4">
+          <b className="text-ink">Read this as cost-pressure, not price.</b> A high score
+          means rent takes a small share of <b className="text-ink">local</b> incomes — so
+          wealthy suburbs (Toorak, Brighton, Kew) can rank well despite high absolute rents,
+          because residents earn more. It uses no sale or purchase prices.
+        </Caveat>
+      )}
     </div>
   );
 }
@@ -590,13 +644,15 @@ function PopulationTrendCard({ series }: { series?: PlaceSeries }) {
       <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
         Population trend
       </h3>
-      <div className="flex items-baseline gap-1.5">
+      <div className="flex flex-wrap items-baseline gap-x-1.5">
         <span className="num text-2xl font-semibold leading-none text-ink">
           {fmt(latest.value)}
         </span>
         <span className="text-[11px] text-ink-muted">people · {latest.period}</span>
       </div>
-      <Sparkline series={series} format={fmt} width={232} />
+      <div className="overflow-x-auto">
+        <Sparkline series={series} format={fmt} width={132} />
+      </div>
       <p className="mt-2 border-t border-surface-border pt-2 text-[11px] text-ink-muted">
         <span>Source: </span>
         {source ? (

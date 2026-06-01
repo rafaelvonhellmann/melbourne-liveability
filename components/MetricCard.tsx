@@ -165,6 +165,23 @@ function BenchmarkBand({
         <span>Median {formatMetricValue(median, def.format)}</span>
         <span>P75 {formatMetricValue(p75, def.format)}</span>
       </div>
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] text-ink-muted">
+        <span className="inline-flex items-center gap-1">
+          <span
+            className="inline-block h-2.5 w-2.5 rounded-full border border-white"
+            style={{ background: dotColor }}
+            aria-hidden
+          />
+          this area
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="inline-block h-3 w-px bg-ink-muted" aria-hidden /> GM median
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="inline-block h-2 w-3 rounded-sm bg-ink-muted/25" aria-hidden />{" "}
+          middle 50%
+        </span>
+      </div>
     </div>
   );
 }

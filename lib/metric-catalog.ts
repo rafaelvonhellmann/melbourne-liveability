@@ -41,7 +41,7 @@ export const METRIC_CATALOG: MetricDef[] = [
     format: "ratio",
     higherIsBetter: false,
     description:
-      "Median weekly rent ÷ equivalised household income — a cost-pressure proxy (no sale-price data).",
+      "Median weekly rent ÷ LOCAL equivalised household income — a cost-pressure proxy (lower is better). Wealthy areas can look affordable because residents' incomes are high, not because rents are low. No sale-price data.",
   },
   {
     domain: "transport",
