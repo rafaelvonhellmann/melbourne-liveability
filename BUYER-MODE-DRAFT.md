@@ -1,0 +1,170 @@
+# Buyer Mode — strategy draft (for review)
+
+**Status:** DRAFT for external review (ChatGPT / Claude / human). Nothing here is built or
+decided. Goal of this doc: pressure-test the *property-buyer* direction as the primary
+paid product, and the differentiation thesis behind it, before we commit engineering.
+
+**Author intent (Rafael):** buyers are the segment most likely to *pay*. But we must
+"think differently from what people already have access to" — not rebuild Domain/REA.
+This doc proposes where that difference is, what data it needs, and the open questions.
+
+---
+
+## 1. The one-line thesis
+
+> **liveable.melbourne (Buyer Mode) is the independent, fully-sourced *due-diligence
+> layer* for Australian property buyers** — surfacing the risks, planning/supply changes,
+> and liveability ground-truth that transaction portals won't, can't, or won't *honestly*
+> show. We don't compete on listings or "growth scores"; we compete on **honest synthesis
+> of fragmented open-government data, and neutrality.**
+
+Price trends are included as orientation. They are **not** the moat — the portals already
+win on transaction data, and we won't out-Domain Domain.
+
+---
+
+## 2. Why this is a real gap (what buyers can and can't already get)
+
+| Buyer question | Who answers it today | The gap we exploit |
+|---|---|---|
+| What's for sale / what did it sell for / median price | Domain, realestate.com.au | They win. We only borrow this as context. |
+| Automated valuation / "growth forecast" | CoreLogic, PropTrack (paid, black-box) | Opaque, proprietary, optimistic. We offer *transparent, sourced* signals instead. |
+| **What hazards / risks affect this property?** (bushfire, flood, insurance, contamination, heritage limits) | Scattered (VicPlan, EPA, CFA); portals **bury** it | **We surface it, sourced + caveated.** Portals are agent-funded → structurally disincentivised. |
+| **What's being built / planned nearby?** (developments, permits, rezoning, infrastructure) | Fragmented across council DA registers, VicPlan, Big Build | **Aggregating this per-area is genuinely hard + unique.** Leading indicator of price + amenity. |
+| **What's the social/community trajectory?** (tenure mix, social housing, churn, demographics) | profile.id (B2G), ABS (raw) | We already compile much of this; buyers research it manually. |
+| **Is it actually a good place to live?** (transport, schools, walkability, health, crime) | Us, already — sourced + honest | This is our existing strength; Buyer Mode ties it to the purchase decision. |
+
+**The structural moat:** the portals are **agent-funded and transaction-optimised**, so they
+cannot credibly publish the downside (flood risk, crime context, a planned 8-storey block
+next door, rising social-housing concentration). We are sourced, neutral, and
+liveability-first — *"the second opinion your buyer's agent won't give you for free."*
+
+---
+
+## 3. Buyer-relevant data layers (Rafael's list + extensions)
+
+Rated by **differentiation** (how much it sets us apart) and **effort/feasibility** (open
+data availability for Victoria first; national later via the §10 adapter pattern).
+
+| Layer | What it tells a buyer | Candidate AU source | Open? | Differentiation | Effort |
+|---|---|---|---|---|---|
+| **Price trend** (median sale) | Is the area rising/falling | Vic Valuer-General sales / data.vic; PropTrack/CoreLogic (licensed) | Partial / patchy | Low (portals win) | Med (licensing) |
+| **New developments / supply pipeline** | Future supply pressure + neighbourhood change | VicPlan permits, council DA registers, **ABS Building Approvals** (SA2/LGA) | Mostly yes | **High** | High (fragmented) |
+| **Social housing nearby** *(also Community)* | Social mix, concentration trajectory | DFFH social-housing stock + ABS tenure (social-housing %) | Yes | Med-High | Low-Med |
+| **Zoning + overlays / rezoning** | Reno limits (heritage), upzoning upside, what can be built next door | VicPlan zones + planning-scheme overlays | Yes | **High** | Med |
+| **Infrastructure pipeline** | Amenity + price trajectory | Vic "Big Build" (Suburban Rail Loop, level-crossing removals), DTP open data | Yes | High | Med |
+| **Hazard / insurance risk** | Bushfire / flood exposure → insurance cost, resale | We ALREADY hold BPA + LSIO overlays | Yes (have it) | **High** | Low (surface it) |
+| **School catchments** | Zoned-for-X-school price premium (top buyer driver) | findmyschool.vic.gov.au (deferred in ULTRAPLAN) | Yes | High | Med |
+| **Rental yield / investor lens** | Yield for investor-buyers | rent (have) ÷ price (need) | Partial | Med | Med |
+| **Vacancy / rental demand** | Tenant demand, exit liquidity | DFFH bond-lodgement / vacancy | Verify | Med | Med |
+| **Demographic trajectory** | Gentrification / churn signals | ABS Census + ERP series (have ERP) | Yes | Med | Low-Med |
+
+**Read:** our highest-differentiation, lowest-effort wins are the ones the portals avoid and
+we partly already hold — **hazards/insurance risk, social-housing context, zoning/overlays,
+and the development/supply pipeline.** Price trend is the *lowest*-differentiation item
+despite being the most-requested — include it, but don't lead with it.
+
+---
+
+## 4. Product shape
+
+- **Free core (unchanged):** the liveability map + all open data. Stays the public good and
+  SEO/top-of-funnel engine. Never paywalled.
+- **Buyer Mode (paid):** a buyer lens over the map **plus** an exportable, sourced
+  **"Buyer Due-Diligence Report"** per suburb/address:
+  - Liveability snapshot (our 7 domains, honestly).
+  - **Risk dossier:** hazard overlays + insurance implications, crime context, contamination/heritage flags.
+  - **Change dossier:** nearby developments/permits, rezoning, infrastructure pipeline, supply (building approvals).
+  - **Social/community trajectory:** tenure mix, social housing, churn, demographics.
+  - **Price context:** trend + rent/yield, clearly labelled and caveated.
+  - Every figure sourced + dated; a confidence statement; explicit "information, not advice."
+
+The report is the thing a buyer would pay $X for before a $1M+ decision — and it's
+*differentiated* because it's the honest, aggregated, forward-looking view, not a listing
+or a black-box score.
+
+---
+
+## 5. Fit with existing architecture & principles
+
+- **Never folds into the scored liveability composite.** Buyer signals are context/lens
+  only — the locked seven-domain score stays neutral (preserves trust + the free product).
+- **Reverses ULTRAPLAN §0 "no sale-price data" — consciously.** Sale price enters *only* as
+  buyer-lens context, never into liveability rank. This must be a documented, deliberate
+  decision (it's the project's stated red line today).
+- **Uses the §10 jurisdiction-adapter pattern.** Most buyer layers are Vic-specific
+  (VicPlan, DFFH, Big Build) → Vic adapter first, other states later.
+- **Slots into §12 monetisation** as the concrete B2C engine (today §12 leans B2G/B2B
+  area reports). Buyer Mode is the consumer counterpart.
+- **Static-first still holds** for the data; accounts/payments stay a thin separate service.
+
+---
+
+## 6. Monetisation
+
+- **B2C primary:** Buyer Mode subscription (small $/mo) **or** pay-per-report (e.g. one
+  due-diligence report per purchase). Per-report may convert better — buyers are episodic.
+- **B2B adjacent (likely durable):** buyers' agents, conveyancers, mortgage brokers,
+  relocation firms — white-labelled or bulk due-diligence reports. (Pairs with §12 B2G/B2B.)
+- **Why they pay:** a $1M+ decision; the report de-risks it with information that is
+  otherwise hours of manual digging across council/VicPlan/EPA sites — and that the
+  agent-funded incumbents won't surface honestly.
+
+---
+
+## 7. Honest risks & limits (do not skip)
+
+1. **We will not beat the portals on sale-price/listing data.** Open sale data is lagged and
+   patchy; CoreLogic is expensive. If we frame Buyer Mode as "better price data," we lose.
+   The thesis only holds if the moat is **risk + change + honesty**, not price.
+2. **DA / planning data is fragmented per-council** and freshness is hard. The supply/dev
+   pipeline is the highest-value, highest-effort layer — scope it carefully or it sinks the MVP.
+3. **Licensing:** Valuer-General sales terms, CoreLogic/PropTrack cost, council DA reuse
+   terms — verify before committing any layer (same gate as every other source).
+4. **Neutrality / SEO risk:** going buyer-commercial must not make the free liveability
+   product look like a sales funnel, or it erodes the trust + organic-search advantage.
+5. **Legal:** strictly "information, not financial/property advice" — even more important
+   when money changes hands. Keep the disclaimer + Privacy/Terms tight.
+6. **Incumbent response:** CoreLogic/PropTrack could add a "risk/liveability" layer. Our
+   defensibility is *open-data transparency + neutrality*, which they structurally can't
+   match without abandoning their agent/valuation business model. Is that enough? (Q for review.)
+
+---
+
+## 8. Proposed MVP (smallest differentiated slice)
+
+Build the layers that are **high-differentiation + we mostly already hold**, ship a basic
+report, measure willingness-to-pay before the expensive layers:
+
+1. **Surface what we have for buyers:** hazards/insurance-risk framing + social-housing/tenure
+   context + ERP population trajectory → a first "Buyer view" on existing profiles. (Low effort.)
+2. **School catchments** (findmyschool) — top buyer driver, deferred but high-value. (Med.)
+3. **Building approvals (ABS, SA2/LGA)** as a first, *tractable* supply-pipeline signal
+   (cleaner than council DAs). (Med.)
+4. **Exportable Buyer Due-Diligence Report** (PDF/CSV) stitching the above + price context. (Med.)
+5. *Then* evaluate: VicPlan zoning/overlays, dev-application aggregation, sale-price feed.
+
+Defer the hardest (per-council DA scraping, licensed price feeds) until WTP is proven.
+
+---
+
+## 9. Open questions for reviewers
+
+1. Is the **"independent due-diligence layer"** thesis defensible long-term, or will
+   CoreLogic/PropTrack/portals absorb it? What's the durable moat — is open-data transparency
+   + neutrality *enough*?
+2. Best **free/open Victorian sources** for (a) sale-price trend and (b) the
+   development/permit pipeline? Is ABS Building Approvals a good-enough supply proxy to start?
+3. **Pricing model:** per-report vs subscription vs B2B (buyers' agents/brokers)? Which
+   converts for an episodic, high-stakes purchase?
+4. Does reversing **"no sale-price data"** endanger the free product's neutrality/SEO? How to
+   firewall the commercial lens from the trusted liveability core?
+5. What's the **single most differentiated layer** to lead the MVP with — risk dossier, the
+   change/pipeline view, or school catchments?
+6. Are we underrating any buyer need (strata/body-corporate data, flood-insurance pricing,
+   noise/aircraft, NBN, crime-trend direction, comparable-sales context)?
+
+---
+
+*Cross-refs: ULTRAPLAN §0 (no-sale-price red line), §9 (deferred: median sale prices, buyer
+mode, school catchments), §10 (jurisdiction adapters), §12 (monetisation roadmap).*
