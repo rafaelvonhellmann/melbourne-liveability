@@ -37,6 +37,18 @@ test.describe("content routes", () => {
     await page.goto("/compare");
     await expect(page.getByRole("heading", { name: /Compare places/ })).toBeVisible();
   });
+
+  test("compare deep table populates from ?list= with sub-indicators + tenure", async ({
+    page,
+  }) => {
+    await page.goto(
+      "/compare?list=toorak-206061138,brunswick-east-206011106"
+    );
+    await expect(page.getByRole("link", { name: "Toorak" })).toBeVisible({ timeout: 15_000 });
+    // Deep rows: a domain sub-indicator + the tenure context row.
+    await expect(page.getByText("Rent-to-income").first()).toBeVisible();
+    await expect(page.getByText(/Owner-occupied % \(approx\)/)).toBeVisible();
+  });
 });
 
 test.describe("profile", () => {

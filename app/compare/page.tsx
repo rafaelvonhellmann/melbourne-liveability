@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { X } from "lucide-react";
@@ -13,6 +13,7 @@ import {
 } from "@/lib/weights";
 import { computeWeightedScore } from "@/lib/scoring";
 import { V1_SCORED_DOMAINS, getDomain } from "@/lib/domains";
+import { metricsForDomain, formatMetricValue } from "@/lib/metric-catalog";
 import { parseListParam, buildCompareUrl } from "@/lib/share-url";
 import { loadUserPrefs } from "@/lib/user-prefs";
 import { buildSearchIndex } from "@/lib/search";
@@ -223,6 +224,20 @@ function bestIndex(values: (number | null)[]): number {
   return best;
 }
 
+/** Best index honouring the indicator's direction (max for higher-is-better, else min). */
+function bestIndexDir(values: (number | null)[], higherIsBetter: boolean): number {
+  let best = -1;
+  let bestVal = higherIsBetter ? -Infinity : Infinity;
+  values.forEach((v, i) => {
+    if (v == null || !Number.isFinite(v)) return;
+    if (higherIsBetter ? v > bestVal : v < bestVal) {
+      bestVal = v;
+      best = i;
+    }
+  });
+  return best;
+}
+
 function CompareTable({
   selected,
   weights,
@@ -232,6 +247,9 @@ function CompareTable({
 }) {
   const totals = selected.map((p) => computeWeightedScore(p, weights).total);
   const bestTotal = bestIndex(totals);
+
+  const pctOrDash = (v: number | null | undefined) =>
+    v != null && Number.isFinite(v) ? `${v.toFixed(1)}%` : "—";
 
   const contextRows = [
     {
@@ -243,20 +261,25 @@ function CompareTable({
       ),
     },
     {
-      label: "Renter %",
-      values: selected.map((p) =>
-        p.context?.community?.renterPct != null
-          ? `${p.context.community.renterPct.toFixed(1)}%`
-          : "—"
-      ),
+      label: "Renter households %",
+      values: selected.map((p) => pctOrDash(p.context?.community?.renterPct)),
+    },
+    {
+      label: "Owner-occupied % (approx)",
+      values: selected.map((p) => {
+        const r = p.context?.community?.renterPct;
+        return r != null && Number.isFinite(r)
+          ? `~${Math.max(0, 100 - r).toFixed(1)}%`
+          : "—";
+      }),
+    },
+    {
+      label: "Apartment dwellings %",
+      values: selected.map((p) => pctOrDash(p.context?.community?.apartmentPct)),
     },
     {
       label: "First Nations %",
-      values: selected.map((p) =>
-        p.context?.community?.firstNationsPct != null
-          ? `${p.context.community.firstNationsPct.toFixed(1)}%`
-          : "—"
-      ),
+      values: selected.map((p) => pctOrDash(p.context?.community?.firstNationsPct)),
     },
   ];
 
@@ -300,35 +323,80 @@ function CompareTable({
         </thead>
         <tbody>
           {V1.map((d) => {
-            const values = selected.map((p) => p.domains[d]?.percentile ?? null);
-            const best = bestIndex(values);
+            const cfg = getDomain(d);
+            const pctValues = selected.map((p) => p.domains[d]?.percentile ?? null);
+            const bestPct = bestIndex(pctValues);
+            const metrics = metricsForDomain(d);
             return (
-              <tr key={d}>
-                <td className="border-b border-surface-border px-3 py-2.5 text-ink-muted">
-                  {getDomain(d)?.label}
-                </td>
-                {values.map((v, i) => (
-                  <td
-                    key={i}
-                    className={`border-b border-surface-border px-3 py-2.5 ${
-                      i === best
-                        ? "bg-accent/10 font-semibold text-accent-focus"
-                        : ""
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span
-                        className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm"
-                        style={{ background: percentileToColor(v) }}
-                      />
-                      <span className="num">{v != null ? v.toFixed(0) : "—"}</span>
-                      {i === best && <span className="text-accent">★</span>}
+              <Fragment key={d}>
+                {/* Domain percentile (group header) */}
+                <tr className="bg-surface-sunken/50">
+                  <td className="border-b border-surface-border px-3 py-2.5 font-medium text-ink">
+                    {cfg?.label}{" "}
+                    <span className="text-[10px] font-normal uppercase tracking-wide text-ink-muted">
+                      percentile
                     </span>
                   </td>
-                ))}
-              </tr>
+                  {pctValues.map((v, i) => (
+                    <td
+                      key={i}
+                      className={`border-b border-surface-border px-3 py-2.5 ${
+                        i === bestPct ? "font-semibold text-accent-focus" : ""
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span
+                          className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm"
+                          style={{ background: percentileToColor(v) }}
+                        />
+                        <span className="num">{v != null ? v.toFixed(0) : "—"}</span>
+                        {i === bestPct && <span className="text-accent">★</span>}
+                      </span>
+                    </td>
+                  ))}
+                </tr>
+                {/* Raw sub-indicators for this domain */}
+                {metrics.map((def) => {
+                  const raws = selected.map((p) => {
+                    const iv = p.domains[d]?.subIndicators?.[def.key];
+                    return iv && iv.raw != null && Number.isFinite(iv.raw) ? iv.raw : null;
+                  });
+                  const bestRaw = bestIndexDir(raws, def.higherIsBetter);
+                  return (
+                    <tr key={def.key}>
+                      <td className="border-b border-surface-border py-2 pl-7 pr-3 text-xs text-ink-muted">
+                        {def.label}{" "}
+                        <span className="text-ink-muted/70">
+                          ({def.higherIsBetter ? "↑ better" : "↓ better"})
+                        </span>
+                      </td>
+                      {raws.map((r, i) => (
+                        <td
+                          key={i}
+                          className={`num border-b border-surface-border px-3 py-2 text-xs ${
+                            i === bestRaw ? "font-semibold text-accent-focus" : "text-ink"
+                          }`}
+                        >
+                          {formatMetricValue(r, def.format)}
+                          {i === bestRaw && <span className="ml-1 text-accent">★</span>}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </Fragment>
             );
           })}
+
+          {/* Context section header */}
+          <tr className="bg-surface-sunken">
+            <td
+              colSpan={selected.length + 1}
+              className="border-b border-surface-border px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-ink-muted"
+            >
+              Context — not part of the score
+            </td>
+          </tr>
 
           {contextRows.map((row) => (
             <tr key={row.label} className="bg-surface-sunken">
@@ -348,9 +416,10 @@ function CompareTable({
         </tbody>
       </table>
       <p className="px-3 py-3 text-xs text-ink-muted">
-        Context rows (italic, shaded) are <b className="text-ink">not part of the
-        score</b> — shown for orientation only. The best value per scored row is
-        highlighted with a ★.
+        Shaded rows are each domain&apos;s Greater-Melbourne percentile; the rows beneath
+        are its raw sub-indicators (↑/↓ marks which direction is better). The best value
+        per row is marked ★. Context rows are <b className="text-ink">not part of the
+        score</b> — orientation only.
       </p>
     </div>
   );

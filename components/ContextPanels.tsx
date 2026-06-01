@@ -26,7 +26,12 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
 
       {context.community && (
         <Panel title="Community">
-          <Row label="Renter %" value={fmtPct(context.community.renterPct)} />
+          <TenureSplit renterPct={context.community.renterPct} />
+          <Row label="Renter households" value={fmtPct(context.community.renterPct)} />
+          <Row
+            label="Owner-occupied (approx)"
+            value={ownerApprox(context.community.renterPct)}
+          />
           <Row
             label="Apartment dwellings %"
             value={fmtPct(context.community.apartmentPct)}
@@ -36,7 +41,8 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
             value={fmtPct(context.community.firstNationsPct)}
           />
           <p className="mt-2 text-xs text-ink-muted">
-            ABS Census 2021 · {context.community.period}
+            Owner-occupied is the non-renter remainder (owned outright + with mortgage +
+            other). ABS Census 2021 · {context.community.period}
           </p>
         </Panel>
       )}
@@ -91,4 +97,33 @@ function Row({ label, value }: { label: string; value: string | number | null })
 function fmtPct(v: number | null): string | null {
   if (v == null || !Number.isFinite(v)) return null;
   return `${v.toFixed(1)}%`;
+}
+
+function ownerApprox(renterPct: number | null): string | null {
+  if (renterPct == null || !Number.isFinite(renterPct)) return null;
+  return `~${Math.max(0, 100 - renterPct).toFixed(1)}%`;
+}
+
+/** Visual renter-vs-owner split — a quick read of whether an area is rental- or
+ * owner-occupier-dominated (a useful buyer / affordability signal). */
+function TenureSplit({ renterPct }: { renterPct: number | null }) {
+  if (renterPct == null || !Number.isFinite(renterPct)) return null;
+  const renter = Math.max(0, Math.min(100, renterPct));
+  const owner = 100 - renter;
+  return (
+    <div className="mb-3">
+      <div
+        className="flex h-2.5 overflow-hidden rounded-full bg-surface-sunken"
+        role="img"
+        aria-label={`Tenure: ${renter.toFixed(0)}% renters, about ${owner.toFixed(0)}% owner-occupied or other`}
+      >
+        <div className="bg-accent" style={{ width: `${renter}%` }} />
+        <div className="bg-ink-muted/30" style={{ width: `${owner}%` }} />
+      </div>
+      <div className="mt-1 flex justify-between text-[10px] text-ink-muted">
+        <span>Renters {renter.toFixed(0)}%</span>
+        <span>Owner / other ~{owner.toFixed(0)}%</span>
+      </div>
+    </div>
+  );
 }
