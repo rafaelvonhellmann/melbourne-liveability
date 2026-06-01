@@ -163,6 +163,54 @@ Defer the hardest (per-council DA scraping, licensed price feeds) until WTP is p
    change/pipeline view, or school catchments?
 6. Are we underrating any buyer need (strata/body-corporate data, flood-insurance pricing,
    noise/aircraft, NBN, crime-trend direction, comparable-sales context)?
+7. Layers: is a **multi-criteria filter** ("show areas matching my criteria") the right paid
+   power feature, vs bivariate choropleths or saved layer sets?
+8. Pin-a-property: ship as **click-to-drop** (no geocoding) first? Is straight-line 15-min
+   walk honest enough, or does the paid tier need street-network routing?
+
+---
+
+## 10. Interaction features to pressure-test (added from Rafael's notes)
+
+Two concrete interactions, mostly buildable with data we already hold, that lean directly
+into "do what the portals don't."
+
+### 10.1 Composable layers + a multi-criteria filter (paid power feature)
+Today the map shows one choropleth at a time. For paying users, let them **manage what they
+see**:
+- **Overlay manager** — choose the base choropleth (any domain/context) + toggle overlays
+  (pins, 15-min-walk shading, hazard overlays). The building blocks already exist.
+- **Multi-criteria filter (likely the killer feature)** — "show only SA2s where renter % is
+  high AND income is high AND 15-min walk is good." Every per-SA2 value is already in the
+  browser, so this is a pure client-side filter that instantly highlights the areas matching
+  *your* criteria — the "where should I even look?" tool a listing portal can't offer.
+- **Bivariate choropleth** (nice-to-have) — colour by two variables at once (e.g. renter % ×
+  income) via a 2-D palette. Visually harder; lower priority than the filter.
+
+Feasibility: high (data is client-side). Free tier stays single-layer; layers/filter are the
+natural paid "power" tier.
+
+### 10.2 Drop a pin / "around this property" (15-min walk from any point)
+A buyer sees a listing on realestate/Domain, then comes here to vet the **location**. Let
+them **drop a pin at the exact spot** (click the map now; typed-address search later) and see:
+- What's within ~15 min on foot **of that point** (not the SA2 centroid) — supermarket, GP,
+  school, park, transport, cafe — computed client-side from the POI set we already ship
+  (haversine from the pin; same straight-line caveat as today).
+- The SA2 liveability + the **risk dossier** for that location (hazard overlays, crime
+  context), plus nearby developments / social housing once those land.
+
+Feasibility: high for the click-to-drop MVP (POIs already loaded; distance maths is trivial).
+Typed-address geocoding (address → lat/lng) is a later add (Nominatim/OSM has usage limits;
+a paid geocoder suits the paid tier), and street-network 15-min routing is a paid upgrade
+over straight-line. This is arguably the **single most differentiated** buyer interaction:
+portals show the listing; nobody gives an honest, sourced "what's actually around this exact
+spot, on foot."
+
+> **More data (Rafael: "grasp more from census/other docs"):** the around-this-point view
+> gets richer as we add the §3 buyer layers (catchments, development pipeline, social
+> housing) and more amenity types. ABS Census has more we don't yet fetch — journey-to-work
+> mode, car ownership, and qualification level (bachelor/postgrad via DataPacks G49, which is
+> not in our current ArcGIS feed) — all candidates for the buyer dossier.
 
 ---
 
