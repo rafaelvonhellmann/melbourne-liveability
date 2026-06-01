@@ -130,7 +130,11 @@ export function FeedbackButton({ context, className }: FeedbackButtonProps) {
         ref={triggerRef}
         type="button"
         onClick={() => {
+          // Start every open from a clean slate (so a previously-sent message
+          // never lingers on the next open).
           setStatus("idle");
+          setMessage("");
+          setEmail("");
           setOpen(true);
         }}
         className={

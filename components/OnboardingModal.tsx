@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { loadUserPrefs, saveUserPrefs } from "@/lib/user-prefs";
 import { INTEREST_VIEWS, type InterestViewId } from "@/lib/interest-views";
 
@@ -19,6 +19,7 @@ type Props = {
  */
 export function OnboardingModal({ onPick }: Props) {
   const [open, setOpen] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try {
@@ -36,8 +37,36 @@ export function OnboardingModal({ onPick }: Props) {
 
   useEffect(() => {
     if (!open) return;
+    const panel = panelRef.current;
+    const focusables = () =>
+      panel
+        ? Array.from(
+            panel.querySelectorAll<HTMLElement>(
+              'button, [href], input, [tabindex]:not([tabindex="-1"])'
+            )
+          )
+        : [];
+    // Move focus into the dialog on open.
+    focusables()[0]?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") dismiss();
+      if (e.key === "Escape") {
+        e.preventDefault();
+        dismiss();
+        return;
+      }
+      if (e.key === "Tab") {
+        const f = focusables();
+        if (f.length === 0) return;
+        const first = f[0];
+        const last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -64,6 +93,7 @@ export function OnboardingModal({ onPick }: Props) {
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4">
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="onboarding-title"
