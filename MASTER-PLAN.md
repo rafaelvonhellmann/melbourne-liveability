@@ -7,7 +7,7 @@ review pass.
 
 ---
 
-## ⭐ START HERE — autonomous build mandate (HEAD `aeb64ea`, tree clean)
+## ⭐ START HERE — autonomous build mandate (HEAD `25d659d`, tree clean)
 
 **Your job this session: keep building the Goal board (G1–G12) below until it's done.**
 Founder's instruction, verbatim intent: *"set it as a goal and build everything that is
@@ -44,12 +44,14 @@ social-housing *supply* instead, same reason we dropped ethnicity %).
 | G2 | Social-housing **supply** layer | ✅ `65891a1` | ABS Census G37 landlord-type → `context.socialHousing` (public+community %); profile panel. `npm run data:social-housing` then `data:apply-social-housing` → `data:geo`. **Map context-layer still TODO.** |
 | G5b | Police (VicPol) + childcare (VIC) authoritative | ✅ `c5482e5` | Vicmap FOI replaces OSM: police 125→98 (official), childcare 1,198→3,694. Per-category buyer attribution. `npm run data:vic-facilities` then `data:poi`. |
 | G9 | Deeper indicators | 🟡 partial `aeb64ea` | **DONE:** rent + mortgage stress → `context.housingStress` (ABS G9.. stress %). **TODO:** DFFH vacancy, journey-to-work mode share, train-station distance (separate sources). |
-| G10 | School catchments + primary/secondary split | ⬜ | research-gated (official zone boundaries — findmyschool.vic / DET) |
-| G11 | Zoning/heritage/parcel overlays + parcel-level hazard | ⬜ | research-gated (VicPlan — same Vicmap_Planning service as the shipped bushfire/flood overlays; add HO heritage + zone layers) |
-| G12b | Fuller LXRP-110 set + Big Build map pin-layer | ⬜ | research-gated. Pin-layer = pure code (data in `data/generated/major-projects.json`, 11 stations). LXRP-110 set needs a clean source. |
+| G11 | Zoning/heritage/parcel overlays | 🟡 partial `25d659d` | **DONE:** Heritage Overlay share → `context.planning.heritageOverlayPct` + profile panel + caveated buyer finding (Vicplan layer 9, 11,270 polys, complete). **TODO:** zoning (Vicplan zones) + parcel-level overlay matching. `npm run data:heritage` then `data:apply-heritage` → `data:geo`. |
+| G10 | School catchments + primary/secondary split | ⬜ | research-gated (official zone boundaries — findmyschool.vic / DET). Heaviest: needs polygon catchments + point-in-polygon at pin level. |
+| G12b | Fuller LXRP-110 set + Big Build map pin-layer | ⬜ | Pin-layer = pure code (data in `data/generated/major-projects.json`, 11 stations) but a WIDE blind-to-verify map surface (rAF throttle) — well-specified follow-up. LXRP-110 set needs a clean geocoded source. |
 | G7 | axe a11y audit (Playwright) | ⬜ | blocked: needs a clean local env (OneDrive lock) |
 
-Suggested order for the next session: **G11 zoning/heritage** (same Vicmap_Planning pattern as the shipped hazards — most tractable) → **G12b pin-layer** (pure code) → **G10 catchments** / remaining **G9** indicators. G7 when the local env is clean.
+Suggested order for the next session: **G11 zoning** (extend the shipped heritage pattern — add a Vicplan zone layer the same way) → remaining **G9** (train-station distance is computable from the existing GTFS; DFFH vacancy / journey-to-work need new sources) → **G2 map context-layer** (the supply data already lives in `context.socialHousing`) → **G12b pin-layer** / **G10 catchments**. G7 when the local env is clean.
+
+**Verification reality (held all session):** map render rAF-throttles under automation, so every map feature was verified via DOM/data/CI, never pixels. All 8 items this session gated `typecheck · vitest · lint` + CI deploy green. Context layers verified with the HEAD-diff script (domainsChanged === 0 every time — the locked composite was never touched).
 
 **Context-layer pattern (proven this session, reuse for more ABS/DFFH context):** dedicated `fetch-*.ts` → raw → `apply-*.ts` reads `data/generated/places.json` + injects `place.context.X` (mirror `apply-social-housing.ts` / `apply-housing-stress.ts`), PLUS the same compute inlined in `normalize.ts` for durability, then `data:geo`. ALWAYS verify with the HEAD-diff script (domainsChanged must be 0 — context never touches the locked composite). Sanity-check values vs ground truth before committing.
 
