@@ -25,6 +25,19 @@ export function serializeWeights(weights: ScoreWeights): string {
     .join(",");
 }
 
+/**
+ * Fill any missing scored domains from defaults and clamp each to >= 0, WITHOUT
+ * rescaling to sum 100. Used for the live priority sliders: scoring already
+ * normalizes by the weight RATIOS (computeWeightedScore divides by the present
+ * weight), so rescaling here only made sliders "fight" the user — drag one up and
+ * every value jumped. Keep raw values; let the score do the normalising.
+ */
+export function mergeWeights(input: ScoreWeights): ScoreWeights {
+  const merged: ScoreWeights = { ...defaultV1Weights(), ...input };
+  for (const d of V1_SCORED_DOMAINS) merged[d] = Math.max(0, merged[d] ?? 0);
+  return merged;
+}
+
 export function normalizeWeights(input: ScoreWeights): ScoreWeights {
   const defaults = defaultV1Weights();
   const merged: ScoreWeights = { ...defaults, ...input };

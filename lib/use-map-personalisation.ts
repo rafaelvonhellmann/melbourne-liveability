@@ -7,7 +7,7 @@ import { INTEREST_VIEWS, type InterestViewId } from "./interest-views";
 import { personaWeights, type PersonaId } from "./personas";
 import {
   getDefaultWeights,
-  normalizeWeights,
+  mergeWeights,
 } from "./weights";
 import { buildMapUrl, parseMapUrlState } from "./share-url";
 import {
@@ -55,9 +55,9 @@ export function useMapPersonalisation() {
     setSavedChecks(prefs.savedChecks);
 
     let w = url.weights
-      ? normalizeWeights(url.weights)
+      ? mergeWeights(url.weights)
       : prefs.weights
-        ? normalizeWeights(prefs.weights)
+        ? mergeWeights(prefs.weights)
         : getDefaultWeights();
     if (url.persona) w = personaWeights(url.persona);
 
@@ -144,10 +144,10 @@ export function useMapPersonalisation() {
       interestView: InterestViewId;
       persona?: PersonaId | null;
     }) => {
-      const normalized = normalizeWeights(next.weights);
+      const merged = mergeWeights(next.weights);
       router.replace(
         buildMapUrl("/", {
-          weights: normalized,
+          weights: merged,
           shortlist: next.shortlist,
           view: next.interestView,
           persona: next.persona ?? null,
@@ -155,7 +155,7 @@ export function useMapPersonalisation() {
         { scroll: false }
       );
       persistPrefs({
-        weights: normalized,
+        weights: merged,
         shortlist: next.shortlist,
         interestView: next.interestView,
         personaId: next.persona ?? null,
@@ -166,9 +166,9 @@ export function useMapPersonalisation() {
 
   const setWeightsAndSync = useCallback(
     (w: ScoreWeights, persona?: PersonaId | null) => {
-      const normalized = normalizeWeights(w);
-      setWeights(normalized);
-      replaceUrl({ weights: normalized, shortlist, interestView, persona });
+      const merged = mergeWeights(w);
+      setWeights(merged);
+      replaceUrl({ weights: merged, shortlist, interestView, persona });
     },
     [replaceUrl, shortlist, interestView]
   );
