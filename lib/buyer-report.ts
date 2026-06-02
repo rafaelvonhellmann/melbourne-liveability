@@ -155,8 +155,8 @@ const SCHOOL_ZONE_REF: BuyerSourceRef = {
  */
 export const AMENITY_GROUPS: { id: string; label: string; categories: PoiCategoryId[] }[] = [
   { id: "groceries", label: "Groceries & supermarkets", categories: ["supermarket"] },
-  { id: "services", label: "Everyday services", categories: ["pharmacy", "post_office", "bank"] },
-  { id: "health", label: "Health", categories: ["hospital", "gp", "pathology_lab", "ndis_provider"] },
+  { id: "services", label: "Everyday services", categories: ["post_office", "bank"] },
+  { id: "health", label: "Health", categories: ["hospital", "gp", "pharmacy", "pathology_lab", "ndis_provider"] },
   { id: "education", label: "Education", categories: ["childcare", "school", "tafe", "university"] },
   { id: "recreation", label: "Parks & recreation", categories: ["park", "gym_leisure"] },
   { id: "food", label: "Cafes & dining", categories: ["cafe_restaurant"] },

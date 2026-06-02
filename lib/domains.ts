@@ -38,7 +38,7 @@ export const DOMAIN_REGISTRY: DomainConfig[] = [
     defaultWeight: 18,
     layer: "choropleth+pins",
     pinTypes: [],
-    description: "PT stops within 800m, modes, AM-peak frequency (PTV GTFS precompute).",
+    description: "Public-transport stops within 800 m, the mix of modes, and morning-peak frequency.",
   },
   {
     id: "safety",
@@ -47,7 +47,7 @@ export const DOMAIN_REGISTRY: DomainConfig[] = [
     defaultWeight: 14,
     layer: "choropleth+pins",
     pinTypes: ["police"],
-    description: "Property and violent crime rates (VCSA); police proximity as context.",
+    description: "Recorded property and violent crime rates; nearby police stations shown as context.",
   },
   {
     id: "health",
@@ -57,7 +57,7 @@ export const DOMAIN_REGISTRY: DomainConfig[] = [
     layer: "choropleth+pins",
     pinTypes: ["hospital", "gp"],
     description:
-      "Distance to public hospitals (Vic MapShare) and GP/clinic count (OSM fallback).",
+      "Distance to public hospitals and the number of GPs / clinics nearby.",
   },
   {
     id: "hazards",
@@ -66,7 +66,7 @@ export const DOMAIN_REGISTRY: DomainConfig[] = [
     defaultWeight: 8,
     layer: "choropleth",
     description:
-      "% of SA2 in bushfire-prone and flood planning overlays (Vic planning; inverted score).",
+      "Share of the area under bushfire-prone and flood planning overlays — less overlay scores better.",
   },
   {
     id: "education",
@@ -75,7 +75,7 @@ export const DOMAIN_REGISTRY: DomainConfig[] = [
     defaultWeight: 8,
     layer: "choropleth+pins",
     pinTypes: ["school", "childcare"],
-    description: "Schools within 2 km (OSM) and preschool enrolment (ABS Census 2021).",
+    description: "Schools within 2 km and preschool enrolment.",
   },
   {
     id: "income",
@@ -84,7 +84,7 @@ export const DOMAIN_REGISTRY: DomainConfig[] = [
     defaultWeight: 8,
     layer: "choropleth",
     description:
-      "Median equivalised household income, employment-to-population, participation (ABS Census 2016).",
+      "Median household income, employment-to-population ratio, and participation rate.",
   },
   {
     id: "equity",
