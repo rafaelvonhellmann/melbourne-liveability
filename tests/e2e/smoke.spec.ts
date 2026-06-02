@@ -91,6 +91,16 @@ test.describe("map", () => {
     await expect(page.getByText(/Carlton/i).first()).toBeVisible({ timeout: 10_000 });
   });
 
+  test("buyer report restores from a shared pin URL", async ({ page }) => {
+    // ?buyer=1&lat&lng restores the Location Check without a map click, so this
+    // exercises the buyer report panel (DOM) rather than the rAF-throttled GL
+    // canvas. A CBD pin always yields positives + things-to-verify.
+    await page.goto("/?buyer=1&lat=-37.8136&lng=144.9631");
+    await expect(
+      page.getByText(/positive signal|to verify/i).first()
+    ).toBeVisible({ timeout: 20_000 });
+  });
+
   test("shows a recoverable error when area data fails to load", async ({ page }) => {
     // Simulate the data fetch failing — the map must not silently render empty.
     await page.route("**/data/places.json", (route) => route.abort());
