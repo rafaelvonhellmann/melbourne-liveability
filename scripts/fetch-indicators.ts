@@ -9,6 +9,7 @@ import { RAW } from "./lib/paths.js";
 import { loadMelbourneSa2Codes } from "./lib/melbourne-sa2-codes.js";
 import { fetchArcGisTable, overpassMelbourne } from "./lib/arcgis-fetch.js";
 import { fetchVicHospitalPoints } from "./lib/vic-facilities.js";
+import { G37_SERVICE, G37_FIELDS } from "../lib/social-housing.js";
 
 const UA = "MelbourneLiveability/1.0";
 
@@ -77,6 +78,13 @@ async function main() {
       "sa2_code_2021,tenure_72021,tenure_82021,tenure_92021,tenure_102021,dwell_42021,dwell_72021",
   });
   await writeFile(path.join(RAW, "abs-sa2-community.json"), JSON.stringify(fam));
+
+  console.log("ABS Census G37 (tenure + landlord type) social-housing supply...");
+  const landlord = await fetchArcGisTable(G37_SERVICE, 0, {
+    codes,
+    outFields: G37_FIELDS,
+  });
+  await writeFile(path.join(RAW, "abs-sa2-landlord.json"), JSON.stringify(landlord));
 
   console.log("ABS Census G01 (First Nations population)...");
   const g01 = await fetchArcGisTable("ABS_2021_Census_G01_SA2", 0, {

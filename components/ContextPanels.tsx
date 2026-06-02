@@ -53,6 +53,29 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
         </Panel>
       )}
 
+      {context.socialHousing && context.socialHousing.socialPct != null && (
+        <Panel title="Social housing supply">
+          <Row label="Social housing %" value={fmtPct(context.socialHousing.socialPct)} />
+          <Row
+            label="Public (state authority) %"
+            value={fmtPct(context.socialHousing.statePct)}
+          />
+          <Row label="Community housing %" value={fmtPct(context.socialHousing.communityPct)} />
+          {context.socialHousing.dwellings != null && (
+            <Row
+              label="Social-housing dwellings"
+              value={context.socialHousing.dwellings.toLocaleString()}
+            />
+          )}
+          <p className="mt-2 text-xs text-ink-muted">
+            Share of occupied private dwellings rented from a state/territory housing
+            authority or a community housing provider — a housing-supply mix, not a
+            measure of the people who live here. ABS Census 2021 ·{" "}
+            {context.socialHousing.period}
+          </p>
+        </Panel>
+      )}
+
       {context.environment && (
         <Panel title="Environment">
           <p className="text-sm text-ink-muted">{context.environment.note}</p>

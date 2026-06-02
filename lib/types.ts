@@ -93,6 +93,22 @@ export type Cyclability = {
   period: string;
 };
 
+/**
+ * Social-housing SUPPLY for an SA2 — context/display-only, never scored. The
+ * share of occupied private dwellings that are social housing (public + community
+ * landlord types), from the ABS 2021 Census tenure-and-landlord-type table. A
+ * housing-mix fact, NOT a welfare/disadvantage measure (see lib/social-housing).
+ */
+export type SocialHousing = {
+  statePct: number | null;
+  communityPct: number | null;
+  socialPct: number | null;
+  dwellings: number | null;
+  totalDwellings: number | null;
+  sourceId: string;
+  period: string;
+};
+
 /** Display-only context (never affects liveability rank). */
 export type PlaceContext = {
   equity?: {
@@ -112,6 +128,7 @@ export type PlaceContext = {
   };
   walkAccess?: WalkAccess;
   cyclability?: Cyclability;
+  socialHousing?: SocialHousing;
   environment?: { note: string };
   politics?: { note: string };
 };

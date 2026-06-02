@@ -18,7 +18,8 @@ import { countWithinKm, minDistanceKm } from "./lib/proximity.js";
 import { scoredGpPoints } from "./lib/poi-classify.js";
 import { buildHazardIndex, overlayPctInSa2 } from "./lib/sa2-overlay-pct.js";
 import { computeCyclabilityByCode } from "./lib/cyclability-compute.js";
-import type { Cyclability, PlaceContext, WalkAccess } from "../lib/types.js";
+import { computeSocialHousing } from "../lib/social-housing.js";
+import type { Cyclability, PlaceContext, SocialHousing, WalkAccess } from "../lib/types.js";
 import {
   WALK_THRESHOLD_KM,
   WALK_CATEGORY_IDS,
@@ -60,6 +61,7 @@ type Sa2Raw = {
   year12Pct: number | null;
   walkAccess?: WalkAccess;
   cyclability?: Cyclability;
+  socialHousing?: SocialHousing;
   context?: PlaceContext;
 };
 
@@ -221,6 +223,24 @@ async function main() {
     if (dwellTotal > 0 && Number.isFinite(apartments)) {
       p.apartmentPct = (apartments / dwellTotal) * 100;
     }
+  }
+
+  // Social-housing SUPPLY (context only, never scored) — ABS 2021 Census G37
+  // landlord-type totals: public (state/territory authority) + community housing
+  // as a share of occupied private dwellings. See lib/social-housing.ts.
+  for (const row of await loadAttrJsonAsync("abs-sa2-landlord.json")) {
+    const code = String(row.sa2_code_2021 ?? "");
+    const p = byCode.get(code);
+    if (!p) continue;
+    const sh = computeSocialHousing(
+      {
+        stateAuthority: Number(row.r_st_h_auth_total),
+        communityProvider: Number(row.r_com_hp_total),
+        totalDwellings: Number(row.total_total),
+      },
+      { sourceId: "abs-census-community-2021", period: "2021" }
+    );
+    if (sh.socialPct != null || sh.dwellings != null) p.socialHousing = sh;
   }
 
   for (const row of await loadAttrJsonAsync("abs-sa2-indigenous.json")) {
@@ -492,6 +512,7 @@ async function main() {
     }
     if (p.walkAccess) ctx.walkAccess = p.walkAccess;
     if (p.cyclability) ctx.cyclability = p.cyclability;
+    if (p.socialHousing) ctx.socialHousing = p.socialHousing;
     p.context = ctx;
   }
 
