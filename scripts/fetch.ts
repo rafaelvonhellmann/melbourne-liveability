@@ -56,6 +56,9 @@ async function main() {
   console.log("\n▶ Indicator sources...");
   const { execSync } = await import("node:child_process");
   execSync("npx tsx scripts/fetch-indicators.ts", { stdio: "inherit" });
+
+  console.log("\n▶ Extra buyer POI (banks, TAFE/university)...");
+  execSync("npx tsx scripts/fetch-extra-poi.ts", { stdio: "inherit" });
 }
 
 main().catch((err) => {

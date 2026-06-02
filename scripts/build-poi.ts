@@ -117,6 +117,12 @@ async function main() {
   const clinical = JSON.parse(
     await readFile(path.join(RAW, "osm-clinical-social.json"), "utf8").catch(() => "{}")
   );
+  const finance = JSON.parse(
+    await readFile(path.join(RAW, "osm-finance.json"), "utf8").catch(() => "{}")
+  );
+  const eduExtra = JSON.parse(
+    await readFile(path.join(RAW, "osm-education-extra.json"), "utf8").catch(() => "{}")
+  );
 
   const features = dedupeFeatures([
     ...osmToFeatures(health, "police", isPolice),
@@ -131,6 +137,9 @@ async function main() {
     ...osmToFeatures(post, "post_office", isPostOffice),
     ...osmToFeatures(clinical, "pathology_lab", isPathologyLab),
     ...osmToFeatures(clinical, "ndis_provider", isNdisProvider),
+    ...osmToFeatures(finance, "bank", (t) => t.amenity === "bank"),
+    ...osmToFeatures(eduExtra, "tafe", (t) => t.amenity === "college"),
+    ...osmToFeatures(eduExtra, "university", (t) => t.amenity === "university"),
     ...amenitiesToFeatures(amenities),
   ]);
 

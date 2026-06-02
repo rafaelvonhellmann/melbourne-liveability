@@ -29,7 +29,10 @@ export type PoiCategoryId =
   | "supermarket"
   | "park"
   | "gym_leisure"
-  | "cafe_restaurant";
+  | "cafe_restaurant"
+  | "bank"
+  | "tafe"
+  | "university";
 
 export type PoiCategory = {
   id: PoiCategoryId;
@@ -57,6 +60,9 @@ export const POI_CATEGORIES: PoiCategory[] = [
   { id: "park", label: "Parks / open space", color: "#117733" },
   { id: "gym_leisure", label: "Gyms / leisure", color: "#E6AB02" },
   { id: "cafe_restaurant", label: "Cafes / restaurants", color: "#A6761D" },
+  { id: "bank", label: "Banks", color: "#08519C" },
+  { id: "tafe", label: "TAFE / college", color: "#CC4C02" },
+  { id: "university", label: "Universities", color: "#54278F" },
 ];
 
 export const POI_CATEGORY_IDS: PoiCategoryId[] = POI_CATEGORIES.map((c) => c.id);
