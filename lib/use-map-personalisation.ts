@@ -14,7 +14,10 @@ import {
   loadUserPrefs,
   saveUserPrefs,
   trackRecentView,
+  addSavedCheck,
+  removeSavedCheck,
   type RecentPlace,
+  type SavedCheck,
   type UserPrefs,
 } from "./user-prefs";
 
@@ -35,6 +38,7 @@ export function useMapPersonalisation() {
   const [walkAccessMode, setWalkAccessMode] = useState(false);
   const [cyclabilityMode, setCyclabilityMode] = useState(false);
   const [recent, setRecent] = useState<RecentPlace[]>([]);
+  const [savedChecks, setSavedChecks] = useState<SavedCheck[]>([]);
 
   // Tracks which interest view we last applied layer/confidence defaults for, so
   // weight edits (which change the URL) don't clobber the user's manual layer or
@@ -45,6 +49,7 @@ export function useMapPersonalisation() {
     const url = parseMapUrlState(searchParams.toString());
     const prefs = loadUserPrefs();
     setRecent(prefs.recent);
+    setSavedChecks(prefs.savedChecks);
 
     let w = url.weights
       ? normalizeWeights(url.weights)
@@ -196,6 +201,16 @@ export function useMapPersonalisation() {
     setRecent(next.recent);
   }, []);
 
+  const saveCheck = useCallback(
+    (check: Parameters<typeof addSavedCheck>[0]) => {
+      setSavedChecks(addSavedCheck(check).savedChecks);
+    },
+    []
+  );
+  const removeCheck = useCallback((id: string) => {
+    setSavedChecks(removeSavedCheck(id).savedChecks);
+  }, []);
+
   return {
     weights,
     shortlist,
@@ -210,6 +225,9 @@ export function useMapPersonalisation() {
     cyclabilityMode,
     toggleCyclabilityMode,
     recent,
+    savedChecks,
+    saveCheck,
+    removeCheck,
     setWeightsAndSync,
     selectPersona,
     selectInterestView,

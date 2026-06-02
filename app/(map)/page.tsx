@@ -21,6 +21,8 @@ import { ResultsList } from "@/components/ResultsList";
 import { FeedbackButton } from "@/components/FeedbackButton";
 import { OnboardingModal } from "@/components/OnboardingModal";
 import { BuyerReportPanel } from "@/components/buyer/BuyerReportPanel";
+import { SavedChecks } from "@/components/buyer/SavedChecks";
+import { savedCheckId, type SavedCheck } from "@/lib/user-prefs";
 import { buildBuyerReport, type BuyerReport as BuyerReportData } from "@/lib/buyer-report";
 import { findSa2ForPoint } from "@/lib/buyer-location";
 import type { GeocodeResult } from "@/lib/geocode";
@@ -61,6 +63,9 @@ export default function MapPage() {
     cyclabilityMode,
     toggleCyclabilityMode,
     recent,
+    savedChecks,
+    saveCheck,
+    removeCheck,
     setWeightsAndSync,
     selectPersona,
     selectInterestView,
@@ -298,6 +303,32 @@ export default function MapPage() {
     syncBuyerUrl(true, null);
   };
 
+  // Saved checks (device-local retention): bookmark the current pin, or reopen a
+  // saved one (regenerating the deterministic report from its coordinates).
+  const currentCheckSaved = useMemo(
+    () =>
+      buyerPin != null &&
+      savedChecks.some((c) => c.id === savedCheckId(buyerPin[1], buyerPin[0])),
+    [savedChecks, buyerPin]
+  );
+  const toggleSaveCheck = () => {
+    if (!buyerPin) return;
+    const id = savedCheckId(buyerPin[1], buyerPin[0]);
+    if (savedChecks.some((c) => c.id === id)) {
+      removeCheck(id);
+    } else {
+      saveCheck({ lat: buyerPin[1], lng: buyerPin[0], areaName: buyerPlace?.name });
+      track("buyer_save_check", { coverage: buyerPlace ? "in" : "off" });
+    }
+  };
+  const openSavedCheck = (c: SavedCheck) => {
+    const lngLat: [number, number] = [c.lng, c.lat];
+    setBuyerMode(true);
+    setSelected(null);
+    syncBuyerUrl(true, lngLat);
+    void restorePin(lngLat);
+  };
+
   const toggleBuyerMode = () => {
     const next = !buyerMode;
     if (next) setSelected(null);
@@ -405,10 +436,17 @@ export default function MapPage() {
         </button>
       </div>
       {!buyerPin ? (
-        <p className="rounded-lg border border-dashed border-surface-border bg-surface px-3 py-4 text-sm text-ink-muted">
-          Click the map — or search a suburb in the top bar — to drop a pin and get a
-          second-opinion report.
-        </p>
+        <div className="space-y-3">
+          <p className="rounded-lg border border-dashed border-surface-border bg-surface px-3 py-4 text-sm text-ink-muted">
+            Click the map — or search a suburb or full address in the top bar — to drop a
+            pin and get a second-opinion report.
+          </p>
+          <SavedChecks
+            checks={savedChecks}
+            onOpen={openSavedCheck}
+            onRemove={removeCheck}
+          />
+        </div>
       ) : !buyerReport ? (
         <p className="text-sm text-ink-muted">Computing what&apos;s nearby…</p>
       ) : (
@@ -500,6 +538,8 @@ export default function MapPage() {
             variant="live"
             shareUrl={buyerShareUrl}
             onClear={clearBuyerPin}
+            onSaveCheck={toggleSaveCheck}
+            isSaved={currentCheckSaved}
           />
         </>
       )}

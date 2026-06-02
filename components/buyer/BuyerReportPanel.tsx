@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Printer, X, ShieldAlert, CheckCircle2, HelpCircle, Info } from "lucide-react";
+import { Printer, X, ShieldAlert, CheckCircle2, HelpCircle, Info, Sun, Bookmark, BookmarkCheck } from "lucide-react";
 import type { BuyerReport, BuyerFinding, BuyerConfidence, BuyerGeography } from "@/lib/buyer-report";
 import { AMENITY_GROUPS } from "@/lib/buyer-report";
 import { formatSourceDate } from "@/lib/source-manifest";
+import { shadeMapUrl } from "@/lib/shademap";
 import { withBase } from "@/lib/asset-path";
 import { track } from "@/lib/analytics";
 import { POI_CATEGORY_BY_ID, type PoiCategoryId } from "@/lib/poi-categories";
@@ -22,6 +23,10 @@ type BuyerReportPanelProps = {
   shareUrl?: string;
   /** Clear-pin handler (live map only); omit to hide. */
   onClear?: () => void;
+  /** Save-this-check handler (live map only); omit to hide the save button. */
+  onSaveCheck?: () => void;
+  /** Whether the current pin is already in the user's saved checks. */
+  isSaved?: boolean;
   className?: string;
 };
 
@@ -44,8 +49,11 @@ export function BuyerReportPanel({
   variant = "live",
   shareUrl,
   onClear,
+  onSaveCheck,
+  isSaved = false,
   className = "",
 }: BuyerReportPanelProps) {
+  const hasPin = report.location.lat != null && report.location.lng != null;
   const verify = report.findings.filter((f) => f.kind === "red_flag" || f.kind === "verify");
   const positives = report.findings.filter((f) => f.kind === "positive");
   const unavailable = report.findings.filter((f) => f.kind === "unavailable");
@@ -106,6 +114,36 @@ export function BuyerReportPanel({
             >
               <Printer className="h-3.5 w-3.5" aria-hidden /> Print / Save as PDF
             </button>
+            {hasPin && (
+              <a
+                href={shadeMapUrl(report.location.lat!, report.location.lng!)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => track("buyer_shademap")}
+                className="inline-flex items-center gap-1.5 rounded-md border border-surface-border px-2.5 py-1 text-xs text-ink transition-colors hover:border-accent hover:text-accent"
+              >
+                <Sun className="h-3.5 w-3.5" aria-hidden /> Check sunlight &amp; aspect
+              </a>
+            )}
+            {onSaveCheck && hasPin && (
+              <button
+                type="button"
+                onClick={onSaveCheck}
+                aria-pressed={isSaved}
+                className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-colors ${
+                  isSaved
+                    ? "border-accent bg-accent/10 text-accent"
+                    : "border-surface-border text-ink hover:border-accent hover:text-accent"
+                }`}
+              >
+                {isSaved ? (
+                  <BookmarkCheck className="h-3.5 w-3.5" aria-hidden />
+                ) : (
+                  <Bookmark className="h-3.5 w-3.5" aria-hidden />
+                )}{" "}
+                {isSaved ? "Saved" : "Save this check"}
+              </button>
+            )}
             {shareUrl && <ShareViewButton getUrl={() => shareUrl} label="Copy share link" />}
             {onClear && (
               <button
