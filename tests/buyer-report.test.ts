@@ -4,6 +4,7 @@ import {
   buildBuyerReport,
   findContainingSa2,
   getNearbyAmenities,
+  dedupeParkAmenities,
   BUYER_DISCLAIMER,
 } from "../lib/buyer-report";
 import type { Place } from "../lib/types";
@@ -285,5 +286,68 @@ describe("buildBuyerReport adjacency nudge", () => {
   it("omits the finding when nearbyAreas is not supplied", () => {
     const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: samplePlace(), pois: POIS, generatedAt: "t" });
     expect(r.findings.find((f) => f.id === "near-area-border")).toBeFalsy();
+  });
+});
+
+describe("dedupeParkAmenities", () => {
+  const park = (name: string, lat: number, lng: number, d = 0) => ({
+    id: `${name}@${lat},${lng}`,
+    name,
+    category: "park",
+    lat,
+    lng,
+    distanceMeters: d,
+  });
+  const cafe = (name: string, lat: number, lng: number, d = 0) => ({
+    id: name,
+    name,
+    category: "cafe_restaurant",
+    lat,
+    lng,
+    distanceMeters: d,
+  });
+
+  it("merges same-named park pins within the merge radius, keeping the nearest", () => {
+    const out = dedupeParkAmenities([
+      park("Royal Park", -37.78, 144.95, 100),
+      park("Royal Park", -37.7805, 144.9505, 160), // ~70 m away
+    ]);
+    expect(out.filter((a) => a.category === "park")).toHaveLength(1);
+    expect(out[0].distanceMeters).toBe(100);
+  });
+
+  it("keeps same-named parks that are far apart (different suburbs)", () => {
+    const out = dedupeParkAmenities([
+      park("Rose Garden", -37.78, 144.95, 100),
+      park("Rose Garden", -37.82, 144.99, 200), // kilometres away
+    ]);
+    expect(out).toHaveLength(2);
+  });
+
+  it("keeps distinct named parks even when close together", () => {
+    const out = dedupeParkAmenities([
+      park("Royal Park", -37.78, 144.95, 100),
+      park("Princes Park", -37.7802, 144.9502, 120), // ~25 m, different name
+    ]);
+    expect(out).toHaveLength(2);
+  });
+
+  it("merges an unnamed 'park' pin into a nearby named park", () => {
+    const out = dedupeParkAmenities([
+      park("Royal Park", -37.78, 144.95, 100),
+      park("park", -37.7802, 144.9502, 120), // generic, ~25 m
+    ]);
+    expect(out).toHaveLength(1);
+    expect(out[0].name).toBe("Royal Park");
+  });
+
+  it("leaves non-park amenities untouched and preserves order", () => {
+    const input = [
+      cafe("A", -37.78, 144.95, 50),
+      park("P", -37.78, 144.95, 60),
+      cafe("B", -37.79, 144.96, 70),
+    ];
+    const out = dedupeParkAmenities(input);
+    expect(out.map((a) => a.id)).toEqual(["A", "P@-37.78,144.95", "B"]);
   });
 });

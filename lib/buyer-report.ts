@@ -256,6 +256,51 @@ export function getNearbyAmenities(
   return limited;
 }
 
+/** Distance under which two park pins are treated as the same park. */
+export const PARK_MERGE_METERS = 200;
+
+function isGenericParkName(name: string): boolean {
+  const n = name.trim().toLowerCase();
+  // Unnamed OSM open space is labelled with the category fallback ("park").
+  return n === "" || n === "park";
+}
+
+/**
+ * Collapse OSM park "splits". A single park is frequently mapped as many separate
+ * nodes/segments (or as several unnamed `park` points), which would otherwise read
+ * as a dozen nearby parks. Two park pins are merged when they sit within
+ * {@link PARK_MERGE_METERS} of each other AND share a name (or at least one is the
+ * generic unnamed `park`). Different *named* parks that happen to be close (e.g.
+ * "Royal Park" vs "Princes Park") are kept separate; same names far apart (a "Rose
+ * Garden" in two suburbs) are also kept. Input must be nearest-first; the nearest
+ * pin of each cluster is the one kept. Non-park amenities pass through untouched
+ * and overall order is preserved. Pure.
+ */
+export function dedupeParkAmenities(
+  amenities: NearbyAmenity[],
+  mergeMeters: number = PARK_MERGE_METERS
+): NearbyAmenity[] {
+  const out: NearbyAmenity[] = [];
+  const keptParks: NearbyAmenity[] = [];
+  for (const a of amenities) {
+    if (a.category !== "park") {
+      out.push(a);
+      continue;
+    }
+    const aName = a.name.trim().toLowerCase();
+    const aGeneric = isGenericParkName(a.name);
+    const isDup = keptParks.some((k) => {
+      const meters = haversineKm([a.lng, a.lat], [k.lng, k.lat]) * 1000;
+      if (meters > mergeMeters) return false;
+      return aGeneric || isGenericParkName(k.name) || aName === k.name.trim().toLowerCase();
+    });
+    if (isDup) continue;
+    out.push(a);
+    keptParks.push(a);
+  }
+  return out;
+}
+
 // ---- Finding-rule helpers --------------------------------------------------
 
 function rawOf(place: Place | null | undefined, domain: keyof Place["domains"], sub: string): number | null {
@@ -342,19 +387,27 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
 
   // Nearby amenities (display: top 8 per category) + full reachable counts. When
   // an isochrone is supplied, "reachable" means inside that walk polygon; else a
-  // straight-line radius. Same code path either way (getNearbyAmenities).
-  const allNearby =
+  // straight-line radius. OSM splits a single park into many nodes/segments, so
+  // we collapse same-park pins (dedupeParkAmenities) before counting OR listing —
+  // otherwise one park reads as a dozen. Counts + list derive from one deduped,
+  // nearest-first pass.
+  const allNearby = dedupeParkAmenities(
     point && input.pois
       ? getNearbyAmenities(point, input.pois, { radiusMeters, isochrone })
-      : [];
+      : []
+  );
   const amenityCountsByCategory: Record<string, number> = {};
   for (const a of allNearby) {
     amenityCountsByCategory[a.category] = (amenityCountsByCategory[a.category] ?? 0) + 1;
   }
-  const nearbyAmenities =
-    point && input.pois
-      ? getNearbyAmenities(point, input.pois, { radiusMeters, limitPerCategory: 8, isochrone })
-      : [];
+  const perCatShown = new Map<string, number>();
+  const nearbyAmenities: NearbyAmenity[] = [];
+  for (const a of allNearby) {
+    const n = perCatShown.get(a.category) ?? 0;
+    if (n >= 8) continue;
+    perCatShown.set(a.category, n + 1);
+    nearbyAmenities.push(a);
+  }
 
   const findings: BuyerFinding[] = [];
   const reachableEveryday = WALK_CATEGORY_IDS.filter(
@@ -398,10 +451,10 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         kind: "positive",
         severity: "info",
         title: "Good access to parks / open space",
-        summary: `${amenityCountsByCategory["park"]} park / open-space feature(s) mapped ${walkPhrase}.`,
+        summary: `${amenityCountsByCategory["park"]} distinct park / open-space area(s) mapped ${walkPhrase}.`,
         confidence: "medium",
         geography: "poi-radius",
-        caveat: amenityCaveat,
+        caveat: `${amenityCaveat} Where OpenStreetMap splits one park into several points, nearby duplicates are merged so the count reflects distinct parks.`,
         sourceRefs: getSourcesByIds(["osm-amenities"]),
       });
     }
