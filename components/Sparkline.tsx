@@ -52,7 +52,7 @@ export function Sparkline({ series, format, width = 132, height = 34 }: Sparklin
 
   // Colourblind-safe: blue (#2c7fb8, "data-4") for better, orange accent for
   // worse, neutral ink for flat. Always paired with an arrow + sign below.
-  const color = flat ? "#6B6862" : better ? "#2c7fb8" : "#D97757";
+  const color = flat ? "#6B6862" : better ? "#2c7fb8" : "#AD4F2E";
   const arrow = flat ? "→" : rising ? "▲" : "▼";
 
   const deltaText =

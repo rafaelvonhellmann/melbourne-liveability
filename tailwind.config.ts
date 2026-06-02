@@ -21,9 +21,13 @@ const config: Config = {
           muted: "#6B6862",
         },
         accent: {
-          DEFAULT: "#D97757",
+          // Deepened from the original coral #D97757 (~3.1:1 on light) to meet
+          // WCAG AA 4.5:1 as BOTH text-on-light and white-text-on-fill (contrast
+          // is symmetric). #AD4F2E is ~5.1/4.6/4.7 on surface/bg/sunken and ~5.3
+          // on white. Tunable, but keep it at least this dark to stay AA.
+          DEFAULT: "#AD4F2E",
           ink: "#FFFFFF",
-          focus: "#B65A3C",
+          focus: "#9C4221",
         },
         // Colorblind-safe YlGnBu data channel — never themed
         data: {

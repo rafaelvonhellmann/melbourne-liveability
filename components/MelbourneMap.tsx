@@ -198,7 +198,7 @@ export function MelbourneMap({
         source: "sa2",
         filter: ["==", ["get", "slug"], "__none__"],
         paint: {
-          "line-color": "#B65A3C",
+          "line-color": "#9C4221",
           "line-width": 3.5,
           "line-opacity": 0.95,
         },
@@ -263,14 +263,14 @@ export function MelbourneMap({
         id: "buyer-radius-fill",
         type: "fill",
         source: "buyer-radius",
-        paint: { "fill-color": "#D97757", "fill-opacity": 0.08 },
+        paint: { "fill-color": "#AD4F2E", "fill-opacity": 0.08 },
       });
       map.addLayer({
         id: "buyer-radius-line",
         type: "line",
         source: "buyer-radius",
         paint: {
-          "line-color": "#D97757",
+          "line-color": "#AD4F2E",
           "line-width": 1.5,
           "line-opacity": 0.7,
           "line-dasharray": [2, 2],
@@ -433,7 +433,7 @@ export function MelbourneMap({
       return;
     }
     if (!pinMarkerRef.current) {
-      pinMarkerRef.current = new maplibregl.Marker({ color: "#D97757" })
+      pinMarkerRef.current = new maplibregl.Marker({ color: "#AD4F2E" })
         .setLngLat(buyerPin)
         .addTo(map);
     } else {
