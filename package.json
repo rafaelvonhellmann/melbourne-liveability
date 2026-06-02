@@ -52,6 +52,7 @@
     "data:ev-poi": "tsx scripts/fetch-ev-poi.ts",
     "data:noise": "tsx scripts/fetch-noise.ts",
     "data:nuisance": "tsx scripts/fetch-nuisance.ts",
+    "data:stations": "tsx scripts/fetch-train-stations.ts",
     "data:vic-facilities": "tsx scripts/fetch-vic-facilities.ts",
     "data:social-housing": "tsx scripts/fetch-social-housing.ts",
     "data:apply-social-housing": "tsx scripts/apply-social-housing.ts",

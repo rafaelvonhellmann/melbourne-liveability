@@ -84,6 +84,32 @@ describe("nuisance-proximity finding (industrial/waste/sewage/quarry)", () => {
   });
 });
 
+describe("nearest train-station finding", () => {
+  it("flags a nearby station as a positive, sourced + caveated", () => {
+    const r = buildBuyerReport({
+      lat: -37.8,
+      lng: 144.97,
+      pois: [],
+      stations: [{ name: "Test Station", coord: [144.97, -37.8] }],
+    });
+    const f = r.findings.find((x) => x.id === "train-station");
+    expect(f).toBeTruthy();
+    expect(f!.kind).toBe("positive");
+    expect(f!.summary).toMatch(/Test Station/);
+    expect(f!.sourceRefs?.length ?? 0).toBeGreaterThan(0);
+  });
+
+  it("marks a far station neutral, not positive", () => {
+    const r = buildBuyerReport({
+      lat: -37.8,
+      lng: 144.97,
+      pois: [],
+      stations: [{ name: "Far", coord: [145.1, -37.9] }], // ~14 km
+    });
+    expect(r.findings.find((x) => x.id === "train-station")?.kind).toBe("neutral");
+  });
+});
+
 function poi(pinType: string, name: string, lng: number, lat: number): Feature<Point> {
   return {
     type: "Feature",

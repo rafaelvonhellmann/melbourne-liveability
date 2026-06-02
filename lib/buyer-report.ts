@@ -32,6 +32,7 @@ import {
   type NuisancePoint,
 } from "./nuisance";
 import { evaluateFit, type BuyerProfile, type FitResult } from "./buyer-fit";
+import { nearestStation, type Station } from "./transit";
 import { computeWeightedScore } from "./scoring";
 import { getDefaultWeights } from "./weights";
 import { getSourcesByIds } from "./source-manifest";
@@ -426,6 +427,8 @@ export interface BuildBuyerReportInput {
    * for the proximity proxy finding. Lazy-loaded client-side; omit to skip.
    */
   nuisancePoints?: NuisancePoint[];
+  /** Train stations for the "nearest train station" finding. Lazy-loaded; omit to skip. */
+  stations?: Station[];
   /**
    * The user's personal "fit" profile (buyer or agent). When provided, the report
    * gains a `fit` block: deal-breakers to verify + plain-language fit notes,
@@ -588,6 +591,30 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         geography: "pin",
         caveat:
           "Straight-line distance to the representative point of the nearest mapped industrial area, waste/landfill, sewage works or quarry (OpenStreetMap, ODbL) — a proximity proxy, NOT a measured emission. Whether a site affects this property depends on wind, hours, screening and operations.",
+        sourceRefs: getSourcesByIds(["osm-amenities"]),
+      });
+    }
+  }
+
+  // Nearest train station (pin-level, OSM) — a commute-convenience signal.
+  if (point && input.stations && input.stations.length > 0) {
+    const st = nearestStation([point.lng, point.lat], input.stations);
+    if (st) {
+      const close = st.distanceM <= 1200;
+      const dist =
+        st.distanceM < 1000 ? `${st.distanceM} m` : `${(st.distanceM / 1000).toFixed(1)} km`;
+      findings.push({
+        id: "train-station",
+        kind: close ? "positive" : "neutral",
+        severity: "info",
+        title: close ? "Train station within walking distance" : "Nearest train station",
+        summary: `${st.name} station is about ${dist} away (straight line).`,
+        whyItMatters:
+          "A nearby train station often means a faster, more reliable commute than buses alone.",
+        confidence: "medium",
+        geography: "pin",
+        caveat:
+          "Straight-line distance to the nearest mapped train station (OpenStreetMap, ODbL). The walking route is longer, and the line, frequency and direction matter too.",
         sourceRefs: getSourcesByIds(["osm-amenities"]),
       });
     }
