@@ -5,6 +5,8 @@ import {
   NO_DATA_COLOR,
   RISK_PALETTE,
   RISK_BANDS,
+  SOCIAL_PALETTE,
+  SOCIAL_BANDS,
 } from "./colors";
 
 export function choroplethFillColor(domain: DomainId, colorblind = false): unknown[] {
@@ -56,6 +58,35 @@ export function riskFillColorByProp(property: string): unknown[] {
       RISK_PALETTE[3],
       RISK_BANDS[3],
       RISK_PALETTE[4],
+    ],
+  ];
+}
+
+/**
+ * Social-housing supply choropleth (share of dwellings that are social housing).
+ * Same null/non-residential handling as the others; a Purples step keyed to
+ * SOCIAL_BANDS (more social housing = deeper purple). See SOCIAL_PALETTE.
+ */
+export function socialFillColorByProp(property: string): unknown[] {
+  const prop = ["get", property];
+  return [
+    "case",
+    ["==", ["get", "nonResidential"], true],
+    NO_DATA_COLOR,
+    ["==", prop, null],
+    NO_DATA_COLOR,
+    [
+      "step",
+      prop,
+      SOCIAL_PALETTE[0],
+      SOCIAL_BANDS[0],
+      SOCIAL_PALETTE[1],
+      SOCIAL_BANDS[1],
+      SOCIAL_PALETTE[2],
+      SOCIAL_BANDS[2],
+      SOCIAL_PALETTE[3],
+      SOCIAL_BANDS[3],
+      SOCIAL_PALETTE[4],
     ],
   ];
 }

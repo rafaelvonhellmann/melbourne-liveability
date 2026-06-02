@@ -18,6 +18,8 @@ type LayerToggleProps = {
   onWalkAccessToggle?: () => void;
   cyclabilityMode?: boolean;
   onCyclabilityToggle?: () => void;
+  socialHousingMode?: boolean;
+  onSocialHousingToggle?: () => void;
   colorblindRamp?: boolean;
   onColorblindToggle?: () => void;
   hazardLayer?: "bushfire" | "flood" | null;
@@ -36,6 +38,8 @@ export function LayerToggle({
   onWalkAccessToggle,
   cyclabilityMode = false,
   onCyclabilityToggle,
+  socialHousingMode = false,
+  onSocialHousingToggle,
   colorblindRamp = false,
   onColorblindToggle,
   hazardLayer = null,
@@ -47,7 +51,7 @@ export function LayerToggle({
     (c) => visiblePins[c.id]
   ).length;
   const activeContext =
-    walkAccessMode || cyclabilityMode || confidenceMode || !!hazardLayer;
+    walkAccessMode || cyclabilityMode || socialHousingMode || confidenceMode || !!hazardLayer;
   const activeLabel = activeContext
     ? hazardLayer === "bushfire"
       ? "Bushfire overlay"
@@ -57,7 +61,9 @@ export function LayerToggle({
           ? "15-min walk access"
           : cyclabilityMode
             ? "Cyclability"
-            : "Data confidence"
+            : socialHousingMode
+              ? "Social housing"
+              : "Data confidence"
     : (getDomain(activeDomain)?.label ?? activeDomain);
   return (
     <div
@@ -169,7 +175,11 @@ export function LayerToggle({
         </ul>
       </div>
 
-      {(onConfidenceToggle || onWalkAccessToggle || onCyclabilityToggle || onHazardSelect) && (
+      {(onConfidenceToggle ||
+        onWalkAccessToggle ||
+        onCyclabilityToggle ||
+        onSocialHousingToggle ||
+        onHazardSelect) && (
         <div className="mt-2.5 space-y-1.5 border-t border-surface-border pt-2.5">
           <div className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
             Context layers
@@ -196,6 +206,18 @@ export function LayerToggle({
               />
               Cyclability
               <span className="text-xs text-ink-muted">(not in score)</span>
+            </label>
+          )}
+          {onSocialHousingToggle && (
+            <label className="flex cursor-pointer items-center gap-2 px-1 text-sm text-ink">
+              <input
+                type="checkbox"
+                checked={socialHousingMode}
+                onChange={onSocialHousingToggle}
+                className="rounded border-surface-border accent-accent"
+              />
+              Social housing
+              <span className="text-xs text-ink-muted">(supply %)</span>
             </label>
           )}
           {onConfidenceToggle && (

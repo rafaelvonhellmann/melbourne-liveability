@@ -64,6 +64,9 @@ async function main() {
       place?.domains?.hazards?.subIndicators?.bushfirePct?.raw ?? null;
     props.flood_share =
       place?.domains?.hazards?.subIndicators?.floodPct?.raw ?? null;
+    // Context layer (never scored): % of occupied private dwellings that are
+    // social housing (public + community landlord). See context.socialHousing.
+    props.social_share = place?.context?.socialHousing?.socialPct ?? null;
     features.push({
       type: "Feature",
       properties: props,

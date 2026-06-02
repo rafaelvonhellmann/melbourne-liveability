@@ -74,6 +74,31 @@ export const RISK_PALETTE = [
 /** Upper bound (%) of each RISK_PALETTE band except the last (open-ended). */
 export const RISK_BANDS = [2, 10, 25, 50] as const;
 
+/**
+ * Social-housing SUPPLY ramp — ColorBrewer Purples (sequential, single-hue,
+ * colourblind-safe by lightness). Deliberately NOT the red risk ramp: more social
+ * housing is a neutral housing-mix fact, not "risk". Used for the optional
+ * social-housing context choropleth (share of dwellings that are social housing).
+ */
+export const SOCIAL_PALETTE = [
+  "#f2f0f7",
+  "#cbc9e2",
+  "#9e9ac8",
+  "#756bb1",
+  "#54278f",
+] as const;
+
+/** Upper bound (%) of each SOCIAL_PALETTE band except the last (open-ended). */
+export const SOCIAL_BANDS = [2, 5, 10, 15] as const;
+
+export function socialToColor(share: number | null, nonResidential = false): string {
+  if (nonResidential || share == null) return NO_DATA_COLOR;
+  const v = Math.max(0, Math.min(100, share));
+  let band = 0;
+  for (let i = 0; i < SOCIAL_BANDS.length; i++) if (v >= SOCIAL_BANDS[i]) band = i + 1;
+  return SOCIAL_PALETTE[band];
+}
+
 export function riskToColor(share: number | null, nonResidential = false): string {
   if (nonResidential || share == null) return NO_DATA_COLOR;
   const v = Math.max(0, Math.min(100, share));

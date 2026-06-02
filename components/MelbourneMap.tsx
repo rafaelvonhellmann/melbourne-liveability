@@ -8,6 +8,7 @@ import {
   choroplethFillColor,
   choroplethFillColorByProp,
   riskFillColorByProp,
+  socialFillColorByProp,
 } from "@/lib/map-expressions";
 import { withBase } from "@/lib/asset-path";
 import { poiCircleColorExpression } from "@/lib/poi-categories";
@@ -43,6 +44,8 @@ type MelbourneMapProps = {
   confidenceMode?: boolean;
   walkAccessMode?: boolean;
   cyclabilityMode?: boolean;
+  /** Social-housing supply choropleth (% of dwellings that are social housing). */
+  socialHousingMode?: boolean;
   /** Colourblind-safe score ramp (RdYlBu) instead of the default RdYlGn. */
   colorblind?: boolean;
   /** Optional hazard overlay-share choropleth (Reds ramp), or null for none. */
@@ -87,10 +90,12 @@ function fillColorFor(
   confidenceMode: boolean,
   walkAccessMode: boolean,
   cyclabilityMode: boolean,
+  socialHousingMode: boolean,
   hazardLayer: "bushfire" | "flood" | null,
   colorblind: boolean
 ): unknown[] {
   if (hazardLayer) return riskFillColorByProp(`${hazardLayer}_share`);
+  if (socialHousingMode) return socialFillColorByProp("social_share");
   if (walkAccessMode) return choroplethFillColorByProp("pct_walkaccess", colorblind);
   if (cyclabilityMode) return choroplethFillColorByProp("pct_cyclability", colorblind);
   if (confidenceMode) return choroplethFillColorByProp("pct_confidence", colorblind);
@@ -103,6 +108,7 @@ export function MelbourneMap({
   confidenceMode = false,
   walkAccessMode = false,
   cyclabilityMode = false,
+  socialHousingMode = false,
   colorblind = false,
   hazardLayer = null,
   visiblePins = {},
@@ -181,6 +187,7 @@ export function MelbourneMap({
             confidenceMode,
             walkAccessMode,
             cyclabilityMode,
+            socialHousingMode,
             hazardLayer,
             colorblind
           ) as maplibregl.ExpressionSpecification,
@@ -505,6 +512,7 @@ export function MelbourneMap({
       confidenceMode,
       walkAccessMode,
       cyclabilityMode,
+      socialHousingMode,
       hazardLayer,
       colorblind
     ) as maplibregl.ExpressionSpecification;
@@ -517,7 +525,15 @@ export function MelbourneMap({
       return;
     }
     map.setPaintProperty("sa2-fill", "fill-color", color);
-  }, [activeDomain, confidenceMode, walkAccessMode, cyclabilityMode, hazardLayer, colorblind]);
+  }, [
+    activeDomain,
+    confidenceMode,
+    walkAccessMode,
+    cyclabilityMode,
+    socialHousingMode,
+    hazardLayer,
+    colorblind,
+  ]);
 
   useEffect(() => {
     const map = mapRef.current;

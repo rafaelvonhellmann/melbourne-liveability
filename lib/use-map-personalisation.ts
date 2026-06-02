@@ -37,6 +37,9 @@ export function useMapPersonalisation() {
   const [confidenceMode, setConfidenceMode] = useState(false);
   const [walkAccessMode, setWalkAccessMode] = useState(false);
   const [cyclabilityMode, setCyclabilityMode] = useState(false);
+  // Social-housing supply choropleth (% of dwellings that are social housing).
+  // A context layer, mutually exclusive with the others.
+  const [socialHousingMode, setSocialHousingMode] = useState(false);
   // Colourblind-safe (RdYlBu) score ramp. A display-only preference (device-local,
   // persisted), independent of the choropleth basis — it recolours whatever is
   // painted, so it is NOT mutually exclusive with the context layers.
@@ -83,6 +86,7 @@ export function useMapPersonalisation() {
       setWalkAccessMode(false);
       setCyclabilityMode(false);
       setHazardLayer(null);
+      setSocialHousingMode(false);
     }
 
     // One-shot deep link (e.g. /?layer=transport from a profile metric card):
@@ -94,6 +98,7 @@ export function useMapPersonalisation() {
       setWalkAccessMode(false);
       setCyclabilityMode(false);
       setHazardLayer(null);
+      setSocialHousingMode(false);
     }
   }, [searchParams]);
 
@@ -104,6 +109,7 @@ export function useMapPersonalisation() {
         setWalkAccessMode(false);
         setCyclabilityMode(false);
         setHazardLayer(null);
+        setSocialHousingMode(false);
       }
       return !v;
     });
@@ -114,6 +120,7 @@ export function useMapPersonalisation() {
         setConfidenceMode(false);
         setCyclabilityMode(false);
         setHazardLayer(null);
+        setSocialHousingMode(false);
       }
       return !v;
     });
@@ -124,6 +131,7 @@ export function useMapPersonalisation() {
         setConfidenceMode(false);
         setWalkAccessMode(false);
         setHazardLayer(null);
+        setSocialHousingMode(false);
       }
       return !v;
     });
@@ -137,8 +145,21 @@ export function useMapPersonalisation() {
         setConfidenceMode(false);
         setWalkAccessMode(false);
         setCyclabilityMode(false);
+        setSocialHousingMode(false);
       }
       return next;
+    });
+  }, []);
+
+  const toggleSocialHousingMode = useCallback(() => {
+    setSocialHousingMode((v) => {
+      if (!v) {
+        setConfidenceMode(false);
+        setWalkAccessMode(false);
+        setCyclabilityMode(false);
+        setHazardLayer(null);
+      }
+      return !v;
     });
   }, []);
 
@@ -260,6 +281,8 @@ export function useMapPersonalisation() {
     toggleWalkAccessMode,
     cyclabilityMode,
     toggleCyclabilityMode,
+    socialHousingMode,
+    toggleSocialHousingMode,
     colorblindRamp,
     toggleColorblindRamp,
     hazardLayer,

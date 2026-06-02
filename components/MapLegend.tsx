@@ -1,4 +1,4 @@
-import { getScoreRamp, NO_DATA_COLOR, RISK_PALETTE } from "@/lib/colors";
+import { getScoreRamp, NO_DATA_COLOR, RISK_PALETTE, SOCIAL_PALETTE } from "@/lib/colors";
 import { POI_CATEGORIES } from "@/lib/poi-categories";
 
 type MapLegendProps = {
@@ -6,6 +6,8 @@ type MapLegendProps = {
   visiblePins?: Record<string, boolean>;
   /** Hazard overlay-share layer active → use the Reds risk ramp + "less/more". */
   risk?: boolean;
+  /** Social-housing supply layer active → use the Purples ramp + "less/more". */
+  social?: boolean;
   /** Colourblind-safe score ramp (RdYlBu) instead of the default RdYlGn. */
   colorblind?: boolean;
 };
@@ -14,16 +16,22 @@ export function MapLegend({
   domainLabel,
   visiblePins = {},
   risk = false,
+  social = false,
   colorblind = false,
 }: MapLegendProps) {
   const activePins = POI_CATEGORIES.filter((c) => visiblePins[c.id]);
+  const stepGrad = (palette: readonly string[]) =>
+    `linear-gradient(to right, ${palette
+      .map((c, i) => `${c} ${(i / (palette.length - 1)) * 100}%`)
+      .join(", ")})`;
   const gradient = risk
-    ? `linear-gradient(to right, ${RISK_PALETTE.map(
-        (c, i) => `${c} ${(i / (RISK_PALETTE.length - 1)) * 100}%`
-      ).join(", ")})`
-    : `linear-gradient(to right, ${getScoreRamp(colorblind)
-        .map(([p, c]) => `${c} ${p}%`)
-        .join(", ")})`;
+    ? stepGrad(RISK_PALETTE)
+    : social
+      ? stepGrad(SOCIAL_PALETTE)
+      : `linear-gradient(to right, ${getScoreRamp(colorblind)
+          .map(([p, c]) => `${c} ${p}%`)
+          .join(", ")})`;
+  const sequential = risk || social;
 
   return (
     <div
@@ -36,7 +44,7 @@ export function MapLegend({
       <div className="mb-1 font-medium text-ink">{domainLabel}</div>
       <div className="h-2.5 w-full rounded-sm" style={{ background: gradient }} />
       <div className="mt-1 flex justify-between text-[10px]">
-        {risk ? (
+        {sequential ? (
           <>
             <span>Less</span>
             <span>More</span>
@@ -51,6 +59,12 @@ export function MapLegend({
       {risk && (
         <div className="mt-0.5 text-[10px] leading-snug">
           Share of the area under the planning overlay — not a parcel-level result.
+        </div>
+      )}
+      {social && (
+        <div className="mt-0.5 text-[10px] leading-snug">
+          Share of dwellings that are social housing (public + community) — supply,
+          not a measure of residents.
         </div>
       )}
       <div className="mt-1.5 flex items-center gap-1.5">

@@ -9,9 +9,16 @@ import {
   SCORE_RAMP_CB,
   RISK_PALETTE,
   RISK_BANDS,
+  socialToColor,
+  SOCIAL_PALETTE,
+  SOCIAL_BANDS,
   NO_DATA_COLOR,
 } from "../lib/colors";
-import { riskFillColorByProp, choroplethFillColorByProp } from "../lib/map-expressions";
+import {
+  riskFillColorByProp,
+  choroplethFillColorByProp,
+  socialFillColorByProp,
+} from "../lib/map-expressions";
 
 describe("percentileToColor (score ramp)", () => {
   it("hits the red->green ramp endpoints and interpolates the middle", () => {
@@ -108,6 +115,34 @@ describe("riskToColor", () => {
   it("returns the no-data grey for null or non-residential, never a risk colour", () => {
     expect(riskToColor(null)).toBe(NO_DATA_COLOR);
     expect(riskToColor(80, true)).toBe(NO_DATA_COLOR);
+  });
+});
+
+describe("socialToColor (social-housing supply ramp)", () => {
+  it("deepens through the Purples bands by social-housing share", () => {
+    expect(socialToColor(0)).toBe(SOCIAL_PALETTE[0]);
+    expect(socialToColor(SOCIAL_BANDS[0])).toBe(SOCIAL_PALETTE[1]); // 2%
+    expect(socialToColor(SOCIAL_BANDS[1])).toBe(SOCIAL_PALETTE[2]); // 5%
+    expect(socialToColor(SOCIAL_BANDS[2])).toBe(SOCIAL_PALETTE[3]); // 10%
+    expect(socialToColor(SOCIAL_BANDS[3])).toBe(SOCIAL_PALETTE[4]); // 15%
+    expect(socialToColor(40)).toBe(SOCIAL_PALETTE[4]);
+  });
+  it("is NOT the red risk ramp (supply is neutral, not risk)", () => {
+    expect(socialToColor(40)).not.toBe(riskToColor(40));
+  });
+  it("greys-out null / non-residential", () => {
+    expect(socialToColor(null)).toBe(NO_DATA_COLOR);
+    expect(socialToColor(10, true)).toBe(NO_DATA_COLOR);
+  });
+});
+
+describe("socialFillColorByProp", () => {
+  it("builds a guarded step expression keyed on the prop with the Purples palette", () => {
+    const json = JSON.stringify(socialFillColorByProp("social_share"));
+    expect(json).toContain("social_share");
+    expect(json).toContain("nonResidential");
+    expect(json).toContain(SOCIAL_PALETTE[0]);
+    expect(json).toContain(SOCIAL_PALETTE[4]);
   });
 });
 
