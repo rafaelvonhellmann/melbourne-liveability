@@ -7,12 +7,73 @@ review pass.
 
 ---
 
+## ⭐ START HERE — autonomous build mandate (HEAD `5827f0d`, tree clean)
+
+**Your job this session: keep building the Goal board (G1–G12) below until it's done.**
+Founder's instruction, verbatim intent: *"set it as a goal and build everything that is
+pending; if you hit a problem, come to me for a direction — otherwise don't stop."* So:
+
+- **Do NOT checkpoint or stop to report progress.** Gate → commit → push → next item, repeat.
+- **Only message the founder for a genuine direction-decision** (a real fork, a source that
+  doesn't exist, an ethics/dignity call). Not for progress updates.
+- **Gate every item:** `npm run typecheck` · `npm test` (vitest) · `npm run lint`. Commit per
+  item (trailer below). Push = auto-deploy (GitHub Pages).
+- **Verify via CI, not the local dev server.** Repo lives in OneDrive; `.next` gets locked
+  mid-build/HMR → local `next dev` serves stale/broken bundles, `next build` flakes. CI is
+  clean — `gh run watch <id>` on deploy-pages is the authoritative build check. To use the
+  dev server, `rm -rf .next` first. The MapLibre GL canvas also rAF-throttles under
+  automation, so verify map features via DOM/data/CI, not screenshots/synthetic clicks.
+- **Never fabricate data.** Find an authoritative source, fetch, sanity-check; if no clean
+  source exists, FLAG it (don't invent coordinates/values). See the Big Build curated set +
+  the data-audit for the pattern.
+
+**Do NOT build (out of scope):** the §6 "founder calls" (brand name, pricing, legal/ODbL,
+accounts/payment) · **national expansion** · **welfare/Centrelink-% per area** (dignity — use
+social-housing *supply* instead, same reason we dropped ethnicity %).
+
+### Goal board
+| # | Item | Status | Class / how |
+|---|---|---|---|
+| G1 | "Show 15-min walk" button + bold radius | ✅ `0766c7b` | — |
+| G4 | Sun & aspect finding (lib/sun.ts) + remove ShadeMap | ✅ `1c2fc0a` | — |
+| G5a | Data completeness audit + drop NDIS | ✅ `5827f0d` | `npm run data:audit` → `data/generated/data-audit.json` |
+| G6 | Colourblind-safe ramp toggle | ⬜ | code (sits on the new red→green ramp) |
+| G8 | "Find areas like this" multi-criteria filter | ⬜ | code (filter SA2s by per-domain percentiles) |
+| G12a | Cyclability radius around the pin | ⬜ | code (cyclability data already exists) |
+| G2 | Social-housing **supply** layer | ⬜ | data-fetch: Census **landlord-type** field (current tenure pull lacks it) → fetch-indicators + normalize + score |
+| G3 | Community amenities (worship + community centres) | ⬜ | data-fetch: Overpass place_of_worship/community_centre → build-poi + new POI categories |
+| G5b | Police (VicPol) + childcare (VIC) authoritative | ⬜ | data-fetch (audit shows OSM sparse: police 125, pathology 46) |
+| G9 | Deeper indicators (mortgage-to-income, rental stress, DFFH vacancy, journey-to-work, train-station dist) | ⬜ | research-gated (new ABS/DFFH fetch + 2-source validation vs scores) |
+| G10 | School catchments + primary/secondary split | ⬜ | research-gated (official zone boundaries) |
+| G11 | Zoning/heritage/parcel overlays + parcel-level hazard | ⬜ | research-gated (VicPlan) |
+| G12b | Fuller LXRP-110 set + Big Build map pin-layer | ⬜ | research-gated |
+| G7 | axe a11y audit (Playwright) | ⬜ | blocked: needs a clean local env (OneDrive lock) |
+
+Suggested order: **code (G6, G8, G12a) → data-fetch (G2, G3, G5b) → research-gated (G9–G11, G12b)**. G7 when the local env is clean.
+
+### Decisions already made (do NOT re-litigate)
+- Score ramp = continuous **red→green** (worse=red); G6 adds a colourblind toggle *on top*.
+- "Rental affordability" → **"Rent vs income"**. Priority sliders hold **raw** weights (label = share-of-score). Pharmacy is in **Health**. Layer tooltips don't name sources (→ methodology).
+- Sun-aspect is **proprietary** (`lib/sun.ts`); ShadeMap removed (liability).
+- **NDIS dropped** from the report (OSM has 3 across Melbourne); map pin category kept.
+- Social housing = **supply** (Census landlord-type + OSM points), NOT welfare-%.
+- Community signal = **amenities** (places of worship of all faiths + community/cultural centres), NOT demographics.
+- Lens picker = curated 6 (Balanced / Renting / Buying / Family / Retiree / Data quality).
+
+### Conventions / gotchas
+- `rtk` prefixes shell commands (token filter) but **breaks `npx` as a prefix** — use `npx … | rtk cat`, never `rtk npx …`.
+- Data scripts: `npx tsx scripts/<x>.ts`. Offline data rebuild for data items: `data:normalize` → `data:score` → `data:geo` (reads `data/raw/*`, gitignored but present locally; avoid network `data:hazards`/full `data:fetch` unless needed).
+- Commit trailer: `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+- ~138 vitest tests. Hard constraints (§2) unchanged: static export only · Buyer Mode never scored · never overclaim/fabricate · every finding sourced + caveated · sub-path safe (`withBase`).
+
+---
+
 ## 0. TL;DR
 - **What:** static (no-backend) Next.js map of Greater Melbourne liveability +
   a **Buyer Location Check** (drop/search a location → sourced, caveated
   due-diligence report before you offer). Buyer-first product.
 - **Live:** https://rafaelvonhellmann.github.io/melbourne-liveability/
-- **Repo:** github.com/rafaelvonhellmann/melbourne-liveability (HEAD `45d3964`)
+- **Repo:** github.com/rafaelvonhellmann/melbourne-liveability (HEAD `5827f0d`)
 - **Goal:** report-first buyer due-diligence for Melbourne; open map stays free;
   per-report monetisation validated before national expansion. Compete on
   transparent, sourced due-diligence — NOT price (that is Cotality/Domain/REA).
