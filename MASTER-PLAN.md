@@ -12,7 +12,7 @@ review pass.
   a **Buyer Location Check** (drop/search a location → sourced, caveated
   due-diligence report before you offer). Buyer-first product.
 - **Live:** https://rafaelvonhellmann.github.io/melbourne-liveability/
-- **Repo:** github.com/rafaelvonhellmann/melbourne-liveability (HEAD `a946e3d`)
+- **Repo:** github.com/rafaelvonhellmann/melbourne-liveability (HEAD `45d3964`)
 - **Goal:** report-first buyer due-diligence for Melbourne; open map stays free;
   per-report monetisation validated before national expansion. Compete on
   transparent, sourced due-diligence — NOT price (that is Cotality/Domain/REA).
@@ -79,21 +79,34 @@ All seven goal-tracker build items are done, each gated (typecheck · tests · l
 | 10 | **Parks dedupe** | `a400a83` | `dedupeParkAmenities()` collapses OSM park splits (same name OR generic, within 200 m). Verified: a Royal Park pin drops 36→20 distinct parks. Park geometry is point-only, so green-%-of-area would need a polygon rebuild — deferred. |
 | 8 | **Collapsible sidebar + Lens merge + mobile parity** | `56dec4a` | Unified "Lens" picker (Balanced/Renting/Buying/Family/Retiree/Data quality — young-pro/student→Renting, education→Family); collapsible desktop panel; mobile sheet now Explore/Search/Layers/Weights (Results tab + Recently-viewed removed). |
 
-## 5. REVIEW / FIX + polish — partly shipped (`d0c2d5d`..`a946e3d`)
-Shipped this round (gated typecheck · 127 tests · lint; CI build green):
+## 5. REVIEW / FIX + polish — mostly shipped (`d0c2d5d`..`45d3964`)
+Shipped (gated typecheck · 130 tests · lint; CI build green):
 - ✅ **Canonical tags** `/buyer/sample` → `/buyer/sample-report` (`b22e411`, Codex P3).
 - ✅ **Domain tooltip** → styled, keyboard-accessible explainer box (`de75175`).
 - ✅ **CI** data-refresh.yml actions `v4`→`v6` (`d0c2d5d`); deploy-pages already `v6` (`21fa9c6`).
 - ✅ **Bushfire + flood hazard risk layers** (`a946e3d`) — overlay-share choropleths,
-  Reds ramp, off by default, never scored. **Color ramp + bands (2/10/25/50%) are a
-  first pass — review/tune the scheme.**
+  Reds ramp, off by default, never scored. **Ramp + bands (2/10/25/50%) are a first
+  pass — review/tune.**
+- ✅ **WCAG AA contrast** (`046fef9`, Codex P2) — accent deepened #D97757→**#AD4F2E**
+  (focus #9C4221) to clear 4.5:1 as text + white-on-fill. **Brand reads a touch deeper;
+  the two hex values are tunable (keep ≤#AD4F2E on light to stay AA).**
+- ✅ **Buyer-restore E2E** (`7ff7684`) — Playwright spec for `?buyer=1&lat&lng`.
+- ✅ **Infrastructure MVP** (`45d3964`) — "major project nearby" buyer finding from a
+  curated VIC Big Build set (Metro Tunnel ×5 + SRL East ×6), coords resolved via OSM
+  Nominatim + sanity-checked (`scripts/build-major-projects.ts` →
+  `data/generated/major-projects.json`). Factual, sourced, NOT price prediction. A map
+  pin-layer can follow.
 
 Still open:
-- **WCAG contrast** — accent `#D97757` ~3.1:1 on light. **Deferred on purpose:** the
-  fix darkens the brand accent across the app, a visual change to review live, not a
-  blind autonomous edit. [Codex P2.]
-- **Playwright E2E + axe** for the buyer flow + a11y audit. [Codex P1 — not added.]
-- **`page.tsx`** (~900 lines now) — extract `useBuyerMode` / hazard wiring. [optional]
+- **axe a11y audit** (Playwright) — un-addable blind here: Playwright's webServer is the
+  OneDrive-corrupted `npm run dev`, E2E isn't in deploy CI, and axe needs iterative fixing
+  against a live run. Do it in a clean local env. [Codex P1.]
+- **`page.tsx`** (~950 lines) — extract `useBuyerMode`. **Deferred on purpose:** refactoring
+  the core buyer flow (no unit coverage; only the corrupted dev server verifies it) blind is
+  the wrong risk. Do once OneDrive `.next` is clean. [optional]
+- **Community amenities** — founder GREENLIT reshaping "community" to amenities (places of
+  worship of all faiths, community/cultural centres as a POI category), NOT demographics.
+  Next build item.
 - **OneDrive `.next` HMR lock** can corrupt the *local* dev server mid-edit (stale
   bundle, false "hooks order" errors). CI/prod unaffected. Fix: stop OneDrive, `rm
   -rf .next`, `npm run dev`. See [[onedrive-next-build-race]].
@@ -101,15 +114,15 @@ Still open:
 ## 5b. Strategy discussed (this session) — decisions/notes
 - **Lens merge:** founder chose the curated buyer-first 6 (`56dec4a`).
 - **Demographics (religion/nationality/migration):** recommended AGAINST per-ethnicity
-  percentages (steering risk, conflicts with `DIGNITY-STANDARD.md`); reshape to
-  *amenities* (places of worship of all faiths, community/cultural centres) if wanted.
+  percentages (steering risk, conflicts with `DIGNITY-STANDARD.md`). **Founder GREENLIT**
+  the amenities reshape instead — places of worship of all faiths + community/cultural
+  centres as a POI category. Next build item (see §5).
 - **Legal/copyright:** OSM ODbL share-alike on the derived geojson is the one to watch;
   AU has no sui-generis DB right so the open data is inherently copyable — moat = brand
   + methodology + report UX + gated paid features. Folds into §6 legal review.
-- **Council/infra contracts (analisa.pt-style):** raw procurement isn't geocoded; the
-  tractable version is a "planned & recent infrastructure" layer from VIC Big Build
-  (level-crossing removals, Metro Tunnel, SRL stations), framed as "what's changing
-  nearby", NOT price prediction. Bigger task; not started.
+- **Council/infra contracts (analisa.pt-style):** raw procurement isn't geocoded.
+  **MVP SHIPPED** (`45d3964`) as a buyer finding from a curated, OSM-resolved Big Build
+  station set (§5). A fuller LXRP-110 set + a toggleable map pin-layer remain if wanted.
 
 ## 6. PENDING — ACT (founder decisions / external)
 - **D1 brand name** — pick (shortlist: Kerbside / Groundwork / Premise /
