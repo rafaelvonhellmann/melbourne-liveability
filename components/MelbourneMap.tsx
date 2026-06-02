@@ -8,6 +8,24 @@ import { choroplethFillColor, choroplethFillColorByProp } from "@/lib/map-expres
 import { withBase } from "@/lib/asset-path";
 import { poiCircleColorExpression } from "@/lib/poi-categories";
 import { buildPoiPopupHtml, escapeHtml, type PoiFeatureProps } from "@/lib/poi-feature";
+import { WALK_THRESHOLD_KM } from "@/lib/walk-access";
+
+/** Approximate a geographic circle (radius km) around [lng, lat] as a Polygon. */
+function circlePolygon(
+  center: [number, number],
+  radiusKm: number,
+  steps = 64
+): GeoJSON.Feature<GeoJSON.Polygon> {
+  const [lng, lat] = center;
+  const latR = radiusKm / 110.574;
+  const lngR = radiusKm / (111.32 * Math.cos((lat * Math.PI) / 180));
+  const coords: [number, number][] = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = (i / steps) * 2 * Math.PI;
+    coords.push([lng + lngR * Math.cos(t), lat + latR * Math.sin(t)]);
+  }
+  return { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [coords] } };
+}
 
 // Light basemap to sit under the warm-editorial chrome; the YlGnBu choropleth
 // remains the independent data channel on top.
@@ -225,6 +243,30 @@ export function MelbourneMap({
         },
       });
 
+      // 15-min-walk radius around the buyer pin (straight-line ~1.2 km). Drawn
+      // under the POI pins so amenities sit on top of the shaded reach.
+      map.addSource("buyer-radius", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+      map.addLayer({
+        id: "buyer-radius-fill",
+        type: "fill",
+        source: "buyer-radius",
+        paint: { "fill-color": "#D97757", "fill-opacity": 0.08 },
+      });
+      map.addLayer({
+        id: "buyer-radius-line",
+        type: "line",
+        source: "buyer-radius",
+        paint: {
+          "line-color": "#D97757",
+          "line-width": 1.5,
+          "line-opacity": 0.7,
+          "line-dasharray": [2, 2],
+        },
+      });
+
       map.addSource("pois", {
         type: "geojson",
         data: withBase("/data/pois.geojson"),
@@ -384,6 +426,11 @@ export function MelbourneMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+    const radiusSrc = map.getSource("buyer-radius") as maplibregl.GeoJSONSource | undefined;
+    radiusSrc?.setData({
+      type: "FeatureCollection",
+      features: buyerPin ? [circlePolygon(buyerPin, WALK_THRESHOLD_KM)] : [],
+    });
     if (!buyerPin) {
       pinMarkerRef.current?.remove();
       pinMarkerRef.current = null;
