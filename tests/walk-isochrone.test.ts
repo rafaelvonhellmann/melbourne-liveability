@@ -1,19 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { Feature, Point, Polygon, MultiPolygon } from "geojson";
+import type { Polygon, MultiPolygon } from "geojson";
 import {
-  amenitiesNearIsochrone,
   parseOrsIsochrone,
   fetchWalkIsochrone,
   isPreciseWalkConfigured,
 } from "@/lib/walk-isochrone";
-
-function poi(pinType: string, lng: number, lat: number): Feature<Point> {
-  return {
-    type: "Feature",
-    properties: { pinType },
-    geometry: { type: "Point", coordinates: [lng, lat] },
-  };
-}
 
 // Unit square 0..1 with a hole 0.4..0.6 (same fixture style as buyer-location).
 const square: Polygon = {
@@ -35,57 +26,6 @@ const square: Polygon = {
     ],
   ],
 };
-
-describe("amenitiesNearIsochrone", () => {
-  it("counts POIs inside the polygon and excludes those outside", () => {
-    const pin: [number, number] = [0.1, 0.1];
-    const pois = [
-      poi("gp", 0.2, 0.2), // inside
-      poi("gp", 0.3, 0.1), // inside
-      poi("school", 0.5, 0.5), // inside the hole -> outside
-      poi("park", 5, 5), // far outside
-    ];
-    const byCat = amenitiesNearIsochrone(pin, pois, square);
-    expect(byCat.get("gp")?.count).toBe(2);
-    expect(byCat.has("school")).toBe(false);
-    expect(byCat.has("park")).toBe(false);
-  });
-
-  it("reports straight-line nearestKm to the closest reachable POI", () => {
-    // 0.01 deg of latitude ~= 1.11 km; nearer POI must win.
-    const pin: [number, number] = [144, -37];
-    const near: MultiPolygon = {
-      type: "MultiPolygon",
-      coordinates: [square.coordinates, [
-        [
-          [143.99, -37.01],
-          [143.99, -36.99],
-          [144.01, -36.99],
-          [144.01, -37.01],
-          [143.99, -37.01],
-        ],
-      ]],
-    };
-    const pois = [
-      poi("cafe_restaurant", 144, -37.005), // ~0.55 km
-      poi("cafe_restaurant", 144.005, -37), // ~0.44 km (closer)
-    ];
-    const byCat = amenitiesNearIsochrone(pin, pois, near);
-    expect(byCat.get("cafe_restaurant")?.count).toBe(2);
-    expect(byCat.get("cafe_restaurant")?.nearestKm).toBeLessThan(0.5);
-  });
-
-  it("ignores POIs with no pinType or bad coordinates", () => {
-    const pin: [number, number] = [0.1, 0.1];
-    const bad: Feature<Point> = {
-      type: "Feature",
-      properties: {},
-      geometry: { type: "Point", coordinates: [0.2, 0.2] },
-    };
-    const byCat = amenitiesNearIsochrone(pin, [bad], square);
-    expect(byCat.size).toBe(0);
-  });
-});
 
 describe("parseOrsIsochrone", () => {
   it("extracts a Polygon geometry from an ORS FeatureCollection", () => {

@@ -106,6 +106,16 @@ export default function MapPage() {
   // Paid-tier "precise walk routing" fetch status (idle until the user opts in).
   const [preciseStatus, setPreciseStatus] = useState<"idle" | "loading" | "error">("idle");
 
+  // Staleness guards for the async precise-walk fetch. `buyerPinRef` mirrors the
+  // current pin so an in-flight request can detect that the pin moved underneath
+  // it; `precisionAbortRef` cancels a superseded fetch. Without these, a slow ORS
+  // response for an old pin could overwrite the report for a newly dropped pin.
+  const buyerPinRef = useRef<[number, number] | null>(null);
+  useEffect(() => {
+    buyerPinRef.current = buyerPin;
+  }, [buyerPin]);
+  const precisionAbortRef = useRef<AbortController | null>(null);
+
   // POIs + SA2 polygons live in the MapLibre sources; for the report maths we
   // also need them as JS. Lazy-load each once (kept out of the initial bundle).
   const poiFeaturesRef = useRef<Feature<Point>[] | null>(null);
@@ -152,7 +162,9 @@ export default function MapPage() {
     sa2: { slug?: string; sa2Code?: string } | null
   ) => {
     // A new/moved pin (or a "revert") always starts from the free straight-line
-    // report — any prior precise result no longer applies to this point.
+    // report — any prior precise result no longer applies to this point. Cancel
+    // any in-flight precise fetch so its (now stale) result can't land late.
+    precisionAbortRef.current?.abort();
     setPreciseStatus("idle");
     const feats = await ensurePois().catch(() => [] as Feature<Point>[]);
     const place = sa2
@@ -169,18 +181,28 @@ export default function MapPage() {
   // a runtime, client-side, env-gated fetch (so static export is untouched) and
   // never runs on the free tier — the button is hidden without a configured key.
   const recomputePrecise = async () => {
-    if (!buyerPin) return;
+    const pin = buyerPin;
+    if (!pin) return;
+    // Supersede any earlier in-flight precise request, and allow this one to be
+    // cancelled if the pin moves while ORS is still responding.
+    precisionAbortRef.current?.abort();
+    const ctrl = new AbortController();
+    precisionAbortRef.current = ctrl;
     setPreciseStatus("loading");
-    const iso = await fetchWalkIsochrone(buyerPin, WALK_MINUTES);
+    const iso = await fetchWalkIsochrone(pin, WALK_MINUTES, { signal: ctrl.signal });
+    // Discard silently if this request was superseded or the pin moved under it —
+    // a stale isochrone must never overwrite the report for a different pin.
+    if (ctrl.signal.aborted || buyerPinRef.current !== pin) return;
     if (!iso.ok) {
       setPreciseStatus("error");
       return;
     }
     const feats = await ensurePois().catch(() => [] as Feature<Point>[]);
+    if (ctrl.signal.aborted || buyerPinRef.current !== pin) return;
     setBuyerReport(
       buildBuyerReport({
-        lat: buyerPin[1],
-        lng: buyerPin[0],
+        lat: pin[1],
+        lng: pin[0],
         place: buyerPlace,
         pois: feats,
         isochrone: iso.geom,

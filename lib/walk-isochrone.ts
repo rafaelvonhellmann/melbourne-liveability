@@ -14,11 +14,9 @@
  *    fetch. No build step, no Next API/server route, no new server dependency.
  *  - Pure vs networked split: the network call ({@link fetchWalkIsochrone}) and
  *    response parsing ({@link parseOrsIsochrone}) live here; turning the polygon
- *    into reachability is pure. The live BuyerReport path does that via
- *    `getNearbyAmenities` in ./buyer-report (it already imports `pointInPolygon`),
- *    and {@link amenitiesNearIsochrone} is a standalone pure helper for grouping
- *    POIs by category inside the isochrone. Either way the report engine stays
- *    network-free.
+ *    into reachability is pure and lives in the report engine — `getNearbyAmenities`
+ *    in ./buyer-report classifies the already-loaded POIs by isochrone containment
+ *    (it already imports `pointInPolygon`), so the report engine stays network-free.
  *  - Provider-agnostic: the network call is isolated in {@link fetchWalkIsochrone}
  *    and the response shape in {@link parseOrsIsochrone}, so swapping the backend
  *    (Mapbox, a key-hiding proxy, or — with its own parser — Valhalla) is a small,
@@ -35,43 +33,12 @@
  *  - ORS's free tier is rate-limited (~2k requests/day). This is why precise
  *    routing is opt-in per pin, not the default for every pin drop.
  */
-import type { Feature, Point, Polygon, MultiPolygon } from "geojson";
-import { haversineKm, pointInPolygon, type AmenityHit, type LngLat } from "./buyer-location";
+import type { Polygon, MultiPolygon } from "geojson";
+import type { LngLat } from "./buyer-location";
 
 /** Walk budget for the buyer "on foot" check (minutes / seconds). */
 export const WALK_MINUTES = 15;
 export const WALK_RANGE_SECONDS = WALK_MINUTES * 60;
-
-/**
- * Group POIs that fall INSIDE a street-network walk isochrone by `pinType`, with
- * count + straight-line nearest distance (km). The polygon twin of
- * {@link amenitiesNear} (which uses a straight-line radius): membership is decided
- * by {@link pointInPolygon} (honouring holes + MultiPolygon), but the reported
- * `nearestKm` stays straight-line haversine for a stable, comparable number.
- * Pure + network-free — the isochrone is plain data fetched elsewhere.
- */
-export function amenitiesNearIsochrone(
-  pin: LngLat,
-  pois: Feature<Point>[],
-  isochrone: Polygon | MultiPolygon
-): Map<string, AmenityHit> {
-  const byCat = new Map<string, AmenityHit>();
-  for (const f of pois) {
-    const c = f.geometry?.coordinates as LngLat | undefined;
-    if (!c || c.length < 2) continue;
-    if (!pointInPolygon(c, isochrone)) continue;
-    const cat = String((f.properties as { pinType?: string } | null)?.pinType ?? "");
-    if (!cat) continue;
-    const d = haversineKm(pin, c);
-    const cur = byCat.get(cat);
-    if (!cur) byCat.set(cat, { category: cat, count: 1, nearestKm: d });
-    else {
-      cur.count++;
-      if (d < cur.nearestKm) cur.nearestKm = d;
-    }
-  }
-  return byCat;
-}
 
 /** Default OpenRouteService isochrones endpoint (foot-walking profile). */
 const ORS_FOOT_ISOCHRONE_URL =
