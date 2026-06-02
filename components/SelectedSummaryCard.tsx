@@ -6,6 +6,7 @@ import { X, Search } from "lucide-react";
 import type { Place, ScoreWeights } from "@/lib/types";
 import { computeWeightedScore } from "@/lib/scoring";
 import { getDomain } from "@/lib/domains";
+import { percentileToColor, percentileWord } from "@/lib/colors";
 import { findSimilarAreas, toSimilarItems } from "@/lib/similar-areas";
 import { ScoreBadge } from "./ScoreVisuals";
 import { AddToShortlistButton } from "./AddToShortlistButton";
@@ -49,16 +50,12 @@ export function SelectedSummaryCard({
     [showSimilar, place, places]
   );
 
-  // Top driver = the present component contributing most to the composite.
-  const topDriver = breakdown.components
+  // Plain-language read of the user's top-priority categories (feedback: lead
+  // with words, not bare numbers). Highest-weighted present domains first.
+  const topDomains = [...breakdown.components]
     .filter((c) => !c.missing)
-    .reduce<(typeof breakdown.components)[number] | null>(
-      (best, c) => (best == null || c.contribution > best.contribution ? c : best),
-      null
-    );
-  const topDriverLabel = topDriver
-    ? (getDomain(topDriver.domain)?.label ?? topDriver.domain)
-    : null;
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, 3);
 
   return (
     <div
@@ -87,14 +84,31 @@ export function SelectedSummaryCard({
               <X className="h-4 w-4" aria-hidden />
             </button>
           </div>
-          {topDriverLabel && topDriver && (
-            <p className="mt-1 text-xs text-ink-muted">
-              Top driver:{" "}
-              <span className="font-medium text-ink">{topDriverLabel}</span>{" "}
-              <span className="num">({Math.round(topDriver.percentile ?? 0)})</span>
-            </p>
+          {topDomains.length > 0 && (
+            <ul className="mt-1.5 space-y-1" aria-label="Your top priorities here">
+              {topDomains.map((c) => (
+                <li
+                  key={c.domain}
+                  className="flex items-center justify-between gap-2 text-xs"
+                >
+                  <span className="flex min-w-0 items-center gap-1.5 text-ink-muted">
+                    <span
+                      className="inline-block h-2 w-2 shrink-0 rounded-full"
+                      style={{ background: percentileToColor(c.percentile) }}
+                      aria-hidden
+                    />
+                    <span className="truncate">
+                      {getDomain(c.domain)?.label ?? c.domain}
+                    </span>
+                  </span>
+                  <span className="shrink-0 font-medium text-ink">
+                    {percentileWord(c.percentile)}
+                  </span>
+                </li>
+              ))}
+            </ul>
           )}
-          <p className="mt-0.5 text-[11px] text-ink-muted">
+          <p className="mt-1.5 text-[11px] text-ink-muted">
             Showing on map: {activeLayerLabel}
           </p>
         </div>

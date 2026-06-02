@@ -130,6 +130,21 @@ export function percentileTextColor(pct: number | null, colorblind = false): str
     : "#1A1A18";
 }
 
+/**
+ * Plain-language band for a 0–100 percentile — so a category reads "Strong" /
+ * "Weak" at a glance instead of a bare number (user feedback: spell it out).
+ * Honest framing: these are ranks RELATIVE to Greater Melbourne, not absolutes.
+ */
+export function percentileWord(pct: number | null): string {
+  if (pct == null) return "No data";
+  const v = Math.max(0, Math.min(100, pct));
+  if (v >= 80) return "Excellent";
+  if (v >= 60) return "Strong";
+  if (v >= 40) return "Average";
+  if (v >= 20) return "Below average";
+  return "Weak";
+}
+
 export function domainProperty(domain: DomainId): string {
   return `pct_${domain}`;
 }

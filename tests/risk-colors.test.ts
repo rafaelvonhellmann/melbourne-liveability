@@ -3,6 +3,7 @@ import {
   riskToColor,
   percentileToColor,
   percentileTextColor,
+  percentileWord,
   getScoreRamp,
   SCORE_RAMP,
   SCORE_RAMP_CB,
@@ -70,6 +71,23 @@ describe("percentileTextColor (legible on either ramp)", () => {
   });
   it("falls back to dark ink for null", () => {
     expect(percentileTextColor(null)).toBe("#1A1A18");
+  });
+});
+
+describe("percentileWord (plain-language bands)", () => {
+  it("maps percentile to a plain word, worse->better", () => {
+    expect(percentileWord(95)).toBe("Excellent");
+    expect(percentileWord(70)).toBe("Strong");
+    expect(percentileWord(50)).toBe("Average");
+    expect(percentileWord(30)).toBe("Below average");
+    expect(percentileWord(10)).toBe("Weak");
+  });
+  it("hits the band edges and handles null", () => {
+    expect(percentileWord(80)).toBe("Excellent");
+    expect(percentileWord(60)).toBe("Strong");
+    expect(percentileWord(40)).toBe("Average");
+    expect(percentileWord(20)).toBe("Below average");
+    expect(percentileWord(null)).toBe("No data");
   });
 });
 
