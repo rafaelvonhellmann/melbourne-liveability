@@ -351,3 +351,49 @@ describe("dedupeParkAmenities", () => {
     expect(out.map((a) => a.id)).toEqual(["A", "P@-37.78,144.95", "B"]);
   });
 });
+
+describe("buildBuyerReport major-project nudge", () => {
+  // PIN = [-37.8, 144.97]. ~0.011 deg lat ~= 1.2 km.
+  const proj = (name: string, lat: number, lng: number) => ({
+    name,
+    label: "Metro Tunnel (new underground station)",
+    status: "opening 2025",
+    lat,
+    lng,
+    sourceUrl: "https://bigbuild.vic.gov.au/projects/metro-tunnel",
+  });
+
+  it("flags the nearest project within ~1.5 km, with distance + a no-price caveat", () => {
+    const r = buildBuyerReport({
+      lat: PIN.lat,
+      lng: PIN.lng,
+      place: samplePlace(),
+      pois: POIS,
+      majorProjects: [proj("Parkville", -37.805, 144.97), proj("Faraway", -37.86, 144.97)],
+      generatedAt: "t",
+    });
+    const f = r.findings.find((x) => x.id === "major-project-nearby");
+    expect(f).toBeTruthy();
+    expect(f?.summary).toContain("Parkville");
+    expect(f?.summary).not.toContain("Faraway");
+    expect(f?.caveat).toMatch(/not a prediction of prices/i);
+    expect(f?.sourceRefs?.[0]?.url).toMatch(/bigbuild\.vic\.gov\.au/);
+  });
+
+  it("omits the finding when nothing is within range", () => {
+    const r = buildBuyerReport({
+      lat: PIN.lat,
+      lng: PIN.lng,
+      place: samplePlace(),
+      pois: POIS,
+      majorProjects: [proj("Faraway", -37.86, 144.97)],
+      generatedAt: "t",
+    });
+    expect(r.findings.find((x) => x.id === "major-project-nearby")).toBeFalsy();
+  });
+
+  it("omits the finding when no projects are supplied", () => {
+    const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: samplePlace(), pois: POIS, generatedAt: "t" });
+    expect(r.findings.find((x) => x.id === "major-project-nearby")).toBeFalsy();
+  });
+});

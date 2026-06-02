@@ -120,6 +120,13 @@ export const DEFAULT_RADIUS_METERS = 1200;
  */
 export const ADJACENCY_THRESHOLD_KM = DEFAULT_RADIUS_METERS / 1000;
 
+/**
+ * A curated VIC Big Build project within this straight-line distance of the pin
+ * is "nearby" for the what's-changing nudge. Generous on purpose — a new station
+ * reshapes a wide catchment, not just its doorstep.
+ */
+export const MAJOR_PROJECT_THRESHOLD_KM = 1.5;
+
 export const STRAIGHT_LINE_CAVEAT =
   "Nearby amenities are estimated using straight-line distance from the dropped pin. This is a quick screening tool, not a street-network routing calculation.";
 
@@ -357,6 +364,19 @@ export interface BuildBuyerReportInput {
    * cards or the sample report).
    */
   nearbyAreas?: { sa2Code: string; slug: string; name: string; centroid: [number, number] }[];
+  /**
+   * Curated flagship VIC Big Build transport projects (see lib/major-projects).
+   * When the pin is within {@link MAJOR_PROJECT_THRESHOLD_KM} of one, the report
+   * flags it as "what's changing nearby". Optional — omit to skip the finding.
+   */
+  majorProjects?: {
+    name: string;
+    label: string;
+    status: string;
+    lat: number;
+    lng: number;
+    sourceUrl: string;
+  }[];
 }
 
 export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
@@ -494,6 +514,42 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         caveat:
           "Closeness is measured to area centre-points (straight-line), not to the actual boundary — check the map for where the borders fall.",
         sourceRefs: [METHODOLOGY_REF],
+      });
+    }
+  }
+
+  // 1c) Major transport projects (curated VIC Big Build) within ~1.5 km of the
+  //     pin — a factual "what's changing nearby" nudge, never a price prediction.
+  if (point && input.majorProjects?.length) {
+    const pin: LngLat = [point.lng, point.lat];
+    const near = input.majorProjects
+      .map((p) => ({ ...p, km: haversineKm(pin, [p.lng, p.lat]) }))
+      .filter((p) => p.km <= MAJOR_PROJECT_THRESHOLD_KM)
+      .sort((a, b) => a.km - b.km)
+      .slice(0, 2);
+    if (near.length > 0) {
+      const p = near[0];
+      const more = near
+        .slice(1)
+        .map((n) => `${n.name} (~${Math.round(n.km * 1000)} m)`)
+        .join(", ");
+      findings.push({
+        id: "major-project-nearby",
+        kind: "neutral",
+        severity: "info",
+        title: "Major transport project nearby",
+        summary: `A new ${p.label} — ${p.name} station, ~${Math.round(p.km * 1000)} m away — is ${p.status}.${more ? ` Also nearby: ${more}.` : ""}`,
+        whyItMatters:
+          "Major transport infrastructure can reshape access and the area over the years it is built and opens.",
+        verifyAction:
+          "Check the official project page for timing, construction impacts and the final station siting.",
+        confidence: "medium",
+        geography: "poi-radius",
+        caveat:
+          "Station location is approximate (resolved from OpenStreetMap) and projects can shift — confirm on the project page. This flags what is planned or underway, not a prediction of prices.",
+        sourceRefs: [
+          { id: "vic-big-build", label: "Victoria's Big Build", url: p.sourceUrl },
+        ],
       });
     }
   }

@@ -1,0 +1,127 @@
+{
+  "generatedAt": "build",
+  "source": "Curated VIC Big Build list; coordinates resolved via OSM Nominatim",
+  "projects": [
+    {
+      "id": "mt-arden",
+      "name": "Arden",
+      "kind": "metro-tunnel",
+      "label": "Metro Tunnel (new underground station)",
+      "status": "opening 2025",
+      "lat": -37.801285,
+      "lng": 144.9408852,
+      "sourceUrl": "https://bigbuild.vic.gov.au/projects/metro-tunnel",
+      "period": "opening 2025"
+    },
+    {
+      "id": "mt-parkville",
+      "name": "Parkville",
+      "kind": "metro-tunnel",
+      "label": "Metro Tunnel (new underground station)",
+      "status": "opening 2025",
+      "lat": -37.7996947,
+      "lng": 144.9579389,
+      "sourceUrl": "https://bigbuild.vic.gov.au/projects/metro-tunnel",
+      "period": "opening 2025"
+    },
+    {
+      "id": "mt-state-library",
+      "name": "State Library",
+      "kind": "metro-tunnel",
+      "label": "Metro Tunnel (new underground station)",
+      "status": "opening 2025",
+      "lat": -37.8081284,
+      "lng": 144.9631742,
+      "sourceUrl": "https://bigbuild.vic.gov.au/projects/metro-tunnel",
+      "period": "opening 2025"
+    },
+    {
+      "id": "mt-town-hall",
+      "name": "Town Hall",
+      "kind": "metro-tunnel",
+      "label": "Metro Tunnel (new underground station)",
+      "status": "opening 2025",
+      "lat": -37.8166134,
+      "lng": 144.9670887,
+      "sourceUrl": "https://bigbuild.vic.gov.au/projects/metro-tunnel",
+      "period": "opening 2025"
+    },
+    {
+      "id": "mt-anzac",
+      "name": "Anzac",
+      "kind": "metro-tunnel",
+      "label": "Metro Tunnel (new underground station)",
+      "status": "opening 2025",
+      "lat": -37.8338746,
+      "lng": 144.9735569,
+      "sourceUrl": "https://bigbuild.vic.gov.au/projects/metro-tunnel",
+      "period": "opening 2025"
+    },
+    {
+      "id": "srl-cheltenham",
+      "name": "Cheltenham",
+      "kind": "srl-east",
+      "label": "Suburban Rail Loop East (new station)",
+      "status": "under construction",
+      "lat": -37.9670081,
+      "lng": 145.0546951,
+      "sourceUrl": "https://bigbuild.vic.gov.au/projects/suburban-rail-loop",
+      "period": "under construction, opening ~2035"
+    },
+    {
+      "id": "srl-clayton",
+      "name": "Clayton",
+      "kind": "srl-east",
+      "label": "Suburban Rail Loop East (new station)",
+      "status": "under construction",
+      "lat": -37.9246722,
+      "lng": 145.120752,
+      "sourceUrl": "https://bigbuild.vic.gov.au/projects/suburban-rail-loop",
+      "period": "under construction, opening ~2035"
+    },
+    {
+      "id": "srl-monash",
+      "name": "Monash",
+      "kind": "srl-east",
+      "label": "Suburban Rail Loop East (new station)",
+      "status": "under construction",
+      "lat": -37.9143766,
+      "lng": 145.1316672,
+      "sourceUrl": "https://bigbuild.vic.gov.au/projects/suburban-rail-loop",
+      "period": "under construction, opening ~2035"
+    },
+    {
+      "id": "srl-glen-waverley",
+      "name": "Glen Waverley",
+      "kind": "srl-east",
+      "label": "Suburban Rail Loop East (new station)",
+      "status": "under construction",
+      "lat": -37.8796677,
+      "lng": 145.1629162,
+      "sourceUrl": "https://bigbuild.vic.gov.au/projects/suburban-rail-loop",
+      "period": "under construction, opening ~2035"
+    },
+    {
+      "id": "srl-burwood",
+      "name": "Burwood",
+      "kind": "srl-east",
+      "label": "Suburban Rail Loop East (new station)",
+      "status": "under construction",
+      "lat": -37.8475136,
+      "lng": 145.1149474,
+      "sourceUrl": "https://bigbuild.vic.gov.au/projects/suburban-rail-loop",
+      "period": "under construction, opening ~2035"
+    },
+    {
+      "id": "srl-box-hill",
+      "name": "Box Hill",
+      "kind": "srl-east",
+      "label": "Suburban Rail Loop East (new station)",
+      "status": "under construction",
+      "lat": -37.8193015,
+      "lng": 145.1219604,
+      "sourceUrl": "https://bigbuild.vic.gov.au/projects/suburban-rail-loop",
+      "period": "under construction, opening ~2035"
+    }
+  ]
+}

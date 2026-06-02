@@ -22,6 +22,7 @@ import { SavedChecks } from "@/components/buyer/SavedChecks";
 import { savedCheckId, type SavedCheck } from "@/lib/user-prefs";
 import { buildBuyerReport, type BuyerReport as BuyerReportData } from "@/lib/buyer-report";
 import { findSa2ForPoint } from "@/lib/buyer-location";
+import { MAJOR_PROJECTS } from "@/lib/major-projects";
 import type { GeocodeResult } from "@/lib/geocode";
 import { fetchWalkIsochrone, isPreciseWalkConfigured, WALK_MINUTES } from "@/lib/walk-isochrone";
 import { withBase } from "@/lib/asset-path";
@@ -194,6 +195,7 @@ export default function MapPage() {
         place,
         pois: feats,
         nearbyAreas: areaCentroids,
+        majorProjects: MAJOR_PROJECTS,
       })
     );
     track("buyer_report", { coverage: place ? "in" : "off" });
@@ -230,6 +232,7 @@ export default function MapPage() {
         pois: feats,
         isochrone: iso.geom,
         nearbyAreas: areaCentroids,
+        majorProjects: MAJOR_PROJECTS,
       })
     );
     setPreciseStatus("idle");
