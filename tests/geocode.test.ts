@@ -1,5 +1,21 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { geocodeAddress } from "../lib/geocode";
+import { geocodeAddress, stripUnitPrefix } from "../lib/geocode";
+
+describe("stripUnitPrefix", () => {
+  it("strips Australian unit prefixes, keeping the building", () => {
+    expect(stripUnitPrefix("5/12 Smith St, Brunswick")).toBe("12 Smith St, Brunswick");
+    expect(stripUnitPrefix("Unit 5, 12 Smith St")).toBe("12 Smith St");
+    expect(stripUnitPrefix("Apt 5 12 Smith St")).toBe("12 Smith St");
+    expect(stripUnitPrefix("Flat 5, 12 Smith Street")).toBe("12 Smith Street");
+  });
+  it("leaves a plain street address unchanged", () => {
+    expect(stripUnitPrefix("12 Smith St, Carlton")).toBe("12 Smith St, Carlton");
+    expect(stripUnitPrefix("Unley Road, Parkville")).toBe("Unley Road, Parkville");
+  });
+  it("falls back to the original when stripping leaves too little", () => {
+    expect(stripUnitPrefix("5/12")).toBe("5/12");
+  });
+});
 
 function mockFetch(rows: unknown, ok = true, status = 200) {
   const fn = vi.fn(async () => ({

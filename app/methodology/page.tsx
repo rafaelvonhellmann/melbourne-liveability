@@ -254,9 +254,10 @@ export default function MethodologyPage() {
           Greater Melbourne</strong> (relative, not absolute), inverting indicators where
           higher is worse (rent, crime, hazard overlay). A domain score is the sub-weighted
           blend of its indicators; the composite is the weight-blend of the seven scored
-          domains. Default weights: Rental affordability 30, Transport 18, Crime/Safety 14, Health
-          14, Hazards 8, Education 8, Income/Economy 8 — adjustable by sliders / persona
-          presets, which re-normalise at runtime.
+          domains. Default weights: Rent vs income 30, Transport 18, Crime/Safety 14, Health
+          14, Hazards 8, Education 8, Income/Economy 8 — adjustable by sliders / lens presets.
+          The score uses each weight&apos;s share (ratio) of the total, so a slider holds the value
+          you set.
         </p>
         <p>
           Missing data is never imputed: a missing indicator gets a null percentile, is

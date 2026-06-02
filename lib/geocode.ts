@@ -80,6 +80,22 @@ function toResult(row: NominatimRow): GeocodeResult | null {
 }
 
 /**
+ * Strip a leading Australian unit/apartment prefix so Nominatim can resolve the
+ * building. Handles "5/12 Smith St", "Unit 5, 12 Smith St", "Apt 5 12 ...",
+ * "Flat 5 ...". Falls back to the original if stripping would leave too little.
+ */
+export function stripUnitPrefix(query: string): string {
+  let s = query.trim();
+  s = s.replace(
+    /^\s*(?:unit|apartment|apt|flat|u)\s*\.?\s*\d+[a-z]?\s*[,/\-]?\s*/i,
+    ""
+  );
+  s = s.replace(/^\s*\d+[a-z]?\s*\/\s*/, "");
+  s = s.trim();
+  return s.length >= 3 ? s : query.trim();
+}
+
+/**
  * Geocode a free-text address within Greater Melbourne. Returns [] for queries
  * under 3 chars. Pass an AbortSignal to cancel a superseded request (the caller
  * should abort the previous in-flight lookup before starting a new one).
@@ -89,7 +105,11 @@ export async function geocodeAddress(
   query: string,
   signal?: AbortSignal
 ): Promise<GeocodeResult[]> {
-  const q = query.trim();
+  // Nominatim resolves a building, not a unit — and an Australian unit prefix
+  // ("5/12 Smith St", "Unit 5, ...", "Apt 5 ...") makes it fail. Strip it so the
+  // pin still lands on the building; the unit doesn't change the SA2 or what's
+  // nearby.
+  const q = stripUnitPrefix(query);
   if (q.length < 3) return [];
   const params = new URLSearchParams({
     format: "jsonv2",

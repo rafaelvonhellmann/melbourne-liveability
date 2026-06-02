@@ -24,7 +24,7 @@ export const V1_SCORED_DOMAINS: DomainId[] = [
 export const DOMAIN_REGISTRY: DomainConfig[] = [
   {
     id: "affordability",
-    label: "Rental affordability",
+    label: "Rent vs income",
     scored: true,
     defaultWeight: 30,
     layer: "choropleth",
