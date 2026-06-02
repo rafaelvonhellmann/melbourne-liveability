@@ -31,6 +31,7 @@ import {
   nuisanceKindLabel,
   type NuisancePoint,
 } from "./nuisance";
+import { evaluateFit, type BuyerProfile, type FitResult } from "./buyer-fit";
 import { computeWeightedScore } from "./scoring";
 import { getDefaultWeights } from "./weights";
 import { getSourcesByIds } from "./source-manifest";
@@ -118,6 +119,8 @@ export interface BuyerReport {
   amenityCountsByCategory: Record<string, number>;
   sourceRefs: BuyerSourceRef[];
   disclaimers: string[];
+  /** Personal "fit for your life" result when a profile was supplied; else absent. */
+  fit?: FitResult;
 }
 
 // ---- Constants -------------------------------------------------------------
@@ -423,6 +426,12 @@ export interface BuildBuyerReportInput {
    * for the proximity proxy finding. Lazy-loaded client-side; omit to skip.
    */
   nuisancePoints?: NuisancePoint[];
+  /**
+   * The user's personal "fit" profile (buyer or agent). When provided, the report
+   * gains a `fit` block: deal-breakers to verify + plain-language fit notes,
+   * evaluated against this place. Never changes the score. See lib/buyer-fit.
+   */
+  profile?: BuyerProfile | null;
 }
 
 export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
@@ -943,6 +952,19 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       ? `pin-${input.lat!.toFixed(5)}-${input.lng!.toFixed(5)}`
       : "buyer-report";
 
+  // Personal "fit for your life" — re-frame the sourced facts against the user's
+  // profile (deal-breakers to verify + fit notes). Pure; never alters the score.
+  const fit: FitResult | undefined = input.profile
+    ? evaluateFit(input.profile, {
+        floodPct: rawOf(place, "hazards", "floodPct"),
+        bushfirePct: rawOf(place, "hazards", "bushfirePct"),
+        heritagePct: place?.context?.planning?.heritageOverlayPct ?? null,
+        transportPct: pctOf(place, "transport"),
+        hasNoiseFlag: findings.some((f) => f.id === "transport-noise"),
+        hasNuisanceFlag: findings.some((f) => f.id === "nuisance-proximity"),
+      })
+    : undefined;
+
   return {
     id,
     generatedAt: input.generatedAt ?? new Date().toISOString(),
@@ -961,5 +983,6 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     amenityCountsByCategory,
     sourceRefs,
     disclaimers: [BUYER_DISCLAIMER],
+    fit,
   };
 }

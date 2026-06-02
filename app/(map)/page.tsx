@@ -19,7 +19,15 @@ import { FeedbackButton } from "@/components/FeedbackButton";
 import { OnboardingModal } from "@/components/OnboardingModal";
 import { BuyerReportPanel } from "@/components/buyer/BuyerReportPanel";
 import { SavedChecks } from "@/components/buyer/SavedChecks";
-import { savedCheckId, type SavedCheck } from "@/lib/user-prefs";
+import { BuyerProfilePanel } from "@/components/buyer/BuyerProfilePanel";
+import {
+  savedCheckId,
+  loadBuyerProfile,
+  saveBuyerProfile,
+  clearBuyerProfile,
+  type SavedCheck,
+} from "@/lib/user-prefs";
+import type { BuyerProfile } from "@/lib/buyer-fit";
 import { buildBuyerReport, type BuyerReport as BuyerReportData } from "@/lib/buyer-report";
 import type { NoiseLine } from "@/lib/noise";
 import type { NuisancePoint } from "@/lib/nuisance";
@@ -143,6 +151,16 @@ export default function MapPage() {
   const [buyerMode, setBuyerMode] = useState(false);
   const [buyerPin, setBuyerPin] = useState<[number, number] | null>(null);
   const [showCycleRadius, setShowCycleRadius] = useState(false);
+  // Personal "fit" profile (buyer/agent), local-only. `profileRef` mirrors it so
+  // a rebuild triggered right after save reads the latest profile (not stale state).
+  const [profile, setProfile] = useState<BuyerProfile | null>(null);
+  const [showProfile, setShowProfile] = useState(false);
+  const profileRef = useRef<BuyerProfile | null>(null);
+  useEffect(() => {
+    const pf = loadBuyerProfile();
+    setProfile(pf);
+    profileRef.current = pf;
+  }, []);
   // Floating Layers panel (desktop) auto-collapses to a pill when an area is
   // selected, so the selected-area card isn't crowded by the big panel.
   const [showLayers, setShowLayers] = useState(true);
@@ -270,6 +288,7 @@ export default function MapPage() {
         nuisancePoints,
         nearbyAreas: areaCentroids,
         majorProjects: MAJOR_PROJECTS,
+        profile: profileRef.current,
       })
     );
     track("buyer_report", { coverage: place ? "in" : "off" });
@@ -313,6 +332,7 @@ export default function MapPage() {
         nuisancePoints,
         nearbyAreas: areaCentroids,
         majorProjects: MAJOR_PROJECTS,
+        profile: profileRef.current,
       })
     );
     setPreciseStatus("idle");
@@ -476,6 +496,21 @@ export default function MapPage() {
     </div>
   );
 
+  const onSaveProfile = (pf: BuyerProfile) => {
+    const next = saveBuyerProfile(pf).buyerProfile ?? pf;
+    setProfile(next);
+    profileRef.current = next;
+    setShowProfile(false);
+    if (buyerPin) void buildReportFor(buyerPin, buyerSa2);
+  };
+  const onClearProfile = () => {
+    clearBuyerProfile();
+    setProfile(null);
+    profileRef.current = null;
+    setShowProfile(false);
+    if (buyerPin) void buildReportFor(buyerPin, buyerSa2);
+  };
+
   const buyerPanel = (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
@@ -514,6 +549,26 @@ export default function MapPage() {
               This pin is outside our Greater Melbourne SA2 coverage — drop it on a Melbourne
               property for the full report.
             </p>
+          )}
+          {/* Personalise: a local-only profile that adds "Fit for your life" +
+              deal-breaker flags to the report (buyer or agent). */}
+          {showProfile ? (
+            <BuyerProfilePanel
+              initial={profile}
+              onSave={onSaveProfile}
+              onClear={onClearProfile}
+              onClose={() => setShowProfile(false)}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowProfile(true)}
+              className="w-full rounded-md border border-surface-border px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent"
+            >
+              {profile
+                ? `Edit ${profile.mode === "agent" ? "client" : "your"} preferences`
+                : "Personalise this report"}
+            </button>
           )}
           {/* 15-min walk: the radius is drawn on the map; this drops every
               buyer-relevant pin so you see what's inside the circle at once. */}

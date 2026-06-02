@@ -161,6 +161,46 @@ export function BuyerReportPanel({
           <p className="mt-1 text-sm leading-relaxed text-ink-muted">{report.summary.subheadline}</p>
         </Section>
 
+        {/* 1b. Personal fit (only when a profile is set) */}
+        {report.fit && (report.fit.hits.length > 0 || report.fit.notes.length > 0) && (
+          <Section title={report.fit.mode === "agent" ? "For your client" : "Fit for your life"}>
+            {report.fit.hits.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold text-ink">
+                  Your deal-breakers to verify here:
+                </p>
+                <ul className="space-y-1.5">
+                  {report.fit.hits.map((h) => (
+                    <li
+                      key={h.id}
+                      className="rounded-md border border-l-[3px] border-surface-border border-l-accent bg-surface-sunken px-2.5 py-1.5"
+                    >
+                      <span className="text-sm font-medium text-ink">{h.label}</span>
+                      <span className="mt-0.5 block text-xs leading-snug text-ink-muted">
+                        {h.detail}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {report.fit.notes.length > 0 && (
+              <ul className="mt-2 space-y-1 text-sm text-ink-muted">
+                {report.fit.notes.map((n, i) => (
+                  <li key={i} className="flex gap-1.5">
+                    <span aria-hidden>·</span>
+                    <span>{n}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="mt-2 text-[11px] leading-snug text-ink-muted">
+              Based on your saved preferences — these re-frame the facts, they never change
+              the score, and a flag means &ldquo;verify&rdquo;, not a verdict.
+            </p>
+          </Section>
+        )}
+
         {/* 2. Things to verify */}
         {verify.length > 0 && (
           <Section title="Things to verify" count={verify.length}>

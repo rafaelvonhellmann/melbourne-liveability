@@ -41,6 +41,24 @@ describe("transport-noise finding (proximity proxy)", () => {
   });
 });
 
+describe("personal fit block", () => {
+  it("attaches fit with a deal-breaker hit when a profile is supplied", () => {
+    const r = buildBuyerReport({
+      lat: -37.8,
+      lng: 144.97,
+      pois: [],
+      profile: { mode: "buyer", dealBreakers: ["noise"] },
+      noiseLines: [{ kind: "freeway", coords: [[144.96, -37.8], [144.98, -37.8]] }],
+    });
+    expect(r.fit).toBeTruthy();
+    expect(r.fit!.hits.map((h) => h.id)).toContain("noise");
+  });
+
+  it("omits fit entirely when no profile is supplied", () => {
+    expect(buildBuyerReport({ lat: -37.8, lng: 144.97, pois: [] }).fit).toBeUndefined();
+  });
+});
+
 describe("nuisance-proximity finding (industrial/waste/sewage/quarry)", () => {
   it("flags a pin next to an industrial point, sourced + caveated", () => {
     const r = buildBuyerReport({

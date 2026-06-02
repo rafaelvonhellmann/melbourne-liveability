@@ -81,6 +81,8 @@ export type FitResult = {
   hits: DealBreakerHit[];
   /** Plain-language "fit" notes for the preferences the user marked as mattering. */
   notes: string[];
+  /** Which profile produced this (drives buyer vs client-facing copy). */
+  mode?: ProfileMode;
 };
 
 function pct(n: number | null | undefined): string {
@@ -99,6 +101,7 @@ export function evaluateFit(
   const hits: DealBreakerHit[] = [];
   const notes: string[] = [];
   if (!profile) return { hits, notes };
+  const mode = profile.mode;
 
   const wants = new Set(profile.dealBreakers ?? []);
   const material = (v: number | null | undefined, threshold: number) =>
@@ -170,5 +173,5 @@ export function evaluateFit(
     );
   }
 
-  return { hits, notes };
+  return { hits, notes, mode };
 }
