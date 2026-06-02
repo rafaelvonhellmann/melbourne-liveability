@@ -1,5 +1,5 @@
 import XLSX from "xlsx";
-import { suburbLgaKey } from "../../lib/suburb-normalize.js";
+import { suburbLgaKey, normalizeLgaName } from "../../lib/suburb-normalize.js";
 import type { CrosswalkFile } from "../../lib/crosswalk-types.js";
 
 export type CrimeCounts = { property: number; violent: number };
@@ -71,7 +71,7 @@ export function parseLgaCrimeTable02(
   return { property, violent };
 }
 
-const normLga = (s: string) => s.toLowerCase().replace(/\s+city$/i, "").trim();
+const normLga = normalizeLgaName;
 
 export function applyCrimeToPlaces<
   T extends {
