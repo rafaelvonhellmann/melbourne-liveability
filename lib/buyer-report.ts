@@ -19,6 +19,12 @@ import type { Place } from "./types";
 import { haversineKm, pointInPolygon, type LngLat } from "./buyer-location";
 import { WALK_CATEGORY_IDS } from "./walk-access";
 import { POI_CATEGORY_BY_ID, type PoiCategoryId } from "./poi-categories";
+import {
+  nearestNoiseSources,
+  noiseFlags,
+  noiseKindLabel,
+  type NoiseLine,
+} from "./noise";
 import { computeWeightedScore } from "./scoring";
 import { getDefaultWeights } from "./weights";
 import { getSourcesByIds } from "./source-manifest";
@@ -401,6 +407,11 @@ export interface BuildBuyerReportInput {
     lng: number;
     sourceUrl: string;
   }[];
+  /**
+   * Transport-noise source polylines (rail / tram / freeway) for the proximity
+   * proxy finding. Lazy-loaded client-side; omit to skip. See lib/noise.
+   */
+  noiseLines?: NoiseLine[];
 }
 
 export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
@@ -499,6 +510,35 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         confidence: "medium",
         geography: "poi-radius",
         caveat: `${amenityCaveat} Where OpenStreetMap splits one park into several points, nearby duplicates are merged so the count reflects distinct parks.`,
+        sourceRefs: getSourcesByIds(["osm-amenities"]),
+      });
+    }
+  }
+
+  // Transport-noise proximity proxy (pin-level, OSM lines). Only FLAG when a
+  // source is close — we never claim "quiet" (not all noise sources are mapped).
+  if (point && input.noiseLines && input.noiseLines.length > 0) {
+    const flags = noiseFlags(
+      nearestNoiseSources([point.lng, point.lat], input.noiseLines)
+    );
+    if (flags.length > 0) {
+      const list = flags
+        .map((f) => `${noiseKindLabel(f.kind)} (~${f.distance} m away)`)
+        .join(", ");
+      findings.push({
+        id: "transport-noise",
+        kind: "verify",
+        severity: flags.some((f) => f.distance <= 50) ? "medium" : "low",
+        title: "Possible traffic / rail noise",
+        summary: `This point is close to a ${list}.`,
+        whyItMatters:
+          "Proximity to a freeway, railway or tram line often means road, train or tram noise — especially at peak hour and overnight.",
+        verifyAction:
+          "Visit at peak hour and after dark to judge the real noise; ask whether the property has double glazing.",
+        confidence: "low",
+        geography: "pin",
+        caveat:
+          "Straight-line distance to the nearest mapped rail line, tram line or freeway/major road (OpenStreetMap, ODbL) — a proximity proxy, NOT a measured noise level. Barriers, cuttings, traffic volume, aspect and time of day all matter and are not modelled.",
         sourceRefs: getSourcesByIds(["osm-amenities"]),
       });
     }

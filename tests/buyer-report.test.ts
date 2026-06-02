@@ -11,6 +11,36 @@ import type { Place } from "../lib/types";
 
 const PIN = { lat: -37.8, lng: 144.97 };
 
+describe("transport-noise finding (proximity proxy)", () => {
+  it("flags a pin sitting on a freeway line, sourced + caveated", () => {
+    const r = buildBuyerReport({
+      lat: -37.8,
+      lng: 144.97,
+      pois: [],
+      noiseLines: [
+        { kind: "freeway", coords: [[144.96, -37.8], [144.98, -37.8]] }, // through the pin
+      ],
+    });
+    const f = r.findings.find((x) => x.id === "transport-noise");
+    expect(f).toBeTruthy();
+    expect(f!.kind).toBe("verify");
+    expect(f!.sourceRefs.length).toBeGreaterThan(0);
+    expect(f!.caveat).toMatch(/proximity proxy/i);
+  });
+
+  it("stays silent when no source is within range", () => {
+    const r = buildBuyerReport({
+      lat: -37.8,
+      lng: 144.97,
+      pois: [],
+      noiseLines: [
+        { kind: "rail", coords: [[144.90, -37.9], [144.91, -37.9]] }, // ~11 km away
+      ],
+    });
+    expect(r.findings.find((x) => x.id === "transport-noise")).toBeUndefined();
+  });
+});
+
 function poi(pinType: string, name: string, lng: number, lat: number): Feature<Point> {
   return {
     type: "Feature",
