@@ -174,15 +174,16 @@ export function BuyerReportPanel({
           ) : (
             <div className="space-y-3">
               {AMENITY_GROUPS.map((g) => {
-                const items = report.nearbyAmenities
+                const items = [...report.nearbyAmenities]
                   .filter((a) => g.categories.includes(a.category as PoiCategoryId))
-                  // In-group priority by category order (hospitals before GPs);
-                  // stable sort keeps nearest-first within each category.
-                  .sort(
-                    (a, b) =>
-                      g.categories.indexOf(a.category as PoiCategoryId) -
-                      g.categories.indexOf(b.category as PoiCategoryId)
-                  )
+                  // Nearest-first, but float hospitals to the top when present
+                  // (founder: hospitals are the priority health item). Other groups
+                  // sort purely by distance, so the nearest item is never hidden.
+                  .sort((a, b) => {
+                    const ah = a.category === "hospital" ? 0 : 1;
+                    const bh = b.category === "hospital" ? 0 : 1;
+                    return ah - bh || a.distanceMeters - b.distanceMeters;
+                  })
                   .slice(0, 4);
                 const total = g.categories.reduce(
                   (n, c) => n + (report.amenityCountsByCategory[c] ?? 0),

@@ -523,12 +523,12 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       ? "This point is outside our Greater Melbourne coverage, so no local crime context is available here. Recorded offences are published at suburb/LGA level — check the VCSA data for the actual area."
       : crimeBits.length
         ? `Recorded ${crimeBits.join(" and ")} across Greater Melbourne, measured at suburb/LGA level — not the specific street.`
-        : "Recorded-offence rates are published at suburb/LGA level — not at the specific street or property.",
+        : "We do not hold recorded-offence figures for this specific area — check VCSA crime data for the wider council/LGA.",
     verifyAction: "Walk the immediate street at different times and check recent local reports.",
     caveat:
       "Recorded offences reflect reporting and policing, not true crime levels; percentiles rank areas and do not predict a specific street.",
-    confidence: place ? "medium" : "unknown",
-    geography: place ? "lga" : "unknown",
+    confidence: place && crimeBits.length ? "medium" : "unknown",
+    geography: place && crimeBits.length ? "lga" : "unknown",
     sourceRefs: getSourcesByIds(["vcsa-recorded-offences"]),
   });
 
