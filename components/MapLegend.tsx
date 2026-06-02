@@ -1,4 +1,4 @@
-import { SCORE_RAMP, NO_DATA_COLOR, RISK_PALETTE } from "@/lib/colors";
+import { getScoreRamp, NO_DATA_COLOR, RISK_PALETTE } from "@/lib/colors";
 import { POI_CATEGORIES } from "@/lib/poi-categories";
 
 type MapLegendProps = {
@@ -6,15 +6,24 @@ type MapLegendProps = {
   visiblePins?: Record<string, boolean>;
   /** Hazard overlay-share layer active → use the Reds risk ramp + "less/more". */
   risk?: boolean;
+  /** Colourblind-safe score ramp (RdYlBu) instead of the default RdYlGn. */
+  colorblind?: boolean;
 };
 
-export function MapLegend({ domainLabel, visiblePins = {}, risk = false }: MapLegendProps) {
+export function MapLegend({
+  domainLabel,
+  visiblePins = {},
+  risk = false,
+  colorblind = false,
+}: MapLegendProps) {
   const activePins = POI_CATEGORIES.filter((c) => visiblePins[c.id]);
   const gradient = risk
     ? `linear-gradient(to right, ${RISK_PALETTE.map(
         (c, i) => `${c} ${(i / (RISK_PALETTE.length - 1)) * 100}%`
       ).join(", ")})`
-    : `linear-gradient(to right, ${SCORE_RAMP.map(([p, c]) => `${c} ${p}%`).join(", ")})`;
+    : `linear-gradient(to right, ${getScoreRamp(colorblind)
+        .map(([p, c]) => `${c} ${p}%`)
+        .join(", ")})`;
 
   return (
     <div

@@ -46,6 +46,8 @@ export type UserPrefs = {
   recent: RecentPlace[];
   savedChecks: SavedCheck[];
   alertEmail?: string;
+  /** Use the colourblind-safe (RdYlBu) score ramp on the map. Display-only. */
+  colorblindRamp?: boolean;
 };
 
 export const DEFAULT_PREFS: UserPrefs = {

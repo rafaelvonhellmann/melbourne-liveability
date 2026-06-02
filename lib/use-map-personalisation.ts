@@ -37,6 +37,10 @@ export function useMapPersonalisation() {
   const [confidenceMode, setConfidenceMode] = useState(false);
   const [walkAccessMode, setWalkAccessMode] = useState(false);
   const [cyclabilityMode, setCyclabilityMode] = useState(false);
+  // Colourblind-safe (RdYlBu) score ramp. A display-only preference (device-local,
+  // persisted), independent of the choropleth basis — it recolours whatever is
+  // painted, so it is NOT mutually exclusive with the context layers.
+  const [colorblindRamp, setColorblindRamp] = useState(false);
   // Optional hazard overlay-share choropleth (bushfire / flood). Mutually
   // exclusive with the other context layers + the scored domain choropleth.
   const [hazardLayer, setHazardLayer] = useState<"bushfire" | "flood" | null>(null);
@@ -53,6 +57,7 @@ export function useMapPersonalisation() {
     const prefs = loadUserPrefs();
     setRecent(prefs.recent);
     setSavedChecks(prefs.savedChecks);
+    setColorblindRamp(prefs.colorblindRamp ?? false);
 
     let w = url.weights
       ? mergeWeights(url.weights)
@@ -133,6 +138,16 @@ export function useMapPersonalisation() {
         setWalkAccessMode(false);
         setCyclabilityMode(false);
       }
+      return next;
+    });
+  }, []);
+
+  // Display-only ramp swap; persisted device-local, kept out of the URL (an
+  // accessibility preference, not a shareable view-state).
+  const toggleColorblindRamp = useCallback(() => {
+    setColorblindRamp((v) => {
+      const next = !v;
+      persistPrefs({ colorblindRamp: next });
       return next;
     });
   }, []);
@@ -245,6 +260,8 @@ export function useMapPersonalisation() {
     toggleWalkAccessMode,
     cyclabilityMode,
     toggleCyclabilityMode,
+    colorblindRamp,
+    toggleColorblindRamp,
     hazardLayer,
     selectHazardLayer,
     recent,

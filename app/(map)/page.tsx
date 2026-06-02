@@ -73,6 +73,8 @@ export default function MapPage() {
     toggleWalkAccessMode,
     cyclabilityMode,
     toggleCyclabilityMode,
+    colorblindRamp,
+    toggleColorblindRamp,
     hazardLayer,
     selectHazardLayer,
     savedChecks,
@@ -599,6 +601,7 @@ export default function MapPage() {
             confidenceMode={confidenceMode}
             walkAccessMode={walkAccessMode}
             cyclabilityMode={cyclabilityMode}
+            colorblind={colorblindRamp}
             hazardLayer={hazardLayer}
             visiblePins={visiblePins}
             focusTarget={focusTarget}
@@ -688,6 +691,8 @@ export default function MapPage() {
               onWalkAccessToggle={toggleWalkAccessMode}
               cyclabilityMode={cyclabilityMode}
               onCyclabilityToggle={toggleCyclabilityMode}
+              colorblindRamp={colorblindRamp}
+              onColorblindToggle={toggleColorblindRamp}
               hazardLayer={hazardLayer}
               onHazardSelect={selectHazardLayer}
             />
@@ -695,7 +700,12 @@ export default function MapPage() {
 
           {/* Legend card (bottom-left) */}
           <div className="absolute bottom-4 left-4 z-10 hidden max-w-[16rem] space-y-2 md:block">
-            <MapLegend domainLabel={legendLabel} visiblePins={visiblePins} risk={!!hazardLayer} />
+            <MapLegend
+              domainLabel={legendLabel}
+              visiblePins={visiblePins}
+              risk={!!hazardLayer}
+              colorblind={colorblindRamp}
+            />
             <Attribution />
           </div>
 
@@ -811,10 +821,17 @@ export default function MapPage() {
               onWalkAccessToggle={toggleWalkAccessMode}
               cyclabilityMode={cyclabilityMode}
               onCyclabilityToggle={toggleCyclabilityMode}
+              colorblindRamp={colorblindRamp}
+              onColorblindToggle={toggleColorblindRamp}
               hazardLayer={hazardLayer}
               onHazardSelect={selectHazardLayer}
             />
-            <MapLegend domainLabel={legendLabel} visiblePins={visiblePins} risk={!!hazardLayer} />
+            <MapLegend
+              domainLabel={legendLabel}
+              visiblePins={visiblePins}
+              risk={!!hazardLayer}
+              colorblind={colorblindRamp}
+            />
           </div>
         }
         weights={

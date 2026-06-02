@@ -16,6 +16,30 @@ export const SCORE_RAMP: readonly (readonly [number, string])[] = [
   [100, "#1a9641"],
 ];
 
+/**
+ * Colourblind-safe score ramp — ColorBrewer RdYlBu (a documented CVD-safe
+ * diverging palette). Same red/orange/yellow low-to-mid as RdYlGn, but the
+ * "good" end is BLUE instead of green: red-vs-green is the exact pair that
+ * deuteranopia/protanopia confound, and red-vs-blue is separable under every
+ * common deficiency. Keeps the universal red=worse intuition; only the top half
+ * changes hue. Toggled on by the user (see getScoreRamp); off by default so the
+ * default map still reads green=good for the majority.
+ */
+export const SCORE_RAMP_CB: readonly (readonly [number, string])[] = [
+  [0, "#d7191c"],
+  [25, "#fdae61"],
+  [50, "#ffffbf"],
+  [75, "#abd9e9"],
+  [100, "#2c7bb6"],
+];
+
+/** Pick the active score ramp. `true` = colourblind-safe RdYlBu, else RdYlGn. */
+export function getScoreRamp(
+  colorblind = false
+): readonly (readonly [number, string])[] {
+  return colorblind ? SCORE_RAMP_CB : SCORE_RAMP;
+}
+
 export const NO_DATA_COLOR = "#d9d6cf";
 
 function hexToRgb(h: string): [number, number, number] {
@@ -58,16 +82,21 @@ export function riskToColor(share: number | null, nonResidential = false): strin
   return RISK_PALETTE[band];
 }
 
-/** Continuous colour for a 0–100 percentile on the score ramp. */
-export function percentileToColor(pct: number | null, nonResidential = false): string {
+/** Continuous colour for a 0–100 percentile on the active score ramp. */
+export function percentileToColor(
+  pct: number | null,
+  nonResidential = false,
+  colorblind = false
+): string {
   if (nonResidential || pct == null) return NO_DATA_COLOR;
+  const ramp = getScoreRamp(colorblind);
   const v = Math.max(0, Math.min(100, pct));
-  let lo = SCORE_RAMP[0];
-  let hi = SCORE_RAMP[SCORE_RAMP.length - 1];
-  for (let i = 0; i < SCORE_RAMP.length - 1; i++) {
-    if (v >= SCORE_RAMP[i][0] && v <= SCORE_RAMP[i + 1][0]) {
-      lo = SCORE_RAMP[i];
-      hi = SCORE_RAMP[i + 1];
+  let lo = ramp[0];
+  let hi = ramp[ramp.length - 1];
+  for (let i = 0; i < ramp.length - 1; i++) {
+    if (v >= ramp[i][0] && v <= ramp[i + 1][0]) {
+      lo = ramp[i];
+      hi = ramp[i + 1];
       break;
     }
   }
@@ -77,14 +106,28 @@ export function percentileToColor(pct: number | null, nonResidential = false): s
   return rgbToHex(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t);
 }
 
+/** WCAG relative luminance (0 = black, 1 = white) of an sRGB hex colour. */
+function relativeLuminance(hex: string): number {
+  const lin = (c: number) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  const [r, g, b] = hexToRgb(hex);
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+
 /**
- * Readable foreground for text on a score swatch. The red (low) and green (high)
- * ends are dark enough for white; the orange→yellow→light-green middle needs ink.
+ * Readable foreground for text on a score swatch. Picked from the swatch's own
+ * luminance so it stays legible on EITHER ramp (the RdYlBu "good" end is a
+ * mid-blue that needs white, where RdYlGn's was dark green): dark ends and the
+ * deep colours get white ink, the pale yellow/orange/light-blue middle gets dark.
  */
-export function percentileTextColor(pct: number | null): string {
+export function percentileTextColor(pct: number | null, colorblind = false): string {
   if (pct == null) return "#1A1A18";
   const v = Math.max(0, Math.min(100, pct));
-  return v < 15 || v > 85 ? "#ffffff" : "#1A1A18";
+  return relativeLuminance(percentileToColor(v, false, colorblind)) < 0.45
+    ? "#ffffff"
+    : "#1A1A18";
 }
 
 export function domainProperty(domain: DomainId): string {

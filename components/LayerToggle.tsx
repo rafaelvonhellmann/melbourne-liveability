@@ -18,6 +18,8 @@ type LayerToggleProps = {
   onWalkAccessToggle?: () => void;
   cyclabilityMode?: boolean;
   onCyclabilityToggle?: () => void;
+  colorblindRamp?: boolean;
+  onColorblindToggle?: () => void;
   hazardLayer?: "bushfire" | "flood" | null;
   onHazardSelect?: (layer: "bushfire" | "flood") => void;
 };
@@ -34,6 +36,8 @@ export function LayerToggle({
   onWalkAccessToggle,
   cyclabilityMode = false,
   onCyclabilityToggle,
+  colorblindRamp = false,
+  onColorblindToggle,
   hazardLayer = null,
   onHazardSelect,
 }: LayerToggleProps) {
@@ -230,6 +234,24 @@ export function LayerToggle({
               </label>
             </>
           )}
+        </div>
+      )}
+
+      {onColorblindToggle && (
+        <div className="mt-2.5 space-y-1.5 border-t border-surface-border pt-2.5">
+          <div className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            Display
+          </div>
+          <label className="flex cursor-pointer items-center gap-2 px-1 text-sm text-ink">
+            <input
+              type="checkbox"
+              checked={colorblindRamp}
+              onChange={onColorblindToggle}
+              className="rounded border-surface-border accent-accent"
+            />
+            Colourblind-safe colours
+            <span className="text-xs text-ink-muted">(red→blue)</span>
+          </label>
         </div>
       )}
     </div>

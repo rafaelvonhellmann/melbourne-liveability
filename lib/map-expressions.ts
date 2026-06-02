@@ -1,17 +1,17 @@
 import type { DomainId } from "./types";
 import {
   domainProperty,
-  SCORE_RAMP,
+  getScoreRamp,
   NO_DATA_COLOR,
   RISK_PALETTE,
   RISK_BANDS,
 } from "./colors";
 
-export function choroplethFillColor(domain: DomainId): unknown[] {
-  return choroplethFillColorByProp(domainProperty(domain));
+export function choroplethFillColor(domain: DomainId, colorblind = false): unknown[] {
+  return choroplethFillColorByProp(domainProperty(domain), colorblind);
 }
 
-export function choroplethFillColorByProp(property: string): unknown[] {
+export function choroplethFillColorByProp(property: string, colorblind = false): unknown[] {
   const prop = ["get", property];
   return [
     "case",
@@ -19,13 +19,14 @@ export function choroplethFillColorByProp(property: string): unknown[] {
     NO_DATA_COLOR,
     ["==", prop, null],
     NO_DATA_COLOR,
-    // Continuous Red->Yellow->Green interpolation (worse -> better) for fine
-    // granularity. See SCORE_RAMP in ./colors.
+    // Continuous worse->better interpolation for fine granularity. Default ramp
+    // is Red->Yellow->Green; the colourblind-safe toggle swaps the top half to
+    // blue (RdYlBu). See getScoreRamp in ./colors.
     [
       "interpolate",
       ["linear"],
       prop,
-      ...SCORE_RAMP.flatMap(([p, c]) => [p, c]),
+      ...getScoreRamp(colorblind).flatMap(([p, c]) => [p, c]),
     ],
   ];
 }
