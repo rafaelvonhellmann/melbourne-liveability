@@ -357,6 +357,35 @@ export default function MapPage() {
               property for the full report.
             </p>
           )}
+          {/* Toggle nearby-amenity pins on the map (you're zoomed into the area). */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] text-ink-muted">Show nearby:</span>
+            {[
+              { id: "supermarket", label: "Groceries" },
+              { id: "gp", label: "GP" },
+              { id: "school", label: "Schools" },
+              { id: "gym_leisure", label: "Gym" },
+              { id: "bank", label: "Banks" },
+              { id: "park", label: "Parks" },
+            ].map((c) => {
+              const on = !!visiblePins[c.id];
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setVisiblePins((v) => ({ ...v, [c.id]: !v[c.id] }))}
+                  className={`rounded-full border px-2 py-0.5 text-[11px] transition-colors ${
+                    on
+                      ? "border-accent bg-accent text-accent-ink"
+                      : "border-surface-border text-ink-muted hover:border-accent hover:text-accent"
+                  }`}
+                >
+                  {c.label}
+                </button>
+              );
+            })}
+          </div>
           {isPreciseWalkConfigured() && (
             <div className="rounded-lg border border-surface-border bg-surface px-3 py-2 text-xs">
               {buyerReport.accessMode === "precise" ? (
