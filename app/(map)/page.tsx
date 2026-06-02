@@ -35,6 +35,17 @@ import { buildSearchIndex } from "@/lib/search";
 import { DOMAIN_LABELS, domainProperty } from "@/lib/colors";
 import { useMapPersonalisation } from "@/lib/use-map-personalisation";
 
+// Buyer-relevant amenity pins for the "show everything within a 15-min walk" button.
+const WALK_PIN_CATEGORIES = [
+  { id: "supermarket", label: "Groceries" },
+  { id: "gp", label: "GP" },
+  { id: "pharmacy", label: "Pharmacy" },
+  { id: "school", label: "Schools" },
+  { id: "gym_leisure", label: "Gym" },
+  { id: "bank", label: "Banks" },
+  { id: "park", label: "Parks" },
+];
+
 export default function MapPage() {
   const [places, setPlaces] = useState<Place[]>([]);
   const [loadError, setLoadError] = useState(false);
@@ -435,17 +446,29 @@ export default function MapPage() {
               property for the full report.
             </p>
           )}
-          {/* Toggle nearby-amenity pins on the map (you're zoomed into the area). */}
+          {/* 15-min walk: the radius is drawn on the map; this drops every
+              buyer-relevant pin so you see what's inside the circle at once. */}
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[11px] text-ink-muted">Show nearby:</span>
-            {[
-              { id: "supermarket", label: "Groceries" },
-              { id: "gp", label: "GP" },
-              { id: "school", label: "Schools" },
-              { id: "gym_leisure", label: "Gym" },
-              { id: "bank", label: "Banks" },
-              { id: "park", label: "Parks" },
-            ].map((c) => {
+            <button
+              type="button"
+              onClick={() => {
+                const ids = WALK_PIN_CATEGORIES.map((c) => c.id);
+                const allOn = ids.every((id) => visiblePins[id]);
+                setVisiblePins((v) => {
+                  const next = { ...v };
+                  for (const id of ids) next[id] = !allOn;
+                  return next;
+                });
+              }}
+              aria-pressed={WALK_PIN_CATEGORIES.every((c) => visiblePins[c.id])}
+              className="rounded-full border border-accent bg-accent px-2.5 py-0.5 text-[11px] font-medium text-accent-ink transition-colors hover:bg-accent-focus"
+            >
+              {WALK_PIN_CATEGORIES.every((c) => visiblePins[c.id])
+                ? "Hide 15-min walk"
+                : "Show 15-min walk"}
+            </button>
+            <span className="text-[11px] text-ink-muted">or one:</span>
+            {WALK_PIN_CATEGORIES.map((c) => {
               const on = !!visiblePins[c.id];
               return (
                 <button

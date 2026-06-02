@@ -263,7 +263,7 @@ export function MelbourneMap({
         id: "buyer-radius-fill",
         type: "fill",
         source: "buyer-radius",
-        paint: { "fill-color": "#AD4F2E", "fill-opacity": 0.08 },
+        paint: { "fill-color": "#AD4F2E", "fill-opacity": 0.1 },
       });
       map.addLayer({
         id: "buyer-radius-line",
@@ -271,9 +271,9 @@ export function MelbourneMap({
         source: "buyer-radius",
         paint: {
           "line-color": "#AD4F2E",
-          "line-width": 1.5,
-          "line-opacity": 0.7,
-          "line-dasharray": [2, 2],
+          "line-width": 2.5,
+          "line-opacity": 0.95,
+          "line-dasharray": [3, 2],
         },
       });
 
