@@ -1,6 +1,7 @@
 import type { ScoreWeights } from "./types";
 import type { PersonaId } from "./personas";
 import type { InterestViewId } from "./interest-views";
+import type { BuyerProfile } from "./buyer-fit";
 
 const STORAGE_KEY = "mlv-user-prefs-v1";
 const MAX_SHORTLIST = 12;
@@ -48,6 +49,8 @@ export type UserPrefs = {
   alertEmail?: string;
   /** Use the colourblind-safe (RdYlBu) score ramp on the map. Display-only. */
   colorblindRamp?: boolean;
+  /** Lightweight personal "fit for your life" profile (buyer or agent). Local-only. */
+  buyerProfile?: BuyerProfile;
 };
 
 export const DEFAULT_PREFS: UserPrefs = {
@@ -190,4 +193,29 @@ export function removeSavedCheck(id: string): UserPrefs {
 export function isCheckSaved(lat: number, lng: number): boolean {
   const id = savedCheckId(lat, lng);
   return loadUserPrefs().savedChecks.some((c) => c.id === id);
+}
+
+/** The saved personal "fit" profile, or null if none set. Device-local. */
+export function loadBuyerProfile(): BuyerProfile | null {
+  return loadUserPrefs().buyerProfile ?? null;
+}
+
+/** Save (replace) the personal profile, stamping updatedAt. */
+export function saveBuyerProfile(profile: BuyerProfile): UserPrefs {
+  const prefs = loadUserPrefs();
+  const next: UserPrefs = {
+    ...prefs,
+    buyerProfile: { ...profile, updatedAt: new Date().toISOString() },
+  };
+  saveUserPrefs(next);
+  return next;
+}
+
+/** Forget the personal profile. */
+export function clearBuyerProfile(): UserPrefs {
+  const prefs = loadUserPrefs();
+  const next: UserPrefs = { ...prefs };
+  delete next.buyerProfile;
+  saveUserPrefs(next);
+  return next;
 }

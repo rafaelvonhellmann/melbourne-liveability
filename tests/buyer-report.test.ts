@@ -24,8 +24,8 @@ describe("transport-noise finding (proximity proxy)", () => {
     const f = r.findings.find((x) => x.id === "transport-noise");
     expect(f).toBeTruthy();
     expect(f!.kind).toBe("verify");
-    expect(f!.sourceRefs.length).toBeGreaterThan(0);
-    expect(f!.caveat).toMatch(/proximity proxy/i);
+    expect(f!.sourceRefs?.length ?? 0).toBeGreaterThan(0);
+    expect(f!.caveat ?? "").toMatch(/proximity proxy/i);
   });
 
   it("stays silent when no source is within range", () => {
