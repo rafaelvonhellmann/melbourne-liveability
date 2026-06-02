@@ -507,9 +507,13 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     });
   }
 
-  // 6) Local safety / crime context (LGA). Off-coverage pins (no SA2 match) have
-  //    no local crime data, so precision/confidence drop to "unknown".
+  // 6) Local safety / crime context (LGA). Property + offences-against-the-person
+  //    split (VCSA). Off-coverage pins (no SA2 match) drop precision to "unknown".
   const propCrimePct = place?.domains?.safety?.subIndicators?.propertyCrime?.percentile ?? null;
+  const violentCrimePct = place?.domains?.safety?.subIndicators?.violentCrime?.percentile ?? null;
+  const crimeBits: string[] = [];
+  if (typeof propCrimePct === "number") crimeBits.push(`property offences ~${Math.round(propCrimePct)}th percentile`);
+  if (typeof violentCrimePct === "number") crimeBits.push(`offences against the person ~${Math.round(violentCrimePct)}th percentile`);
   findings.push({
     id: "safety-context",
     kind: "verify",
@@ -517,10 +521,12 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     title: "Review local safety context",
     summary: !place
       ? "This point is outside our Greater Melbourne coverage, so no local crime context is available here. Recorded offences are published at suburb/LGA level — check the VCSA data for the actual area."
-      : typeof propCrimePct === "number"
-        ? `Recorded property-offence rates sit around the ${Math.round(propCrimePct)}th percentile for Greater Melbourne, measured at suburb/LGA level — not the specific street.`
+      : crimeBits.length
+        ? `Recorded ${crimeBits.join(" and ")} across Greater Melbourne, measured at suburb/LGA level — not the specific street.`
         : "Recorded-offence rates are published at suburb/LGA level — not at the specific street or property.",
     verifyAction: "Walk the immediate street at different times and check recent local reports.",
+    caveat:
+      "Recorded offences reflect reporting and policing, not true crime levels; percentiles rank areas and do not predict a specific street.",
     confidence: place ? "medium" : "unknown",
     geography: place ? "lga" : "unknown",
     sourceRefs: getSourcesByIds(["vcsa-recorded-offences"]),
