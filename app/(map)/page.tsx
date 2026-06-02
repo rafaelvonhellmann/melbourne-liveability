@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { MapPin, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { MapPin, PanelRightClose, PanelRightOpen, Bike } from "lucide-react";
 import { MelbourneMap } from "@/components/MelbourneMap";
 import { LayerToggle } from "@/components/LayerToggle";
 import { SearchBox } from "@/components/SearchBox";
@@ -119,6 +119,7 @@ export default function MapPage() {
   const searchParams = useSearchParams();
   const [buyerMode, setBuyerMode] = useState(false);
   const [buyerPin, setBuyerPin] = useState<[number, number] | null>(null);
+  const [showCycleRadius, setShowCycleRadius] = useState(false);
   const [buyerSa2, setBuyerSa2] = useState<{ slug?: string; sa2Code?: string } | null>(null);
   const [buyerReport, setBuyerReport] = useState<BuyerReportData | null>(null);
   // Paid-tier "precise walk routing" fetch status (idle until the user opts in).
@@ -489,6 +490,29 @@ export default function MapPage() {
               );
             })}
           </div>
+          {/* ~15-min bike reach ring around the pin, plus this area's mapped
+              cycle-infrastructure index (context-only, never scored). */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowCycleRadius((v) => !v)}
+              aria-pressed={showCycleRadius}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors ${
+                showCycleRadius
+                  ? "border-[#0E7C86] bg-[#0E7C86] text-white"
+                  : "border-surface-border text-ink-muted hover:border-[#0E7C86] hover:text-[#0E7C86]"
+              }`}
+            >
+              <Bike className="h-3 w-3" aria-hidden />
+              {showCycleRadius ? "Hide bike radius" : "Show ~15-min bike"}
+            </button>
+            {buyerPlace?.context?.cyclability && (
+              <span className="text-[11px] text-ink-muted">
+                Area cycle-infra:{" "}
+                <b className="num text-ink">{buyerPlace.context.cyclability.index}</b>/100
+              </span>
+            )}
+          </div>
           {isPreciseWalkConfigured() && (
             <div className="rounded-lg border border-surface-border bg-surface px-3 py-2 text-xs">
               {buyerReport.accessMode === "precise" ? (
@@ -610,6 +634,7 @@ export default function MapPage() {
             hoverLabel={activeLayerLabel}
             buyerMode={buyerMode}
             buyerPin={buyerPin}
+            showCycleRadius={showCycleRadius}
             onPinDrop={onPinDrop}
             onPlaceSelect={(props) => {
               const p = places.find(

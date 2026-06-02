@@ -28,6 +28,23 @@ import type { Cyclability } from "./types";
  */
 export const CYCLABILITY_SATURATION_KM_PER_KM2 = 4;
 
+/**
+ * "~15-min bike" reach radius drawn around the buyer pin. A conservative casual
+ * urban speed (allowing for stops, lights and hills), NOT a sports pace — and
+ * straight-line, like the walk radius, so it OVERSTATES real road-network reach
+ * (rivers, freeways and rail are not subtracted). A range indicator, not routing.
+ */
+export const CYCLE_SPEED_KMH = 14;
+export const CYCLE_MINUTES = 15;
+
+/** Straight-line km coverable in `minutes` at `speedKmh`. */
+export function bikeReachKm(minutes: number, speedKmh: number = CYCLE_SPEED_KMH): number {
+  return (speedKmh * minutes) / 60;
+}
+
+/** Radius (km) of the ~15-min bike ring. */
+export const CYCLE_THRESHOLD_KM = bikeReachKm(CYCLE_MINUTES);
+
 export type CyclewayKind = "separated" | "on_road" | null;
 
 /**

@@ -1,9 +1,14 @@
 import { describe, it, expect } from "vitest";
 import {
   CYCLABILITY_SATURATION_KM_PER_KM2,
+  CYCLE_THRESHOLD_KM,
+  CYCLE_SPEED_KMH,
+  CYCLE_MINUTES,
+  bikeReachKm,
   classifyCycleway,
   summariseCyclability,
 } from "../lib/cyclability";
+import { WALK_THRESHOLD_KM } from "../lib/walk-access";
 
 describe("classifyCycleway", () => {
   it("classifies dedicated cycleways and bicycle-designated paths as separated", () => {
@@ -33,6 +38,23 @@ describe("classifyCycleway", () => {
     expect(classifyCycleway({ cycleway: "no" })).toBeNull();
     expect(classifyCycleway({})).toBeNull();
     expect(classifyCycleway(undefined)).toBeNull();
+  });
+});
+
+describe("bike reach radius (buyer-pin ring)", () => {
+  it("derives km from the stated speed and time", () => {
+    expect(bikeReachKm(60, 14)).toBeCloseTo(14, 5);
+    expect(bikeReachKm(30, 14)).toBeCloseTo(7, 5);
+    expect(bikeReachKm(15, 16)).toBeCloseTo(4, 5);
+  });
+
+  it("CYCLE_THRESHOLD_KM matches the 15-min @ 14 km/h assumption", () => {
+    expect(CYCLE_THRESHOLD_KM).toBeCloseTo((CYCLE_SPEED_KMH * CYCLE_MINUTES) / 60, 5);
+    expect(CYCLE_THRESHOLD_KM).toBeCloseTo(3.5, 5);
+  });
+
+  it("reaches farther than the 15-min walk ring (so the rings read as concentric)", () => {
+    expect(CYCLE_THRESHOLD_KM).toBeGreaterThan(WALK_THRESHOLD_KM);
   });
 });
 

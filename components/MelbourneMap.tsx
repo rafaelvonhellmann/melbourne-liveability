@@ -13,6 +13,7 @@ import { withBase } from "@/lib/asset-path";
 import { poiCircleColorExpression } from "@/lib/poi-categories";
 import { buildPoiPopupHtml, escapeHtml, type PoiFeatureProps } from "@/lib/poi-feature";
 import { WALK_THRESHOLD_KM } from "@/lib/walk-access";
+import { CYCLE_THRESHOLD_KM } from "@/lib/cyclability";
 
 /** Approximate a geographic circle (radius km) around [lng, lat] as a Polygon. */
 function circlePolygon(
@@ -64,6 +65,8 @@ type MelbourneMapProps = {
   buyerMode?: boolean;
   /** Coordinates of the dropped buyer pin to render ([lng, lat]). */
   buyerPin?: [number, number] | null;
+  /** Draw the ~15-min bike reach ring around the buyer pin (off by default). */
+  showCycleRadius?: boolean;
   /** Called with the dropped pin + the SA2 it falls in (from the fill layer). */
   onPinDrop?: (
     lngLat: [number, number],
@@ -110,6 +113,7 @@ export function MelbourneMap({
   hoverLabel,
   buyerMode = false,
   buyerPin = null,
+  showCycleRadius = false,
   onPinDrop,
 }: MelbourneMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -255,6 +259,31 @@ export function MelbourneMap({
             15,
             1,
           ],
+        },
+      });
+
+      // ~15-min bike reach ring (straight-line) around the buyer pin. Added
+      // BEFORE the walk radius so the smaller coral walk ring draws on top of it.
+      // A cool teal, distinct from the coral walk ring; off until toggled.
+      map.addSource("cycle-radius", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+      map.addLayer({
+        id: "cycle-radius-fill",
+        type: "fill",
+        source: "cycle-radius",
+        paint: { "fill-color": "#0E7C86", "fill-opacity": 0.06 },
+      });
+      map.addLayer({
+        id: "cycle-radius-line",
+        type: "line",
+        source: "cycle-radius",
+        paint: {
+          "line-color": "#0E7C86",
+          "line-width": 2,
+          "line-opacity": 0.9,
+          "line-dasharray": [1, 2],
         },
       });
 
@@ -448,6 +477,18 @@ export function MelbourneMap({
     // if the user is already closer).
     map.flyTo({ center: buyerPin, zoom: Math.max(map.getZoom(), 14.5), duration: 800 });
   }, [buyerPin]);
+
+  // ~15-min bike reach ring — independent toggle, only shown with a pin down.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const src = map.getSource("cycle-radius") as maplibregl.GeoJSONSource | undefined;
+    src?.setData({
+      type: "FeatureCollection",
+      features:
+        buyerPin && showCycleRadius ? [circlePolygon(buyerPin, CYCLE_THRESHOLD_KM)] : [],
+    });
+  }, [buyerPin, showCycleRadius]);
 
   // Crosshair cursor in buyer mode to signal "click to drop a pin".
   useEffect(() => {
