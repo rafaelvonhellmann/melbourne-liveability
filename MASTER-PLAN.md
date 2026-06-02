@@ -40,8 +40,24 @@ per-area public/infrastructure spending (not geocoded — Big Build is the proxy
 **Shipped this thread:** colourblind ramp (G6) · find-areas-like-this (G8) ·
 bike radius (G12a) · community amenities (G3) · social-housing supply data (G2) ·
 authoritative police+childcare (G5b) · housing-stress (G9) · heritage overlay
-(G11) · UX declutter + free-ification · EV parity · transport-noise proxy · the
-profile engine. ~196 vitest.
+(G11) · UX declutter + free-ification · EV parity · transport-noise proxy ·
+nuisance/industry proxy · **profile UI (buyer + agent "Fit for your life")** ·
+**population density + trend** · **nearest train-station distance** ·
+**social-housing map layer**. ~222 vitest, all CI-green.
+
+**Queue remaining:** school catchments (source CONFIRMED — data.vic.gov.au
+"Victorian Government School Zones", EPSG:3111 polys → reprojection + simplify +
+client pin-in-polygon; the heavy one) · Big Build pin-layer · parity (plain-English
+zone · water retailer · air quality · childcare ACECQA ratings) · developments
+(ABS building approvals) · undergrad/postgrad % · fire history · traffic AADT ·
+mobile-sheet polish · surface Sun & aspect on the area card.
+
+**Overnight (founder asleep):** a Codex ultrareview is running — website/UX, data
+quality, content + writing (esp. how info is delivered to users), buyer + agent
+profiles, accessibility, AI-slop (per impeccable.style/slop + gotalab/uxaudit
+criteria), plus stress-testing and remove/add/change recommendations. Did NOT
+start catchments unsupervised overnight (reprojection is error-prone — do it with
+the founder available).
 
 ---
 
