@@ -1,9 +1,9 @@
 "use client";
 
 import { useId, useRef, useState, type ReactNode } from "react";
-import { ListOrdered, Search, Layers, SlidersHorizontal, Trophy } from "lucide-react";
+import { ListOrdered, Search, Layers, SlidersHorizontal } from "lucide-react";
 
-export type MobileTabId = "explore" | "results" | "search" | "layers" | "weights";
+export type MobileTabId = "explore" | "search" | "layers" | "weights";
 
 type TabDef = {
   id: MobileTabId;
@@ -11,27 +11,26 @@ type TabDef = {
   icon: typeof ListOrdered;
 };
 
+// No ranked "Results" tab — the scored ranking is deferred to a future signed-in
+// profile feature (matches the desktop sidebar, which carries explore tools only).
 const TABS: TabDef[] = [
   { id: "explore", label: "Explore", icon: ListOrdered },
-  { id: "results", label: "Results", icon: Trophy },
   { id: "search", label: "Search", icon: Search },
   { id: "layers", label: "Layers", icon: Layers },
   { id: "weights", label: "Weights", icon: SlidersHorizontal },
 ];
 
-// In Buyer Check mode the ranked "Results" list and the "Weights" (domain
-// sliders) are hidden, mirroring desktop: Buyer Mode is a context lens and must
-// never surface the scored composite / ranking. Explore (the buyer panel),
-// Search and Layers (map backdrop + POI pins) stay.
-const BUYER_HIDDEN_TABS: MobileTabId[] = ["results", "weights"];
+// In Buyer Check mode the "Weights" (domain sliders) tab is hidden: Buyer Mode is
+// a context lens and must never surface the scored composite. Explore (the buyer
+// panel), Search and Layers (map backdrop + POI pins) stay.
+const BUYER_HIDDEN_TABS: MobileTabId[] = ["weights"];
 
 type MobileSheetProps = {
   explore: ReactNode;
-  results: ReactNode;
   search: ReactNode;
   layers: ReactNode;
   weights: ReactNode;
-  /** When true, hide the scored Results + Weights tabs (lens-not-scored). */
+  /** When true, hide the scored Weights tab (lens-not-scored). */
   buyerMode?: boolean;
 };
 
@@ -41,7 +40,7 @@ type MobileSheetProps = {
  * Tabs follow the WAI-ARIA tabs pattern (tablist/tab/tabpanel + roving arrow
  * keys) and rely on the global focus-visible ring / reduced-motion handling.
  */
-export function MobileSheet({ explore, results, search, layers, weights, buyerMode = false }: MobileSheetProps) {
+export function MobileSheet({ explore, search, layers, weights, buyerMode = false }: MobileSheetProps) {
   const [active, setActive] = useState<MobileTabId>("explore");
   const baseId = useId();
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -53,7 +52,6 @@ export function MobileSheet({ explore, results, search, layers, weights, buyerMo
 
   const panels: Record<MobileTabId, ReactNode> = {
     explore,
-    results,
     search,
     layers,
     weights,

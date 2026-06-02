@@ -3,21 +3,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { MapPin } from "lucide-react";
+import { MapPin, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { MelbourneMap } from "@/components/MelbourneMap";
 import { LayerToggle } from "@/components/LayerToggle";
 import { SearchBox } from "@/components/SearchBox";
 import { DomainSliders } from "@/components/DomainSliders";
-import { PersonaPresets } from "@/components/PersonaPresets";
 import { InterestViews } from "@/components/InterestViews";
 import { ShortlistPanel } from "@/components/ShortlistPanel";
-import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { ShareViewButton } from "@/components/ShareViewButton";
 import { MobileSheet } from "@/components/MobileSheet";
 import { MapLegend } from "@/components/MapLegend";
 import { Attribution } from "@/components/Attribution";
 import { SelectedSummaryCard } from "@/components/SelectedSummaryCard";
-import { ResultsList } from "@/components/ResultsList";
 import { FeedbackButton } from "@/components/FeedbackButton";
 import { OnboardingModal } from "@/components/OnboardingModal";
 import { BuyerReportPanel } from "@/components/buyer/BuyerReportPanel";
@@ -41,6 +38,8 @@ export default function MapPage() {
   const [places, setPlaces] = useState<Place[]>([]);
   const [loadError, setLoadError] = useState(false);
   const [selected, setSelected] = useState<Place | null>(null);
+  // Desktop side-panel collapse — gives the map full width on demand.
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   // Pins are OFF by default — they only appear when the user enables a category.
   const [visiblePins, setVisiblePins] = useState<Record<string, boolean>>({});
   // Camera target for the area search / list selections. Map clicks never set
@@ -62,12 +61,10 @@ export default function MapPage() {
     toggleWalkAccessMode,
     cyclabilityMode,
     toggleCyclabilityMode,
-    recent,
     savedChecks,
     saveCheck,
     removeCheck,
     setWeightsAndSync,
-    selectPersona,
     selectInterestView,
     updateShortlist,
     getShareUrl,
@@ -372,19 +369,15 @@ export default function MapPage() {
 
   const personalisationControls = (
     <div className="space-y-3">
-      {/* Presets — quick, one-tap starting points (kept distinct from the
-          manual priority sliders below to reduce confusion). */}
-      <section aria-label="Presets" className="space-y-2">
-        <h3 className="px-1 text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
-          Presets
-        </h3>
+      {/* Lens — one unified set of one-tap starting points (sets layer +
+          weights), kept distinct from the manual priority sliders below. */}
+      <section aria-label="Lens">
         <InterestViews active={interestView} onSelect={selectInterestView} />
-        <PersonaPresets onSelect={selectPersona} />
       </section>
 
       <div className="border-t border-surface-border" aria-hidden />
 
-      {/* Adjust priorities — manual fine-tuning, separated from presets. */}
+      {/* Adjust priorities — manual fine-tuning, separated from the lens. */}
       <section aria-label="Adjust priorities" className="space-y-2">
         <h3 className="px-1 text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
           Fine-tune priorities
@@ -395,31 +388,6 @@ export default function MapPage() {
           onReset={resetWeights}
         />
       </section>
-    </div>
-  );
-
-  // Ranked results — decision-support, not the map hero. A re-weightable lens
-  // surfaced in its own tab/section, driven by the current priority weights.
-  const rankedResults = (
-    <div className="space-y-2">
-      <div>
-        <h3 className="px-1 text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
-          Ranked for your priorities
-        </h3>
-        <p className="px-1 text-[11px] leading-snug text-ink-muted">
-          Top residential areas by your current weights — one lens, not an
-          objective ranking. Re-weight to re-rank; tap a row to focus it.
-        </p>
-      </div>
-      <div className="overflow-hidden rounded-lg border border-surface-border bg-surface">
-        <ResultsList
-          places={places}
-          weights={weights}
-          limit={20}
-          onSelect={focusPlace}
-          selectedSlug={selected?.slug ?? undefined}
-        />
-      </div>
     </div>
   );
 
@@ -704,13 +672,32 @@ export default function MapPage() {
             </div>
           )}
 
+          {/* Collapse / expand the side panel (desktop) — sits on the map's right
+              edge so it stays reachable whether the panel is open or hidden. */}
+          <button
+            type="button"
+            onClick={() => setSidebarCollapsed((c) => !c)}
+            aria-label={sidebarCollapsed ? "Show side panel" : "Hide side panel"}
+            aria-expanded={!sidebarCollapsed}
+            className="absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 items-center rounded-l-lg border border-r-0 border-surface-border bg-surface px-1 py-3 text-ink-muted shadow-card transition-colors hover:text-accent md:flex"
+          >
+            {sidebarCollapsed ? (
+              <PanelRightOpen className="h-4 w-4" aria-hidden />
+            ) : (
+              <PanelRightClose className="h-4 w-4" aria-hidden />
+            )}
+          </button>
         </div>
 
         {/* Desktop sidebar — explore tools only; ranked suburb lists are deferred
-            to a future signed-in profile feature. */}
+            to a future signed-in profile feature. Collapsible for a full-width map. */}
         <aside
           className={`hidden shrink-0 flex-col border-l border-surface-border bg-surface transition-[width] duration-300 ease-out md:flex ${
-            buyerMode ? "w-[460px] lg:w-[520px]" : "w-[372px]"
+            sidebarCollapsed
+              ? "w-0 overflow-hidden border-l-0"
+              : buyerMode
+                ? "w-[460px] lg:w-[520px]"
+                : "w-[372px]"
           }`}
         >
           {buyerMode ? (
@@ -748,7 +735,6 @@ export default function MapPage() {
             </div>
           )
         }
-        results={rankedResults}
         search={
           <div className="space-y-3">
             <SearchBox
@@ -766,7 +752,6 @@ export default function MapPage() {
               onChange={updateShortlist}
               onOpen={focusPlace}
             />
-            <RecentlyViewed recent={recent} />
           </div>
         }
         layers={
@@ -889,9 +874,8 @@ function ExploreHint({ residentialCount }: { residentialCount: number }) {
       {residentialCount > 0 && (
         <>
           {" "}
-          We hold {residentialCount} residential SA2 suburbs — see the Results tab
-          for a live ranking. Saved &amp; synced lists are planned for signed-in
-          profiles.
+          We hold {residentialCount} residential SA2 suburbs. Saved &amp; synced
+          lists are planned for signed-in profiles.
         </>
       )}
     </p>

@@ -5,7 +5,7 @@ import { loadUserPrefs, saveUserPrefs } from "@/lib/user-prefs";
 import { INTEREST_VIEWS, type InterestViewId } from "@/lib/interest-views";
 
 const SEEN_KEY = "mlv-onboarded-v1";
-const PICKS: InterestViewId[] = ["general", "rental", "homeBuyer", "education"];
+const PICKS: InterestViewId[] = ["general", "rental", "homeBuyer", "family"];
 
 type Props = {
   /** Called when the user picks a lens, so the map can apply it immediately. */
