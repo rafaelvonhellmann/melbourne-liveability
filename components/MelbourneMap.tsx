@@ -396,6 +396,9 @@ export function MelbourneMap({
     } else {
       pinMarkerRef.current.setLngLat(buyerPin);
     }
+    // Deep-dive: ease into the area at neighbourhood zoom (never zoom back out
+    // if the user is already closer).
+    map.flyTo({ center: buyerPin, zoom: Math.max(map.getZoom(), 14.5), duration: 800 });
   }, [buyerPin]);
 
   // Crosshair cursor in buyer mode to signal "click to drop a pin".

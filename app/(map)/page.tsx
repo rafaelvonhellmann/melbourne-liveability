@@ -556,7 +556,11 @@ export default function MapPage() {
 
         {/* Desktop sidebar — explore tools only; ranked suburb lists are deferred
             to a future signed-in profile feature. */}
-        <aside className="hidden w-[372px] shrink-0 flex-col border-l border-surface-border bg-surface md:flex">
+        <aside
+          className={`hidden shrink-0 flex-col border-l border-surface-border bg-surface md:flex ${
+            buyerMode ? "w-[460px] lg:w-[520px]" : "w-[372px]"
+          }`}
+        >
           {buyerMode ? (
             <div className="min-h-0 flex-1 overflow-y-auto p-3">{buyerPanel}</div>
           ) : (
