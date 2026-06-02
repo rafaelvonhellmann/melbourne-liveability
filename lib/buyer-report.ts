@@ -25,6 +25,12 @@ import {
   noiseKindLabel,
   type NoiseLine,
 } from "./noise";
+import {
+  nearestNuisances,
+  nuisanceFlags,
+  nuisanceKindLabel,
+  type NuisancePoint,
+} from "./nuisance";
 import { computeWeightedScore } from "./scoring";
 import { getDefaultWeights } from "./weights";
 import { getSourcesByIds } from "./source-manifest";
@@ -412,6 +418,11 @@ export interface BuildBuyerReportInput {
    * proxy finding. Lazy-loaded client-side; omit to skip. See lib/noise.
    */
   noiseLines?: NoiseLine[];
+  /**
+   * Disamenity / nuisance source points (industrial / waste / sewage / quarry)
+   * for the proximity proxy finding. Lazy-loaded client-side; omit to skip.
+   */
+  nuisancePoints?: NuisancePoint[];
 }
 
 export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
@@ -539,6 +550,35 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         geography: "pin",
         caveat:
           "Straight-line distance to the nearest mapped rail line, tram line or freeway/major road (OpenStreetMap, ODbL) — a proximity proxy, NOT a measured noise level. Barriers, cuttings, traffic volume, aspect and time of day all matter and are not modelled.",
+        sourceRefs: getSourcesByIds(["osm-amenities"]),
+      });
+    }
+  }
+
+  // Nuisance / disamenity proximity proxy (pin-level, OSM): industrial estates,
+  // waste/landfill, sewage works, quarries — odour/dust/traffic. Only FLAG close.
+  if (point && input.nuisancePoints && input.nuisancePoints.length > 0) {
+    const nflags = nuisanceFlags(
+      nearestNuisances([point.lng, point.lat], input.nuisancePoints)
+    );
+    if (nflags.length > 0) {
+      const list = nflags
+        .map((f) => `${nuisanceKindLabel(f.kind)} (~${f.distance} m away)`)
+        .join(", ");
+      findings.push({
+        id: "nuisance-proximity",
+        kind: "verify",
+        severity: nflags.some((f) => f.distance <= 200) ? "medium" : "low",
+        title: "Possible industrial / odour / pollution source nearby",
+        summary: `This point is near a ${list}.`,
+        whyItMatters:
+          "Industrial areas, waste or sewage sites and quarries can bring odour, dust, heavy-vehicle traffic or noise at certain times or wind directions.",
+        verifyAction:
+          "Check the prevailing wind, visit at different times, and look up any EPA licence or known issues for the site.",
+        confidence: "low",
+        geography: "pin",
+        caveat:
+          "Straight-line distance to the representative point of the nearest mapped industrial area, waste/landfill, sewage works or quarry (OpenStreetMap, ODbL) — a proximity proxy, NOT a measured emission. Whether a site affects this property depends on wind, hours, screening and operations.",
         sourceRefs: getSourcesByIds(["osm-amenities"]),
       });
     }

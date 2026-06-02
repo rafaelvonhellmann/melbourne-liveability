@@ -41,6 +41,31 @@ describe("transport-noise finding (proximity proxy)", () => {
   });
 });
 
+describe("nuisance-proximity finding (industrial/waste/sewage/quarry)", () => {
+  it("flags a pin next to an industrial point, sourced + caveated", () => {
+    const r = buildBuyerReport({
+      lat: -37.8,
+      lng: 144.97,
+      pois: [],
+      nuisancePoints: [{ kind: "industrial", coord: [144.97, -37.8] }],
+    });
+    const f = r.findings.find((x) => x.id === "nuisance-proximity");
+    expect(f).toBeTruthy();
+    expect(f!.kind).toBe("verify");
+    expect(f!.caveat ?? "").toMatch(/proximity proxy/i);
+  });
+
+  it("stays silent when the nearest nuisance is far", () => {
+    const r = buildBuyerReport({
+      lat: -37.8,
+      lng: 144.97,
+      pois: [],
+      nuisancePoints: [{ kind: "sewage", coord: [145.1, -37.9] }], // ~14 km
+    });
+    expect(r.findings.find((x) => x.id === "nuisance-proximity")).toBeUndefined();
+  });
+});
+
 function poi(pinType: string, name: string, lng: number, lat: number): Feature<Point> {
   return {
     type: "Feature",

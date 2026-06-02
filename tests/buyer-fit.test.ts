@@ -31,6 +31,12 @@ describe("evaluateFit — deal-breakers", () => {
     expect(evaluateFit({ ...base, dealBreakers: ["noise"] }, { hasNoiseFlag: false }).hits).toHaveLength(0);
   });
 
+  it("flags industry only when the nuisance flag is set", () => {
+    const p: BuyerProfile = { ...base, dealBreakers: ["industry"] };
+    expect(evaluateFit(p, { hasNuisanceFlag: true }).hits.map((h) => h.id)).toEqual(["industry"]);
+    expect(evaluateFit(p, { hasNuisanceFlag: false }).hits).toHaveLength(0);
+  });
+
   it("flags weak transport only below the threshold", () => {
     const p: BuyerProfile = { ...base, dealBreakers: ["poor_transport"] };
     expect(evaluateFit(p, { transportPct: 20 }).hits).toHaveLength(1);

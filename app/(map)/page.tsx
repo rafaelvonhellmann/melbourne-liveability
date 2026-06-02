@@ -21,6 +21,8 @@ import { BuyerReportPanel } from "@/components/buyer/BuyerReportPanel";
 import { SavedChecks } from "@/components/buyer/SavedChecks";
 import { savedCheckId, type SavedCheck } from "@/lib/user-prefs";
 import { buildBuyerReport, type BuyerReport as BuyerReportData } from "@/lib/buyer-report";
+import type { NoiseLine } from "@/lib/noise";
+import type { NuisancePoint } from "@/lib/nuisance";
 import { findSa2ForPoint } from "@/lib/buyer-location";
 import { MAJOR_PROJECTS } from "@/lib/major-projects";
 import type { GeocodeResult } from "@/lib/geocode";
@@ -177,6 +179,34 @@ export default function MapPage() {
     sa2GeoRef.current = (await res.json()) as FeatureCollection;
     return sa2GeoRef.current;
   }
+  // Transport-noise source lines (rail/tram/freeway) for the buyer report's
+  // proximity proxy. Lazy-loaded once on first pin (kept out of the map bundle).
+  const noiseLinesRef = useRef<NoiseLine[] | null>(null);
+  async function ensureNoiseLines(): Promise<NoiseLine[]> {
+    if (noiseLinesRef.current) return noiseLinesRef.current;
+    const res = await fetch(withBase("/data/noise-lines.json"));
+    const g = (await res.json()) as Record<NoiseLine["kind"], [number, number][][]>;
+    const lines: NoiseLine[] = [];
+    (["rail", "tram", "freeway"] as const).forEach((k) =>
+      (g[k] ?? []).forEach((coords) => lines.push({ kind: k, coords }))
+    );
+    noiseLinesRef.current = lines;
+    return lines;
+  }
+  // Nuisance source points (industrial/waste/sewage/quarry) for the buyer
+  // report's disamenity proximity proxy. Lazy-loaded once on first pin.
+  const nuisancePointsRef = useRef<NuisancePoint[] | null>(null);
+  async function ensureNuisancePoints(): Promise<NuisancePoint[]> {
+    if (nuisancePointsRef.current) return nuisancePointsRef.current;
+    const res = await fetch(withBase("/data/nuisance-points.json"));
+    const g = (await res.json()) as Record<NuisancePoint["kind"], [number, number][]>;
+    const pts: NuisancePoint[] = [];
+    (["industrial", "waste", "sewage", "quarry"] as const).forEach((k) =>
+      (g[k] ?? []).forEach((coord) => pts.push({ kind: k, coord }))
+    );
+    nuisancePointsRef.current = pts;
+    return pts;
+  }
 
   const buyerPlace = useMemo(
     () =>
@@ -222,7 +252,11 @@ export default function MapPage() {
     // any in-flight precise fetch so its (now stale) result can't land late.
     precisionAbortRef.current?.abort();
     setPreciseStatus("idle");
-    const feats = await ensurePois().catch(() => [] as Feature<Point>[]);
+    const [feats, noiseLines, nuisancePoints] = await Promise.all([
+      ensurePois().catch(() => [] as Feature<Point>[]),
+      ensureNoiseLines().catch(() => [] as NoiseLine[]),
+      ensureNuisancePoints().catch(() => [] as NuisancePoint[]),
+    ]);
     const place = sa2
       ? places.find((p) => p.slug === sa2.slug || p.sa2Code === sa2.sa2Code) ?? null
       : null;
@@ -232,6 +266,8 @@ export default function MapPage() {
         lng: lngLat[0],
         place,
         pois: feats,
+        noiseLines,
+        nuisancePoints,
         nearbyAreas: areaCentroids,
         majorProjects: MAJOR_PROJECTS,
       })
@@ -260,7 +296,11 @@ export default function MapPage() {
       setPreciseStatus("error");
       return;
     }
-    const feats = await ensurePois().catch(() => [] as Feature<Point>[]);
+    const [feats, noiseLines, nuisancePoints] = await Promise.all([
+      ensurePois().catch(() => [] as Feature<Point>[]),
+      ensureNoiseLines().catch(() => [] as NoiseLine[]),
+      ensureNuisancePoints().catch(() => [] as NuisancePoint[]),
+    ]);
     if (ctrl.signal.aborted || buyerPinRef.current !== pin) return;
     setBuyerReport(
       buildBuyerReport({
@@ -269,6 +309,8 @@ export default function MapPage() {
         place: buyerPlace,
         pois: feats,
         isochrone: iso.geom,
+        noiseLines,
+        nuisancePoints,
         nearbyAreas: areaCentroids,
         majorProjects: MAJOR_PROJECTS,
       })

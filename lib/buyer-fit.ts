@@ -20,6 +20,7 @@ export type DealBreakerId =
   | "bushfire"
   | "heritage"
   | "noise"
+  | "industry"
   | "poor_transport";
 
 export type BuyerProfile = {
@@ -44,6 +45,7 @@ export const DEAL_BREAKERS: { id: DealBreakerId; label: string }[] = [
   { id: "bushfire", label: "Bushfire-prone overlay" },
   { id: "heritage", label: "Heritage Overlay restrictions" },
   { id: "noise", label: "Close to rail / tram / freeway noise" },
+  { id: "industry", label: "Close to industry / waste / pollution source" },
   { id: "poor_transport", label: "Weak public transport" },
 ];
 
@@ -59,6 +61,8 @@ export type FitSignals = {
   transportPct?: number | null;
   /** The buyer report produced a transport-noise proximity flag. */
   hasNoiseFlag?: boolean;
+  /** The buyer report produced an industrial/nuisance proximity flag. */
+  hasNuisanceFlag?: boolean;
 };
 
 /** Material-overlay thresholds (share %) for treating a hazard as a deal-breaker. */
@@ -127,6 +131,14 @@ export function evaluateFit(
       label: "Transport noise",
       detail:
         "You flagged noise as a deal-breaker — this point is close to a rail line, tram line or freeway/major road. Visit at peak and after dark.",
+    });
+  }
+  if (wants.has("industry") && signals.hasNuisanceFlag) {
+    hits.push({
+      id: "industry",
+      label: "Industry / pollution source",
+      detail:
+        "You flagged industry/pollution as a deal-breaker — this point is near a mapped industrial area, waste/sewage site or quarry. Check wind direction and any EPA licences.",
     });
   }
   if (
