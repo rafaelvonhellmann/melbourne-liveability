@@ -60,8 +60,8 @@
     "url": "https://opendata.transport.vic.gov.au/dataset/gtfs-schedule",
     "licence": "CC BY 4.0",
     "period": "rolling schedule export",
-    "fetchedAt": "2026-06-01",
-    "sha256": "14a66b3fe76419217ba12703ab60face7ef935653966eee22200f0a6e0b6f280"
+    "fetchedAt": "2026-06-02",
+    "sha256": "e8b17f7d8980e053b86c7196db6c09987f25ba7126a2c7faddd848333bab1138"
   },
   {
     "id": "osm-pt",
@@ -69,8 +69,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-01",
-    "sha256": "117b81e8f3704a954aa1fcdf5357c51e6f3e9ed5dad99de459cfae0a7cea19d6"
+    "fetchedAt": "2026-06-02",
+    "sha256": "dd1f0b328fb60874139c8af89061dc048fb2734dc0ae14cc4ebae5b8a3213082"
   },
   {
     "id": "vic-mapshare-hospitals",
@@ -87,8 +87,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-01",
-    "sha256": "d4cd545dd4e57b2b2e971ed26f55a85d8c8cfd9e4c48cbe070dec08b7aac543e"
+    "fetchedAt": "2026-06-02",
+    "sha256": "3d99b9431a536a51d923b9cda0fcb9fa396d06236b79c91db710f562f8270915"
   },
   {
     "id": "osm-post",
@@ -96,8 +96,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-01",
-    "sha256": "3277751365b81234a85fd91357081ae1fedcd4327ea560f792ef189e0b4c7e58"
+    "fetchedAt": "2026-06-02",
+    "sha256": "5638f737931e856459069ba9bcd8d38a24e94aec2cae716e3a322a40049de026"
   },
   {
     "id": "osm-clinical-social",
@@ -105,8 +105,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-01",
-    "sha256": "ec27f37ce8c0fdf6f83988da35e149b24a0d1398aff02a617599cbe5693e934b"
+    "fetchedAt": "2026-06-02",
+    "sha256": "07d38aae1a73327986b89071c42c33d7f8a57273b4f4c58d631348992cccb425"
   },
   {
     "id": "abs-census-labour-2016",
@@ -141,8 +141,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-01",
-    "sha256": "e74c7c37d2dc9dd10626424018f9243f359b062d92ab9103ad1a5837a9ae1b8a"
+    "fetchedAt": "2026-06-02",
+    "sha256": "e16c0eedce30b6f8ab91df6712ba3f4cca4b21c0b9dea943738aec9351116560"
   },
   {
     "id": "abs-census-preschool-2021",
@@ -177,8 +177,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-01",
-    "sha256": "247ad96a902bb43af96f613c804546a04b3c0033424f57ff11124286dced07cd"
+    "fetchedAt": "2026-06-02",
+    "sha256": "6e6628ebe5c8bf07b9e9efef5871f2b6aac665aa7548e0636b651b8c02cbd2a9"
   },
   {
     "id": "osm-cycleways",
@@ -186,8 +186,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-01",
-    "sha256": "34202973ef610c010c55213644c7960e3d2a7c5a4a48b0be57e4a6a6589bef23"
+    "fetchedAt": "2026-06-02",
+    "sha256": "a7fb511cbd053bc659a5d2497d1b521bcc69025c26008c43c93900f53a49d60d"
   },
   {
     "id": "vicmap-police",
