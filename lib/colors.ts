@@ -42,7 +42,7 @@ export const DOMAIN_LABELS: Record<DomainId, string> = {
   safety: "Crime / Safety",
   health: "Health",
   education: "Education",
-  income: "Income",
+  income: "Economy",
   hazards: "Hazards",
   socialHousing: "Social housing",
   equity: "Equity",

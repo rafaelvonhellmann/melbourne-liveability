@@ -193,6 +193,8 @@ export default function MapPage() {
     lngLat: [number, number],
     sa2: { slug?: string; name?: string; sa2Code?: string } | null
   ) => {
+    setBuyerMode(true); // a map click enters the buyer deep-dive directly
+    setSelected(null);
     setBuyerPin(lngLat);
     setBuyerSa2(sa2);
     setBuyerReport(null); // "computing" until pois resolve
@@ -205,11 +207,11 @@ export default function MapPage() {
   const selectFromSearch = (slug: string) => {
     const p = getPlaceBySlug(places, slug);
     if (!p) return;
-    if (!buyerMode) {
-      focusPlace(p);
-      return;
-    }
+    // Searching enters the buyer deep-dive at the area centroid; click the map
+    // to refine to the exact spot.
     const c = p.centroid as [number, number];
+    setBuyerMode(true);
+    setSelected(null);
     setBuyerPin(c);
     setBuyerSa2({ slug: p.slug, sa2Code: p.sa2Code });
     setBuyerReport(null);
@@ -604,7 +606,7 @@ export default function MapPage() {
         {/* Desktop sidebar — explore tools only; ranked suburb lists are deferred
             to a future signed-in profile feature. */}
         <aside
-          className={`hidden shrink-0 flex-col border-l border-surface-border bg-surface md:flex ${
+          className={`hidden shrink-0 flex-col border-l border-surface-border bg-surface transition-[width] duration-300 ease-out md:flex ${
             buyerMode ? "w-[460px] lg:w-[520px]" : "w-[372px]"
           }`}
         >

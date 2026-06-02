@@ -323,28 +323,8 @@ export function MelbourneMap({
     });
 
     map.on("click", "sa2-fill", (e) => {
-      // Buyer "Location Check": a click drops a pin (the property location) and
-      // reports the SA2 it falls in, instead of the normal area selection.
-      if (buyerModeRef.current) {
-        const bf = e.features?.[0];
-        onPinDropRef.current?.(
-          [e.lngLat.lng, e.lngLat.lat],
-          bf?.properties
-            ? {
-                slug: bf.properties.slug as string | undefined,
-                name: bf.properties.name as string | undefined,
-                sa2Code: bf.properties.sa2Code as string | undefined,
-              }
-            : null
-        );
-        return;
-      }
-      // A single click on a pin hits BOTH the poi-circles and sa2-fill layers
-      // (pins are drawn on top), and MapLibre dispatches the two layer handlers
-      // independently. Without this guard the poi-circles handler opens the
-      // popup and this handler then immediately closes it + selects the SA2
-      // underneath, so the popup never stays visible. If the click also landed
-      // on a visible pin, let the pin popup own it.
+      // If the click also hit a visible POI pin, let the pin popup own it (pins
+      // draw above sa2-fill and both layer handlers fire independently).
       if (
         map.getLayer("poi-circles") &&
         map.queryRenderedFeatures(e.point, { layers: ["poi-circles"] }).length > 0
@@ -353,12 +333,18 @@ export function MelbourneMap({
       }
       closePoiPopup();
       const f = e.features?.[0];
-      if (!f?.properties) return;
-      onPlaceSelectRef.current?.({
-        slug: f.properties.slug as string | undefined,
-        name: f.properties.name as string | undefined,
-        sa2Code: f.properties.sa2Code as string | undefined,
-      });
+      // Buyer-first: a map click drops the location pin + opens the deep-dive
+      // report (the page auto-enters buyer mode). No separate toggle needed.
+      onPinDropRef.current?.(
+        [e.lngLat.lng, e.lngLat.lat],
+        f?.properties
+          ? {
+              slug: f.properties.slug as string | undefined,
+              name: f.properties.name as string | undefined,
+              sa2Code: f.properties.sa2Code as string | undefined,
+            }
+          : null
+      );
     });
 
     map.on("mouseenter", "poi-circles", () => {

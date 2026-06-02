@@ -79,7 +79,7 @@ export const DOMAIN_REGISTRY: DomainConfig[] = [
   },
   {
     id: "income",
-    label: "Income / Economy",
+    label: "Economy",
     scored: true,
     defaultWeight: 8,
     layer: "choropleth",
