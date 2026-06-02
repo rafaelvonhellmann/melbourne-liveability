@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Printer, X, ShieldAlert, CheckCircle2, HelpCircle, Info, Sun, Bookmark, BookmarkCheck } from "lucide-react";
+import { Printer, X, ShieldAlert, CheckCircle2, HelpCircle, Info, Bookmark, BookmarkCheck } from "lucide-react";
 import type { BuyerReport, BuyerFinding, BuyerConfidence, BuyerGeography } from "@/lib/buyer-report";
 import { AMENITY_GROUPS } from "@/lib/buyer-report";
 import { formatSourceDate } from "@/lib/source-manifest";
-import { shadeMapUrl } from "@/lib/shademap";
 import { withBase } from "@/lib/asset-path";
 import { track } from "@/lib/analytics";
 import { POI_CATEGORY_BY_ID, type PoiCategoryId } from "@/lib/poi-categories";
@@ -114,17 +113,6 @@ export function BuyerReportPanel({
             >
               <Printer className="h-3.5 w-3.5" aria-hidden /> Print / Save as PDF
             </button>
-            {hasPin && (
-              <a
-                href={shadeMapUrl(report.location.lat!, report.location.lng!)}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => track("buyer_shademap")}
-                className="inline-flex items-center gap-1.5 rounded-md border border-surface-border px-2.5 py-1 text-xs text-ink transition-colors hover:border-accent hover:text-accent"
-              >
-                <Sun className="h-3.5 w-3.5" aria-hidden /> Check sunlight &amp; aspect
-              </a>
-            )}
             {onSaveCheck && hasPin && (
               <button
                 type="button"

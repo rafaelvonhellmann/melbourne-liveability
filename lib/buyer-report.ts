@@ -22,6 +22,7 @@ import { POI_CATEGORY_BY_ID, type PoiCategoryId } from "./poi-categories";
 import { computeWeightedScore } from "./scoring";
 import { getDefaultWeights } from "./weights";
 import { getSourcesByIds } from "./source-manifest";
+import { sunAspect } from "./sun";
 
 // ---- Types (stable public contract) ---------------------------------------
 
@@ -552,6 +553,30 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         ],
       });
     }
+  }
+
+  // 1d) Sun & aspect — proprietary, deterministic solar geometry from the pin's
+  //     latitude (no external shade service). Aspect can't be changed, so it's a
+  //     real due-diligence factor.
+  if (hasPoint) {
+    const sun = sunAspect(input.lat as number);
+    const h = (n: number) => n.toFixed(1);
+    findings.push({
+      id: "sun-aspect",
+      kind: "neutral",
+      severity: "info",
+      title: "Sun & aspect",
+      summary: `In summer the sun rises in the ${sun.summer.sunrise} and sets in the ${sun.summer.sunset} — a long ~${h(sun.summer.dayHours)}-hour day, climbing to ${Math.round(sun.summer.noonElevation)}° at noon. In winter it rises ${sun.winter.sunrise}, sets ${sun.winter.sunset} (~${h(sun.winter.dayHours)} hours, only ${Math.round(sun.winter.noonElevation)}° high). ${sun.sunSide === "north" ? "North" : "South"}-facing rooms and outdoor space get the most sun; morning sun comes from the east, afternoon from the west.`,
+      whyItMatters:
+        "Aspect — which way the property faces — drives natural light, winter warmth and running costs, and it can't be changed.",
+      verifyAction:
+        "Walk the property at the time of day you'd use the main rooms, and check which windows face the sunny side.",
+      confidence: "high",
+      geography: "pin",
+      caveat:
+        "Computed from the sun's geometry at this latitude (so it's the same along the street); trees, hills and neighbouring buildings still cast real shadows.",
+      sourceRefs: [METHODOLOGY_REF],
+    });
   }
 
   // 2) Overall area liveability (SA2).
