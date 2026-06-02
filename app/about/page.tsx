@@ -76,13 +76,12 @@ export default function AboutPage() {
         </section>
 
         <section className="mt-8">
-          <h2 className="font-display text-xl font-medium text-ink">How it stays free — and how it will earn</h2>
+          <h2 className="font-display text-xl font-medium text-ink">How it stays free</h2>
           <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-            The liveability map and the underlying open-data facts stay <b className="text-ink">free</b>.
-            We plan to charge later only for convenience and derived analysis — for example a
-            per-property buyer report — never for reselling open data, and never by adding ads or
-            tracking. Pricing is still being worked out; see{" "}
-            <Link href="/pricing" className="text-accent hover:underline">pricing</Link>.
+            liveable.melbourne is <b className="text-ink">free</b> — the map, every area profile,
+            and the Buyer Location Check. No ads, no behavioural tracking, no agent payments, and
+            we never resell the open data. If a paid convenience is ever added later, the map and
+            all the underlying facts will stay free.
           </p>
         </section>
 

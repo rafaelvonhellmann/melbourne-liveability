@@ -160,13 +160,9 @@ export default function BuyerLandingPage() {
             professional.
           </p>
           <p className="mt-3 text-sm text-ink-muted">
-            The core liveability map stays free.{" "}
-            <Link href="/pricing" className="text-accent hover:underline">
-              See pricing
-            </Link>{" "}
-            ·{" "}
+            Free to use — the map and every report.{" "}
             <Link href="/methodology" className="text-accent hover:underline">
-              methodology &amp; sources
+              Methodology &amp; sources
             </Link>
             .
           </p>

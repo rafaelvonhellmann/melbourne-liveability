@@ -78,10 +78,11 @@ export function SelectedSummaryCard({
             <button
               type="button"
               onClick={onClose}
-              className="-mr-1 -mt-1 shrink-0 rounded-md p-1 text-ink-muted transition-colors hover:text-accent"
-              aria-label="Clear selection"
+              className="-mr-1 -mt-1 inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1.5 text-xs text-ink-muted transition-colors hover:bg-surface-sunken hover:text-accent"
+              aria-label="Close — back to the map"
             >
               <X className="h-4 w-4" aria-hidden />
+              <span className="md:hidden">Close</span>
             </button>
           </div>
           {topDomains.length > 0 && (

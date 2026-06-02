@@ -5,7 +5,6 @@ const LINKS: { href: string; label: string }[] = [
   { href: "/buyer", label: "Buyer check" },
   { href: "/about", label: "About & trust" },
   { href: "/compare", label: "Compare" },
-  { href: "/pricing", label: "Pricing" },
   { href: "/account", label: "Your data" },
   { href: "/methodology", label: "Methodology" },
   { href: "/privacy", label: "Privacy" },

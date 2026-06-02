@@ -77,14 +77,10 @@ export default function AccountPage() {
         <div className="mt-6 flex items-start gap-3 rounded-lg border border-surface-border bg-surface-sunken p-4">
           <Lock className="mt-0.5 h-5 w-5 shrink-0 text-ink-muted" aria-hidden />
           <div>
-            <h2 className="text-sm font-semibold text-ink">Sign in to sync — coming soon</h2>
+            <h2 className="text-sm font-semibold text-ink">Sign in to sync — coming later</h2>
             <p className="mt-0.5 text-sm text-ink-muted">
-              Optional accounts to sync your shortlist and lenses across devices (and unlock
-              Pro features) are planned. The core map and all data stay free. See{" "}
-              <Link href="/pricing" className="text-accent hover:underline">
-                pricing
-              </Link>
-              .
+              Optional accounts to sync your shortlist and lenses across devices may come later.
+              For now everything is free and stored only in this browser.
             </p>
           </div>
         </div>

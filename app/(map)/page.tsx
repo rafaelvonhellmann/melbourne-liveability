@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { MapPin, PanelRightClose, PanelRightOpen, Bike } from "lucide-react";
+import { MapPin, PanelRightClose, PanelRightOpen, Bike, Layers } from "lucide-react";
 import { MelbourneMap } from "@/components/MelbourneMap";
 import { LayerToggle } from "@/components/LayerToggle";
 import { SearchBox } from "@/components/SearchBox";
@@ -115,6 +115,12 @@ export default function MapPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Selecting an area collapses the Layers panel; clearing it brings the panel
+  // back. (Manual toggle still works between selection changes.)
+  useEffect(() => {
+    setShowLayers(!selected);
+  }, [selected]);
+
   const searchIndex = useMemo(() => buildSearchIndex(places), [places]);
 
   // Map-click selection: update the side panel only, preserving map view.
@@ -135,6 +141,9 @@ export default function MapPage() {
   const [buyerMode, setBuyerMode] = useState(false);
   const [buyerPin, setBuyerPin] = useState<[number, number] | null>(null);
   const [showCycleRadius, setShowCycleRadius] = useState(false);
+  // Floating Layers panel (desktop) auto-collapses to a pill when an area is
+  // selected, so the selected-area card isn't crowded by the big panel.
+  const [showLayers, setShowLayers] = useState(true);
   const [buyerSa2, setBuyerSa2] = useState<{ slug?: string; sa2Code?: string } | null>(null);
   const [buyerReport, setBuyerReport] = useState<BuyerReportData | null>(null);
   // Paid-tier "precise walk routing" fetch status (idle until the user opts in).
@@ -719,27 +728,59 @@ export default function MapPage() {
             </div>
           )}
 
-          {/* Floating layer-control card (top-right) */}
-          <div className="absolute right-4 top-4 z-10 hidden max-h-[calc(100%-2rem)] w-56 overflow-y-auto md:block">
-            <LayerToggle
-              activeDomain={activeDomain}
-              onDomainChange={setActiveDomain}
-              visiblePins={visiblePins}
-              onPinToggle={(pin) =>
-                setVisiblePins((v) => ({ ...v, [pin]: !v[pin] }))
-              }
-              onClearPins={() => setVisiblePins({})}
-              confidenceMode={confidenceMode}
-              onConfidenceToggle={toggleConfidenceMode}
-              walkAccessMode={walkAccessMode}
-              onWalkAccessToggle={toggleWalkAccessMode}
-              cyclabilityMode={cyclabilityMode}
-              onCyclabilityToggle={toggleCyclabilityMode}
-              colorblindRamp={colorblindRamp}
-              onColorblindToggle={toggleColorblindRamp}
-              hazardLayer={hazardLayer}
-              onHazardSelect={selectHazardLayer}
-            />
+          {/* Floating layer-control card (top-right). Collapses to a "Layers"
+              pill when an area is selected (or on demand) to keep the map clean. */}
+          <div
+            className={`absolute right-4 top-4 z-10 hidden md:block ${
+              showLayers ? "max-h-[calc(100%-2rem)] w-56 overflow-y-auto" : ""
+            }`}
+          >
+            {showLayers ? (
+              <div className="space-y-1.5">
+                <button
+                  type="button"
+                  onClick={() => setShowLayers(false)}
+                  className="flex w-full items-center justify-between rounded-lg border border-surface-border bg-surface/95 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted shadow-card backdrop-blur transition-colors hover:text-accent"
+                  aria-expanded
+                >
+                  <span className="flex items-center gap-2">
+                    <Layers className="h-3.5 w-3.5" aria-hidden />
+                    Layers
+                  </span>
+                  <span aria-hidden>Hide ×</span>
+                </button>
+                <LayerToggle
+                  activeDomain={activeDomain}
+                  onDomainChange={setActiveDomain}
+                  visiblePins={visiblePins}
+                  onPinToggle={(pin) =>
+                    setVisiblePins((v) => ({ ...v, [pin]: !v[pin] }))
+                  }
+                  onClearPins={() => setVisiblePins({})}
+                  confidenceMode={confidenceMode}
+                  onConfidenceToggle={toggleConfidenceMode}
+                  walkAccessMode={walkAccessMode}
+                  onWalkAccessToggle={toggleWalkAccessMode}
+                  cyclabilityMode={cyclabilityMode}
+                  onCyclabilityToggle={toggleCyclabilityMode}
+                  colorblindRamp={colorblindRamp}
+                  onColorblindToggle={toggleColorblindRamp}
+                  hazardLayer={hazardLayer}
+                  onHazardSelect={selectHazardLayer}
+                />
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowLayers(true)}
+                aria-label="Show map layers"
+                aria-expanded={false}
+                className="flex items-center gap-2 rounded-full border border-surface-border bg-surface/95 px-3.5 py-1.5 text-sm font-medium text-ink shadow-card backdrop-blur transition-colors hover:border-accent hover:text-accent"
+              >
+                <Layers className="h-4 w-4" aria-hidden />
+                Layers
+              </button>
+            )}
           </div>
 
           {/* Legend card (bottom-left) */}
@@ -916,7 +957,6 @@ function TopBar({
         <FeedbackButton />
         <NavLink href="/buyer">Buyer check</NavLink>
         <NavLink href="/compare">Compare</NavLink>
-        <NavLink href="/pricing">Pricing</NavLink>
         <NavLink href="/account" hideOnSmall>
           Your data
         </NavLink>
