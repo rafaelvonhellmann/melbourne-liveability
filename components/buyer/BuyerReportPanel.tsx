@@ -6,6 +6,7 @@ import type { BuyerReport, BuyerFinding, BuyerConfidence, BuyerGeography } from 
 import { AMENITY_GROUPS } from "@/lib/buyer-report";
 import { formatSourceDate } from "@/lib/source-manifest";
 import { withBase } from "@/lib/asset-path";
+import { track } from "@/lib/analytics";
 import { POI_CATEGORY_BY_ID, type PoiCategoryId } from "@/lib/poi-categories";
 import type { Place } from "@/lib/types";
 import { V1_SCORED_DOMAINS, getDomain } from "@/lib/domains";
@@ -97,7 +98,10 @@ export function BuyerReportPanel({
           <div className="no-print flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => typeof window !== "undefined" && window.print()}
+              onClick={() => {
+                track("buyer_report_print");
+                if (typeof window !== "undefined") window.print();
+              }}
               className="inline-flex items-center gap-1.5 rounded-md border border-surface-border px-2.5 py-1 text-xs text-ink transition-colors hover:border-accent hover:text-accent"
             >
               <Printer className="h-3.5 w-3.5" aria-hidden /> Print / Save as PDF

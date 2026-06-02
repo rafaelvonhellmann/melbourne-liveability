@@ -26,6 +26,7 @@ import { findSa2ForPoint } from "@/lib/buyer-location";
 import { fetchWalkIsochrone, isPreciseWalkConfigured, WALK_MINUTES } from "@/lib/walk-isochrone";
 import { withBase } from "@/lib/asset-path";
 import { parseMapUrlState, buildMapUrl } from "@/lib/share-url";
+import { track } from "@/lib/analytics";
 import type { Feature, FeatureCollection, Point } from "geojson";
 import type { Place } from "@/lib/types";
 import { loadPlaces, getPlaceBySlug } from "@/lib/places-data";
@@ -159,6 +160,7 @@ export default function MapPage() {
     setBuyerReport(
       buildBuyerReport({ lat: lngLat[1], lng: lngLat[0], place, pois: feats })
     );
+    track("buyer_report", { coverage: place ? "in" : "off" });
   };
 
   // Paid-tier opt-in: recompute "nearby on foot" against a real street-network
@@ -241,6 +243,7 @@ export default function MapPage() {
       setBuyerReport(null);
     }
     setBuyerMode(next);
+    track("buyer_mode", { on: next });
     syncBuyerUrl(next, next ? buyerPin : null);
   };
 

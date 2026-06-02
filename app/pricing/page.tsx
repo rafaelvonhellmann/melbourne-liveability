@@ -4,9 +4,9 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { FeedbackButton } from "@/components/FeedbackButton";
 
 export const metadata = {
-  title: "Pricing · Melbourne Liveability",
+  title: "Pricing — the map is free; buyer reports are per-property",
   description:
-    "The core map and all liveability data are free forever. Optional Pro features and authoritative area report cards for organisations are planned.",
+    "The liveability map and all open-data facts stay free forever. The Buyer Location Report is planned as a one-off per-property purchase (with bundles) — no subscription. Join the waitlist.",
 };
 
 type Tier = {
@@ -20,45 +20,42 @@ type Tier = {
 
 const TIERS: Tier[] = [
   {
-    name: "Free",
+    name: "Free map",
     price: "$0",
-    tagline: "The full public good — forever free.",
+    tagline: "The public good — free forever.",
     status: "available",
     features: [
-      "Full interactive map + all seven scored domains",
-      "Every suburb (SA2) profile with sources & caveats",
-      "Methodology, data-confidence, and coverage transparency",
-      "Lenses & personas, priority sliders, shareable links",
-      "Compare up to 3 areas, one shortlist",
-      "Email update alerts + feedback",
+      "Full interactive liveability map + every suburb (SA2) profile",
+      "Sources, data-confidence and methodology transparency",
+      "Buyer Check: drop a pin, read the second-opinion report on screen",
+      "Lenses, compare, shortlist, shareable links",
+      "Print / save any report as PDF",
     ],
   },
   {
-    name: "Pro",
-    price: "$ / mo",
-    tagline: "Convenience & power for serious movers.",
+    name: "Buyer Location Report",
+    price: "Per report",
+    tagline: "A one-off, sourced due-diligence report for a property you're serious about.",
     highlight: true,
     status: "soon",
     features: [
-      "Everything in Free",
-      "Synced shortlists, personas & dashboards across devices",
-      "Compare 5–10 areas side by side",
-      "Exportable PDF / CSV suburb report card",
-      "Saved searches + shortlist update-alerts",
-      "Trend view as more time-series land",
+      "Everything in the free check, as a saved, shareable report",
+      "Pay per property — no subscription",
+      "Bundles for buyers checking several places",
+      "What to verify before you offer, with sources + caveats",
+      "Future layers as they land (school zones, overlays, supply)",
     ],
   },
   {
-    name: "Area Reports",
-    price: "Contact us",
-    tagline: "For councils, MPs' offices, journalists & relocation firms.",
+    name: "Agents & conveyancers",
+    price: "Volume",
+    tagline: "Report credits for buyers' agents and conveyancers.",
     status: "contact",
     features: [
-      "Authoritative, sourced, exportable area report cards",
-      "Bulk / multi-area comparisons",
-      "Data-confidence and methodology appendix included",
-      "Custom datasets on request",
-      "Retains full open-data attribution",
+      "Reuse reports across clients",
+      "Volume report credits",
+      "Full open-data attribution + methodology appendix",
+      "Bulk / multi-property checks",
     ],
   },
 ];
@@ -74,11 +71,12 @@ export default function PricingPage() {
           Pricing
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-ink-muted">
-          The core map and all liveability <strong className="text-ink">facts</strong>{" "}
-          (safety, affordability, hazards, sources) stay free forever — paywalling a
-          relocation tool would be exploitative and kill the open-data mission. We charge
-          only for <strong className="text-ink">convenience and derived analysis</strong>,
-          never for reselling the open data.
+          The map and all liveability <strong className="text-ink">facts</strong> stay free
+          forever — paywalling open data would kill the mission. The paid product is a one-off{" "}
+          <strong className="text-ink">Buyer Location Report</strong> for a specific property:
+          you pay per report, not a subscription. We&apos;re still settling the exact price with
+          early users, so nothing is locked in yet — <strong className="text-ink">join the
+          waitlist</strong> and you&apos;ll help set it.
         </p>
 
         <div className="mt-8 grid gap-4 lg:grid-cols-3">
@@ -93,7 +91,7 @@ export default function PricingPage() {
                 <h2 className="font-display text-lg font-semibold text-ink">{t.name}</h2>
                 {t.status === "soon" && (
                   <span className="rounded-full border border-surface-border bg-surface-sunken px-2 py-0.5 text-[10px] uppercase tracking-wide text-ink-muted">
-                    Coming soon
+                    Waitlist
                   </span>
                 )}
               </div>
@@ -119,10 +117,16 @@ export default function PricingPage() {
                   </Link>
                 )}
                 {t.status === "soon" && (
-                  <FeedbackButton className="w-full justify-center inline-flex items-center gap-1.5 rounded-md border border-accent px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent/5" />
+                  <FeedbackButton
+                    context="Buyer Report waitlist"
+                    className="w-full justify-center inline-flex items-center gap-1.5 rounded-md border border-accent px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent/5"
+                  />
                 )}
                 {t.status === "contact" && (
-                  <FeedbackButton className="w-full justify-center inline-flex items-center gap-1.5 rounded-md border border-surface-border px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent" />
+                  <FeedbackButton
+                    context="Agents/conveyancers interest"
+                    className="w-full justify-center inline-flex items-center gap-1.5 rounded-md border border-surface-border px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent"
+                  />
                 )}
               </div>
             </div>
@@ -130,10 +134,9 @@ export default function PricingPage() {
         </div>
 
         <p className="mt-6 text-xs text-ink-muted">
-          Pro and Area Reports are not yet purchasable — use the Feedback button on a card
-          to register interest and we&apos;ll tell you when they launch. Accounts and
-          payments will be added as a thin, separate service; the data site stays static and
-          free. See the{" "}
+          Reports are not purchasable yet — the Waitlist button registers interest and helps us
+          set a fair per-report price. Accounts and payments will be a thin, separate service; the
+          data site stays static and free. See the{" "}
           <Link href="/terms" className="text-accent hover:underline">
             Terms
           </Link>{" "}

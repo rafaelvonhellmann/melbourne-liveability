@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
+import Script from "next/script";
+import { ANALYTICS_DOMAIN } from "@/lib/analytics";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -35,7 +37,12 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en-AU" className={`${inter.variable} ${fraunces.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        {ANALYTICS_DOMAIN && (
+          <Script defer data-domain={ANALYTICS_DOMAIN} src="https://plausible.io/js/script.js" />
+        )}
+      </body>
     </html>
   );
 }
