@@ -34,7 +34,8 @@ export type PoiCategoryId =
   | "tafe"
   | "university"
   | "place_of_worship"
-  | "community_centre";
+  | "community_centre"
+  | "ev_charging";
 
 export type PoiCategory = {
   id: PoiCategoryId;
@@ -67,6 +68,7 @@ export const POI_CATEGORIES: PoiCategory[] = [
   { id: "university", label: "Universities", color: "#54278F" },
   { id: "place_of_worship", label: "Places of worship", color: "#8E5572" },
   { id: "community_centre", label: "Community / cultural centres", color: "#2B8C8C" },
+  { id: "ev_charging", label: "EV charging", color: "#2E8B57" },
 ];
 
 export const POI_CATEGORY_IDS: PoiCategoryId[] = POI_CATEGORIES.map((c) => c.id);

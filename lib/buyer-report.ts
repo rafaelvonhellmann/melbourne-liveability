@@ -156,7 +156,7 @@ const SCHOOL_ZONE_REF: BuyerSourceRef = {
  */
 export const AMENITY_GROUPS: { id: string; label: string; categories: PoiCategoryId[] }[] = [
   { id: "groceries", label: "Groceries & supermarkets", categories: ["supermarket"] },
-  { id: "services", label: "Everyday services", categories: ["post_office", "bank"] },
+  { id: "services", label: "Everyday services", categories: ["post_office", "bank", "ev_charging"] },
   // NDIS providers dropped from the report: the OSM data is near-empty (3 mapped
   // across Greater Melbourne, see scripts/build-data-audit.ts), so showing it
   // would imply coverage we don't have. The pin category still exists for the map.

@@ -146,6 +146,9 @@ async function main() {
   const community = JSON.parse(
     await readFile(path.join(RAW, "osm-community.json"), "utf8").catch(() => "{}")
   );
+  const ev = JSON.parse(
+    await readFile(path.join(RAW, "osm-ev.json"), "utf8").catch(() => "{}")
+  );
   // Authoritative Vicmap point facilities (CC BY 4.0) replace the sparse OSM
   // police + childcare pins. Context only - never scored. See fetch-vic-facilities.
   const vicPolice = JSON.parse(
@@ -169,6 +172,7 @@ async function main() {
     ...osmToFeatures(eduExtra, "university", (t) => t.amenity === "university"),
     ...osmToFeatures(community, "place_of_worship", isPlaceOfWorship),
     ...osmToFeatures(community, "community_centre", isCommunityCentre),
+    ...osmToFeatures(ev, "ev_charging", (t) => t.amenity === "charging_station"),
     ...amenitiesToFeatures(amenities),
   ]);
 
