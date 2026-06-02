@@ -12,7 +12,7 @@ review pass.
   a **Buyer Location Check** (drop/search a location → sourced, caveated
   due-diligence report before you offer). Buyer-first product.
 - **Live:** https://rafaelvonhellmann.github.io/melbourne-liveability/
-- **Repo:** github.com/rafaelvonhellmann/melbourne-liveability (HEAD `0a2c375`)
+- **Repo:** github.com/rafaelvonhellmann/melbourne-liveability (HEAD `56dec4a`)
 - **Goal:** report-first buyer due-diligence for Melbourne; open map stays free;
   per-report monetisation validated before national expansion. Compete on
   transparent, sourced due-diligence — NOT price (that is Cotality/Domain/REA).
@@ -67,15 +67,17 @@ Commits `2cd7ae9` → `0a2c375`:
   (`1eb772e`); **unify flow** (click/search = instant deep-dive, no toggle, no
   size-reset) + **Economy** rename (`41c6ccf`); domain hover tooltips (`0a2c375`).
 
-## 4. PENDING — BUILD (open tasks)
-| # | Item | Notes |
-|---|---|---|
-| 7 | **Full-address geocode → exact pin** | Nominatim/OSM, client-side, free, rate-limited, attributed. Keep suburb/SA2 + map-click fallbacks. Static-safe. |
-| 9 | **Crime LGA-fallback + caveat** | When an SA2 has no crime (e.g. Brunswick East "—"), report the LGA-level recorded offences with a caveat instead of "—". Needs LGA crime available to the report engine. |
-| 11 | **Compare: search + neighbour + adjacency caveat** | Compare search → "Search where you want to live"; identify/list the area; if a pin is near an SA2 border (another area's centroid within ~15 min), recommend checking the adjacent area(s). |
-| 8 | **Collapsible sidebar + merge interest/persona + mobile parity** | Toggle the right panel; merge InterestViews + PersonaPresets into one "Lens"; remove ranked Results tab + Recently-viewed on mobile (desktop done); surface the layer system more clearly. |
-| 10 | **Parks dedupe / green-%** | Multiple park pins look like the same park (OSM splits geometry). Dedupe nearby same-name park pins and/or report green space as % of SA2 area. Verify OSM park geometry first. |
-| 12 | **ShadeMap link + retention** | "Check sunlight/aspect" verify-action deep-linking shademap.app at pin lat/lng. Retention (localStorage): saved checks, persistent pre-offer checklist, "your areas". Cross-device = needs accounts service. |
+## 4. BUILD tasks #7-#13 — ALL SHIPPED (`d805e13`..`56dec4a`)
+All seven goal-tracker build items are done, each gated (typecheck · tests · lint) and pushed:
+| # | Item | Commit | Notes |
+|---|---|---|---|
+| 9 | **Crime LGA fallback** | `d805e13` | Root cause was a name mismatch, not missing data: ABS says `Moreland`, VCSA renamed it `Merri-bek` (2022), so the existing LGA-fallback silently dropped all 13 Moreland SA2s. Added a shared `normalizeLgaName()` alias → they now resolve at the accurate suburb level. |
+| 7 | **Full-address geocode → exact pin** | `dd3e328` | `lib/geocode.ts` (OSM Nominatim, Melbourne-bounded, abortable, attributed, explicit-submit so ≤1 req/s). SearchBox offers "search as address"; a pick drops an exact pin → deep-dive (SA2 from geometry). Static-safe. Wired on the map + Compare. |
+| 13 | **R3 precise-walk race + R5 dead export** | `da7bef8` | `recomputePrecise()` now snapshots the pin + AbortController + staleness guard. Removed unused `amenitiesNearIsochrone` + its tests. |
+| 11 | **Compare search + adjacency caveat** | `c218b09` | Buyer report gains a "Close to a neighbouring area" finding when the pin is within ~15-min walk of a neighbour's centroid (honestly captioned as centre-point proximity, not a boundary test). Compare reframed to "Search where you want to live" + address→SA2 add. |
+| 12 | **ShadeMap link + retention** | `20859f9` | `lib/shademap.ts` "Check sunlight & aspect" deep-link in the report; saved-checks retention (`user-prefs.savedChecks`) with a "Your saved checks" list in the buyer entry state. Cross-device still needs accounts. |
+| 10 | **Parks dedupe** | `a400a83` | `dedupeParkAmenities()` collapses OSM park splits (same name OR generic, within 200 m). Verified: a Royal Park pin drops 36→20 distinct parks. Park geometry is point-only, so green-%-of-area would need a polygon rebuild — deferred. |
+| 8 | **Collapsible sidebar + Lens merge + mobile parity** | `56dec4a` | Unified "Lens" picker (Balanced/Renting/Buying/Family/Retiree/Data quality — young-pro/student→Renting, education→Family); collapsible desktop panel; mobile sheet now Explore/Search/Layers/Weights (Results tab + Recently-viewed removed). |
 
 ## 5. PENDING — REVIEW / FIX (open quality items)
 - **WCAG contrast** — accent `#D97757` ~3.1:1 on light (needs 4.5:1). Darken
@@ -125,10 +127,15 @@ radius · national expansion (Sydney/Perth/…) · price/growth context (licensi
   `tests/share-url.test.ts` (+ others). 101 total.
 
 ## 9. Handover notes
-- Goal-tracker tasks #1–6 complete; **#7–#12 pending** (section 4). Work
-  autonomously, gate each (typecheck · tests · lint), commit per item, push to
-  deploy.
-- Next up was **#7 (geocode) + #9 (crime LGA-fallback)**.
+- Goal-tracker tasks **#1–13 ALL complete** (section 4 — shipped `d805e13`..`56dec4a`,
+  each gated typecheck · 123 tests · lint, committed per item and pushed to deploy).
+- **Next up: §5 REVIEW/FIX items** (none touched this session): WCAG accent contrast
+  (`#D97757` ~3.1:1), canonical tags on `/buyer/sample*`, Playwright E2E + axe, styled
+  domain-tooltip popover, `page.tsx` god-component extraction. Then §6 ACT (R4 ORS
+  proxy before paid, pricing number, legal review, accounts service) + **D1 brand name**.
+- Browser-verify caveat held all session: the MapLibre GL canvas rAF-throttles under
+  automation, so map-pixel + synthetic-click checks are unreliable — DOM/report-panel
+  text, computed styles and data-level checks were used instead (all passed).
 - Decisions D1–D4: D2 per-report ✅, D3 buyers+agents ✅, D4 dignity+trust ✅;
   **D1 brand name still open**.
 
@@ -141,6 +148,6 @@ Max-effort multi-agent review of `88b4ae2..HEAD` (this session's buyer/map work)
 |---|---|---|---|
 | R1 | `BuyerReportPanel` within-group amenity sort broke nearest-first — a closer later-category pin (e.g. 150 m bank) hidden behind 4 same-category pins | High (regression from flow-unify) | **FIXED** `29a7917` |
 | R2 | `safety-context` claimed medium/LGA recorded-offence context for ~20 SA2s with null crime (overclaim) | Medium | **FIXED** `29a7917`; full LGA-number fallback = task #9 |
-| R3 | `recomputePrecise()` (paid precise-walk) has no abort/staleness guard — pin moved during the in-flight ORS fetch overwrites with the wrong report | Medium (env-gated OFF in prod) | task #13 |
-| R4 | ORS API key client-exposed on prod activation (no proxy/rate-limit) | Medium (act before paid) | §6 ACT (Codex P1) |
-| R5 | `amenitiesNearIsochrone` exported + tested but unused by the app (can drift from `getNearbyAmenities`) | Low | task #13 |
+| R3 | `recomputePrecise()` (paid precise-walk) has no abort/staleness guard — pin moved during the in-flight ORS fetch overwrites with the wrong report | Medium (env-gated OFF in prod) | **FIXED** `da7bef8` |
+| R4 | ORS API key client-exposed on prod activation (no proxy/rate-limit) | Medium (act before paid) | §6 ACT (Codex P1) — still open |
+| R5 | `amenitiesNearIsochrone` exported + tested but unused by the app (can drift from `getNearbyAmenities`) | Low | **FIXED** `da7bef8` (removed) |
