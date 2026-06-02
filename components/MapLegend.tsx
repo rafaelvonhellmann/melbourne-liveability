@@ -1,4 +1,4 @@
-import { DATA_PALETTE, NO_DATA_COLOR, RISK_PALETTE } from "@/lib/colors";
+import { SCORE_RAMP, NO_DATA_COLOR, RISK_PALETTE } from "@/lib/colors";
 import { POI_CATEGORIES } from "@/lib/poi-categories";
 
 type MapLegendProps = {
@@ -10,7 +10,11 @@ type MapLegendProps = {
 
 export function MapLegend({ domainLabel, visiblePins = {}, risk = false }: MapLegendProps) {
   const activePins = POI_CATEGORIES.filter((c) => visiblePins[c.id]);
-  const ramp = risk ? RISK_PALETTE : DATA_PALETTE;
+  const gradient = risk
+    ? `linear-gradient(to right, ${RISK_PALETTE.map(
+        (c, i) => `${c} ${(i / (RISK_PALETTE.length - 1)) * 100}%`
+      ).join(", ")})`
+    : `linear-gradient(to right, ${SCORE_RAMP.map(([p, c]) => `${c} ${p}%`).join(", ")})`;
 
   return (
     <div
@@ -21,16 +25,8 @@ export function MapLegend({ domainLabel, visiblePins = {}, risk = false }: MapLe
         Showing on map
       </div>
       <div className="mb-1 font-medium text-ink">{domainLabel}</div>
-      <div className="flex gap-0.5">
-        {ramp.map((c) => (
-          <span
-            key={c}
-            className="h-2.5 w-6 rounded-sm"
-            style={{ background: c }}
-          />
-        ))}
-      </div>
-      <div className="num mt-1 flex justify-between">
+      <div className="h-2.5 w-full rounded-sm" style={{ background: gradient }} />
+      <div className="mt-1 flex justify-between text-[10px]">
         {risk ? (
           <>
             <span>Less</span>
@@ -38,8 +34,8 @@ export function MapLegend({ domainLabel, visiblePins = {}, risk = false }: MapLe
           </>
         ) : (
           <>
-            <span>0</span>
-            <span>100</span>
+            <span>worse</span>
+            <span>better</span>
           </>
         )}
       </div>

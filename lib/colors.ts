@@ -1,19 +1,35 @@
 import type { DomainId } from "./types";
 
 /**
- * Colorblind-safe YlGnBu data ramp — the single data-encoding channel,
- * kept independent of the warm chrome theme. Five discrete bands across
- * 0–100 (floor(p/20)); no resident / null data uses a neutral grey.
+ * Score ramp — diverging Red→Yellow→Green (ColorBrewer RdYlGn). Low percentile
+ * (worse) = red, high (better) = green, interpolated CONTINUOUSLY so close-but-
+ * different areas no longer look identical (the old 5-band YlGnBu flattened the
+ * granularity and "blue = good" wasn't intuitive). Red=worse is the universal
+ * map intuition; the strong lightness change + yellow midpoint keep the ends
+ * distinguishable even with red-green colour vision deficiency.
  */
-export const DATA_PALETTE = [
-  "#ffffcc",
-  "#a1dab4",
-  "#41b6c4",
-  "#2c7fb8",
-  "#253494",
-] as const;
+export const SCORE_RAMP: readonly (readonly [number, string])[] = [
+  [0, "#d7191c"],
+  [25, "#fdae61"],
+  [50, "#ffffbf"],
+  [75, "#a6d96a"],
+  [100, "#1a9641"],
+];
 
 export const NO_DATA_COLOR = "#d9d6cf";
+
+function hexToRgb(h: string): [number, number, number] {
+  return [
+    parseInt(h.slice(1, 3), 16),
+    parseInt(h.slice(3, 5), 16),
+    parseInt(h.slice(5, 7), 16),
+  ];
+}
+function rgbToHex(r: number, g: number, b: number): string {
+  const c = (n: number) =>
+    Math.round(Math.max(0, Math.min(255, n))).toString(16).padStart(2, "0");
+  return `#${c(r)}${c(g)}${c(b)}`;
+}
 
 /**
  * Hazard "risk" ramp — ColorBrewer Reds (sequential, single-hue, colorblind-safe
@@ -42,21 +58,33 @@ export function riskToColor(share: number | null, nonResidential = false): strin
   return RISK_PALETTE[band];
 }
 
+/** Continuous colour for a 0–100 percentile on the score ramp. */
 export function percentileToColor(pct: number | null, nonResidential = false): string {
-  if (nonResidential) return NO_DATA_COLOR;
-  if (pct == null) return NO_DATA_COLOR;
-  const clamped = Math.max(0, Math.min(100, pct));
-  const band = Math.min(4, Math.floor(clamped / 20));
-  return DATA_PALETTE[band];
+  if (nonResidential || pct == null) return NO_DATA_COLOR;
+  const v = Math.max(0, Math.min(100, pct));
+  let lo = SCORE_RAMP[0];
+  let hi = SCORE_RAMP[SCORE_RAMP.length - 1];
+  for (let i = 0; i < SCORE_RAMP.length - 1; i++) {
+    if (v >= SCORE_RAMP[i][0] && v <= SCORE_RAMP[i + 1][0]) {
+      lo = SCORE_RAMP[i];
+      hi = SCORE_RAMP[i + 1];
+      break;
+    }
+  }
+  const t = hi[0] === lo[0] ? 0 : (v - lo[0]) / (hi[0] - lo[0]);
+  const a = hexToRgb(lo[1]);
+  const b = hexToRgb(hi[1]);
+  return rgbToHex(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t);
 }
 
 /**
- * Readable foreground for text drawn on a data-palette swatch. The two lower
- * YlGnBu bands are light, so use ink; the upper bands are dark enough for white.
+ * Readable foreground for text on a score swatch. The red (low) and green (high)
+ * ends are dark enough for white; the orange→yellow→light-green middle needs ink.
  */
 export function percentileTextColor(pct: number | null): string {
   if (pct == null) return "#1A1A18";
-  return Math.max(0, Math.min(100, pct)) < 60 ? "#1A1A18" : "#ffffff";
+  const v = Math.max(0, Math.min(100, pct));
+  return v < 15 || v > 85 ? "#ffffff" : "#1A1A18";
 }
 
 export function domainProperty(domain: DomainId): string {

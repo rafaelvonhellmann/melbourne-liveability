@@ -1,6 +1,27 @@
 import { describe, it, expect } from "vitest";
-import { riskToColor, RISK_PALETTE, RISK_BANDS, NO_DATA_COLOR } from "../lib/colors";
+import {
+  riskToColor,
+  percentileToColor,
+  RISK_PALETTE,
+  RISK_BANDS,
+  NO_DATA_COLOR,
+} from "../lib/colors";
 import { riskFillColorByProp } from "../lib/map-expressions";
+
+describe("percentileToColor (score ramp)", () => {
+  it("hits the red->green ramp endpoints and interpolates the middle", () => {
+    expect(percentileToColor(0)).toBe("#d7191c"); // worse = red
+    expect(percentileToColor(100)).toBe("#1a9641"); // better = green
+    expect(percentileToColor(50)).toBe("#ffffbf"); // mid = yellow
+    const mid = percentileToColor(12.5); // halfway red->orange
+    expect(mid).not.toBe("#d7191c");
+    expect(mid).not.toBe("#fdae61");
+  });
+  it("returns the no-data grey for null / non-residential", () => {
+    expect(percentileToColor(null)).toBe(NO_DATA_COLOR);
+    expect(percentileToColor(80, true)).toBe(NO_DATA_COLOR);
+  });
+});
 
 describe("riskToColor", () => {
   it("uses the palest band at/below the first threshold", () => {
