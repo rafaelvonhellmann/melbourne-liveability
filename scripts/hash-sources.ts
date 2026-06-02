@@ -30,6 +30,7 @@ const SOURCE_FILES: Record<string, { dir: "raw" | "generated"; file: string }> =
   "abs-census-preschool-2021": { dir: "raw", file: "abs-sa2-employment.json" },
   "vic-planning-bpa": { dir: "raw", file: "vic-bpa.geojson" },
   "vic-planning-flood": { dir: "raw", file: "vic-lsio.geojson" },
+  "vic-planning-heritage": { dir: "raw", file: "vic-ho.geojson" },
   "osm-schools": { dir: "raw", file: "osm-schools.json" },
   "osm-amenities": { dir: "raw", file: "osm-amenities.json" },
   "osm-cycleways": { dir: "raw", file: "osm-cycleways.json" },

@@ -20,10 +20,12 @@ import { buildHazardIndex, overlayPctInSa2 } from "./lib/sa2-overlay-pct.js";
 import { computeCyclabilityByCode } from "./lib/cyclability-compute.js";
 import { computeSocialHousing } from "../lib/social-housing.js";
 import { summariseHousingStress } from "../lib/housing-stress.js";
+import { roundOverlayPct } from "../lib/planning-overlays.js";
 import type {
   Cyclability,
   HousingStress,
   PlaceContext,
+  PlanningOverlays,
   SocialHousing,
   WalkAccess,
 } from "../lib/types.js";
@@ -70,6 +72,7 @@ type Sa2Raw = {
   cyclability?: Cyclability;
   socialHousing?: SocialHousing;
   housingStress?: HousingStress;
+  heritageOverlayPct?: number | null;
   context?: PlaceContext;
 };
 
@@ -504,6 +507,20 @@ async function main() {
     );
   }
 
+  // Heritage Overlay SHARE (context only, never scored) — a planning CONTROL,
+  // not a hazard. Same overlay-share computation as the hazards above. See
+  // lib/planning-overlays.ts (parcel-level caveat). Run data:heritage to fetch.
+  const ho = await loadOverlay("vic-ho.geojson");
+  if (ho && ho.features.length > 0) {
+    const hoIdx = buildHazardIndex(ho);
+    for (const p of byCode.values()) {
+      const geom = sa2GeomByCode.get(p.sa2Code);
+      if (!geom) continue;
+      p.heritageOverlayPct = roundOverlayPct(overlayPctInSa2(geom, hoIdx));
+    }
+    console.log(`Heritage Overlay: ${ho.features.length} polygons`);
+  }
+
   for (const p of byCode.values()) {
     const ctx: PlaceContext = {
       environment: {
@@ -540,6 +557,13 @@ async function main() {
     if (p.cyclability) ctx.cyclability = p.cyclability;
     if (p.socialHousing) ctx.socialHousing = p.socialHousing;
     if (p.housingStress) ctx.housingStress = p.housingStress;
+    if (p.heritageOverlayPct != null) {
+      ctx.planning = {
+        heritageOverlayPct: p.heritageOverlayPct,
+        sourceId: "vic-planning-heritage",
+        period: "current",
+      } satisfies PlanningOverlays;
+    }
     p.context = ctx;
   }
 

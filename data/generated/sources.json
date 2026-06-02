@@ -204,5 +204,13 @@
     "licence": "CC BY 4.0 (Victoria)",
     "period": "current",
     "fetchedAt": "2026-06-02"
+  },
+  {
+    "id": "vic-planning-heritage",
+    "name": "Vicplan — Heritage Overlay (HO) area share per SA2 (DTP Victoria)",
+    "url": "https://plan-gis.mapshare.vic.gov.au/arcgis/rest/services/Planning/Vicplan_PlanningSchemeOverlays/MapServer",
+    "licence": "CC BY 4.0 (Victoria)",
+    "period": "current",
+    "fetchedAt": "2026-06-02"
   }
 ]

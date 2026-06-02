@@ -54,6 +54,8 @@
     "data:apply-social-housing": "tsx scripts/apply-social-housing.ts",
     "data:housing-stress": "tsx scripts/fetch-housing-stress.ts",
     "data:apply-housing-stress": "tsx scripts/apply-housing-stress.ts",
+    "data:heritage": "tsx scripts/fetch-heritage.ts",
+    "data:apply-heritage": "tsx scripts/apply-heritage.ts",
     "data:timeseries": "tsx scripts/build-timeseries.ts",
     "data:walkaccess": "tsx scripts/apply-walk-access.ts",
     "data:cyclability": "tsx scripts/apply-cyclability.ts",

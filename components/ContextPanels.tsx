@@ -97,6 +97,22 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
           </Panel>
         )}
 
+      {context.planning && context.planning.heritageOverlayPct != null && (
+        <Panel title="Planning overlays">
+          <Row
+            label="Area within a Heritage Overlay"
+            value={fmtPct(context.planning.heritageOverlayPct)}
+          />
+          <p className="mt-2 text-xs text-ink-muted">
+            Share of this SA2&apos;s area inside a Heritage Overlay (HO), which can
+            restrict demolition, external changes and subdivision. This is an{" "}
+            <b className="text-ink">area share, not a parcel-level result</b> —
+            always check the planning certificate for the specific property.
+            Vicplan · {context.planning.period}
+          </p>
+        </Panel>
+      )}
+
       {context.environment && (
         <Panel title="Environment">
           <p className="text-sm text-ink-muted">{context.environment.note}</p>

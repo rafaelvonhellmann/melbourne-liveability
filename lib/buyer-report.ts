@@ -719,6 +719,31 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     });
   }
 
+  // 5b) Heritage Overlay (context — a planning CONTROL, never scored). Only
+  //     surfaced when there is material coverage; an AREA share, not parcel-level.
+  const heritagePct = place?.context?.planning?.heritageOverlayPct ?? null;
+  if (heritagePct != null && heritagePct >= 1) {
+    const extensive = heritagePct >= 25;
+    findings.push({
+      id: "heritage-overlay",
+      kind: "verify",
+      severity: extensive ? "medium" : "info",
+      title: extensive
+        ? "Much of this area is under a Heritage Overlay"
+        : "Part of this area is under a Heritage Overlay",
+      summary: `About ${Math.round(heritagePct)}% of this SA2's area is within a Heritage Overlay (HO). Whether THIS property is affected needs a parcel-level check.`,
+      whyItMatters:
+        "A Heritage Overlay can restrict demolition, external changes and subdivision — it shapes what you can do with the property.",
+      verifyAction:
+        "Check the property's planning certificate / VicPlan for a Heritage Overlay before you offer.",
+      confidence: "medium",
+      geography: "sa2",
+      caveat:
+        "Area share, not a parcel-level result — a property can be affected even where the area share is low, and vice versa.",
+      sourceRefs: getSourcesByIds(["vic-planning-heritage"]),
+    });
+  }
+
   // 6) Local safety / crime context (LGA). Property + offences-against-the-person
   //    split (VCSA). Off-coverage pins (no SA2 match) drop precision to "unknown".
   const propCrimePct = place?.domains?.safety?.subIndicators?.propertyCrime?.percentile ?? null;

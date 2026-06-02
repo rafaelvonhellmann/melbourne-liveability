@@ -45,6 +45,18 @@ async function main() {
     console.warn("No flood overlays downloaded — hazards domain will use bushfire only.");
   }
 
+  // Heritage Overlay (HO) — CONTEXT only (planning control, not a hazard, not
+  // scored), but fetched here since it shares the Vicplan overlay service + the
+  // per-SA2 overlay-share computation. ~11.3k polygons -> ~115 pages.
+  try {
+    console.log("Heritage Overlay (HO)...");
+    const ho = await fetchPlanLayerGeoJson(OVERLAYS_URL, 9, 150);
+    await writeFile(path.join(RAW, "vic-ho.geojson"), JSON.stringify(ho));
+    console.log(`  ${ho.features.length} polygons`);
+  } catch (e) {
+    console.warn("  HO skipped:", (e as Error).message);
+  }
+
   console.log("fetch-hazards complete");
 }
 

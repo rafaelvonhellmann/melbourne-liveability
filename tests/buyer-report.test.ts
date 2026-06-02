@@ -136,6 +136,37 @@ describe("buildBuyerReport", () => {
     expect(hazard?.verifyAction).toMatch(/council|VicPlan|insurance/i);
   });
 
+  it("surfaces a caveated, sourced Heritage Overlay finding when coverage is material", () => {
+    const base = samplePlace();
+    const withHo = {
+      ...base,
+      context: {
+        ...base.context,
+        planning: { heritageOverlayPct: 30, sourceId: "vic-planning-heritage", period: "current" },
+      },
+    };
+    const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: withHo, pois: POIS, generatedAt: "x" });
+    const ho = r.findings.find((f) => f.id === "heritage-overlay");
+    expect(ho).toBeTruthy();
+    expect(ho?.kind).toBe("verify");
+    expect(ho?.caveat).toMatch(/area share|parcel/i);
+    expect(ho?.verifyAction).toMatch(/planning certificate|VicPlan/i);
+    expect((ho?.sourceRefs?.length ?? 0)).toBeGreaterThan(0);
+  });
+
+  it("does NOT raise a Heritage Overlay finding when coverage is negligible", () => {
+    const base = samplePlace();
+    const withTinyHo = {
+      ...base,
+      context: {
+        ...base.context,
+        planning: { heritageOverlayPct: 0.4, sourceId: "vic-planning-heritage", period: "current" },
+      },
+    };
+    const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: withTinyHo, pois: POIS, generatedAt: "x" });
+    expect(r.findings.find((f) => f.id === "heritage-overlay")).toBeFalsy();
+  });
+
   it("handles a pin outside SA2 coverage (no place) gracefully", () => {
     const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: null, pois: POIS, generatedAt: "x" });
     expect(r.summary.confidence).toBe("low");
