@@ -716,6 +716,7 @@ export default function MapPage() {
               <SelectedSummaryCard
                 place={selected}
                 weights={weights}
+                places={places}
                 activeLayerLabel={activeLayerLabel}
                 onClose={() => setSelected(null)}
                 onShortlistChange={updateShortlist}
@@ -777,6 +778,7 @@ export default function MapPage() {
                 <SelectedSummaryCard
                   place={selected}
                   weights={weights}
+                  places={places}
                   activeLayerLabel={activeLayerLabel}
                   onClose={() => setSelected(null)}
                   onShortlistChange={updateShortlist}

@@ -8,6 +8,7 @@ import { rankHomeBuyerPercentiles } from "@/lib/home-buyer";
 import { computeGmBenchmarks } from "@/lib/benchmarks";
 import type { TimeseriesFile } from "@/lib/types";
 import { resolvePlaceSeries } from "@/lib/timeseries";
+import { findSimilarAreas, toSimilarItems } from "@/lib/similar-areas";
 import { PlaceProfileClient } from "@/components/PlaceProfileClient";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -104,6 +105,9 @@ export default async function PlaceProfilePage({ params }: Props) {
   const benchmarks = gmBenchmarks(data.places);
   const timeseries = await loadTimeseries();
   const series = resolvePlaceSeries(place, timeseries);
+  // Closest peer areas by per-domain percentile similarity — equal-weighted and
+  // deterministic, so each area's peers are stable across the static export.
+  const similar = toSimilarItems(findSimilarAreas(place, data.places, { limit: 6 }));
 
   return (
     <PlaceProfileClient
@@ -111,6 +115,7 @@ export default async function PlaceProfilePage({ params }: Props) {
       homeBuyerPercentile={homeBuyerPercentile}
       benchmarks={benchmarks}
       series={series}
+      similar={similar}
     />
   );
 }

@@ -1,16 +1,21 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { X } from "lucide-react";
+import { X, Search } from "lucide-react";
 import type { Place, ScoreWeights } from "@/lib/types";
 import { computeWeightedScore } from "@/lib/scoring";
 import { getDomain } from "@/lib/domains";
+import { findSimilarAreas, toSimilarItems } from "@/lib/similar-areas";
 import { ScoreBadge } from "./ScoreVisuals";
 import { AddToShortlistButton } from "./AddToShortlistButton";
+import { SimilarAreasList } from "./SimilarAreasList";
 
 type SelectedSummaryCardProps = {
   place: Place;
   weights: ScoreWeights;
+  /** All loaded areas — source for the "find areas like this" peer match. */
+  places?: Place[];
   /** Human label of the layer currently painted on the choropleth. */
   activeLayerLabel: string;
   onClose: () => void;
@@ -28,12 +33,21 @@ type SelectedSummaryCardProps = {
 export function SelectedSummaryCard({
   place,
   weights,
+  places = [],
   activeLayerLabel,
   onClose,
   onShortlistChange,
   className,
 }: SelectedSummaryCardProps) {
   const breakdown = computeWeightedScore(place, weights);
+  const [showSimilar, setShowSimilar] = useState(false);
+
+  // Peer match is equal-weighted + deterministic; compute only when revealed (and
+  // memoise so re-renders from hover/selection don't re-rank ~354 areas).
+  const similar = useMemo(
+    () => (showSimilar ? toSimilarItems(findSimilarAreas(place, places, { limit: 5 })) : []),
+    [showSimilar, place, places]
+  );
 
   // Top driver = the present component contributing most to the composite.
   const topDriver = breakdown.components
@@ -102,6 +116,25 @@ export function SelectedSummaryCard({
       <p className="mt-2 text-[11px] leading-snug text-ink-muted">
         “Match” reflects your priorities, not a single objective score.
       </p>
+
+      {places.length > 0 && (
+        <div className="mt-3 border-t border-surface-border pt-3">
+          <button
+            type="button"
+            onClick={() => setShowSimilar((v) => !v)}
+            aria-expanded={showSimilar}
+            className="inline-flex items-center gap-1.5 rounded-md border border-surface-border px-3 py-1.5 text-sm text-ink transition-colors hover:border-accent hover:text-accent"
+          >
+            <Search className="h-3.5 w-3.5" aria-hidden />
+            {showSimilar ? "Hide similar areas" : "Find areas like this"}
+          </button>
+          {showSimilar && (
+            <div className="mt-3">
+              <SimilarAreasList items={similar} referenceName={place.name} compact />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

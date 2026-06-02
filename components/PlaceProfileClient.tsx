@@ -26,12 +26,16 @@ import { SourceDrawer } from "./SourceDrawer";
 import { ProfileEngagement } from "./ProfileEngagement";
 import { FeedbackButton } from "./FeedbackButton";
 import { BuyerHereCard } from "@/components/buyer/BuyerHereCard";
+import { SimilarAreasList } from "./SimilarAreasList";
+import type { SimilarAreaItem } from "@/lib/similar-areas";
 
 type Props = {
   place: Place;
   homeBuyerPercentile?: number | null;
   benchmarks?: GmBenchmarks;
   series?: Record<string, PlaceSeries>;
+  /** Closest peer areas by per-domain percentile similarity (precomputed at build). */
+  similar?: SimilarAreaItem[];
 };
 
 type TabKind = "overview" | "persona" | "domain" | "context";
@@ -53,6 +57,7 @@ export function PlaceProfileClient({
   homeBuyerPercentile = null,
   benchmarks = {},
   series = {},
+  similar = [],
 }: Props) {
   const weights = getDefaultWeights();
   const breakdown = computeWeightedScore(place, weights);
@@ -188,6 +193,12 @@ export function PlaceProfileClient({
         <div className="mt-6">
           <SourceDrawer sources={allSources} />
         </div>
+
+        {similar.length > 0 && (
+          <div className="mt-8 rounded-lg border border-surface-border bg-surface p-5 shadow-card">
+            <SimilarAreasList items={similar} referenceName={place.name} />
+          </div>
+        )}
 
         <p className="mt-6 text-xs text-ink-muted">
           Not relocation or financial advice. The composite and persona scores are
