@@ -4,6 +4,8 @@ import {
   isGpClinic,
   isNdisProvider,
   isPathologyLab,
+  isPlaceOfWorship,
+  isCommunityCentre,
   dedupeFeatures,
   poiDedupeKey,
   scoredGpPoints,
@@ -66,6 +68,31 @@ describe("isPathologyLab", () => {
     expect(isPathologyLab({ healthcare: "laboratory" })).toBe(true);
     expect(isPathologyLab({ "healthcare:speciality": "diagnostic" })).toBe(true);
     expect(isPathologyLab({ name: "Melbourne Pathology" })).toBe(true);
+  });
+});
+
+describe("isPlaceOfWorship (all faiths)", () => {
+  it("matches any place_of_worship regardless of religion", () => {
+    expect(isPlaceOfWorship({ amenity: "place_of_worship", religion: "christian" })).toBe(true);
+    expect(isPlaceOfWorship({ amenity: "place_of_worship", religion: "muslim" })).toBe(true);
+    expect(isPlaceOfWorship({ amenity: "place_of_worship" })).toBe(true);
+  });
+  it("ignores non-worship places", () => {
+    expect(isPlaceOfWorship({ amenity: "cafe" })).toBe(false);
+    expect(isPlaceOfWorship({})).toBe(false);
+  });
+});
+
+describe("isCommunityCentre (community + cultural)", () => {
+  it("matches community, social and arts centres", () => {
+    expect(isCommunityCentre({ amenity: "community_centre" })).toBe(true);
+    expect(isCommunityCentre({ amenity: "social_centre" })).toBe(true);
+    expect(isCommunityCentre({ amenity: "arts_centre" })).toBe(true);
+  });
+  it("ignores unrelated venues", () => {
+    expect(isCommunityCentre({ amenity: "theatre" })).toBe(false);
+    expect(isCommunityCentre({ amenity: "place_of_worship" })).toBe(false);
+    expect(isCommunityCentre({})).toBe(false);
   });
 });
 

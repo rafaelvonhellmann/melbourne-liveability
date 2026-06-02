@@ -12,6 +12,8 @@ import {
   isNdisProvider,
   isPostOffice,
   isGpClinic,
+  isPlaceOfWorship,
+  isCommunityCentre,
   dedupeFeatures,
 } from "./lib/poi-classify.js";
 
@@ -123,6 +125,9 @@ async function main() {
   const eduExtra = JSON.parse(
     await readFile(path.join(RAW, "osm-education-extra.json"), "utf8").catch(() => "{}")
   );
+  const community = JSON.parse(
+    await readFile(path.join(RAW, "osm-community.json"), "utf8").catch(() => "{}")
+  );
 
   const features = dedupeFeatures([
     ...osmToFeatures(health, "police", isPolice),
@@ -140,6 +145,8 @@ async function main() {
     ...osmToFeatures(finance, "bank", (t) => t.amenity === "bank"),
     ...osmToFeatures(eduExtra, "tafe", (t) => t.amenity === "college"),
     ...osmToFeatures(eduExtra, "university", (t) => t.amenity === "university"),
+    ...osmToFeatures(community, "place_of_worship", isPlaceOfWorship),
+    ...osmToFeatures(community, "community_centre", isCommunityCentre),
     ...amenitiesToFeatures(amenities),
   ]);
 

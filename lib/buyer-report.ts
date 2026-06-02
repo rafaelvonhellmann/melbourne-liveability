@@ -164,7 +164,14 @@ export const AMENITY_GROUPS: { id: string; label: string; categories: PoiCategor
   { id: "education", label: "Education", categories: ["childcare", "school", "tafe", "university"] },
   { id: "recreation", label: "Parks & recreation", categories: ["park", "gym_leisure"] },
   { id: "food", label: "Cafes & dining", categories: ["cafe_restaurant"] },
-  { id: "community", label: "Community & safety", categories: ["police"] },
+  // Community signal = amenities (faith-neutral places of worship + civic
+  // community/cultural centres), NOT demographics. See DIGNITY-STANDARD.md.
+  {
+    id: "community",
+    label: "Community & culture",
+    categories: ["community_centre", "place_of_worship"],
+  },
+  { id: "safety", label: "Safety", categories: ["police"] },
 ];
 
 // ---- Geometry / POI helpers ------------------------------------------------

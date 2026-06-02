@@ -48,6 +48,7 @@
     "data:geo": "tsx scripts/build-geo.ts",
     "data:poi": "tsx scripts/build-poi.ts",
     "data:extra-poi": "tsx scripts/fetch-extra-poi.ts",
+    "data:community-poi": "tsx scripts/fetch-community-poi.ts",
     "data:timeseries": "tsx scripts/build-timeseries.ts",
     "data:walkaccess": "tsx scripts/apply-walk-access.ts",
     "data:cyclability": "tsx scripts/apply-cyclability.ts",

@@ -70,6 +70,25 @@ export function isNdisProvider(tags: OsmTags): boolean {
   );
 }
 
+/** Place of worship of ANY faith (church, mosque, synagogue, temple, gurdwara…). */
+export function isPlaceOfWorship(tags: OsmTags): boolean {
+  return tags.amenity === "place_of_worship";
+}
+
+/**
+ * Community / cultural gathering place — community + social centres and civic
+ * arts/cultural centres. Deliberately faith-neutral and non-commercial: a venue
+ * where residents gather, run by the community or council, not a private hall let
+ * out for hire (those aren't tagged with these amenity values).
+ */
+export function isCommunityCentre(tags: OsmTags): boolean {
+  return (
+    tags.amenity === "community_centre" ||
+    tags.amenity === "social_centre" ||
+    tags.amenity === "arts_centre"
+  );
+}
+
 export function isPostOffice(tags: OsmTags): boolean {
   return (
     tags.amenity === "post_office" ||
