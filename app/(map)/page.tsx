@@ -23,6 +23,7 @@ import { OnboardingModal } from "@/components/OnboardingModal";
 import { BuyerReportPanel } from "@/components/buyer/BuyerReportPanel";
 import { buildBuyerReport, type BuyerReport as BuyerReportData } from "@/lib/buyer-report";
 import { findSa2ForPoint } from "@/lib/buyer-location";
+import type { GeocodeResult } from "@/lib/geocode";
 import { fetchWalkIsochrone, isPreciseWalkConfigured, WALK_MINUTES } from "@/lib/walk-isochrone";
 import { withBase } from "@/lib/asset-path";
 import { parseMapUrlState, buildMapUrl } from "@/lib/share-url";
@@ -217,6 +218,25 @@ export default function MapPage() {
     setBuyerReport(null);
     syncBuyerUrl(true, c);
     void buildReportFor(c, { slug: p.slug, sa2Code: p.sa2Code });
+  };
+
+  // Full-address geocode (OSM Nominatim, client-side) → exact-pin deep-dive.
+  // There is no clicked map feature, so the SA2 is resolved from geometry. This
+  // mirrors a map click at the geocoded coordinate; suburb/SA2 search + map
+  // clicks remain the primary flows.
+  const selectFromAddress = async (r: GeocodeResult) => {
+    const lngLat: [number, number] = [r.lng, r.lat];
+    setBuyerMode(true);
+    setSelected(null);
+    setBuyerPin(lngLat); // the map flies to the pin
+    setBuyerSa2(null);
+    setBuyerReport(null);
+    syncBuyerUrl(true, lngLat);
+    const fc = await ensureSa2Geo().catch(() => null);
+    const sa2 = fc ? findSa2ForPoint(lngLat, fc) : null;
+    setBuyerSa2(sa2);
+    void buildReportFor(lngLat, sa2);
+    track("buyer_geocode", { coverage: sa2 ? "in" : "off" });
   };
 
   // Restore a pin from a shared URL (no map click → resolve the SA2 from geometry).
@@ -478,6 +498,7 @@ export default function MapPage() {
       <TopBar
         searchIndex={searchIndex}
         onSearchSelect={selectFromSearch}
+        onGeocode={selectFromAddress}
       />
 
       <OnboardingModal onPick={selectInterestView} />
@@ -651,9 +672,11 @@ export default function MapPage() {
             <SearchBox
               index={searchIndex}
               onSelect={(e) => selectFromSearch(e.slug)}
+              onGeocode={selectFromAddress}
             />
             <p className="text-xs leading-snug text-ink-muted">
-              Search a suburb or data area (SA2) to jump the map there.
+              Search a suburb or data area to jump the map there, or a full
+              street address to drop an exact pin.
             </p>
             <ShortlistPanel
               slugs={shortlist}
@@ -698,9 +721,11 @@ export default function MapPage() {
 function TopBar({
   searchIndex,
   onSearchSelect,
+  onGeocode,
 }: {
   searchIndex: ReturnType<typeof buildSearchIndex>;
   onSearchSelect: (slug: string) => void;
+  onGeocode: (result: GeocodeResult) => void;
 }) {
   return (
     <header className="z-20 flex shrink-0 items-center gap-3 border-b border-surface-border bg-surface px-4 py-3">
@@ -711,6 +736,7 @@ function TopBar({
         <SearchBox
           index={searchIndex}
           onSelect={(e) => onSearchSelect(e.slug)}
+          onGeocode={onGeocode}
         />
       </div>
       <nav className="ml-auto flex flex-wrap items-center gap-2 text-sm">
