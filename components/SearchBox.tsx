@@ -46,9 +46,9 @@ export function SearchBox({ index, onSelect }: SearchBoxProps) {
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search a suburb or data area…"
+          placeholder="Search where you want to live…"
           className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-muted"
-          aria-label="Search by suburb name or data area (SA2)"
+          aria-label="Search where you want to live — by suburb or data area (SA2)"
         />
       </div>
       {results.length > 0 && (

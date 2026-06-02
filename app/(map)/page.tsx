@@ -613,12 +613,9 @@ export default function MapPage() {
           ) : (
             <MapSidebar
               places={places}
-              searchIndex={searchIndex}
               onFocusPlace={focusPlace}
               controls={personalisationControls}
-              results={rankedResults}
               shortlist={shortlist}
-              recent={recent}
               onShortlistChange={updateShortlist}
               getShareUrl={getShareUrl}
             />
@@ -738,28 +735,19 @@ function TopBar({
 
 function MapSidebar({
   places,
-  searchIndex,
   onFocusPlace,
   controls,
-  results,
   shortlist,
-  recent,
   onShortlistChange,
   getShareUrl,
 }: {
   places: Place[];
-  searchIndex: ReturnType<typeof buildSearchIndex>;
   onFocusPlace: (p: Place) => void;
   controls: React.ReactNode;
-  results: React.ReactNode;
   shortlist: string[];
-  recent: import("@/lib/user-prefs").RecentPlace[];
   onShortlistChange: (slugs: string[]) => void;
   getShareUrl: () => string;
 }) {
-  const total = places.length;
-  const residential = places.filter((p) => !p.nonResidential).length;
-
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
       <div className="shrink-0 border-b border-surface-border px-4 py-3">
@@ -767,35 +755,18 @@ function MapSidebar({
           Explore
         </h2>
         <p className="mt-1 text-sm leading-snug text-ink">
-          Search a suburb, click the map, or use your shortlist. Priority sliders
-          shape the match score for the area you select.
+          Search where you want to live, or click the map to check a location.
         </p>
-        {residential > 0 && (
-          <p className="mt-2 text-[11px] text-ink-muted">
-            {residential} residential SA2 suburbs in view (of {total} SA2s total),
-            ranked by your priorities below. Saved &amp; synced lists are planned for
-            signed-in profiles.
-          </p>
-        )}
       </div>
       <div className="space-y-3 border-b border-surface-border p-3">
-        <SearchBox
-          index={searchIndex}
-          onSelect={(e) => {
-            const p = getPlaceBySlug(places, e.slug);
-            if (p) onFocusPlace(p);
-          }}
-        />
         <ShortlistPanel
           slugs={shortlist}
           places={places}
           onChange={onShortlistChange}
           onOpen={onFocusPlace}
         />
-        <RecentlyViewed recent={recent} />
         <ShareViewButton getUrl={getShareUrl} label="Copy map link" />
       </div>
-      <div className="border-b border-surface-border p-3">{results}</div>
       <div className="space-y-3 p-3">{controls}</div>
     </div>
   );
