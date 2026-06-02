@@ -100,6 +100,21 @@ export default function MapPage() {
       });
   }, []);
 
+  // Press Escape to clear the selected-area card — a seamless "back to the map"
+  // (the friend feedback: selecting an area felt like a trap with no easy exit).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) {
+        return;
+      }
+      setSelected(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const searchIndex = useMemo(() => buildSearchIndex(places), [places]);
 
   // Map-click selection: update the side panel only, preserving map view.
@@ -640,7 +655,11 @@ export default function MapPage() {
               const p = places.find(
                 (x) => x.slug === props.slug || x.sa2Code === props.sa2Code
               );
-              if (p) selectPlace(p);
+              if (!p) return;
+              // Click the already-selected area again to deselect (toggle) — a
+              // quick way back to the clean map without hunting for the close X.
+              if (selected?.slug === p.slug) setSelected(null);
+              else selectPlace(p);
             }}
           />
 

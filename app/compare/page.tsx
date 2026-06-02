@@ -169,7 +169,7 @@ export default function ComparePage() {
                 another.
               </p>
             ) : (
-              <div className="mt-2">
+              <div className="mt-2 space-y-2">
                 <SearchBox
                   index={searchIndex}
                   onSelect={(entry) => {
@@ -177,6 +177,19 @@ export default function ComparePage() {
                     addSlug(entry.slug);
                   }}
                   onGeocode={addByAddress}
+                />
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-ink-muted">
+                  <span className="h-px flex-1 bg-surface-border" aria-hidden />
+                  or browse
+                  <span className="h-px flex-1 bg-surface-border" aria-hidden />
+                </div>
+                <AreaPicker
+                  places={places}
+                  exclude={slugs}
+                  onPick={(slug) => {
+                    setAddNote(null);
+                    addSlug(slug);
+                  }}
                 />
               </div>
             )}
@@ -253,6 +266,63 @@ export default function ComparePage() {
         )}
       </main>
     </div>
+  );
+}
+
+/**
+ * Browse-by-list area picker — a grouped native dropdown so you can add an area
+ * WITHOUT knowing its name (friend feedback). Residential areas grouped by
+ * council (LGA), alphabetised, already-selected ones omitted.
+ */
+function AreaPicker({
+  places,
+  exclude,
+  onPick,
+}: {
+  places: Place[];
+  exclude: string[];
+  onPick: (slug: string) => void;
+}) {
+  const groups = useMemo(() => {
+    const byLga = new Map<string, Place[]>();
+    for (const p of places) {
+      if (p.nonResidential || exclude.includes(p.slug)) continue;
+      const list = byLga.get(p.lga) ?? [];
+      list.push(p);
+      byLga.set(p.lga, list);
+    }
+    return [...byLga.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(
+        ([lga, ps]) =>
+          [lga, ps.sort((a, b) => a.name.localeCompare(b.name))] as const
+      );
+  }, [places, exclude]);
+
+  if (places.length === 0) return null;
+
+  return (
+    <select
+      aria-label="Browse and add an area from the full list"
+      value=""
+      onChange={(e) => {
+        const slug = e.target.value;
+        if (slug) onPick(slug);
+        e.currentTarget.value = "";
+      }}
+      className="w-full rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+    >
+      <option value="">Browse all areas by council…</option>
+      {groups.map(([lga, ps]) => (
+        <optgroup key={lga} label={lga}>
+          {ps.map((p) => (
+            <option key={p.slug} value={p.slug}>
+              {p.name}
+            </option>
+          ))}
+        </optgroup>
+      ))}
+    </select>
   );
 }
 
