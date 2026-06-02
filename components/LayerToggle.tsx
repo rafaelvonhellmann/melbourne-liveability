@@ -1,6 +1,7 @@
 "use client";
 
-import { Layers, MapPin } from "lucide-react";
+import { useState } from "react";
+import { Layers, MapPin, Info } from "lucide-react";
 import { DOMAIN_REGISTRY, getDomain } from "@/lib/domains";
 import type { DomainId } from "@/lib/types";
 import { POI_CATEGORIES } from "@/lib/poi-categories";
@@ -32,6 +33,8 @@ export function LayerToggle({
   cyclabilityMode = false,
   onCyclabilityToggle,
 }: LayerToggleProps) {
+  // Which layer's explainer to show (hover or keyboard-focus of its info button).
+  const [describe, setDescribe] = useState<DomainId | null>(null);
   const activePinCount = POI_CATEGORIES.filter(
     (c) => visiblePins[c.id]
   ).length;
@@ -59,12 +62,16 @@ export function LayerToggle({
       </p>
       <ul className="space-y-1">
         {DOMAIN_REGISTRY.filter((d) => d.scored && d.layer !== "context").map((d) => (
-          <li key={d.id}>
+          <li
+            key={d.id}
+            className="flex items-center gap-1"
+            onMouseEnter={() => setDescribe(d.id)}
+            onMouseLeave={() => setDescribe((cur) => (cur === d.id ? null : cur))}
+          >
             <button
               type="button"
-              title={d.description}
               onClick={() => onDomainChange(d.id)}
-              className={`flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-left text-sm transition-colors ${
+              className={`flex flex-1 items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-left text-sm transition-colors ${
                 !activeContext && activeDomain === d.id
                   ? "bg-accent font-semibold text-accent-ink"
                   : "text-ink hover:bg-surface-sunken"
@@ -78,9 +85,28 @@ export function LayerToggle({
                 </span>
               )}
             </button>
+            <button
+              type="button"
+              aria-label={`What does the ${d.label} layer show?`}
+              onFocus={() => setDescribe(d.id)}
+              onBlur={() => setDescribe((cur) => (cur === d.id ? null : cur))}
+              className="shrink-0 rounded p-1 text-ink-muted transition-colors hover:text-accent focus-visible:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              <Info className="h-3.5 w-3.5" aria-hidden />
+            </button>
           </li>
         ))}
       </ul>
+      {describe && (
+        <p
+          role="status"
+          aria-live="polite"
+          className="mt-1.5 rounded-md border border-surface-border bg-surface-sunken px-2 py-1.5 text-[11px] leading-snug text-ink-muted"
+        >
+          <span className="font-medium text-ink">{getDomain(describe)?.label}:</span>{" "}
+          {getDomain(describe)?.description}
+        </p>
+      )}
 
       {/* Points of interest — user-controlled, off by default, colour-coded by
           category (a categorical palette, separate from the YlGnBu data ramp). */}
