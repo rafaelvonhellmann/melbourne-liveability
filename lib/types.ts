@@ -139,6 +139,18 @@ export type PlanningOverlays = {
   period: string;
 };
 
+/**
+ * Resident population + density for an SA2 — context/display-only, never scored.
+ * Density = ABS ERP ÷ SA2 land area (km²). A size/intensity fact about the area.
+ */
+export type PopulationContext = {
+  count: number | null;
+  areaKm2: number | null;
+  densityPerKm2: number | null;
+  period: string;
+  sourceId: string;
+};
+
 /** Display-only context (never affects liveability rank). */
 export type PlaceContext = {
   equity?: {
@@ -161,6 +173,7 @@ export type PlaceContext = {
   socialHousing?: SocialHousing;
   housingStress?: HousingStress;
   planning?: PlanningOverlays;
+  population?: PopulationContext;
   environment?: { note: string };
   politics?: { note: string };
 };

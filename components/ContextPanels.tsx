@@ -24,6 +24,30 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
         </Panel>
       )}
 
+      {context.population && (context.population.count != null || context.population.densityPerKm2 != null) && (
+        <Panel title="Population">
+          <Row
+            label="Resident population (ERP)"
+            value={context.population.count != null ? context.population.count.toLocaleString() : null}
+          />
+          <Row
+            label="Density (people / km²)"
+            value={
+              context.population.densityPerKm2 != null
+                ? context.population.densityPerKm2.toLocaleString()
+                : null
+            }
+          />
+          {context.population.areaKm2 != null && (
+            <Row label="Land area (km²)" value={context.population.areaKm2.toLocaleString()} />
+          )}
+          <p className="mt-2 text-xs text-ink-muted">
+            ABS Estimated Resident Population ÷ SA2 land area. Population trend over time is
+            on the area profile. ABS ERP · {context.population.period}
+          </p>
+        </Panel>
+      )}
+
       {context.community && (
         <Panel title="Community">
           <TenureSplit renterPct={context.community.renterPct} />

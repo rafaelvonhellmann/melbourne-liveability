@@ -19,6 +19,7 @@ import { scoredGpPoints } from "./lib/poi-classify.js";
 import { buildHazardIndex, overlayPctInSa2 } from "./lib/sa2-overlay-pct.js";
 import { computeCyclabilityByCode } from "./lib/cyclability-compute.js";
 import { computeSocialHousing } from "../lib/social-housing.js";
+import { populationContext } from "../lib/population.js";
 import { summariseHousingStress } from "../lib/housing-stress.js";
 import { roundOverlayPct } from "../lib/planning-overlays.js";
 import type {
@@ -563,6 +564,12 @@ async function main() {
         sourceId: "vic-planning-heritage",
         period: "current",
       } satisfies PlanningOverlays;
+    }
+    if (p.population != null || p.cyclability?.areaKm2 != null) {
+      ctx.population = populationContext(p.population, p.cyclability?.areaKm2, {
+        sourceId: "abs-erp-sa2",
+        period: "2023",
+      });
     }
     p.context = ctx;
   }

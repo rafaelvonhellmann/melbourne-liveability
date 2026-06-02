@@ -55,6 +55,7 @@
     "data:vic-facilities": "tsx scripts/fetch-vic-facilities.ts",
     "data:social-housing": "tsx scripts/fetch-social-housing.ts",
     "data:apply-social-housing": "tsx scripts/apply-social-housing.ts",
+    "data:apply-density": "tsx scripts/apply-density.ts",
     "data:housing-stress": "tsx scripts/fetch-housing-stress.ts",
     "data:apply-housing-stress": "tsx scripts/apply-housing-stress.ts",
     "data:heritage": "tsx scripts/fetch-heritage.ts",
