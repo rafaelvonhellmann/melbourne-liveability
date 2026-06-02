@@ -19,7 +19,14 @@ import { scoredGpPoints } from "./lib/poi-classify.js";
 import { buildHazardIndex, overlayPctInSa2 } from "./lib/sa2-overlay-pct.js";
 import { computeCyclabilityByCode } from "./lib/cyclability-compute.js";
 import { computeSocialHousing } from "../lib/social-housing.js";
-import type { Cyclability, PlaceContext, SocialHousing, WalkAccess } from "../lib/types.js";
+import { summariseHousingStress } from "../lib/housing-stress.js";
+import type {
+  Cyclability,
+  HousingStress,
+  PlaceContext,
+  SocialHousing,
+  WalkAccess,
+} from "../lib/types.js";
 import {
   WALK_THRESHOLD_KM,
   WALK_CATEGORY_IDS,
@@ -62,6 +69,7 @@ type Sa2Raw = {
   walkAccess?: WalkAccess;
   cyclability?: Cyclability;
   socialHousing?: SocialHousing;
+  housingStress?: HousingStress;
   context?: PlaceContext;
 };
 
@@ -241,6 +249,24 @@ async function main() {
       { sourceId: "abs-census-community-2021", period: "2021" }
     );
     if (sh.socialPct != null || sh.dwellings != null) p.socialHousing = sh;
+  }
+
+  // Housing stress (context only, never scored) — ABS 2021 Census share of
+  // households paying >30% of income on rent / mortgage. See lib/housing-stress.
+  for (const row of await loadAttrJsonAsync("abs-sa2-stress.json")) {
+    const code = String(row.sa2_code_2021 ?? "");
+    const p = byCode.get(code);
+    if (!p) continue;
+    const rent = Number(row.stress_172021);
+    const mortgage = Number(row.stress_152021);
+    const hs = summariseHousingStress(
+      {
+        rentStress: Number.isFinite(rent) ? rent : null,
+        mortgageStress: Number.isFinite(mortgage) ? mortgage : null,
+      },
+      { sourceId: "abs-census-community-2021", period: "2021" }
+    );
+    if (hs.rentStressPct != null || hs.mortgageStressPct != null) p.housingStress = hs;
   }
 
   for (const row of await loadAttrJsonAsync("abs-sa2-indigenous.json")) {
@@ -513,6 +539,7 @@ async function main() {
     if (p.walkAccess) ctx.walkAccess = p.walkAccess;
     if (p.cyclability) ctx.cyclability = p.cyclability;
     if (p.socialHousing) ctx.socialHousing = p.socialHousing;
+    if (p.housingStress) ctx.housingStress = p.housingStress;
     p.context = ctx;
   }
 

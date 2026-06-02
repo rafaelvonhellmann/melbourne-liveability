@@ -52,6 +52,8 @@
     "data:vic-facilities": "tsx scripts/fetch-vic-facilities.ts",
     "data:social-housing": "tsx scripts/fetch-social-housing.ts",
     "data:apply-social-housing": "tsx scripts/apply-social-housing.ts",
+    "data:housing-stress": "tsx scripts/fetch-housing-stress.ts",
+    "data:apply-housing-stress": "tsx scripts/apply-housing-stress.ts",
     "data:timeseries": "tsx scripts/build-timeseries.ts",
     "data:walkaccess": "tsx scripts/apply-walk-access.ts",
     "data:cyclability": "tsx scripts/apply-cyclability.ts",

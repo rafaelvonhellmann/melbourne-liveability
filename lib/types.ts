@@ -109,6 +109,22 @@ export type SocialHousing = {
   period: string;
 };
 
+/**
+ * Housing stress for an SA2 — context/display-only, never scored. The share of
+ * households spending more than 30% of income on housing (the standard ABS
+ * "30/40" stress threshold), split by tenure: renting vs mortgaged. From the ABS
+ * 2021 Census. A cost-pressure signal distinct from the median rent-vs-income
+ * affordability score.
+ */
+export type HousingStress = {
+  /** % of renting households paying >30% of income on rent. */
+  rentStressPct: number | null;
+  /** % of mortgaged households paying >30% of income on repayments. */
+  mortgageStressPct: number | null;
+  sourceId: string;
+  period: string;
+};
+
 /** Display-only context (never affects liveability rank). */
 export type PlaceContext = {
   equity?: {
@@ -129,6 +145,7 @@ export type PlaceContext = {
   walkAccess?: WalkAccess;
   cyclability?: Cyclability;
   socialHousing?: SocialHousing;
+  housingStress?: HousingStress;
   environment?: { note: string };
   politics?: { note: string };
 };

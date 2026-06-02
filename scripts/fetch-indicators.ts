@@ -10,6 +10,7 @@ import { loadMelbourneSa2Codes } from "./lib/melbourne-sa2-codes.js";
 import { fetchArcGisTable, overpassMelbourne } from "./lib/arcgis-fetch.js";
 import { fetchVicHospitalPoints } from "./lib/vic-facilities.js";
 import { G37_SERVICE, G37_FIELDS } from "../lib/social-housing.js";
+import { STRESS_SERVICE, STRESS_FIELDS } from "../lib/housing-stress.js";
 
 const UA = "MelbourneLiveability/1.0";
 
@@ -85,6 +86,13 @@ async function main() {
     outFields: G37_FIELDS,
   });
   await writeFile(path.join(RAW, "abs-sa2-landlord.json"), JSON.stringify(landlord));
+
+  console.log("ABS Census household stress (rent/mortgage >30% of income)...");
+  const stress = await fetchArcGisTable(STRESS_SERVICE, 0, {
+    codes,
+    outFields: STRESS_FIELDS,
+  });
+  await writeFile(path.join(RAW, "abs-sa2-stress.json"), JSON.stringify(stress));
 
   console.log("ABS Census G01 (First Nations population)...");
   const g01 = await fetchArcGisTable("ABS_2021_Census_G01_SA2", 0, {

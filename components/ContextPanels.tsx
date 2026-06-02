@@ -76,6 +76,27 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
         </Panel>
       )}
 
+      {context.housingStress &&
+        (context.housingStress.rentStressPct != null ||
+          context.housingStress.mortgageStressPct != null) && (
+          <Panel title="Housing stress">
+            <Row
+              label="Renters paying >30% of income"
+              value={fmtPct(context.housingStress.rentStressPct)}
+            />
+            <Row
+              label="Mortgaged paying >30% of income"
+              value={fmtPct(context.housingStress.mortgageStressPct)}
+            />
+            <p className="mt-2 text-xs text-ink-muted">
+              Share of households (by tenure) spending more than 30% of income on
+              housing — the ABS housing-stress threshold. A cost-pressure signal,
+              separate from the rent-vs-income score. ABS Census 2021 ·{" "}
+              {context.housingStress.period}
+            </p>
+          </Panel>
+        )}
+
       {context.environment && (
         <Panel title="Environment">
           <p className="text-sm text-ink-muted">{context.environment.note}</p>
