@@ -133,20 +133,18 @@ const SCHOOL_ZONE_REF: BuyerSourceRef = {
   url: "https://www.findmyschool.vic.gov.au/",
 };
 
-/** Display grouping of raw POI `pinType`s into buyer-facing amenity groups. */
+/**
+ * Display grouping of raw POI `pinType`s into buyer-facing amenity groups.
+ * Order = display priority (groceries first); within a group the category order
+ * is the in-group priority (e.g. hospitals before GPs in Health).
+ */
 export const AMENITY_GROUPS: { id: string; label: string; categories: PoiCategoryId[] }[] = [
-  { id: "education", label: "Education", categories: ["school", "childcare"] },
-  {
-    id: "health",
-    label: "Health",
-    categories: ["gp", "hospital", "pharmacy", "pathology_lab", "ndis_provider"],
-  },
-  { id: "parks", label: "Parks & open space", categories: ["park"] },
-  {
-    id: "shops",
-    label: "Shops, food & services",
-    categories: ["supermarket", "cafe_restaurant", "gym_leisure", "post_office"],
-  },
+  { id: "groceries", label: "Groceries & supermarkets", categories: ["supermarket"] },
+  { id: "services", label: "Everyday services", categories: ["pharmacy", "post_office"] },
+  { id: "health", label: "Health", categories: ["hospital", "gp", "pathology_lab", "ndis_provider"] },
+  { id: "education", label: "Education", categories: ["childcare", "school"] },
+  { id: "recreation", label: "Parks & recreation", categories: ["park", "gym_leisure"] },
+  { id: "food", label: "Cafes & dining", categories: ["cafe_restaurant"] },
   { id: "community", label: "Community & safety", categories: ["police"] },
 ];
 

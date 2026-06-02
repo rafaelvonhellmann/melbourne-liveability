@@ -172,6 +172,13 @@ export function BuyerReportPanel({
               {AMENITY_GROUPS.map((g) => {
                 const items = report.nearbyAmenities
                   .filter((a) => g.categories.includes(a.category as PoiCategoryId))
+                  // In-group priority by category order (hospitals before GPs);
+                  // stable sort keeps nearest-first within each category.
+                  .sort(
+                    (a, b) =>
+                      g.categories.indexOf(a.category as PoiCategoryId) -
+                      g.categories.indexOf(b.category as PoiCategoryId)
+                  )
                   .slice(0, 4);
                 const total = g.categories.reduce(
                   (n, c) => n + (report.amenityCountsByCategory[c] ?? 0),
