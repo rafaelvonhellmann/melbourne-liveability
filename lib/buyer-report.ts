@@ -112,6 +112,14 @@ export interface BuyerReport {
 /** ~15 min on foot at 5 km/h (straight-line proxy). */
 export const DEFAULT_RADIUS_METERS = 1200;
 
+/**
+ * A neighbouring SA2 whose centre-point is within this straight-line distance of
+ * the pin counts as "close" for the adjacency nudge — the same ~15-minute-walk
+ * threshold used for nearby amenities. Centre-point proximity, NOT a true
+ * boundary test (the finding says so).
+ */
+export const ADJACENCY_THRESHOLD_KM = DEFAULT_RADIUS_METERS / 1000;
+
 export const STRAIGHT_LINE_CAVEAT =
   "Nearby amenities are estimated using straight-line distance from the dropped pin. This is a quick screening tool, not a street-network routing calculation.";
 
@@ -295,6 +303,15 @@ export interface BuildBuyerReportInput {
   generatedAt?: string;
   /** Optional precomputed overall liveability score; else derived from `place`. */
   overallScore?: number | null;
+  /**
+   * Other SA2 areas (centre-point + name + slug) used for the adjacency nudge:
+   * when the pin is within {@link ADJACENCY_THRESHOLD_KM} of a neighbouring
+   * area's centroid, the report recommends also checking that area. The caller
+   * passes the full area list; the engine filters by distance and drops the
+   * containing SA2. Optional — omit to skip the adjacency finding (e.g. SA2-mode
+   * cards or the sample report).
+   */
+  nearbyAreas?: { sa2Code: string; slug: string; name: string; centroid: [number, number] }[];
 }
 
 export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
@@ -386,6 +403,44 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         geography: "poi-radius",
         caveat: amenityCaveat,
         sourceRefs: getSourcesByIds(["osm-amenities"]),
+      });
+    }
+  }
+
+  // 1b) Adjacency nudge. If the pin sits within ~15 min on foot of a NEIGHBOURING
+  //     SA2's centre-point, a boundary is probably close — recommend also checking
+  //     those areas, since their amenities, scores and recorded-offence figures may
+  //     describe this spot just as well as the containing SA2 does.
+  if (point && input.nearbyAreas?.length) {
+    const here = place?.sa2Code;
+    const pin: LngLat = [point.lng, point.lat];
+    const adjacent = input.nearbyAreas
+      .filter(
+        (a) =>
+          a.sa2Code !== here &&
+          Array.isArray(a.centroid) &&
+          a.centroid.length === 2
+      )
+      .map((a) => ({ name: a.name, km: haversineKm(pin, a.centroid) }))
+      .filter((a) => a.km <= ADJACENCY_THRESHOLD_KM)
+      .sort((a, b) => a.km - b.km)
+      .slice(0, 3);
+    if (adjacent.length > 0) {
+      const names = adjacent.map((a) => a.name).join(", ");
+      findings.push({
+        id: "near-area-border",
+        kind: "neutral",
+        severity: "info",
+        title: "Close to a neighbouring area",
+        summary: `This point is within roughly a 15-minute walk of the centre of ${names}. If it sits near a boundary, those areas' amenities, scores and recorded-offence figures may apply here just as much as ${place?.name ?? "this area"}'s.`,
+        whyItMatters:
+          "Area-level data is reported per SA2; a property near the edge can be better described by the neighbour than by the area it technically falls in.",
+        verifyAction: "Compare the adjacent area(s) before you decide.",
+        confidence: "medium",
+        geography: "sa2",
+        caveat:
+          "Closeness is measured to area centre-points (straight-line), not to the actual boundary — check the map for where the borders fall.",
+        sourceRefs: [METHODOLOGY_REF],
       });
     }
   }

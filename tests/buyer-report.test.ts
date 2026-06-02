@@ -250,3 +250,40 @@ describe("buildBuyerReport hazard conditionality", () => {
     expect(r.findings.find((f) => f.id === "hazard-overlays")?.kind).toBe("red_flag");
   });
 });
+
+describe("buildBuyerReport adjacency nudge", () => {
+  // PIN = [-37.8, 144.97]; containing centroid is the same point.
+  const near = (name: string, sa2Code: string, lat: number) => ({
+    sa2Code,
+    slug: name.toLowerCase(),
+    name,
+    centroid: [144.97, lat] as [number, number],
+  });
+
+  it("flags a neighbour within ~15 min, excluding the containing SA2 and far areas", () => {
+    const nearbyAreas = [
+      near("Testville", "200000001", -37.8), // same SA2 as place -> excluded
+      near("Nextdoor", "200000002", -37.79), // ~1.11 km -> included
+      near("Farburb", "200000003", -37.77), // ~3.3 km -> excluded
+    ];
+    const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: samplePlace(), pois: POIS, nearbyAreas, generatedAt: "t" });
+    const adj = r.findings.find((f) => f.id === "near-area-border");
+    expect(adj).toBeTruthy();
+    // The neighbour list is exactly "Nextdoor" (containing + far area excluded).
+    expect(adj?.summary).toMatch(/centre of Nextdoor\./);
+    expect(adj?.summary).not.toContain("Farburb");
+    expect(adj?.caveat).toMatch(/centre-points/i);
+    expect(adj?.kind).toBe("neutral");
+  });
+
+  it("omits the finding when nothing is close enough", () => {
+    const nearbyAreas = [near("Farburb", "200000003", -37.77)];
+    const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: samplePlace(), pois: POIS, nearbyAreas, generatedAt: "t" });
+    expect(r.findings.find((f) => f.id === "near-area-border")).toBeFalsy();
+  });
+
+  it("omits the finding when nearbyAreas is not supplied", () => {
+    const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: samplePlace(), pois: POIS, generatedAt: "t" });
+    expect(r.findings.find((f) => f.id === "near-area-border")).toBeFalsy();
+  });
+});

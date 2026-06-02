@@ -1,10 +1,14 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { X } from "lucide-react";
+import type { FeatureCollection } from "geojson";
 import { usePlaces } from "@/lib/use-places";
+import { findSa2ForPoint } from "@/lib/buyer-location";
+import { withBase } from "@/lib/asset-path";
+import type { GeocodeResult } from "@/lib/geocode";
 import type { Place, ScoreWeights } from "@/lib/types";
 import {
   getDefaultWeights,
@@ -30,6 +34,8 @@ export default function ComparePage() {
   const [slugs, setSlugs] = useState<string[]>([]);
   const [weights, setWeights] = useState<ScoreWeights>(getDefaultWeights());
   const [savedShortlist, setSavedShortlist] = useState<string[]>([]);
+  const [addNote, setAddNote] = useState<string | null>(null);
+  const sa2GeoRef = useRef<FeatureCollection | null>(null);
 
   useEffect(() => {
     setSavedShortlist(loadUserPrefs().shortlist);
@@ -83,6 +89,28 @@ export default function ComparePage() {
     setSlugs((prev) => prev.filter((s) => s !== slug));
   }
 
+  // "Search where you want to live": geocode a full street address (OSM
+  // Nominatim) and add the SA2 it falls in. The boundary geometry is lazy-loaded
+  // only the first time an address is searched, so the common suburb-name path
+  // pays nothing for it.
+  async function addByAddress(r: GeocodeResult) {
+    try {
+      if (!sa2GeoRef.current) {
+        const res = await fetch(withBase("/data/places.geojson"));
+        sa2GeoRef.current = (await res.json()) as FeatureCollection;
+      }
+      const hit = findSa2ForPoint([r.lng, r.lat], sa2GeoRef.current);
+      if (hit?.slug) {
+        addSlug(hit.slug);
+        setAddNote(`Added ${hit.name ?? "the area"} — the area that contains ${r.shortLabel}.`);
+      } else {
+        setAddNote(`${r.shortLabel} isn’t inside our Greater Melbourne coverage yet.`);
+      }
+    } catch {
+      setAddNote("Couldn’t look up that address. Try a suburb or area name instead.");
+    }
+  }
+
   // Saved shortlist places not yet in the comparison — offered as one-tap chips.
   const shortlistChips = savedShortlist
     .map((slug) => places.find((p) => p.slug === slug))
@@ -112,8 +140,9 @@ export default function ComparePage() {
       <main className="mx-auto max-w-5xl px-4 py-6">
         <h1 className="font-display text-2xl font-semibold text-ink">Compare places</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          Search a suburb to add it — up to four areas side-by-side. Uses your saved
-          weights when shared via link.
+          Search where you want to live — by suburb, area or full street address —
+          to add up to four areas side-by-side. Uses your saved weights when shared
+          via link.
         </p>
 
         {placesError && (
@@ -128,10 +157,11 @@ export default function ComparePage() {
               htmlFor="compare-search"
               className="block text-sm font-medium text-ink"
             >
-              Add a place by suburb name
+              Search where you want to live
             </label>
             <p id="compare-search-help" className="mt-0.5 text-xs text-ink-muted">
-              Type a Melbourne suburb or area name. Add up to {MAX_COMPARE}.
+              Suburb, data area, or a full street address (we add the area it falls
+              in). Add up to {MAX_COMPARE}.
             </p>
             {isFull ? (
               <p className="mt-2 rounded-lg border border-surface-border bg-surface-sunken px-3 py-2 text-sm text-ink-muted">
@@ -142,10 +172,24 @@ export default function ComparePage() {
               <div className="mt-2">
                 <SearchBox
                   index={searchIndex}
-                  onSelect={(entry) => addSlug(entry.slug)}
+                  onSelect={(entry) => {
+                    setAddNote(null);
+                    addSlug(entry.slug);
+                  }}
+                  onGeocode={addByAddress}
                 />
               </div>
             )}
+            {addNote && (
+              <p className="mt-2 rounded-lg border border-surface-border bg-surface-sunken px-3 py-2 text-xs text-ink-muted">
+                {addNote}
+              </p>
+            )}
+            <p className="mt-2 text-xs leading-snug text-ink-muted">
+              Areas are administrative boundaries (SA2s). If your target property is
+              near the edge of one, the adjacent area can be just as relevant — add
+              the neighbour and compare both.
+            </p>
           </div>
 
           {shortlistChips.length > 0 && (

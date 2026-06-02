@@ -143,6 +143,19 @@ export default function MapPage() {
     [buyerSa2, places]
   );
 
+  // Lightweight area centre-points for the buyer report's adjacency nudge (pin
+  // near a neighbouring SA2 → recommend checking it). Derived once from places.
+  const areaCentroids = useMemo(
+    () =>
+      places.map((p) => ({
+        sa2Code: p.sa2Code,
+        slug: p.slug,
+        name: p.name,
+        centroid: p.centroid,
+      })),
+    [places]
+  );
+
   // Persist buyer mode + pin to the URL so a report is shareable / restorable.
   const syncBuyerUrl = (mode: boolean, pin: [number, number] | null) => {
     router.replace(
@@ -171,7 +184,13 @@ export default function MapPage() {
       ? places.find((p) => p.slug === sa2.slug || p.sa2Code === sa2.sa2Code) ?? null
       : null;
     setBuyerReport(
-      buildBuyerReport({ lat: lngLat[1], lng: lngLat[0], place, pois: feats })
+      buildBuyerReport({
+        lat: lngLat[1],
+        lng: lngLat[0],
+        place,
+        pois: feats,
+        nearbyAreas: areaCentroids,
+      })
     );
     track("buyer_report", { coverage: place ? "in" : "off" });
   };
@@ -206,6 +225,7 @@ export default function MapPage() {
         place: buyerPlace,
         pois: feats,
         isochrone: iso.geom,
+        nearbyAreas: areaCentroids,
       })
     );
     setPreciseStatus("idle");
