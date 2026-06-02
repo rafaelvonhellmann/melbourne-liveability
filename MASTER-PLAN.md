@@ -7,6 +7,44 @@ review pass.
 
 ---
 
+## ⭐⭐ CURRENT GOAL — free launch + buyer-decision depth (autonomous build)
+
+**Decision (founder):** ship the product **FREE** for now; monetisation parked +
+UI removed. Beat NestCheck (the real VIC competitor) on **transparency + buyer
+decision workflow + depth**, not coverage. Build the queue below autonomously
+(gate `typecheck`(capture real exit) · `vitest` · `lint` → commit per item → push).
+
+**Build queue (in order):**
+1. **Personal profile** — `lib/buyer-fit.ts` engine + storage SHIPPED (`1b8f5b0`).
+   TODO: profile form modal → "Fit for your life" + deal-breaker flags in the
+   buyer report → **agent (client-facing) variant** (`mode: "agent"`).
+2. **Population density + trend** — density = ERP ÷ SA2 area (no fetch); trend
+   already in `timeseries.json` (ERP 2001-2023) — surface both.
+3. **Train-station distance** (needs raw GTFS rail-stop parse).
+4. **Social-housing map layer** — data already in `context.socialHousing`; emit to
+   geojson + a context toggle.
+5. **School catchments** (findmyschool.vic / DET polygons + pin-in-polygon).
+6. **Big Build pin-layer** (curated data in `major-projects.json`).
+7. **Parity (NestCheck):** plain-English zone · water retailer · air quality
+   (EPA station) · EV ✅(`b03a9fb`) · childcare quality ratings (ACECQA).
+8. **New-developments trend** (ABS building approvals) · **undergrad/postgrad %**
+   (ABS Census qualification) · **fire history** (Vicmap past-fire) · **traffic
+   AADT** proxy (VicRoads).
+9. **Mobile sheet polish** (Pixel) · surface **Sun & aspect** more prominently
+   (currently only in the Buyer report).
+
+**Dead-ends (flag, don't fake):** hospital catchments (no such concept — use
+hospital distance) · power-grid outage history (distributor-level only) ·
+per-area public/infrastructure spending (not geocoded — Big Build is the proxy).
+
+**Shipped this thread:** colourblind ramp (G6) · find-areas-like-this (G8) ·
+bike radius (G12a) · community amenities (G3) · social-housing supply data (G2) ·
+authoritative police+childcare (G5b) · housing-stress (G9) · heritage overlay
+(G11) · UX declutter + free-ification · EV parity · transport-noise proxy · the
+profile engine. ~196 vitest.
+
+---
+
 ## ⭐ START HERE — autonomous build mandate (HEAD `25d659d`, tree clean)
 
 **Your job this session: keep building the Goal board (G1–G12) below until it's done.**
