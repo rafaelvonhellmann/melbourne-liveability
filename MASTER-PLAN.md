@@ -7,7 +7,7 @@ review pass.
 
 ---
 
-## ⭐ START HERE — autonomous build mandate (HEAD `5827f0d`, tree clean)
+## ⭐ START HERE — autonomous build mandate (HEAD `aeb64ea`, tree clean)
 
 **Your job this session: keep building the Goal board (G1–G12) below until it's done.**
 Founder's instruction, verbatim intent: *"set it as a goal and build everything that is
@@ -37,19 +37,21 @@ social-housing *supply* instead, same reason we dropped ethnicity %).
 | G1 | "Show 15-min walk" button + bold radius | ✅ `0766c7b` | — |
 | G4 | Sun & aspect finding (lib/sun.ts) + remove ShadeMap | ✅ `1c2fc0a` | — |
 | G5a | Data completeness audit + drop NDIS | ✅ `5827f0d` | `npm run data:audit` → `data/generated/data-audit.json` |
-| G6 | Colourblind-safe ramp toggle | ⬜ | code (sits on the new red→green ramp) |
-| G8 | "Find areas like this" multi-criteria filter | ⬜ | code (filter SA2s by per-domain percentiles) |
-| G12a | Cyclability radius around the pin | ⬜ | code (cyclability data already exists) |
-| G2 | Social-housing **supply** layer | ⬜ | data-fetch: Census **landlord-type** field (current tenure pull lacks it) → fetch-indicators + normalize + score |
-| G3 | Community amenities (worship + community centres) | ⬜ | data-fetch: Overpass place_of_worship/community_centre → build-poi + new POI categories |
-| G5b | Police (VicPol) + childcare (VIC) authoritative | ⬜ | data-fetch (audit shows OSM sparse: police 125, pathology 46) |
-| G9 | Deeper indicators (mortgage-to-income, rental stress, DFFH vacancy, journey-to-work, train-station dist) | ⬜ | research-gated (new ABS/DFFH fetch + 2-source validation vs scores) |
-| G10 | School catchments + primary/secondary split | ⬜ | research-gated (official zone boundaries) |
-| G11 | Zoning/heritage/parcel overlays + parcel-level hazard | ⬜ | research-gated (VicPlan) |
-| G12b | Fuller LXRP-110 set + Big Build map pin-layer | ⬜ | research-gated |
+| G6 | Colourblind-safe ramp toggle | ✅ `4438123` | RdYlBu (red=worse→blue=better) toggle on map+legend; persisted pref; LayerToggle "Display". Report swatches stay default. |
+| G8 | "Find areas like this" multi-criteria filter | ✅ `169d24e` | `lib/similar-areas.ts` equal-weight per-domain % similarity; profile "Areas like this" (precomputed) + map card expandable. |
+| G12a | Cyclability radius around the pin | ✅ `bfd04b6` | ~15-min bike ring (3.5 km, teal) + area cycle-infra index in the buyer panel. |
+| G3 | Community amenities (worship + community centres) | ✅ `00ff0c8` | Overpass → 1,160 worship + 513 community/cultural pins; buyer "Community & culture" group. `npm run data:community-poi` |
+| G2 | Social-housing **supply** layer | ✅ `65891a1` | ABS Census G37 landlord-type → `context.socialHousing` (public+community %); profile panel. `npm run data:social-housing` then `data:apply-social-housing` → `data:geo`. **Map context-layer still TODO.** |
+| G5b | Police (VicPol) + childcare (VIC) authoritative | ✅ `c5482e5` | Vicmap FOI replaces OSM: police 125→98 (official), childcare 1,198→3,694. Per-category buyer attribution. `npm run data:vic-facilities` then `data:poi`. |
+| G9 | Deeper indicators | 🟡 partial `aeb64ea` | **DONE:** rent + mortgage stress → `context.housingStress` (ABS G9.. stress %). **TODO:** DFFH vacancy, journey-to-work mode share, train-station distance (separate sources). |
+| G10 | School catchments + primary/secondary split | ⬜ | research-gated (official zone boundaries — findmyschool.vic / DET) |
+| G11 | Zoning/heritage/parcel overlays + parcel-level hazard | ⬜ | research-gated (VicPlan — same Vicmap_Planning service as the shipped bushfire/flood overlays; add HO heritage + zone layers) |
+| G12b | Fuller LXRP-110 set + Big Build map pin-layer | ⬜ | research-gated. Pin-layer = pure code (data in `data/generated/major-projects.json`, 11 stations). LXRP-110 set needs a clean source. |
 | G7 | axe a11y audit (Playwright) | ⬜ | blocked: needs a clean local env (OneDrive lock) |
 
-Suggested order: **code (G6, G8, G12a) → data-fetch (G2, G3, G5b) → research-gated (G9–G11, G12b)**. G7 when the local env is clean.
+Suggested order for the next session: **G11 zoning/heritage** (same Vicmap_Planning pattern as the shipped hazards — most tractable) → **G12b pin-layer** (pure code) → **G10 catchments** / remaining **G9** indicators. G7 when the local env is clean.
+
+**Context-layer pattern (proven this session, reuse for more ABS/DFFH context):** dedicated `fetch-*.ts` → raw → `apply-*.ts` reads `data/generated/places.json` + injects `place.context.X` (mirror `apply-social-housing.ts` / `apply-housing-stress.ts`), PLUS the same compute inlined in `normalize.ts` for durability, then `data:geo`. ALWAYS verify with the HEAD-diff script (domainsChanged must be 0 — context never touches the locked composite). Sanity-check values vs ground truth before committing.
 
 ### Decisions already made (do NOT re-litigate)
 - Score ramp = continuous **red→green** (worse=red); G6 adds a colourblind toggle *on top*.
