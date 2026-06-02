@@ -230,7 +230,20 @@ export function getNearbyAmenities(
   const radiusKm = (options?.radiusMeters ?? DEFAULT_RADIUS_METERS) / 1000;
   const isochrone = options?.isochrone;
   const pin: LngLat = [point.lng, point.lat];
+  // Per-category provenance: police + childcare now come from authoritative
+  // Vicmap (not OSM), hospitals from Vicmap + OSM, everything else from OSM.
   const osmRef = getSourcesByIds(["osm-amenities"]);
+  const policeRef = getSourcesByIds(["vicmap-police"]);
+  const childcareRef = getSourcesByIds(["vicmap-foi"]);
+  const hospitalRef = getSourcesByIds(["vic-mapshare-hospitals", "osm-health"]);
+  const refsForCategory = (cat: string) =>
+    cat === "police"
+      ? policeRef
+      : cat === "childcare"
+        ? childcareRef
+        : cat === "hospital"
+          ? hospitalRef
+          : osmRef;
 
   const within: NearbyAmenity[] = [];
   for (let i = 0; i < pois.length; i++) {
@@ -254,7 +267,7 @@ export function getNearbyAmenities(
       lat: coords[1],
       lng: coords[0],
       distanceMeters: Math.round(km * 1000),
-      sourceRefs: osmRef,
+      sourceRefs: refsForCategory(category),
     });
   }
 

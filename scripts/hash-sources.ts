@@ -21,6 +21,8 @@ const SOURCE_FILES: Record<string, { dir: "raw" | "generated"; file: string }> =
   "ptv-gtfs": { dir: "generated", file: "gtfs-transport.json" },
   "osm-pt": { dir: "raw", file: "osm-pt.json" },
   "vic-mapshare-hospitals": { dir: "raw", file: "vic-hospitals.json" },
+  "vicmap-police": { dir: "raw", file: "vic-police.json" },
+  "vicmap-foi": { dir: "raw", file: "vic-childcare.json" },
   "osm-health": { dir: "raw", file: "osm-health.json" },
   "osm-post": { dir: "raw", file: "osm-post.json" },
   "osm-clinical-social": { dir: "raw", file: "osm-clinical-social.json" },

@@ -7,7 +7,6 @@ import type { Feature, FeatureCollection, Point } from "geojson";
 import { RAW, PUBLIC_DATA } from "./lib/paths.js";
 import { classifyOsmAmenity } from "../lib/walk-access.js";
 import {
-  isPolice,
   isPathologyLab,
   isNdisProvider,
   isPostOffice,
@@ -16,6 +15,7 @@ import {
   isCommunityCentre,
   dedupeFeatures,
 } from "./lib/poi-classify.js";
+import type { NamedPoint } from "./lib/vic-facilities.js";
 
 type OsmEl = {
   id?: number;
@@ -79,6 +79,24 @@ function osmToFeatures(
   return out;
 }
 
+/** Authoritative Vicmap named points (police, childcare) -> POI features. */
+function namedPointsToFeatures(
+  points: NamedPoint[],
+  pinType: string
+): Feature<Point>[] {
+  const out: Feature<Point>[] = [];
+  for (const p of points) {
+    const [lon, lat] = p.coord;
+    if (lon == null || lat == null) continue;
+    out.push({
+      type: "Feature",
+      properties: { pinType, name: p.name?.trim() || pinType.replace(/_/g, " ") },
+      geometry: { type: "Point", coordinates: [lon, lat] },
+    });
+  }
+  return out;
+}
+
 /** Everyday-amenity pins for the 15-min access context layer. */
 function amenitiesToFeatures(
   data: { elements?: OsmEl[] } | null
@@ -128,17 +146,21 @@ async function main() {
   const community = JSON.parse(
     await readFile(path.join(RAW, "osm-community.json"), "utf8").catch(() => "{}")
   );
+  // Authoritative Vicmap point facilities (CC BY 4.0) replace the sparse OSM
+  // police + childcare pins. Context only - never scored. See fetch-vic-facilities.
+  const vicPolice = JSON.parse(
+    await readFile(path.join(RAW, "vic-police.json"), "utf8").catch(() => "[]")
+  ) as NamedPoint[];
+  const vicChildcare = JSON.parse(
+    await readFile(path.join(RAW, "vic-childcare.json"), "utf8").catch(() => "[]")
+  ) as NamedPoint[];
 
   const features = dedupeFeatures([
-    ...osmToFeatures(health, "police", isPolice),
+    ...namedPointsToFeatures(vicPolice, "police"),
     ...osmToFeatures(health, "gp", isGpClinic),
     ...osmToFeatures(health, "hospital", (t) => t.amenity === "hospital"),
     ...osmToFeatures(schools, "school", (t) => t.amenity === "school"),
-    ...osmToFeatures(
-      schools,
-      "childcare",
-      (t) => /kindergarten|childcare|preschool/.test(t.amenity ?? "")
-    ),
+    ...namedPointsToFeatures(vicChildcare, "childcare"),
     ...osmToFeatures(post, "post_office", isPostOffice),
     ...osmToFeatures(clinical, "pathology_lab", isPathologyLab),
     ...osmToFeatures(clinical, "ndis_provider", isNdisProvider),

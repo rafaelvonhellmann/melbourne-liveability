@@ -75,6 +75,20 @@ export const SOURCE_REFRESH: Record<
       url: "https://enterprise.mapshare.vic.gov.au/server/rest/services/Hosted/Emergency_Services__VMFEAT_FOI_POINT_/FeatureServer/0",
     },
   },
+  "vicmap-police": {
+    cadence: "annual",
+    probe: {
+      type: "arcgis",
+      url: "https://enterprise.mapshare.vic.gov.au/server/rest/services/Hosted/Emergency_Services__VMFEAT_FOI_POINT_/FeatureServer/0",
+    },
+  },
+  "vicmap-foi": {
+    cadence: "annual",
+    probe: {
+      type: "arcgis",
+      url: "https://services-ap1.arcgis.com/P744lA0wf4LlBZ84/ArcGIS/rest/services/Vicmap_Features_of_Interest/FeatureServer/1",
+    },
+  },
   "vic-planning-bpa": {
     cadence: "annual",
     probe: {

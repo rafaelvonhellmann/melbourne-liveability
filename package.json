@@ -49,6 +49,7 @@
     "data:poi": "tsx scripts/build-poi.ts",
     "data:extra-poi": "tsx scripts/fetch-extra-poi.ts",
     "data:community-poi": "tsx scripts/fetch-community-poi.ts",
+    "data:vic-facilities": "tsx scripts/fetch-vic-facilities.ts",
     "data:social-housing": "tsx scripts/fetch-social-housing.ts",
     "data:apply-social-housing": "tsx scripts/apply-social-housing.ts",
     "data:timeseries": "tsx scripts/build-timeseries.ts",
