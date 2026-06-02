@@ -1,13 +1,16 @@
-import { DATA_PALETTE, NO_DATA_COLOR } from "@/lib/colors";
+import { DATA_PALETTE, NO_DATA_COLOR, RISK_PALETTE } from "@/lib/colors";
 import { POI_CATEGORIES } from "@/lib/poi-categories";
 
 type MapLegendProps = {
   domainLabel: string;
   visiblePins?: Record<string, boolean>;
+  /** Hazard overlay-share layer active → use the Reds risk ramp + "less/more". */
+  risk?: boolean;
 };
 
-export function MapLegend({ domainLabel, visiblePins = {} }: MapLegendProps) {
+export function MapLegend({ domainLabel, visiblePins = {}, risk = false }: MapLegendProps) {
   const activePins = POI_CATEGORIES.filter((c) => visiblePins[c.id]);
+  const ramp = risk ? RISK_PALETTE : DATA_PALETTE;
 
   return (
     <div
@@ -19,7 +22,7 @@ export function MapLegend({ domainLabel, visiblePins = {} }: MapLegendProps) {
       </div>
       <div className="mb-1 font-medium text-ink">{domainLabel}</div>
       <div className="flex gap-0.5">
-        {DATA_PALETTE.map((c) => (
+        {ramp.map((c) => (
           <span
             key={c}
             className="h-2.5 w-6 rounded-sm"
@@ -28,15 +31,29 @@ export function MapLegend({ domainLabel, visiblePins = {} }: MapLegendProps) {
         ))}
       </div>
       <div className="num mt-1 flex justify-between">
-        <span>0</span>
-        <span>100</span>
+        {risk ? (
+          <>
+            <span>Less</span>
+            <span>More</span>
+          </>
+        ) : (
+          <>
+            <span>0</span>
+            <span>100</span>
+          </>
+        )}
       </div>
+      {risk && (
+        <div className="mt-0.5 text-[10px] leading-snug">
+          Share of the area under the planning overlay — not a parcel-level result.
+        </div>
+      )}
       <div className="mt-1.5 flex items-center gap-1.5">
         <span
           className="inline-block h-2.5 w-3 rounded-sm"
           style={{ background: NO_DATA_COLOR }}
         />
-        No / low resident data
+        {risk ? "No overlay mapped" : "No / low resident data"}
       </div>
 
       {activePins.length > 0 && (

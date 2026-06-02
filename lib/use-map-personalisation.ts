@@ -37,6 +37,9 @@ export function useMapPersonalisation() {
   const [confidenceMode, setConfidenceMode] = useState(false);
   const [walkAccessMode, setWalkAccessMode] = useState(false);
   const [cyclabilityMode, setCyclabilityMode] = useState(false);
+  // Optional hazard overlay-share choropleth (bushfire / flood). Mutually
+  // exclusive with the other context layers + the scored domain choropleth.
+  const [hazardLayer, setHazardLayer] = useState<"bushfire" | "flood" | null>(null);
   const [recent, setRecent] = useState<RecentPlace[]>([]);
   const [savedChecks, setSavedChecks] = useState<SavedCheck[]>([]);
 
@@ -74,6 +77,7 @@ export function useMapPersonalisation() {
       setConfidenceMode(view.confidenceMode);
       setWalkAccessMode(false);
       setCyclabilityMode(false);
+      setHazardLayer(null);
     }
 
     // One-shot deep link (e.g. /?layer=transport from a profile metric card):
@@ -84,6 +88,7 @@ export function useMapPersonalisation() {
       setConfidenceMode(false);
       setWalkAccessMode(false);
       setCyclabilityMode(false);
+      setHazardLayer(null);
     }
   }, [searchParams]);
 
@@ -93,6 +98,7 @@ export function useMapPersonalisation() {
       if (!v) {
         setWalkAccessMode(false);
         setCyclabilityMode(false);
+        setHazardLayer(null);
       }
       return !v;
     });
@@ -102,6 +108,7 @@ export function useMapPersonalisation() {
       if (!v) {
         setConfidenceMode(false);
         setCyclabilityMode(false);
+        setHazardLayer(null);
       }
       return !v;
     });
@@ -111,8 +118,22 @@ export function useMapPersonalisation() {
       if (!v) {
         setConfidenceMode(false);
         setWalkAccessMode(false);
+        setHazardLayer(null);
       }
       return !v;
+    });
+  }, []);
+  // Hazard overlay layer: pick bushfire/flood (toggles off if already active),
+  // clearing the other mutually-exclusive context choropleths.
+  const selectHazardLayer = useCallback((layer: "bushfire" | "flood") => {
+    setHazardLayer((cur) => {
+      const next = cur === layer ? null : layer;
+      if (next) {
+        setConfidenceMode(false);
+        setWalkAccessMode(false);
+        setCyclabilityMode(false);
+      }
+      return next;
     });
   }, []);
 
@@ -224,6 +245,8 @@ export function useMapPersonalisation() {
     toggleWalkAccessMode,
     cyclabilityMode,
     toggleCyclabilityMode,
+    hazardLayer,
+    selectHazardLayer,
     recent,
     savedChecks,
     saveCheck,

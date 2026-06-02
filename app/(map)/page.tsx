@@ -61,6 +61,8 @@ export default function MapPage() {
     toggleWalkAccessMode,
     cyclabilityMode,
     toggleCyclabilityMode,
+    hazardLayer,
+    selectHazardLayer,
     savedChecks,
     saveCheck,
     removeCheck,
@@ -514,32 +516,42 @@ export default function MapPage() {
     </div>
   );
 
-  const legendLabel = walkAccessMode
-    ? "15-min walk access (context, not in score)"
-    : cyclabilityMode
-      ? "Cyclability (context, not in score)"
-      : confidenceMode
-        ? "Data confidence (context, not in score)"
-        : DOMAIN_LABELS[activeDomain];
+  const legendLabel = hazardLayer === "bushfire"
+    ? "Bushfire-prone overlay share (context)"
+    : hazardLayer === "flood"
+      ? "Flood (LSIO) overlay share (context)"
+      : walkAccessMode
+        ? "15-min walk access (context, not in score)"
+        : cyclabilityMode
+          ? "Cyclability (context, not in score)"
+          : confidenceMode
+            ? "Data confidence (context, not in score)"
+            : DOMAIN_LABELS[activeDomain];
 
   // The GeoJSON property currently painted on the choropleth — feeds the map
   // hover tooltip so it always reports the value the user is looking at.
-  const paintedProp = walkAccessMode
-    ? "pct_walkaccess"
-    : cyclabilityMode
-      ? "pct_cyclability"
-      : confidenceMode
-        ? "pct_confidence"
-        : domainProperty(activeDomain);
+  const paintedProp = hazardLayer
+    ? `${hazardLayer}_share`
+    : walkAccessMode
+      ? "pct_walkaccess"
+      : cyclabilityMode
+        ? "pct_cyclability"
+        : confidenceMode
+          ? "pct_confidence"
+          : domainProperty(activeDomain);
 
   // Short label (no "context" suffix) for the selected-area mini-summary.
-  const activeLayerLabel = walkAccessMode
-    ? "15-min walk access"
-    : cyclabilityMode
-      ? "Cyclability"
-      : confidenceMode
-        ? "Data confidence"
-        : DOMAIN_LABELS[activeDomain];
+  const activeLayerLabel = hazardLayer === "bushfire"
+    ? "Bushfire overlay"
+    : hazardLayer === "flood"
+      ? "Flood overlay"
+      : walkAccessMode
+        ? "15-min walk access"
+        : cyclabilityMode
+          ? "Cyclability"
+          : confidenceMode
+            ? "Data confidence"
+            : DOMAIN_LABELS[activeDomain];
 
   const isHomeBuyer = interestView === "homeBuyer";
 
@@ -561,6 +573,7 @@ export default function MapPage() {
             confidenceMode={confidenceMode}
             walkAccessMode={walkAccessMode}
             cyclabilityMode={cyclabilityMode}
+            hazardLayer={hazardLayer}
             visiblePins={visiblePins}
             focusTarget={focusTarget}
             selectedSlug={selected?.slug ?? null}
@@ -649,12 +662,14 @@ export default function MapPage() {
               onWalkAccessToggle={toggleWalkAccessMode}
               cyclabilityMode={cyclabilityMode}
               onCyclabilityToggle={toggleCyclabilityMode}
+              hazardLayer={hazardLayer}
+              onHazardSelect={selectHazardLayer}
             />
           </div>
 
           {/* Legend card (bottom-left) */}
           <div className="absolute bottom-4 left-4 z-10 hidden max-w-[16rem] space-y-2 md:block">
-            <MapLegend domainLabel={legendLabel} visiblePins={visiblePins} />
+            <MapLegend domainLabel={legendLabel} visiblePins={visiblePins} risk={!!hazardLayer} />
             <Attribution />
           </div>
 
@@ -770,8 +785,10 @@ export default function MapPage() {
               onWalkAccessToggle={toggleWalkAccessMode}
               cyclabilityMode={cyclabilityMode}
               onCyclabilityToggle={toggleCyclabilityMode}
+              hazardLayer={hazardLayer}
+              onHazardSelect={selectHazardLayer}
             />
-            <MapLegend domainLabel={legendLabel} visiblePins={visiblePins} />
+            <MapLegend domainLabel={legendLabel} visiblePins={visiblePins} risk={!!hazardLayer} />
           </div>
         }
         weights={

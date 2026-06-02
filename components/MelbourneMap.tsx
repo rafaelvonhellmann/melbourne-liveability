@@ -4,7 +4,11 @@ import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import type { DomainId } from "@/lib/types";
 import { MELBOURNE_BOUNDS, MELBOURNE_CENTER, MELBOURNE_MAX_BOUNDS } from "@/lib/region";
-import { choroplethFillColor, choroplethFillColorByProp } from "@/lib/map-expressions";
+import {
+  choroplethFillColor,
+  choroplethFillColorByProp,
+  riskFillColorByProp,
+} from "@/lib/map-expressions";
 import { withBase } from "@/lib/asset-path";
 import { poiCircleColorExpression } from "@/lib/poi-categories";
 import { buildPoiPopupHtml, escapeHtml, type PoiFeatureProps } from "@/lib/poi-feature";
@@ -38,6 +42,8 @@ type MelbourneMapProps = {
   confidenceMode?: boolean;
   walkAccessMode?: boolean;
   cyclabilityMode?: boolean;
+  /** Optional hazard overlay-share choropleth (Reds ramp), or null for none. */
+  hazardLayer?: "bushfire" | "flood" | null;
   visiblePins?: Record<string, boolean>;
   onPlaceSelect?: (props: { slug?: string; name?: string; sa2Code?: string }) => void;
   /**
@@ -75,8 +81,10 @@ function fillColorFor(
   activeDomain: DomainId,
   confidenceMode: boolean,
   walkAccessMode: boolean,
-  cyclabilityMode: boolean
+  cyclabilityMode: boolean,
+  hazardLayer: "bushfire" | "flood" | null
 ): unknown[] {
+  if (hazardLayer) return riskFillColorByProp(`${hazardLayer}_share`);
   if (walkAccessMode) return choroplethFillColorByProp("pct_walkaccess");
   if (cyclabilityMode) return choroplethFillColorByProp("pct_cyclability");
   if (confidenceMode) return choroplethFillColorByProp("pct_confidence");
@@ -89,6 +97,7 @@ export function MelbourneMap({
   confidenceMode = false,
   walkAccessMode = false,
   cyclabilityMode = false,
+  hazardLayer = null,
   visiblePins = {},
   onPlaceSelect,
   focusTarget = null,
@@ -163,7 +172,8 @@ export function MelbourneMap({
             activeDomain,
             confidenceMode,
             walkAccessMode,
-            cyclabilityMode
+            cyclabilityMode,
+            hazardLayer
           ) as maplibregl.ExpressionSpecification,
           "fill-opacity": 0.72,
         },
@@ -448,7 +458,8 @@ export function MelbourneMap({
       activeDomain,
       confidenceMode,
       walkAccessMode,
-      cyclabilityMode
+      cyclabilityMode,
+      hazardLayer
     ) as maplibregl.ExpressionSpecification;
     if (!map.isStyleLoaded()) {
       map.once("idle", () => {
@@ -459,7 +470,7 @@ export function MelbourneMap({
       return;
     }
     map.setPaintProperty("sa2-fill", "fill-color", color);
-  }, [activeDomain, confidenceMode, walkAccessMode, cyclabilityMode]);
+  }, [activeDomain, confidenceMode, walkAccessMode, cyclabilityMode, hazardLayer]);
 
   useEffect(() => {
     const map = mapRef.current;

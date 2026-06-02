@@ -18,6 +18,8 @@ type LayerToggleProps = {
   onWalkAccessToggle?: () => void;
   cyclabilityMode?: boolean;
   onCyclabilityToggle?: () => void;
+  hazardLayer?: "bushfire" | "flood" | null;
+  onHazardSelect?: (layer: "bushfire" | "flood") => void;
 };
 
 export function LayerToggle({
@@ -32,19 +34,26 @@ export function LayerToggle({
   onWalkAccessToggle,
   cyclabilityMode = false,
   onCyclabilityToggle,
+  hazardLayer = null,
+  onHazardSelect,
 }: LayerToggleProps) {
   // Which layer's explainer to show (hover or keyboard-focus of its info button).
   const [describe, setDescribe] = useState<DomainId | null>(null);
   const activePinCount = POI_CATEGORIES.filter(
     (c) => visiblePins[c.id]
   ).length;
-  const activeContext = walkAccessMode || cyclabilityMode || confidenceMode;
+  const activeContext =
+    walkAccessMode || cyclabilityMode || confidenceMode || !!hazardLayer;
   const activeLabel = activeContext
-    ? walkAccessMode
-      ? "15-min walk access"
-      : cyclabilityMode
-        ? "Cyclability"
-        : "Data confidence"
+    ? hazardLayer === "bushfire"
+      ? "Bushfire overlay"
+      : hazardLayer === "flood"
+        ? "Flood overlay"
+        : walkAccessMode
+          ? "15-min walk access"
+          : cyclabilityMode
+            ? "Cyclability"
+            : "Data confidence"
     : (getDomain(activeDomain)?.label ?? activeDomain);
   return (
     <div
@@ -156,7 +165,7 @@ export function LayerToggle({
         </ul>
       </div>
 
-      {(onConfidenceToggle || onWalkAccessToggle || onCyclabilityToggle) && (
+      {(onConfidenceToggle || onWalkAccessToggle || onCyclabilityToggle || onHazardSelect) && (
         <div className="mt-2.5 space-y-1.5 border-t border-surface-border pt-2.5">
           <div className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
             Context layers
@@ -196,6 +205,30 @@ export function LayerToggle({
               Data confidence
               <span className="text-xs text-ink-muted">(not in score)</span>
             </label>
+          )}
+          {onHazardSelect && (
+            <>
+              <label className="flex cursor-pointer items-center gap-2 px-1 text-sm text-ink">
+                <input
+                  type="checkbox"
+                  checked={hazardLayer === "bushfire"}
+                  onChange={() => onHazardSelect("bushfire")}
+                  className="rounded border-surface-border accent-accent"
+                />
+                Bushfire risk
+                <span className="text-xs text-ink-muted">(overlay share)</span>
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 px-1 text-sm text-ink">
+                <input
+                  type="checkbox"
+                  checked={hazardLayer === "flood"}
+                  onChange={() => onHazardSelect("flood")}
+                  className="rounded border-surface-border accent-accent"
+                />
+                Flood risk
+                <span className="text-xs text-ink-muted">(overlay share)</span>
+              </label>
+            </>
           )}
         </div>
       )}
