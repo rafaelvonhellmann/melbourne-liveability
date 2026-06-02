@@ -198,6 +198,23 @@ export default function MapPage() {
     void buildReportFor(lngLat, sa2);
   };
 
+  // Search-driven location (keyboard-accessible alternative to clicking the map):
+  // in buyer mode, drop the pin at the suburb/SA2 centroid; else pan the map.
+  const selectFromSearch = (slug: string) => {
+    const p = getPlaceBySlug(places, slug);
+    if (!p) return;
+    if (!buyerMode) {
+      focusPlace(p);
+      return;
+    }
+    const c = p.centroid as [number, number];
+    setBuyerPin(c);
+    setBuyerSa2({ slug: p.slug, sa2Code: p.sa2Code });
+    setBuyerReport(null);
+    syncBuyerUrl(true, c);
+    void buildReportFor(c, { slug: p.slug, sa2Code: p.sa2Code });
+  };
+
   // Restore a pin from a shared URL (no map click → resolve the SA2 from geometry).
   const restorePin = async (lngLat: [number, number]) => {
     setBuyerPin(lngLat);
@@ -322,7 +339,8 @@ export default function MapPage() {
       </div>
       {!buyerPin ? (
         <p className="rounded-lg border border-dashed border-surface-border bg-surface px-3 py-4 text-sm text-ink-muted">
-          Click the map to drop a pin on a property and get a second-opinion report.
+          Click the map — or search a suburb in the top bar — to drop a pin and get a
+          second-opinion report.
         </p>
       ) : !buyerReport ? (
         <p className="text-sm text-ink-muted">Computing what&apos;s nearby…</p>
@@ -425,10 +443,7 @@ export default function MapPage() {
     <main className="flex h-screen w-screen flex-col overflow-hidden bg-bg text-ink">
       <TopBar
         searchIndex={searchIndex}
-        onSearchSelect={(slug) => {
-          const p = getPlaceBySlug(places, slug);
-          if (p) focusPlace(p);
-        }}
+        onSearchSelect={selectFromSearch}
       />
 
       <OnboardingModal onPick={selectInterestView} />
@@ -604,10 +619,7 @@ export default function MapPage() {
           <div className="space-y-3">
             <SearchBox
               index={searchIndex}
-              onSelect={(e) => {
-                const p = getPlaceBySlug(places, e.slug);
-                if (p) focusPlace(p);
-              }}
+              onSelect={(e) => selectFromSearch(e.slug)}
             />
             <p className="text-xs leading-snug text-ink-muted">
               Search a suburb or data area (SA2) to jump the map there.
