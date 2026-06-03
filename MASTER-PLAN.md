@@ -44,8 +44,8 @@ silently drops that layer (this regressed pins 37,723 -> 32,010 on 2026-06).
 |---|------|--------------|
 | DONE | **Declutter buyer report** (#7) | Shipped: per-finding Source/Confidence/Geography -> PDF-only (`e3ce360`); engine `tone:"concern"` drives a "What to weigh up" negatives section vs neutral "Things to verify" (`43e02e5`). Copy can iterate after founder eyeballs it live. |
 | 1 | DONE - **Conservation / restriction overlays** (ESO/SLO/VPO/EMO/EAO/PAO) | Shipped `b993c92`. 6 Vicplan overlays (ids verified live) as a sourced/caveated buyer finding (PAO/EAO = high severity -> before-you-offer checklist) + area-card panel; normalize inline + data-refresh.yml wired. |
-| NEXT (2) | **Social-anchor scoring** | The differentiator. User drops work / school / family anchors, each property scored by proximity + commute. Reuse geocode + distance (noise/transit already use them). Extends `lib/buyer-fit.ts`. |
-| 3 | **Sun-path SVG** | Founder's visual ask. Honest sun-path diagram from `lib/sun.ts` - NOT a 3D shadow map (liability). Replaces the WSW/degrees copy that confused users. |
+| 2 | DONE - **Social-anchor scoring** | Shipped (4 commits). Work/school/family anchors added in the profile by geocoded address -> straight-line distance + plain-English band in the report ("Distance to your places") + purple map pins with dashed lines to the pin. `lib/anchors.ts`; context only, never scored. The NestCheck wedge. |
+| NEXT (3) | **Sun-path SVG** | Founder's visual ask. Honest sun-path diagram from `lib/sun.ts` - NOT a 3D shadow map (liability). Replaces the WSW/degrees copy that confused users. |
 | 4 | **Transit lines near pin** | rail + tram cheap (reuse `noise-lines.json` kind: rail/tram); bus needs GTFS `shapes.txt` (heavier follow-up). |
 | 5 | **School catchments** | data.vic "Victorian Government School Zones" - EPSG:3111 polys -> reproject -> simplify -> client pin-in-polygon. Heaviest; do it with the founder available (reprojection is error-prone). |
 | 6 | **Big Build pin-layer** | curated `major-projects.json` -> map pins. |
@@ -58,6 +58,7 @@ silently drops that layer (this regressed pins 37,723 -> 32,010 on 2026-06).
 | + | **Horizon lens** (future-risk theme) | Forward-looking layers for a 5-25yr purchase: sea-level rise + coastal inundation (DEECA Future Coasts scenarios), VIF population/dwelling projections, climate flood/fire trend, Big Build proximity (future transit), upzoning / activity-centre densification. Label everything projections/scenarios with the same source+caveat discipline. Sea-level rise = first add (best source-to-value). |
 | + | **Water retailer** | Which retailer services the SA2 (Yarra Valley / South East / Greater Western Water). Cheap context. Skip generic water-quality (metro is uniform/regulated; localised contamination already via the EAO overlay). |
 | + | **Aged care / retirement pins** | OSM `social_facility=nursing_home/assisted_living` + retirement villages. Context pins (downsizers + care-near-parents). SKIP SDA / shared-support (dignity + sparse, same call as NDIS). |
+| + | **"What's being built" (development pipeline)** | ABS Building Approvals (cat 8731): dwelling approvals by type (house / townhouse / apartment), LGA-level densification trend = the headline "what's coming" layer. Also surface the current mix we already hold (`apartmentPct` / `renterPct`). Median lot size from Vicmap cadastre (OPEN, heavier compute) second. Frame as BUILT FORM + supply, NEVER "type of neighbours" (dignity). No clean open feed for future council permits - cover forward via Big Build + activity centres. |
 
 ### Shipped this session (`b9c56b1`..`a0a975b`)
 
