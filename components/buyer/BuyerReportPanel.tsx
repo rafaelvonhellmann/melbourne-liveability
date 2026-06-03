@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Printer, X, ShieldAlert, CheckCircle2, HelpCircle, Info, Bookmark, BookmarkCheck } from "lucide-react";
 import type { BuyerReport, BuyerFinding, BuyerConfidence, BuyerGeography } from "@/lib/buyer-report";
+import { anchorKindLabel, bandLabel } from "@/lib/anchors";
 import { AMENITY_GROUPS } from "@/lib/buyer-report";
 import { formatSourceDate } from "@/lib/source-manifest";
 import { withBase } from "@/lib/asset-path";
@@ -228,6 +229,36 @@ export function BuyerReportPanel({
             <p className="mt-2 text-[11px] leading-snug text-ink-muted">
               Based on your saved preferences - these re-frame the facts, they never change
               the score, and a flag means &ldquo;verify&rdquo;, not a verdict.
+            </p>
+          </Section>
+        )}
+
+        {/* 1c. Distance to the buyer's real-life anchors (work/school/family).
+            The wedge a suburb-score can't match - straight-line, never scored. */}
+        {report.anchorDistances && report.anchorDistances.length > 0 && (
+          <Section title="Distance to your places">
+            <ul className="space-y-1.5">
+              {report.anchorDistances.map((d) => (
+                <li
+                  key={d.anchor.id}
+                  className="flex items-center justify-between gap-2 rounded-md border border-surface-border bg-surface px-2.5 py-1.5"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm text-ink">{d.anchor.label}</span>
+                    <span className="block text-[11px] uppercase tracking-wide text-ink-muted">
+                      {anchorKindLabel(d.anchor.kind)}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-right">
+                    <span className="num block text-sm font-semibold text-ink">{d.km} km</span>
+                    <span className="block text-[11px] text-ink-muted">{bandLabel(d.band)}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-[11px] leading-snug text-ink-muted">
+              Straight-line distance from this pin to your saved places - not drive or
+              public-transport time. Verify the real commute at peak hour.
             </p>
           </Section>
         )}
