@@ -46,6 +46,7 @@ import { busiestRoadNear, type TrafficSegment } from "./traffic";
 import { nearestAirSite, type EpaAirSite } from "./epa-air";
 import { activityCentreAt, type ActivityCentreFeature } from "./activity-centres";
 import { formatMonth } from "./approvals";
+import type { ParcelInfo } from "./parcel";
 
 // ---- Types (stable public contract) ---------------------------------------
 
@@ -461,6 +462,8 @@ export interface BuildBuyerReportInput {
   epaAir?: EpaAirSite[];
   /** Activity Centre Zone polygons for the "in a designated activity centre" finding. Lazy-loaded; pin mode. */
   activityCentres?: ActivityCentreFeature[];
+  /** Parcel info at the pin (runtime Vicmap WFS lookup, client-side) for the lot-size finding. */
+  parcel?: ParcelInfo | null;
   /**
    * Government school zones (primary + secondary Year 7) for the address-level
    * zone match. Lazy-loaded client-side; resolved only in pin mode (never from
@@ -1235,6 +1238,29 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       caveat:
         "The Activity Centre Zone is the statutory upzoning instrument - it covers only centres that have adopted it (not every Plan Melbourne centre), and built-form controls vary by schedule.",
       sourceRefs: getSourcesByIds(["vic-activity-centres"]),
+    });
+  }
+
+  // 5l) Lot size (context, never scored). Runtime parcel area at the pin from the
+  //     Vicmap parcel WFS (turf-derived; a single parcel, not merged lots).
+  const parcel = input.parcel;
+  if (parcel && parcel.areaM2 > 0) {
+    const m2 = Math.round(parcel.areaM2);
+    findings.push({
+      id: "lot-size",
+      kind: "neutral",
+      severity: "info",
+      title: "Approximate lot size",
+      summary: `The parcel at this point is about ${m2.toLocaleString("en-AU")} m2${parcel.lot ? ` (Lot ${parcel.lot}${parcel.plan ? ` ${parcel.plan}` : ""})` : ""}.`,
+      whyItMatters:
+        "Lot size shapes what you can build, extend or subdivide, and underpins the land value beneath the home.",
+      verifyAction:
+        "Confirm the exact area and boundaries on the title and plan of subdivision before you offer.",
+      confidence: "medium",
+      geography: "pin",
+      caveat:
+        "Area is geometry-derived from the Vicmap parcel boundary (CC BY 4.0) at the dropped point - indicative, a SINGLE parcel (not merged or adjoining lots), and not a substitute for the title.",
+      sourceRefs: getSourcesByIds(["vic-parcel"]),
     });
   }
 

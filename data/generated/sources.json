@@ -307,6 +307,15 @@
     "sha256": "a6cbbbdc26bdab74759ade807c2ad556791a63159b2bfd13fc7f8707fcc98151"
   },
   {
+    "id": "vic-parcel",
+    "name": "Vicmap parcel boundaries - lot size at a point (runtime WFS query, area geometry-derived)",
+    "url": "https://www.land.vic.gov.au/maps-and-spatial/spatial-data/vicmap-catalogue",
+    "licence": "CC BY 4.0 (Victoria)",
+    "period": "current",
+    "derived": true,
+    "sha256": ""
+  },
+  {
     "id": "epa-air",
     "name": "EPA Victoria Air Monitoring (AirWatch) - nearest fixed site + latest health-advice band",
     "url": "https://www.epa.vic.gov.au/for-community/airwatch",

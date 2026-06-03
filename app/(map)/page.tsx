@@ -35,6 +35,7 @@ import type { SchoolZonesData } from "@/lib/school-zones";
 import type { TrafficSegment } from "@/lib/traffic";
 import type { EpaAirSite } from "@/lib/epa-air";
 import type { ActivityCentreFeature } from "@/lib/activity-centres";
+import { fetchParcelAreaAt } from "@/lib/parcel";
 import type { Station } from "@/lib/transit";
 import { findSa2ForPoint } from "@/lib/buyer-location";
 import { MAJOR_PROJECTS } from "@/lib/major-projects";
@@ -351,6 +352,7 @@ export default function MapPage() {
       ensureEpaAir().catch(() => [] as EpaAirSite[]),
       ensureActivityCentres().catch(() => [] as ActivityCentreFeature[]),
     ]);
+    const parcel = await fetchParcelAreaAt(lngLat[0], lngLat[1]).catch(() => null);
     const place = sa2
       ? places.find((p) => p.slug === sa2.slug || p.sa2Code === sa2.sa2Code) ?? null
       : null;
@@ -367,6 +369,7 @@ export default function MapPage() {
         traffic,
         epaAir,
         activityCentres,
+        parcel,
         nearbyAreas: areaCentroids,
         majorProjects: MAJOR_PROJECTS,
         profile: profileRef.current,
@@ -406,6 +409,7 @@ export default function MapPage() {
       ensureEpaAir().catch(() => [] as EpaAirSite[]),
       ensureActivityCentres().catch(() => [] as ActivityCentreFeature[]),
     ]);
+    const parcel = await fetchParcelAreaAt(pin[0], pin[1], ctrl.signal).catch(() => null);
     if (ctrl.signal.aborted || buyerPinRef.current !== pin) return;
     setBuyerReport(
       buildBuyerReport({
@@ -421,6 +425,7 @@ export default function MapPage() {
         traffic,
         epaAir,
         activityCentres,
+        parcel,
         nearbyAreas: areaCentroids,
         majorProjects: MAJOR_PROJECTS,
         profile: profileRef.current,

@@ -148,6 +148,10 @@ export const SOURCE_REFRESH: Record<
     cadence: "annual",
     probe: { type: "none" },
   },
+  "vic-parcel": {
+    cadence: "annual",
+    probe: { type: "none" },
+  },
   "epa-air": {
     cadence: "rolling",
     probe: { type: "none" },
