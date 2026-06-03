@@ -8,7 +8,6 @@ import { RAW, PUBLIC_DATA } from "./lib/paths.js";
 import { classifyOsmAmenity } from "../lib/walk-access.js";
 import {
   isPathologyLab,
-  isNdisProvider,
   isPostOffice,
   isGpClinic,
   isPlaceOfWorship,
@@ -166,7 +165,6 @@ async function main() {
     ...namedPointsToFeatures(vicChildcare, "childcare"),
     ...osmToFeatures(post, "post_office", isPostOffice),
     ...osmToFeatures(clinical, "pathology_lab", isPathologyLab),
-    ...osmToFeatures(clinical, "ndis_provider", isNdisProvider),
     ...osmToFeatures(finance, "bank", (t) => t.amenity === "bank"),
     ...osmToFeatures(eduExtra, "tafe", (t) => t.amenity === "college"),
     ...osmToFeatures(eduExtra, "university", (t) => t.amenity === "university"),

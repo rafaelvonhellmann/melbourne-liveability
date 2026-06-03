@@ -21,7 +21,6 @@ export type PoiCategoryId =
   | "gp"
   | "pharmacy"
   | "pathology_lab"
-  | "ndis_provider"
   | "police"
   | "post_office"
   | "school"
@@ -54,7 +53,6 @@ export const POI_CATEGORIES: PoiCategory[] = [
   { id: "gp", label: "GPs / clinics", color: "#377EB8" },
   { id: "pharmacy", label: "Pharmacies", color: "#1B9E77" },
   { id: "pathology_lab", label: "Pathology / labs", color: "#6A3D9A" },
-  { id: "ndis_provider", label: "NDIS / disability services", color: "#B15928" },
   { id: "police", label: "Police", color: "#7570B3" },
   { id: "post_office", label: "Post offices / LPO", color: "#984EA3" },
   { id: "school", label: "Schools", color: "#E7298A" },
@@ -72,6 +70,26 @@ export const POI_CATEGORIES: PoiCategory[] = [
 ];
 
 export const POI_CATEGORY_IDS: PoiCategoryId[] = POI_CATEGORIES.map((c) => c.id);
+
+/**
+ * Display grouping for the layer control - keeps the pin list scannable instead
+ * of one flat list of ~18 toggles. Hospitals are deliberately their own group
+ * (different scale, people look for them specifically); GP/pharmacy/pathology are
+ * aggregated under "Health services".
+ */
+export const POI_GROUPS: { label: string; ids: PoiCategoryId[] }[] = [
+  { label: "Hospitals", ids: ["hospital"] },
+  { label: "Health services", ids: ["gp", "pharmacy", "pathology_lab"] },
+  { label: "Education", ids: ["childcare", "school", "tafe", "university"] },
+  {
+    label: "Daily needs",
+    ids: ["supermarket", "bank", "post_office", "cafe_restaurant", "gym_leisure"],
+  },
+  { label: "Community", ids: ["place_of_worship", "community_centre"] },
+  { label: "Getting around", ids: ["ev_charging"] },
+  { label: "Safety", ids: ["police"] },
+  { label: "Parks & green", ids: ["park"] },
+];
 
 export const POI_CATEGORY_BY_ID: Record<PoiCategoryId, PoiCategory> =
   Object.fromEntries(POI_CATEGORIES.map((c) => [c.id, c])) as Record<

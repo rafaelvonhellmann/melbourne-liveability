@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Layers, MapPin, Info } from "lucide-react";
 import { DOMAIN_REGISTRY, getDomain } from "@/lib/domains";
 import type { DomainId } from "@/lib/types";
-import { POI_CATEGORIES } from "@/lib/poi-categories";
+import { POI_CATEGORIES, POI_GROUPS, POI_CATEGORY_BY_ID } from "@/lib/poi-categories";
 
 type LayerToggleProps = {
   activeDomain: DomainId;
@@ -150,29 +150,40 @@ export function LayerToggle({
             None shown. Tick a category to drop its pins on the map.
           </p>
         )}
-        <ul className="space-y-0.5">
-          {POI_CATEGORIES.map((cat) => {
-            const on = visiblePins[cat.id] ?? false;
-            return (
-              <li key={cat.id}>
-                <label className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-sm text-ink hover:bg-surface-sunken">
-                  <input
-                    type="checkbox"
-                    checked={on}
-                    onChange={() => onPinToggle(cat.id)}
-                    className="rounded border-surface-border accent-accent"
-                  />
-                  <span
-                    className="h-3 w-3 shrink-0 rounded-full border border-white shadow-[0_0_0_1px_rgba(0,0,0,0.12)]"
-                    style={{ background: cat.color }}
-                    aria-hidden
-                  />
-                  <span className="flex-1">{cat.label}</span>
-                </label>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="space-y-1.5">
+          {POI_GROUPS.map((group) => (
+            <div key={group.label}>
+              <div className="px-1 text-[10px] font-semibold uppercase tracking-wide text-ink-muted/80">
+                {group.label}
+              </div>
+              <ul className="space-y-0.5">
+                {group.ids.map((id) => {
+                  const cat = POI_CATEGORY_BY_ID[id];
+                  if (!cat) return null;
+                  const on = visiblePins[cat.id] ?? false;
+                  return (
+                    <li key={cat.id}>
+                      <label className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-sm text-ink hover:bg-surface-sunken">
+                        <input
+                          type="checkbox"
+                          checked={on}
+                          onChange={() => onPinToggle(cat.id)}
+                          className="rounded border-surface-border accent-accent"
+                        />
+                        <span
+                          className="h-3 w-3 shrink-0 rounded-full border border-white shadow-[0_0_0_1px_rgba(0,0,0,0.12)]"
+                          style={{ background: cat.color }}
+                          aria-hidden
+                        />
+                        <span className="flex-1">{cat.label}</span>
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
       </div>
 
       {(onConfidenceToggle ||
