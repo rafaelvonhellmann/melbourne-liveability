@@ -479,17 +479,25 @@ function FindingCard({ f }: { f: BuyerFinding }) {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-ink">{f.title}</p>
           <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">{f.summary}</p>
+          {/* "Why it matters" is detail - keep the on-screen card direct and
+              show it only in the printable PDF. */}
           {f.whyItMatters && (
-            <p className="mt-1 text-[11px] leading-snug text-ink-muted">
+            <p className="mt-1 hidden text-[11px] leading-snug text-ink-muted print:block">
               <span className="font-medium text-ink">Why it matters:</span> {f.whyItMatters}
             </p>
           )}
+          {/* The action stays on screen - it's the useful, direct part. */}
           {f.verifyAction && (
             <p className="mt-1 text-[11px] leading-snug text-ink-muted">
               <span className="font-medium text-ink">Verify:</span> {f.verifyAction}
             </p>
           )}
-          {f.caveat && <p className="mt-1 text-[11px] italic leading-snug text-ink-muted">{f.caveat}</p>}
+          {/* Full caveat lives in the PDF + methodology; on screen it's noise. */}
+          {f.caveat && (
+            <p className="mt-1 hidden text-[11px] italic leading-snug text-ink-muted print:block">
+              {f.caveat}
+            </p>
+          )}
           <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] uppercase tracking-wide text-ink-muted">
             <span>Confidence: {f.confidence}</span>
             <span>Geography: {GEO_LABEL[f.geography]}</span>

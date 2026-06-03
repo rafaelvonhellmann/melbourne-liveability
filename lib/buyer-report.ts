@@ -701,21 +701,21 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
   //     real due-diligence factor.
   if (hasPoint) {
     const sun = sunAspect(input.lat as number);
-    const h = (n: number) => n.toFixed(1);
+    const sunny = sun.sunSide === "north" ? "North" : "South";
     findings.push({
       id: "sun-aspect",
       kind: "neutral",
       severity: "info",
       title: "Sun & aspect",
-      summary: `In summer the sun rises in the ${sun.summer.sunrise} and sets in the ${sun.summer.sunset} - a long ~${h(sun.summer.dayHours)}-hour day, climbing to ${Math.round(sun.summer.noonElevation)}° at noon. In winter it rises ${sun.winter.sunrise}, sets ${sun.winter.sunset} (~${h(sun.winter.dayHours)} hours, only ${Math.round(sun.winter.noonElevation)}° high). ${sun.sunSide === "north" ? "North" : "South"}-facing rooms and outdoor space get the most sun; morning sun comes from the east, afternoon from the west.`,
+      summary: `${sunny}-facing rooms and yards get the most sun. For morning sun, look for east-facing living areas; west-facing rooms get strong, hot afternoon sun in summer. Winter sun sits low, so buildings or trees to the ${sunny.toLowerCase()} can overshadow.`,
       whyItMatters:
-        "Aspect - which way the property faces - drives natural light, winter warmth and running costs, and it can't be changed.",
+        "Which way the main rooms face decides natural light and winter warmth - and it can't be changed.",
       verifyAction:
-        "Walk the property at the time of day you'd use the main rooms, and check which windows face the sunny side.",
+        "Visit at the time of day you'd use the main rooms and check which way they face.",
       confidence: "high",
       geography: "pin",
       caveat:
-        "Computed from the sun's geometry at this latitude (so it's the same along the street); trees, hills and neighbouring buildings still cast real shadows.",
+        "Based on the sun's path at this latitude (same for the whole street). Actual light depends on the dwelling's orientation, windows, trees and nearby buildings. Full sun-path detail is in the methodology.",
       sourceRefs: [METHODOLOGY_REF],
     });
   }
@@ -810,29 +810,42 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       id: "hazard-overlays",
       kind: "neutral",
       severity: "info",
-      title: "No significant bushfire or flood overlay mapped here",
+      title: "Little bushfire or flood overlay here",
       summary:
-        "This SA2 has little or no bushfire-prone or flood (LSIO) planning overlay. Overlays still apply parcel by parcel, so confirm the exact property if it matters to you.",
+        "Almost none of this area is under a bushfire or flood planning overlay. Overlays still apply parcel by parcel - confirm the exact property.",
       confidence: "medium",
       geography: "sa2",
       caveat:
         "Absence of a mapped planning overlay is not a guarantee - flood or fire risk can exist without one.",
       sourceRefs: getSourcesByIds(["vic-planning-bpa", "vic-planning-flood"]),
     });
-  } else {
+  } else if (hazardBits.length) {
     findings.push({
       id: "hazard-overlays",
       kind: elevatedHazard ? "red_flag" : "verify",
       severity: elevatedHazard ? "high" : "medium",
-      title: "Check hazard and planning overlays",
-      summary: hazardBits.length
-        ? `Of this SA2, ${hazardBits.join(" and ")}. Whether THIS parcel is affected needs a parcel-level check - pin-level overlay matching is not yet available in this MVP.`
-        : "Hazard/planning overlay checks matter for this location, but exact pin-level overlay matching is not yet available in this MVP.",
+      title: "Check bushfire / flood overlays",
+      summary: `Of this area, ${hazardBits.join(" and ")}. Confirm whether this exact parcel is affected.`,
       whyItMatters: "Overlays drive building controls, insurance cost and what you can do with the land.",
       verifyAction:
-        "Check the relevant council planning certificate, VicPlan and an insurance quote before buying.",
-      confidence: hazardBits.length ? "medium" : "unknown",
-      geography: hazardBits.length ? "sa2" : "unknown",
+        "Check the council planning certificate, VicPlan and an insurance quote before buying.",
+      confidence: "medium",
+      geography: "sa2",
+      sourceRefs: getSourcesByIds(["vic-planning-bpa", "vic-planning-flood"]),
+    });
+  } else {
+    // No overlay data matched (e.g. off-coverage). A known gap, not a prominent
+    // "verify" - keep it out of the before-you-offer priority list.
+    findings.push({
+      id: "hazard-overlays",
+      kind: "unavailable",
+      severity: "info",
+      title: "Bushfire / flood overlays not matched here",
+      summary: "We could not match bushfire or flood overlays to this point.",
+      verifyAction: "Check the council planning certificate and VicPlan for the exact address.",
+      confidence: "unknown",
+      geography: "unknown",
+      caveat: "Absence of a mapped overlay is not a guarantee - risk can exist without one.",
       sourceRefs: getSourcesByIds(["vic-planning-bpa", "vic-planning-flood"]),
     });
   }
@@ -890,13 +903,12 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
   // 7) School zones (catchment data NOT available).
   findings.push({
     id: "school-zones",
-    kind: "verify",
-    severity: "medium",
-    title: "Verify school zones directly",
-    summary:
-      "School zones can materially affect buyer decisions, but official catchment matching is not included in this MVP.",
+    kind: "unavailable",
+    severity: "info",
+    title: "School zones not included yet",
+    summary: "Official school-catchment matching is not in this version.",
     verifyAction:
-      "Confirm the address using the official Victorian school-zone tool before relying on school access.",
+      "Confirm the address on the official Victorian school-zone tool if schools matter to you.",
     confidence: "unknown",
     geography: "unknown",
     caveat: "We do not hold official school-catchment boundaries; zones change yearly and must be checked at the exact address.",

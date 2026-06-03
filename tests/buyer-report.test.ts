@@ -257,7 +257,9 @@ describe("buildBuyerReport", () => {
     expect(price?.confidence).toBe("unknown");
 
     const school = report.findings.find((f) => f.id === "school-zones");
-    expect(school?.kind).toBe("verify");
+    // School catchments are a known data gap, surfaced as "unavailable" (not a
+    // prominent verify) so it stays out of the before-you-offer priority list.
+    expect(school?.kind).toBe("unavailable");
     expect(school?.confidence).toBe("unknown");
 
     // Never claims a definitive parcel-level flood/bushfire status.
@@ -404,7 +406,7 @@ describe("buildBuyerReport hazard conditionality", () => {
     const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: placeWithHazards(0, 0), pois: POIS, generatedAt: "t" });
     const hz = r.findings.find((f) => f.id === "hazard-overlays");
     expect(hz?.kind).toBe("neutral");
-    expect(hz?.title).toMatch(/no significant/i);
+    expect(hz?.title).toMatch(/little|no significant/i);
   });
 
   it("raises a red_flag when overlay share is elevated", () => {
