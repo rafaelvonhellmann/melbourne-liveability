@@ -36,10 +36,24 @@ const PROMPT = [
   "so rather than guessing. Do NOT modify app code; only write the review file.",
 ].join("\n");
 
+// Codex reads the prompt from STDIN when the positional prompt is "-", which
+// avoids any multi-line/quoting issues. On Windows the npm shim is codex.cmd and
+// Node 24 refuses to spawn a .cmd without a shell, so use shell:true there (and
+// quote the cwd path for the shell); on POSIX spawn codex directly.
+const isWin = process.platform === "win32";
 const child = spawn(
   "codex",
-  ["exec", "--disable", "image_generation", "-s", "workspace-write", "-C", ROOT, PROMPT],
-  { stdio: "inherit" }
+  [
+    "exec",
+    "--disable",
+    "image_generation",
+    "-s",
+    "workspace-write",
+    "-C",
+    isWin ? `"${ROOT}"` : ROOT,
+    "-",
+  ],
+  { stdio: ["pipe", "inherit", "inherit"], shell: isWin }
 );
 child.on("error", (e) => {
   console.error(
@@ -48,4 +62,6 @@ child.on("error", (e) => {
   );
   process.exit(2);
 });
+child.stdin?.write(PROMPT);
+child.stdin?.end();
 child.on("exit", (code) => process.exit(code ?? 0));

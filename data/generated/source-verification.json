@@ -1,13 +1,11 @@
 {
-  "checkedAt": "2026-06-03T06:23:52.888Z",
+  "checkedAt": "2026-06-03T06:28:20.371Z",
   "sources": 26,
   "referencedInCode": 12,
   "networkChecked": true,
   "errors": [],
   "warnings": [
-    "unreachable url abs-census-rent-2021: https://www.abs.gov.au/statistics/people/people-and-communities/data-region (404)",
-    "unreachable url vcsa-recorded-offences: https://www.crimestatistics.vic.gov.au/crime-statistics/latest-victorian-crime-data/download-data (403)",
-    "unreachable url abs-seifa-2021: https://www.abs.gov.au/statistics/people/people-and-communities/socio-economic-indexes-areas (404)"
+    "unreachable url vcsa-recorded-offences: https://www.crimestatistics.vic.gov.au/crime-statistics/latest-victorian-crime-data/download-data (403)"
   ],
   "liveness": [
     {
@@ -18,9 +16,9 @@
     },
     {
       "id": "abs-census-rent-2021",
-      "url": "https://www.abs.gov.au/statistics/people/people-and-communities/data-region",
-      "ok": false,
-      "status": 404
+      "url": "https://www.abs.gov.au/databyregion",
+      "ok": true,
+      "status": 200
     },
     {
       "id": "abs-erp-sa2",
@@ -108,9 +106,9 @@
     },
     {
       "id": "abs-seifa-2021",
-      "url": "https://www.abs.gov.au/statistics/people/people-and-communities/socio-economic-indexes-areas",
-      "ok": false,
-      "status": 404
+      "url": "https://www.abs.gov.au/statistics/people/people-and-communities/socio-economic-indexes-areas-seifa-australia/latest-release",
+      "ok": true,
+      "status": 200
     },
     {
       "id": "abs-census-community-2021",

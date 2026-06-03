@@ -11,7 +11,7 @@
   {
     "id": "abs-census-rent-2021",
     "name": "ABS Census 2021 — median weekly household rental payment (SA2)",
-    "url": "https://www.abs.gov.au/statistics/people/people-and-communities/data-region",
+    "url": "https://www.abs.gov.au/databyregion",
     "licence": "CC BY 4.0",
     "period": "2021",
     "fetchedAt": "2026-05-29",
@@ -156,7 +156,7 @@
   {
     "id": "abs-seifa-2021",
     "name": "ABS SEIFA 2021 — IRSAD and IRSD deciles (SA2)",
-    "url": "https://www.abs.gov.au/statistics/people/people-and-communities/socio-economic-indexes-areas",
+    "url": "https://www.abs.gov.au/statistics/people/people-and-communities/socio-economic-indexes-areas-seifa-australia/latest-release",
     "licence": "CC BY 4.0",
     "period": "2021",
     "fetchedAt": "2026-05-29",
