@@ -21,8 +21,12 @@ import { computeCyclabilityByCode } from "./lib/cyclability-compute.js";
 import { computeSocialHousing } from "../lib/social-housing.js";
 import { populationContext } from "../lib/population.js";
 import { summariseHousingStress } from "../lib/housing-stress.js";
-import { roundOverlayPct } from "../lib/planning-overlays.js";
+import {
+  roundOverlayPct,
+  CONSERVATION_OVERLAY_CODES,
+} from "../lib/planning-overlays.js";
 import type {
+  ConservationOverlayCode,
   Cyclability,
   HousingStress,
   PlaceContext,
@@ -74,6 +78,7 @@ type Sa2Raw = {
   socialHousing?: SocialHousing;
   housingStress?: HousingStress;
   heritageOverlayPct?: number | null;
+  overlayShares?: Partial<Record<ConservationOverlayCode, number>>;
   context?: PlaceContext;
 };
 
@@ -522,6 +527,40 @@ async function main() {
     console.log(`Heritage Overlay: ${ho.features.length} polygons`);
   }
 
+  // Conservation / restriction overlay SHARES (context only, never scored). Each
+  // feature in the combined raw file is tagged with its overlay `code`
+  // (ESO/SLO/VPO/EMO/EAO/PAO). Same overlay-share computation as heritage above;
+  // see lib/planning-overlays.ts (parcel-level caveat). Run data:overlays to fetch.
+  const conservation = await loadOverlay("vic-conservation-overlays.geojson");
+  if (conservation && conservation.features.length > 0) {
+    const featsByCode = new Map<
+      ConservationOverlayCode,
+      typeof conservation.features
+    >();
+    for (const f of conservation.features) {
+      const code = (f.properties?.code ?? "") as ConservationOverlayCode;
+      if (!CONSERVATION_OVERLAY_CODES.includes(code)) continue;
+      let arr = featsByCode.get(code);
+      if (!arr) {
+        arr = [];
+        featsByCode.set(code, arr);
+      }
+      arr.push(f);
+    }
+    for (const [code, feats] of featsByCode) {
+      const idx = buildHazardIndex({ type: "FeatureCollection", features: feats });
+      for (const p of byCode.values()) {
+        const geom = sa2GeomByCode.get(p.sa2Code);
+        if (!geom) continue;
+        const pct = roundOverlayPct(overlayPctInSa2(geom, idx));
+        if (pct != null && pct > 0) {
+          (p.overlayShares ??= {})[code] = pct;
+        }
+      }
+      console.log(`Overlay ${code}: ${feats.length} polygons`);
+    }
+  }
+
   for (const p of byCode.values()) {
     const ctx: PlaceContext = {
       environment: {
@@ -558,11 +597,17 @@ async function main() {
     if (p.cyclability) ctx.cyclability = p.cyclability;
     if (p.socialHousing) ctx.socialHousing = p.socialHousing;
     if (p.housingStress) ctx.housingStress = p.housingStress;
-    if (p.heritageOverlayPct != null) {
+    if (
+      p.heritageOverlayPct != null ||
+      (p.overlayShares && Object.keys(p.overlayShares).length > 0)
+    ) {
       ctx.planning = {
-        heritageOverlayPct: p.heritageOverlayPct,
+        heritageOverlayPct: p.heritageOverlayPct ?? null,
         sourceId: "vic-planning-heritage",
         period: "current",
+        ...(p.overlayShares && Object.keys(p.overlayShares).length > 0
+          ? { overlays: p.overlayShares }
+          : {}),
       } satisfies PlanningOverlays;
     }
     if (p.population != null || p.cyclability?.areaKm2 != null) {

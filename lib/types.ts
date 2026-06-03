@@ -132,9 +132,22 @@ export type HousingStress = {
  * within the overlay; it is NOT a parcel-level result - a buyer must check the
  * property's planning certificate. From Vicplan (DTP Victoria).
  */
+/**
+ * Conservation / restriction overlay codes we surface as an SA2 area share
+ * (context only, never scored). ESO/SLO/VPO/EMO control development + vegetation;
+ * EAO flags possible contamination; PAO can mean the land is reserved for
+ * compulsory public acquisition. Distinct from the Heritage Overlay (HO) above.
+ */
+export type ConservationOverlayCode = "ESO" | "SLO" | "VPO" | "EMO" | "EAO" | "PAO";
+
 export type PlanningOverlays = {
   /** % of the SA2 area within a Heritage Overlay (HO). Area share, not parcel-level. */
   heritageOverlayPct: number | null;
+  /**
+   * Per-overlay SA2 area share (0-100) for conservation/restriction overlays.
+   * Context only, never scored; parcel-level still varies within the SA2.
+   */
+  overlays?: Partial<Record<ConservationOverlayCode, number>>;
   sourceId: string;
   period: string;
 };

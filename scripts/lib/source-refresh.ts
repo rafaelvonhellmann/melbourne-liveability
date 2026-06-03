@@ -110,6 +110,13 @@ export const SOURCE_REFRESH: Record<
       url: "https://plan-gis.mapshare.vic.gov.au/arcgis/rest/services/Planning/Vicplan_PlanningSchemeOverlays/MapServer/9",
     },
   },
+  "vic-planning-overlays": {
+    cadence: "annual",
+    probe: {
+      type: "arcgis",
+      url: "https://plan-gis.mapshare.vic.gov.au/arcgis/rest/services/Planning/Vicplan_PlanningSchemeOverlays/MapServer/3",
+    },
+  },
   "ptv-gtfs": { cadence: "rolling", probe: { type: "none" } },
   "osm-pt": { cadence: "rolling", probe: { type: "none" } },
   "osm-health": { cadence: "rolling", probe: { type: "none" } },

@@ -37,6 +37,7 @@ import { computeWeightedScore } from "./scoring";
 import { getDefaultWeights } from "./weights";
 import { getSourcesByIds } from "./source-manifest";
 import { sunAspect } from "./sun";
+import { presentOverlays } from "./planning-overlays";
 
 // ---- Types (stable public contract) ---------------------------------------
 
@@ -875,6 +876,45 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     });
   }
 
+  // 5c) Conservation & restriction overlays (context - planning CONTROLS, never
+  //     scored). ESO/SLO/VPO/EMO control development + vegetation; EAO flags
+  //     possible contamination; PAO can mean the land is reserved for compulsory
+  //     public acquisition. SA2 area share only, never parcel-level - always a
+  //     "verify", surfaced most-material-first (PAO/EAO are the ones not to miss).
+  const overlayShares = place?.context?.planning?.overlays ?? null;
+  const presentOverlayList = presentOverlays(overlayShares, 1);
+  if (presentOverlayList.length > 0) {
+    const hasHigh = presentOverlayList.some((o) => o.materiality === "high");
+    const lead = presentOverlayList[0];
+    const shareList = presentOverlayList
+      .map((o) => `${o.code} ~${Math.round(overlayShares?.[o.code] ?? 0)}%`)
+      .join(", ");
+    findings.push({
+      id: "conservation-overlays",
+      kind: "verify",
+      severity: hasHigh ? "high" : "medium",
+      title: hasHigh
+        ? `Check the ${lead.name} (${lead.code}) on this property`
+        : presentOverlayList.length === 1
+          ? `${lead.name} (${lead.code}) controls development here`
+          : "Planning overlays control development here",
+      summary: `Part of this area is within ${
+        presentOverlayList.length === 1
+          ? "a planning overlay"
+          : `${presentOverlayList.length} planning overlays`
+      } (${shareList}). ${lead.buyerMeaning}`,
+      whyItMatters:
+        "Planning overlays control what you can build, remove or change - and a Public Acquisition Overlay can mean the land is reserved for a public work. They affect the cost, feasibility and even the ownership of your plans.",
+      verifyAction:
+        "Check the property's planning certificate (Section 32) and VicPlan for the exact overlays on THIS parcel before you offer.",
+      confidence: "medium",
+      geography: "sa2",
+      caveat:
+        "Area share for the wider SA2, not a parcel-level result - your specific property may or may not be affected.",
+      sourceRefs: getSourcesByIds(["vic-planning-overlays"]),
+    });
+  }
+
   // 6) Local safety / crime context (LGA). Property + offences-against-the-person
   //    split (VCSA). Off-coverage pins (no SA2 match) drop precision to "unknown".
   const propCrimePct = place?.domains?.safety?.subIndicators?.propertyCrime?.percentile ?? null;
@@ -960,12 +1000,13 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
   const SEV_RANK: Record<BuyerFindingSeverity, number> = { high: 0, medium: 1, low: 2, info: 3 };
   const MATERIALITY: Record<string, number> = {
     "hazard-overlays": 0,
-    "heritage-overlay": 1,
-    "safety-context": 2,
-    "transport-noise": 3,
-    "nuisance-proximity": 4,
-    "transport-weak": 5,
-    "amenity-access-low": 6,
+    "conservation-overlays": 1,
+    "heritage-overlay": 2,
+    "safety-context": 3,
+    "transport-noise": 4,
+    "nuisance-proximity": 5,
+    "transport-weak": 6,
+    "amenity-access-low": 7,
   };
   const priorityChecks = [...verifyFindings]
     .sort(

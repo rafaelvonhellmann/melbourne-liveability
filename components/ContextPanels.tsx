@@ -1,7 +1,12 @@
 import type { PlaceContext } from "@/lib/types";
+import { presentOverlays, CONSERVATION_OVERLAY_META } from "@/lib/planning-overlays";
 
 export function ContextPanels({ context }: { context?: PlaceContext }) {
   if (!context) return null;
+
+  const overlays = context.planning
+    ? presentOverlays(context.planning.overlays, 1)
+    : [];
 
   return (
     <section className="space-y-4">
@@ -121,21 +126,50 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
           </Panel>
         )}
 
-      {context.planning && context.planning.heritageOverlayPct != null && (
-        <Panel title="Planning overlays">
-          <Row
-            label="Area within a Heritage Overlay"
-            value={fmtPct(context.planning.heritageOverlayPct)}
-          />
-          <p className="mt-2 text-xs text-ink-muted">
-            Share of this SA2&apos;s area inside a Heritage Overlay (HO), which can
-            restrict demolition, external changes and subdivision. This is an{" "}
-            <b className="text-ink">area share, not a parcel-level result</b> —
-            always check the planning certificate for the specific property.
-            Vicplan · {context.planning.period}
-          </p>
-        </Panel>
-      )}
+      {context.planning &&
+        (context.planning.heritageOverlayPct != null || overlays.length > 0) && (
+          <Panel title="Planning overlays">
+            {context.planning.heritageOverlayPct != null && (
+              <>
+                <Row
+                  label="Area within a Heritage Overlay"
+                  value={fmtPct(context.planning.heritageOverlayPct)}
+                />
+                <p className="mt-2 text-xs text-ink-muted">
+                  Share of this SA2&apos;s area inside a Heritage Overlay (HO), which
+                  can restrict demolition, external changes and subdivision. This is
+                  an <b className="text-ink">area share, not a parcel-level result</b>{" "}
+                  - always check the planning certificate for the specific property.
+                </p>
+              </>
+            )}
+            {overlays.length > 0 && (
+              <div
+                className={context.planning.heritageOverlayPct != null ? "mt-3" : ""}
+              >
+                {overlays.map((o) => (
+                  <Row
+                    key={o.code}
+                    label={`Area within ${CONSERVATION_OVERLAY_META[o.code].name} (${o.code})`}
+                    value={fmtPct(context.planning!.overlays?.[o.code] ?? null)}
+                  />
+                ))}
+                <p className="mt-2 text-xs text-ink-muted">
+                  Conservation and restriction overlays control development and
+                  vegetation; an Environmental Audit Overlay can flag possible
+                  contamination, and a Public Acquisition Overlay can mean the land is
+                  reserved for a public work. Each figure is an{" "}
+                  <b className="text-ink">area share, not a parcel-level result</b> -
+                  confirm the exact overlays on the property&apos;s planning
+                  certificate.
+                </p>
+              </div>
+            )}
+            <p className="mt-2 text-[11px] text-ink-muted">
+              Vicplan · {context.planning.period}
+            </p>
+          </Panel>
+        )}
 
       {context.environment && (
         <Panel title="Environment">

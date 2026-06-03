@@ -299,6 +299,51 @@ describe("buildBuyerReport", () => {
     expect(r.findings.find((f) => f.id === "heritage-overlay")).toBeFalsy();
   });
 
+  it("surfaces a high-severity, sourced conservation-overlay finding when a PAO is present", () => {
+    const base = samplePlace();
+    const withOverlays = {
+      ...base,
+      context: {
+        ...base.context,
+        planning: {
+          heritageOverlayPct: null,
+          sourceId: "vic-planning-overlays",
+          period: "current",
+          overlays: { PAO: 4, VPO: 12 },
+        },
+      },
+    };
+    const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: withOverlays, pois: POIS, generatedAt: "x" });
+    const co = r.findings.find((f) => f.id === "conservation-overlays");
+    expect(co).toBeTruthy();
+    expect(co?.kind).toBe("verify");
+    expect(co?.severity).toBe("high"); // PAO is high-materiality
+    expect(co?.title).toMatch(/Public Acquisition|PAO/);
+    expect(co?.caveat).toMatch(/area share|parcel/i);
+    expect(co?.verifyAction).toMatch(/planning certificate|VicPlan/i);
+    expect(co?.sourceRefs?.length ?? 0).toBeGreaterThan(0);
+    // A high-severity verify belongs in the before-you-offer checklist.
+    expect(r.priorityChecks.some((f) => f.id === "conservation-overlays")).toBe(true);
+  });
+
+  it("does NOT raise a conservation-overlay finding below the 1% floor", () => {
+    const base = samplePlace();
+    const withTiny = {
+      ...base,
+      context: {
+        ...base.context,
+        planning: {
+          heritageOverlayPct: null,
+          sourceId: "vic-planning-overlays",
+          period: "current",
+          overlays: { VPO: 0.3 },
+        },
+      },
+    };
+    const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: withTiny, pois: POIS, generatedAt: "x" });
+    expect(r.findings.find((f) => f.id === "conservation-overlays")).toBeFalsy();
+  });
+
   it("handles a pin outside SA2 coverage (no place) gracefully", () => {
     const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: null, pois: POIS, generatedAt: "x" });
     expect(r.summary.confidence).toBe("low");
