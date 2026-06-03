@@ -362,6 +362,23 @@ describe("buildBuyerReport", () => {
     expect(pos?.tone).toBeUndefined();
   });
 
+  it("computes straight-line distance to the profile's life-anchors (context only)", () => {
+    const r = buildBuyerReport({
+      lat: PIN.lat,
+      lng: PIN.lng,
+      place: samplePlace(),
+      pois: POIS,
+      generatedAt: "x",
+      profile: {
+        mode: "buyer",
+        anchors: [{ id: "w", kind: "work", label: "Office", lng: 144.99, lat: -37.82 }],
+      },
+    });
+    expect(r.anchorDistances?.length).toBe(1);
+    expect(r.anchorDistances?.[0].anchor.label).toBe("Office");
+    expect(r.anchorDistances?.[0].km).toBeGreaterThanOrEqual(0);
+  });
+
   it("handles a pin outside SA2 coverage (no place) gracefully", () => {
     const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: null, pois: POIS, generatedAt: "x" });
     expect(r.summary.confidence).toBe("low");

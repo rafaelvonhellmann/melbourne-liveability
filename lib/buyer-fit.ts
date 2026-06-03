@@ -8,6 +8,8 @@
  * report and pass them in, so this module stays testable and free of data wiring.
  */
 
+import type { BuyerAnchor } from "./anchors";
+
 export type ProfileMode = "buyer" | "agent";
 export type BuyerIntent = "buy" | "rent";
 export type HouseholdType = "solo" | "couple" | "family" | "share" | "retiree";
@@ -31,6 +33,8 @@ export type BuyerProfile = {
   car?: CarAccess;
   /** A commute destination to sanity-check against (label only at this layer). */
   commuteLabel?: string;
+  /** Real-life anchors (work / school / family) to measure each property against. */
+  anchors?: BuyerAnchor[];
   schools?: Importance;
   quiet?: Importance;
   safety?: Importance;

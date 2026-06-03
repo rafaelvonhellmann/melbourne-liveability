@@ -32,6 +32,7 @@ import {
   type NuisancePoint,
 } from "./nuisance";
 import { evaluateFit, type BuyerProfile, type FitResult } from "./buyer-fit";
+import { anchorDistances, type AnchorDistance } from "./anchors";
 import { nearestStation, type Station } from "./transit";
 import { computeWeightedScore } from "./scoring";
 import { getDefaultWeights } from "./weights";
@@ -132,6 +133,11 @@ export interface BuyerReport {
   disclaimers: string[];
   /** Personal "fit for your life" result when a profile was supplied; else absent. */
   fit?: FitResult;
+  /**
+   * Straight-line distance from the pin to each saved life-anchor (work/school/
+   * family). Context only, never scored; present only when a pin + anchors exist.
+   */
+  anchorDistances?: AnchorDistance[];
 }
 
 // ---- Constants -------------------------------------------------------------
@@ -1083,6 +1089,13 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       })
     : undefined;
 
+  // Social anchors: straight-line distance from this pin to the user's real-life
+  // places (work / school / family). Context only, never scored; needs a pin.
+  const anchors =
+    hasPoint && input.profile?.anchors?.length
+      ? anchorDistances([input.lng!, input.lat!], input.profile.anchors)
+      : undefined;
+
   return {
     id,
     generatedAt: input.generatedAt ?? new Date().toISOString(),
@@ -1103,5 +1116,6 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     sourceRefs,
     disclaimers: [BUYER_DISCLAIMER],
     fit,
+    anchorDistances: anchors,
   };
 }
