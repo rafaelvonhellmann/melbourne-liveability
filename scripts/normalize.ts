@@ -29,6 +29,7 @@ import { COASTAL_SCENARIOS } from "../lib/coastal.js";
 import { readVifProjections } from "./lib/vif-parse.js";
 import { readApprovalsFile } from "./lib/abs-approvals.js";
 import { summarizeApprovals, type MonthlySeries } from "../lib/approvals.js";
+import { waterRetailerAt, type WaterCorp } from "../lib/water.js";
 import type {
   CoastalScenario,
   ConservationOverlayCode,
@@ -636,6 +637,28 @@ async function main() {
     /* approvals file optional */
   }
 
+  // Water retailer per SA2 (context only) - which corporation services the area.
+  // Optional file (run data:water-corp to fetch from the Vicmap WFS).
+  let waterCorps: WaterCorp[] = [];
+  try {
+    const wfc = JSON.parse(
+      await readFile(path.join(RAW, "water-corp.geojson"), "utf8")
+    ) as FeatureCollection;
+    waterCorps = wfc.features
+      .filter(
+        (f): f is typeof f & { geometry: Polygon | MultiPolygon } =>
+          !!f.geometry && (f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon")
+      )
+      .map((f) => ({
+        name: String(f.properties?.watercorp_name ?? ""),
+        url: f.properties?.url ? String(f.properties.url) : undefined,
+        geometry: f.geometry,
+      }));
+    if (waterCorps.length) console.log(`Water corps: ${waterCorps.length}`);
+  } catch {
+    /* water-corp file optional */
+  }
+
   for (const p of byCode.values()) {
     const ctx: PlaceContext = {
       environment: {
@@ -710,6 +733,12 @@ async function main() {
     }
     const dp = summarizeApprovals(approvalsMap.get(p.sa2Code));
     if (dp) ctx.developmentPipeline = dp;
+    const sa2geom = sa2GeomByCode.get(p.sa2Code);
+    if (sa2geom && waterCorps.length) {
+      const ctr = turf.centroid(sa2geom).geometry.coordinates as [number, number];
+      const wr = waterRetailerAt(ctr, waterCorps);
+      if (wr) ctx.waterRetailer = { name: wr.name, url: wr.url, sourceId: "vic-water-corp" };
+    }
     if (p.population != null || p.cyclability?.areaKm2 != null) {
       ctx.population = populationContext(p.population, p.cyclability?.areaKm2, {
         sourceId: "abs-erp-sa2",

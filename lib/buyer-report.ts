@@ -1147,6 +1147,26 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     });
   }
 
+  // 5i) Water retailer (context, never scored). Which corporation services the
+  //     area, from the Vicmap water-corporation boundaries (area-level).
+  const water = place?.context?.waterRetailer;
+  if (water?.name) {
+    findings.push({
+      id: "water-retailer",
+      kind: "neutral",
+      severity: "info",
+      title: `Water retailer: ${water.name}`,
+      summary: `${water.name} is the water corporation servicing this area - your water and sewerage bills come from them.`,
+      verifyAction:
+        "Confirm on a current water / rates notice for the exact property; a few boundary streets can differ.",
+      confidence: "high",
+      geography: "sa2",
+      caveat:
+        "Resolved from the Vicmap water-corporation boundary at the area level - confirm the exact address on your water bill.",
+      sourceRefs: getSourcesByIds(["vic-water-corp"]),
+    });
+  }
+
   // 6) Local safety / crime context (LGA). Property + offences-against-the-person
   //    split (VCSA). Off-coverage pins (no SA2 match) drop precision to "unknown".
   const propCrimePct = place?.domains?.safety?.subIndicators?.propertyCrime?.percentile ?? null;

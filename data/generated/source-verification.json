@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-06-03T11:30:05.440Z",
-  "sources": 35,
-  "referencedInCode": 21,
+  "checkedAt": "2026-06-03T13:55:37.063Z",
+  "sources": 36,
+  "referencedInCode": 22,
   "networkChecked": true,
   "errors": [],
   "warnings": [
@@ -191,6 +191,12 @@
     {
       "id": "dtp-aadt",
       "url": "https://discover.data.vic.gov.au/dataset/historical-annual-average-daily-traffic-volume",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vic-water-corp",
+      "url": "https://discover.data.vic.gov.au/dataset/melbourne-water-retailers",
       "ok": true,
       "status": 200
     },

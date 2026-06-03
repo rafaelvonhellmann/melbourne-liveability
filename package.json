@@ -76,6 +76,7 @@
     "data:apply-abs-approvals": "tsx scripts/apply-abs-approvals.ts",
     "data:school-zones": "tsx scripts/fetch-school-zones.ts",
     "data:traffic": "tsx scripts/fetch-traffic-aadt.ts",
+    "data:water-corp": "tsx scripts/fetch-water-corp.ts",
     "data:timeseries": "tsx scripts/build-timeseries.ts",
     "data:walkaccess": "tsx scripts/apply-walk-access.ts",
     "data:cyclability": "tsx scripts/apply-cyclability.ts",

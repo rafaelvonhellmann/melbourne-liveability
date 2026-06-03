@@ -226,6 +226,17 @@ export type DevelopmentPipeline = {
   period: string;
 };
 
+/**
+ * Water retailer servicing the area (Yarra Valley / South East / Greater Western
+ * Water in metro). Context only, never scored - which corporation bills the
+ * property, resolved from the Vicmap water-corporation boundaries.
+ */
+export type WaterRetailer = {
+  name: string;
+  url?: string;
+  sourceId: string;
+};
+
 /** Display-only context (never affects liveability rank). */
 export type PlaceContext = {
   equity?: {
@@ -252,6 +263,7 @@ export type PlaceContext = {
   fireHistory?: FireHistory;
   projections?: VifProjection;
   developmentPipeline?: DevelopmentPipeline;
+  waterRetailer?: WaterRetailer;
   population?: PopulationContext;
   environment?: { note: string };
   politics?: { note: string };

@@ -38,6 +38,7 @@ const SOURCE_FILES: Record<string, { dir: "raw" | "generated" | "public"; file: 
   "abs-building-approvals": { dir: "raw", file: "abs-sa2-approvals.json" },
   "vic-school-zones": { dir: "public", file: "school-zones.json" },
   "dtp-aadt": { dir: "public", file: "traffic-aadt.json" },
+  "vic-water-corp": { dir: "raw", file: "water-corp.geojson" },
   "osm-noise-corridors": { dir: "public", file: "noise-lines.json" },
   "osm-nuisance-points": { dir: "public", file: "nuisance-points.json" },
   "osm-train-stations": { dir: "public", file: "train-stations.json" },
