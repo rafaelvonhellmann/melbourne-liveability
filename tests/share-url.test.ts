@@ -5,8 +5,24 @@ import {
   parseMapUrlState,
   buildMapUrl,
   buildCompareUrl,
+  shareHref,
 } from "../lib/share-url";
 import { normalizeWeights } from "../lib/weights";
+
+describe("shareHref (sub-path-safe copy links)", () => {
+  it("prepends the GitHub Pages base path so copied links don't 404", () => {
+    expect(shareHref("https://x.github.io", buildCompareUrl(["a", "b"]), "/melbourne-liveability"))
+      .toBe("https://x.github.io/melbourne-liveability" + buildCompareUrl(["a", "b"]));
+    expect(shareHref("https://x.github.io", "/?w=1", "/melbourne-liveability")).toBe(
+      "https://x.github.io/melbourne-liveability/?w=1"
+    );
+  });
+  it("is a no-op prefix at root (local dev / Vercel, empty base)", () => {
+    expect(shareHref("http://localhost:3000", "/compare?list=a", "")).toBe(
+      "http://localhost:3000/compare?list=a"
+    );
+  });
+});
 
 describe("share-url", () => {
   it("round-trips shortlist", () => {

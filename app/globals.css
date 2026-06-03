@@ -12,9 +12,12 @@
   --ink: #1a1a18;
   --muted: #6b6862;
   --border: #e3dfd3;
-  --accent: #d97757;
+  /* Accent matches the Tailwind theme's accessible value: #AD4F2E clears WCAG
+     2.2 AA (about 5.07:1 on #faf9f5) as text + white-on-fill. The old #d97757
+     was ~2.96:1 and failed AA for links/labels using this var. */
+  --accent: #ad4f2e;
   --accent-ink: #fff;
-  --focus: #b65a3c;
+  --focus: #9c4221;
   --radius: 10px;
   --shadow: 0 1px 3px rgba(40, 35, 25, 0.08), 0 8px 24px rgba(40, 35, 25, 0.06);
 

@@ -15,9 +15,10 @@ const CARDS: { icon: typeof ShieldAlert; title: string; items: CardItem[] }[] = 
     title: "Red flags to verify",
     items: [
       { label: "Flood & bushfire planning-overlay exposure (where mapped)" },
+      { label: "Heritage Overlay area share (where mapped)" },
       { label: "Crime & safety context (where available)" },
       { label: "Data-confidence caveats on every finding" },
-      { label: "Zoning, heritage & planning-scheme overlays", soon: true },
+      { label: "Zoning & permit/parcel-level overlays", soon: true },
     ],
   },
   {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { copyToClipboard } from "@/lib/share-url";
+import { copyToClipboard, shareHref } from "@/lib/share-url";
 
 type ShareViewButtonProps = {
   getUrl: () => string;
@@ -25,7 +25,7 @@ export function ShareViewButton({
       }
       onClick={async () => {
         const ok = await copyToClipboard(
-          typeof window !== "undefined" ? window.location.origin + getUrl() : getUrl()
+          typeof window !== "undefined" ? shareHref(window.location.origin, getUrl()) : getUrl()
         );
         setStatus(ok ? "ok" : "fail");
         setTimeout(() => setStatus("idle"), 2000);

@@ -3,6 +3,7 @@ import type { PersonaId } from "./personas";
 import { V1_SCORED_DOMAINS } from "./domains";
 import { parseWeightsFromSearchParams, serializeWeights } from "./weights";
 import { parseInterestView, type InterestViewId } from "./interest-views";
+import { BASE_PATH } from "./asset-path";
 
 export type MapUrlState = {
   weights: ScoreWeights | null;
@@ -99,6 +100,18 @@ export function buildCompareUrl(slugs: string[], weights?: ScoreWeights): string
   if (weights) params.set("w", serializeWeights(weights));
   const q = params.toString();
   return q ? `/compare?${q}` : "/compare";
+}
+
+/**
+ * Absolute, sub-path-safe href for copy/share. buildMapUrl/buildCompareUrl return
+ * root-relative paths ("/", "/compare?...") for in-app router nav; copying them
+ * to the clipboard needs origin + the deploy base path, or the link 404s on a
+ * GitHub Pages project site (e.g. /melbourne-liveability). basePath is injectable
+ * for tests; defaults to the build-time BASE_PATH.
+ */
+export function shareHref(origin: string, path: string, basePath: string = BASE_PATH): string {
+  const prefixed = path.startsWith("/") ? `${basePath}${path}` : `${basePath}/${path}`;
+  return `${origin}${prefixed}`;
 }
 
 export async function copyToClipboard(text: string): Promise<boolean> {

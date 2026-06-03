@@ -167,7 +167,9 @@ export function BuyerReportPanel({
             {report.fit.hits.length > 0 && (
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold text-ink">
-                  Your deal-breakers to verify here:
+                  {report.fit.mode === "agent"
+                    ? "Client-specific checks to verify here:"
+                    : "Your deal-breakers to verify here:"}
                 </p>
                 <ul className="space-y-1.5">
                   {report.fit.hits.map((h) => (
