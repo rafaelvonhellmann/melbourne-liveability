@@ -128,6 +128,10 @@ export const SOURCE_REFRESH: Record<
     cadence: "annual",
     probe: { type: "none" },
   },
+  "vif2023-sa2": {
+    cadence: "annual",
+    probe: { type: "none" },
+  },
   "ptv-gtfs": { cadence: "rolling", probe: { type: "none" } },
   "osm-pt": { cadence: "rolling", probe: { type: "none" } },
   "osm-health": { cadence: "rolling", probe: { type: "none" } },

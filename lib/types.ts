@@ -190,6 +190,21 @@ export type FireHistory = {
   period: string;
 };
 
+/**
+ * Victoria in Future (VIF2023) SA2 projections - context only, never scored. A
+ * modelled PROJECTION (not a forecast or target), at discrete 5-yearly years.
+ * The forward-looking "Horizon" signal: where the area is headed for dwellings
+ * (densification) and population.
+ */
+export type VifProjection = {
+  /** Resident population projection, keyed by year string (e.g. "2021"). */
+  population: Record<string, number>;
+  /** Structural private dwelling projection, keyed by year string. */
+  dwellings: Record<string, number>;
+  sourceId: string;
+  period: string;
+};
+
 /** Display-only context (never affects liveability rank). */
 export type PlaceContext = {
   equity?: {
@@ -214,6 +229,7 @@ export type PlaceContext = {
   planning?: PlanningOverlays;
   coastalInundation?: CoastalInundation;
   fireHistory?: FireHistory;
+  projections?: VifProjection;
   population?: PopulationContext;
   environment?: { note: string };
   politics?: { note: string };

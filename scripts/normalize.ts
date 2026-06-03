@@ -26,6 +26,7 @@ import {
   CONSERVATION_OVERLAY_CODES,
 } from "../lib/planning-overlays.js";
 import { COASTAL_SCENARIOS } from "../lib/coastal.js";
+import { readVifProjections } from "./lib/vif-parse.js";
 import type {
   CoastalScenario,
   ConservationOverlayCode,
@@ -610,6 +611,19 @@ async function main() {
     console.log(`Fire history: ${fireHistory.features.length} polygons`);
   }
 
+  // VIF2023 SA2 population + dwelling projections (context only, never scored) -
+  // read once for the context loop below. Optional file (run data:vif to fetch).
+  let vifMap: Map<
+    string,
+    { population: Record<string, number>; dwellings: Record<string, number> }
+  > = new Map();
+  try {
+    vifMap = readVifProjections(path.join(RAW, "vif2023-sa2.xlsx"));
+    if (vifMap.size) console.log(`VIF projections: ${vifMap.size} SA2s`);
+  } catch {
+    /* VIF file optional */
+  }
+
   for (const p of byCode.values()) {
     const ctx: PlaceContext = {
       environment: {
@@ -671,6 +685,15 @@ async function main() {
         burntPct: p.fireBurntPct,
         sourceId: "vic-fire-history",
         period: "to 2022-23",
+      };
+    }
+    const vrec = vifMap.get(p.sa2Code);
+    if (vrec && (Object.keys(vrec.population).length || Object.keys(vrec.dwellings).length)) {
+      ctx.projections = {
+        population: vrec.population,
+        dwellings: vrec.dwellings,
+        sourceId: "vif2023-sa2",
+        period: "2021-2036",
       };
     }
     if (p.population != null || p.cyclability?.areaKm2 != null) {

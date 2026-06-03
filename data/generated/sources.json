@@ -251,5 +251,14 @@
     "period": "to 2022-23",
     "fetchedAt": "2026-06-03",
     "sha256": "2585cb140356426e4fb51ba7d33d722d3996f86c25920feee21e83f722388a89"
+  },
+  {
+    "id": "vif2023-sa2",
+    "name": "Victoria in Future 2023 - SA2 population + dwelling projections to 2036 (DTP)",
+    "url": "https://www.data.vic.gov.au/victoria-future-2023-vif2023-data-available-excel-spreadsheets",
+    "licence": "CC BY 4.0 (Victoria)",
+    "period": "2021-2036 projection",
+    "fetchedAt": "2026-06-03",
+    "sha256": "d84fb90d5ee51aa82a3d96a2bed59db980694c39fa641d72d45e0d704bdeb68e"
   }
 ]

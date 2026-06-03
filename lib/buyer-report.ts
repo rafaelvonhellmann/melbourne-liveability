@@ -40,6 +40,7 @@ import { getSourcesByIds } from "./source-manifest";
 import { sunAspect } from "./sun";
 import { presentOverlays } from "./planning-overlays";
 import { worstCoastalScenario } from "./coastal";
+import { projectedGrowth } from "./vif";
 
 // ---- Types (stable public contract) ---------------------------------------
 
@@ -1002,6 +1003,36 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       caveat:
         "Mapped fire HISTORY (fires since ~1903; severity from 2006, private-land fires from 2009) - an area share, NOT a parcel result and NOT the forward-looking bushfire-prone overlay.",
       sourceRefs: getSourcesByIds(["vic-fire-history"]),
+    });
+  }
+
+  // 5f) Growth / "what's coming" (context, never scored). Official Victoria in
+  //     Future projections of dwellings + population to 2036 - the forward lens.
+  //     A projection, not a forecast/target; neutral (growth can be good or bad
+  //     depending on the buyer).
+  const vifGrowth = projectedGrowth(place?.context?.projections);
+  if (vifGrowth.dwellingGrowthPct != null || vifGrowth.populationGrowthPct != null) {
+    const bits: string[] = [];
+    if (vifGrowth.dwellingGrowthPct != null)
+      bits.push(`dwellings ${vifGrowth.dwellingGrowthPct >= 0 ? "+" : ""}${vifGrowth.dwellingGrowthPct}%`);
+    if (vifGrowth.populationGrowthPct != null)
+      bits.push(`population ${vifGrowth.populationGrowthPct >= 0 ? "+" : ""}${vifGrowth.populationGrowthPct}%`);
+    const fastGrowth = (vifGrowth.dwellingGrowthPct ?? 0) >= 20;
+    findings.push({
+      id: "growth-projection",
+      kind: "neutral",
+      severity: "info",
+      title: fastGrowth ? "Strong growth projected for this area" : "Projected change to 2036",
+      summary: `Official projections (Victoria in Future) to 2036: ${bits.join(", ")} vs 2021.`,
+      whyItMatters:
+        "Where dwellings are projected to grow fast, expect more development, density and streetscape change over the years you would own here.",
+      verifyAction:
+        "Check the council planning scheme and any activity-centre / housing-target plans for what can be built nearby.",
+      confidence: "medium",
+      geography: "sa2",
+      caveat:
+        "A modelled PROJECTION at SA2 level (Victoria in Future 2023), not a forecast or target; only 5-yearly years (2021/2026/2031/2036) are published.",
+      sourceRefs: getSourcesByIds(["vif2023-sa2"]),
     });
   }
 
