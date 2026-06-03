@@ -69,6 +69,8 @@
     "data:cyclability": "tsx scripts/apply-cyclability.ts",
     "data:hash": "tsx scripts/hash-sources.ts",
     "data:freshness": "tsx scripts/check-freshness.ts",
+    "data:verify": "tsx scripts/verify-sources.ts",
+    "data:codex-review": "tsx scripts/codex-data-review.ts",
     "data:audit": "tsx scripts/build-data-audit.ts",
     "data:all": "npm run data:fetch && npm run data:build",
     "data:build": "tsx scripts/build.ts",

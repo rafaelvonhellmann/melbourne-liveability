@@ -63,6 +63,9 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Verify data sources + citations
+        run: npm run data:verify
+
       - name: Build static site
         run: npm run build
 
