@@ -4,6 +4,25 @@ Date: 2026-06-03
 Scope: read-only code, content, data, and UX audit of the current repo.  
 Constraint observed: no source files modified. Only this report file was created/edited.
 
+## Status - addressed in follow-up commits (2026-06-03)
+
+ DONE:
+- P0 report summary count -> priority: added `report.priorityChecks` + a "Before
+  you offer, check these first" ranked block; headline reframed to task language.
+- P1 a11y contrast: `--accent` -> #AD4F2E, `--focus` -> #9C4221 (clears WCAG AA).
+- P1 sub-path share links: new `shareHref()` prepends the base path (map + compare).
+- P1 heritage "coming soon" inconsistency: split into shipped vs not-yet.
+- P1 agent voice: "Your deal-breakers" -> "Client-specific checks" in agent mode.
+- P3 em-dashes: 367 sentence em-dashes stripped from product copy (ASCII standard).
+- Durability: data-refresh.yml now fetches heritage/POI/proxy layers before the
+  rebuild (the 2026-06 auto-refresh regression that dropped those layers is fixed).
+
+STILL OPEN (bigger / founder calls): P0 per-finding source freshness badge; P1
+profile field wiring (schools/safety/walkability) + agent-mode depth decision; P1
+specific proxy source labels; P2 "Known gaps" block, inline jargon definitions,
+44px touch targets, ARIA (search listbox / map role), adjacency real-boundary;
+P3 flatten nested cards; axe-in-CI.
+
 ## Executive Summary
 
 The product is directionally strong: static export discipline is mostly intact, Buyer Mode is kept as a lens rather than folded into the scored composite, and the report architecture is explicitly deterministic and source-backed. The main weakness is not lack of information. It is delivery: the report gives many honest facts, but it does not yet guide a buyer quickly enough from "what did you find?" to "what should I do before I inspect or offer?"
