@@ -23,7 +23,7 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v6
 
@@ -37,8 +37,26 @@ jobs:
       - name: Report upstream freshness
         run: npm run data:freshness || true
 
-      - name: Fetch + rebuild all data
-        run: npm run data:all
+      - name: Fetch base upstream data
+        run: npm run data:fetch
+
+      # These extra raw layers are inputs to the SAME build (normalize reads
+      # vic-ho.geojson for heritage; build-poi reads the community/EV/police/
+      # childcare extracts). They are NOT part of scripts/fetch.ts, so without
+      # this step a clean-env refresh silently drops those layers (see the
+      # 2026-06 regression). Keep this list in sync with the fetch scripts.
+      - name: Fetch heritage + POI + proxy layers
+        run: |
+          npm run data:heritage
+          npm run data:community-poi
+          npm run data:ev-poi
+          npm run data:vic-facilities
+          npm run data:noise
+          npm run data:nuisance
+          npm run data:stations
+
+      - name: Rebuild scored + derived artifacts
+        run: npm run data:build
 
       - name: Test
         run: npm test
