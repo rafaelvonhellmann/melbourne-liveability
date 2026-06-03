@@ -1,17 +1,17 @@
 /**
- * Builds data/generated/timeseries.json (+ copies to public/data) — historical
+ * Builds data/generated/timeseries.json (+ copies to public/data) - historical
  * trend context for the metric cards. Compilation, NOT a scoring engine: these
  * series are never fed into any score, and we only emit indicators where genuine
  * multi-period data is held. No interpolation, no extrapolation.
  *
- * Indicators shipped (Phase 1 — the series that need NO 2016→2021 SA2
+ * Indicators shipped (Phase 1 - the series that need NO 2016→2021 SA2
  * concordance, so they carry no silent boundary break):
- *   • population     — ABS ERP, annual 2001–2023, per SA2 (ABS already supplies
+ *   • population     - ABS ERP, annual 2001–2023, per SA2 (ABS already supplies
  *                      the whole series on 2021 SA2 boundaries → no concordance).
- *   • propertyCrime  — VCSA recorded offences, year-ending-September 2016–2025,
+ *   • propertyCrime  - VCSA recorded offences, year-ending-September 2016–2025,
  *                      per LGA (native LGA geography; rate per 100,000 from the
  *                      release's own LGA population denominators).
- *   • violentCrime   — VCSA recorded offences, as above.
+ *   • violentCrime   - VCSA recorded offences, as above.
  *
  * Deferred (documented in methodology/HANDOVER, NOT faked here): the 2-point
  * ABS Census/SEIFA 2016↔2021 panel (needs the ASGS SA2 correspondence) and a
@@ -106,7 +106,7 @@ type CrimeAccum = { property: number; violent: number };
  * year-ending September. We sum the release's own "LGA Rate per 100,000
  * population" across offence subgroups within a division (rows are unique per
  * LGA/year/subgroup, so this is exact and uses the correct per-year LGA
- * population denominator). Native LGA geography — never implies SA2 precision.
+ * population denominator). Native LGA geography - never implies SA2 precision.
  */
 function buildCrimeSeries(): IndicatorSeries[] {
   let wb: XLSX.WorkBook;

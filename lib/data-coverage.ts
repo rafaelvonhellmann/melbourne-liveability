@@ -3,7 +3,7 @@ import { DOMAIN_LABELS } from "./colors";
 import { V1_SCORED_DOMAINS } from "./domains";
 
 /**
- * "Data coverage" — an honest, transparency-only description of what the data we
+ * "Data coverage" - an honest, transparency-only description of what the data we
  * actually hold REPRESENTS for a given SA2, versus the drawn SA2 geography it is
  * joined to.
  *
@@ -17,7 +17,7 @@ import { V1_SCORED_DOMAINS } from "./domains";
  */
 
 /**
- * Per-domain note on the real granularity / aggregation behind the data — the
+ * Per-domain note on the real granularity / aggregation behind the data - the
  * honest answer to "what does this number actually measure for this area?".
  * Sourced from the methodology page; static so it cannot drift from the docs.
  */
@@ -27,20 +27,20 @@ export const DOMAIN_GRANULARITY: Record<DomainId, string> = {
   transport:
     "PT stops within 800 m and AM-peak frequency, computed at the SA2 centroid (PTV GTFS).",
   safety:
-    "Crime recorded at suburb/LGA level and allocated to this SA2 via crosswalk (VCSA) — not resident point-level.",
+    "Crime recorded at suburb/LGA level and allocated to this SA2 via crosswalk (VCSA) - not resident point-level.",
   health:
     "Distance to the nearest public hospital and GP/clinic count within 2 km, by proximity (Vic MapShare + OSM).",
   education:
     "Schools within 2 km (OpenStreetMap) and preschool enrolment at SA2 (ABS Census 2021).",
   income:
-    "Median household income at SA2 (ABS 2021) plus labour-force ratios (ABS Census 2016 — older).",
+    "Median household income at SA2 (ABS 2021) plus labour-force ratios (ABS Census 2016 - older).",
   hazards:
     "Share of SA2 land in bushfire/flood planning overlays (area-weighted; Vic planning overlays, not risk models).",
-  socialHousing: "Social-housing context only — not scored.",
-  equity: "ABS SEIFA deciles at SA2 — context only.",
-  population: "ABS Census community indicators at SA2 — context only.",
-  environment: "Deferred to v2 — not currently held.",
-  politics: "Deferred to v2 — not currently held.",
+  socialHousing: "Social-housing context only - not scored.",
+  equity: "ABS SEIFA deciles at SA2 - context only.",
+  population: "ABS Census community indicators at SA2 - context only.",
+  environment: "Deferred to v2 - not currently held.",
+  politics: "Deferred to v2 - not currently held.",
   greenSpace: "Green-space context only.",
 };
 
@@ -79,7 +79,7 @@ function tierFor(score: number): "High" | "Moderate" | "Limited" {
 
 /**
  * Build the data-coverage summary for one place from already-present fields.
- * Pure and deterministic — safe to compute server-side or client-side.
+ * Pure and deterministic - safe to compute server-side or client-side.
  */
 export function buildDataCoverage(place: Place): DataCoverageSummary {
   const domains: DomainCoverage[] = V1_SCORED_DOMAINS.map((id) => {

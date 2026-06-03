@@ -61,9 +61,9 @@ export default function MapPage() {
   const [places, setPlaces] = useState<Place[]>([]);
   const [loadError, setLoadError] = useState(false);
   const [selected, setSelected] = useState<Place | null>(null);
-  // Desktop side-panel collapse — gives the map full width on demand.
+  // Desktop side-panel collapse - gives the map full width on demand.
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  // Pins are OFF by default — they only appear when the user enables a category.
+  // Pins are OFF by default - they only appear when the user enables a category.
   const [visiblePins, setVisiblePins] = useState<Record<string, boolean>>({});
   // Camera target for the area search / list selections. Map clicks never set
   // this, so clicking a place on the map preserves the current view.
@@ -113,7 +113,7 @@ export default function MapPage() {
       });
   }, []);
 
-  // Press Escape to clear the selected-area card — a seamless "back to the map"
+  // Press Escape to clear the selected-area card - a seamless "back to the map"
   // (the friend feedback: selecting an area felt like a trap with no easy exit).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -277,7 +277,7 @@ export default function MapPage() {
     sa2: { slug?: string; sa2Code?: string } | null
   ) => {
     // A new/moved pin (or a "revert") always starts from the free straight-line
-    // report — any prior precise result no longer applies to this point. Cancel
+    // report - any prior precise result no longer applies to this point. Cancel
     // any in-flight precise fetch so its (now stale) result can't land late.
     precisionAbortRef.current?.abort();
     setPreciseStatus("idle");
@@ -310,7 +310,7 @@ export default function MapPage() {
   // Paid-tier opt-in: recompute "nearby on foot" against a real street-network
   // walk isochrone (OpenRouteService) instead of the straight-line radius. It is
   // a runtime, client-side, env-gated fetch (so static export is untouched) and
-  // never runs on the free tier — the button is hidden without a configured key.
+  // never runs on the free tier - the button is hidden without a configured key.
   const recomputePrecise = async () => {
     const pin = buyerPin;
     if (!pin) return;
@@ -489,7 +489,7 @@ export default function MapPage() {
 
   const personalisationControls = (
     <div className="space-y-3">
-      {/* Lens — one unified set of one-tap starting points (sets layer +
+      {/* Lens - one unified set of one-tap starting points (sets layer +
           weights), kept distinct from the manual priority sliders below. */}
       <section aria-label="Lens">
         <InterestViews active={interestView} onSelect={selectInterestView} />
@@ -497,7 +497,7 @@ export default function MapPage() {
 
       <div className="border-t border-surface-border" aria-hidden />
 
-      {/* Adjust priorities — manual fine-tuning, separated from the lens. */}
+      {/* Adjust priorities - manual fine-tuning, separated from the lens. */}
       <section aria-label="Adjust priorities" className="space-y-2">
         <h3 className="px-1 text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
           Fine-tune priorities
@@ -541,7 +541,7 @@ export default function MapPage() {
       {!buyerPin ? (
         <div className="space-y-3">
           <p className="rounded-lg border border-dashed border-surface-border bg-surface px-3 py-4 text-sm text-ink-muted">
-            Click the map — or search a suburb or full address in the top bar — to drop a
+            Click the map - or search a suburb or full address in the top bar - to drop a
             pin and get a second-opinion report.
           </p>
           <SavedChecks
@@ -561,7 +561,7 @@ export default function MapPage() {
             </p>
           ) : (
             <p className="text-xs text-ink-muted">
-              This pin is outside our Greater Melbourne SA2 coverage — drop it on a Melbourne
+              This pin is outside our Greater Melbourne SA2 coverage - drop it on a Melbourne
               property for the full report.
             </p>
           )}
@@ -654,7 +654,7 @@ export default function MapPage() {
               {buyerReport.accessMode === "precise" ? (
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-ink-muted">
-                    <b className="text-ink">Precise walk routing on</b> — &ldquo;nearby&rdquo; reflects
+                    <b className="text-ink">Precise walk routing on</b> - &ldquo;nearby&rdquo; reflects
                     a street-network ~15-min walk.
                   </span>
                   <button
@@ -684,7 +684,7 @@ export default function MapPage() {
               )}
               {preciseStatus === "error" && (
                 <p className="mt-1 text-[11px] text-[#9A552F]">
-                  Couldn&apos;t fetch the walk isochrone just now — still showing straight-line. Try
+                  Couldn&apos;t fetch the walk isochrone just now - still showing straight-line. Try
                   again shortly.
                 </p>
               )}
@@ -718,7 +718,7 @@ export default function MapPage() {
               ? "Data confidence (context, not in score)"
               : DOMAIN_LABELS[activeDomain];
 
-  // The GeoJSON property currently painted on the choropleth — feeds the map
+  // The GeoJSON property currently painted on the choropleth - feeds the map
   // hover tooltip so it always reports the value the user is looking at.
   const paintedProp = hazardLayer
     ? `${hazardLayer}_share`
@@ -784,14 +784,14 @@ export default function MapPage() {
                 (x) => x.slug === props.slug || x.sa2Code === props.sa2Code
               );
               if (!p) return;
-              // Click the already-selected area again to deselect (toggle) — a
+              // Click the already-selected area again to deselect (toggle) - a
               // quick way back to the clean map without hunting for the close X.
               if (selected?.slug === p.slug) setSelected(null);
               else selectPlace(p);
             }}
           />
 
-          {/* Buyer "Location Check" toggle — the headline interaction. */}
+          {/* Buyer "Location Check" toggle - the headline interaction. */}
           <div className="absolute left-1/2 top-3 z-10 -translate-x-1/2">
             <button
               type="button"
@@ -813,7 +813,7 @@ export default function MapPage() {
             )}
           </div>
 
-          {/* Data-load failure — visible, recoverable (never a silent empty map). */}
+          {/* Data-load failure - visible, recoverable (never a silent empty map). */}
           {loadError && (
             <div className="pointer-events-none absolute left-1/2 top-16 z-20 w-[min(92%,30rem)] -translate-x-1/2">
               <div
@@ -834,13 +834,13 @@ export default function MapPage() {
             </div>
           )}
 
-          {/* Home-buyer caveat — visible on the map (not only the profile) so
+          {/* Home-buyer caveat - visible on the map (not only the profile) so
               users never read the buyer lens as purchase-price guidance. */}
           {isHomeBuyer && !buyerMode && (
             <div className="pointer-events-none absolute left-1/2 top-16 z-10 w-[min(92%,30rem)] -translate-x-1/2">
               <p className="pointer-events-auto rounded-lg border border-surface-border border-l-[3px] border-l-accent bg-surface px-3 py-2 text-xs leading-snug text-ink shadow-card">
                 <span className="font-medium text-ink">Home-buyer lens:</span>{" "}
-                context only — sale/purchase prices are{" "}
+                context only - sale/purchase prices are{" "}
                 <span className="font-medium text-ink">not</span> included. This
                 ranks liveability factors, not property value.
               </p>
@@ -916,7 +916,7 @@ export default function MapPage() {
             <Attribution />
           </div>
 
-          {/* Persistent selected-area mini-summary (desktop) — a lightweight
+          {/* Persistent selected-area mini-summary (desktop) - a lightweight
               map-side quick view; the rich profile lives on its own page. */}
           {selected && (
             <div className="absolute bottom-4 left-1/2 z-10 hidden w-[22rem] max-w-[calc(100%-2rem)] -translate-x-1/2 md:block">
@@ -931,7 +931,7 @@ export default function MapPage() {
             </div>
           )}
 
-          {/* Collapse / expand the side panel (desktop) — sits on the map's right
+          {/* Collapse / expand the side panel (desktop) - sits on the map's right
               edge so it stays reachable whether the panel is open or hidden. */}
           <button
             type="button"
@@ -948,7 +948,7 @@ export default function MapPage() {
           </button>
         </div>
 
-        {/* Desktop sidebar — explore tools only; ranked suburb lists are deferred
+        {/* Desktop sidebar - explore tools only; ranked suburb lists are deferred
             to a future signed-in profile feature. Collapsible for a full-width map. */}
         <aside
           className={`hidden shrink-0 flex-col border-l border-surface-border bg-surface transition-[width] duration-300 ease-out md:flex ${

@@ -2,8 +2,8 @@
  * Planning-overlay context (context-only, never scored).
  *
  * We report the AREA SHARE of an SA2 within a Heritage Overlay (HO). A Heritage
- * Overlay is a planning CONTROL — it can restrict demolition, external changes
- * and subdivision — so for a buyer it is a real due-diligence signal. But it is
+ * Overlay is a planning CONTROL - it can restrict demolition, external changes
+ * and subdivision - so for a buyer it is a real due-diligence signal. But it is
  * an area share, NOT a parcel-level result: a property inside a "0%" SA2 could
  * still be individually affected, and vice versa. Always defer to the planning
  * certificate for the specific property. Nothing here enters any score.

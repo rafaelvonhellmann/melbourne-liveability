@@ -6,13 +6,13 @@ import { getDomain } from "@/lib/domains";
 type SimilarAreasListProps = {
   items: SimilarAreaItem[];
   referenceName: string;
-  /** Heading level isn't fixed — pass a compact variant for the map card. */
+  /** Heading level isn't fixed - pass a compact variant for the map card. */
   compact?: boolean;
   className?: string;
 };
 
 /**
- * "Areas like this" — a ranked, honest list of the closest peer SA2s by
+ * "Areas like this" - a ranked, honest list of the closest peer SA2s by
  * per-domain percentile similarity. Each row links to that area's profile. The
  * caption states what "alike" means (domain ranks, not price) and a thin match
  * (few comparable domains) is flagged inline rather than hidden.
@@ -26,7 +26,7 @@ export function SimilarAreasList({
   if (items.length === 0) {
     return (
       <p className={`text-sm text-ink-muted ${className ?? ""}`}>
-        No closely comparable areas — {referenceName} has too few measured domains
+        No closely comparable areas - {referenceName} has too few measured domains
         to match confidently.
       </p>
     );
@@ -43,7 +43,7 @@ export function SimilarAreasList({
         </h2>
       )}
       <p className={`${compact ? "mb-1.5" : "mt-1 mb-3"} text-xs leading-snug text-ink-muted`}>
-        Closest peers by how their domain percentiles line up — not by price or a
+        Closest peers by how their domain percentiles line up - not by price or a
         single score.
       </p>
       <ul className="space-y-1.5">

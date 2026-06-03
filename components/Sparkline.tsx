@@ -18,7 +18,7 @@ type SparklineProps = {
  * labels the series' true geography (so an LGA trend never implies SA2
  * precision), and states the period range. Direction is encoded redundantly
  * (arrow glyph + sign + a colourblind-safe blue/orange pair, never colour
- * alone). No animation — reduced-motion friendly by construction.
+ * alone). No animation - reduced-motion friendly by construction.
  */
 export function Sparkline({ series, format, width = 132, height = 34 }: SparklineProps) {
   const pts = series.points;

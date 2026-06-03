@@ -42,10 +42,10 @@ async function main() {
   }
 
   if (lsioFeatures === 0 && sboFeatures === 0) {
-    console.warn("No flood overlays downloaded — hazards domain will use bushfire only.");
+    console.warn("No flood overlays downloaded - hazards domain will use bushfire only.");
   }
 
-  // Heritage Overlay (HO) — CONTEXT only (planning control, not a hazard, not
+  // Heritage Overlay (HO) - CONTEXT only (planning control, not a hazard, not
   // scored), but fetched here since it shares the Vicplan overlay service + the
   // per-SA2 overlay-share computation. ~11.3k polygons -> ~115 pages.
   try {

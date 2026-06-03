@@ -11,7 +11,7 @@ type TabDef = {
   icon: typeof ListOrdered;
 };
 
-// No ranked "Results" tab — the scored ranking is deferred to a future signed-in
+// No ranked "Results" tab - the scored ranking is deferred to a future signed-in
 // profile feature (matches the desktop sidebar, which carries explore tools only).
 const TABS: TabDef[] = [
   { id: "explore", label: "Explore", icon: ListOrdered },

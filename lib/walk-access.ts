@@ -10,7 +10,7 @@ import type { WalkAccess } from "./types";
  * Honesty note: straight-line ("as the crow flies") distance overstates real
  * walking access versus a street-network walk; rivers, freeways and rail lines
  * are not subtracted. OSM amenity coverage is community-maintained and uneven.
- * This is a transparency/compilation feature, not a routing engine — see the
+ * This is a transparency/compilation feature, not a routing engine - see the
  * methodology caveat. Nothing here enters the composite score or its weights.
  */
 

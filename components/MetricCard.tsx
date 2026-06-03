@@ -57,7 +57,7 @@ export function MetricCard({ def, value, benchmark, series, mapHref }: MetricCar
         />
       ) : (
         <p className="mt-3 rounded-lg border border-dashed border-surface-border bg-surface-sunken px-3 py-2 text-xs text-ink-muted">
-          No data held for this SA2 — omitted from the benchmark.
+          No data held for this SA2 - omitted from the benchmark.
         </p>
       )}
 
@@ -87,7 +87,7 @@ export function MetricCard({ def, value, benchmark, series, mapHref }: MetricCar
         />
       ) : (
         <p className="mt-2 text-[11px] text-ink-muted">
-          <span aria-hidden>•</span> Single period — no trend data held.
+          <span aria-hidden>•</span> Single period - no trend data held.
         </p>
       )}
 

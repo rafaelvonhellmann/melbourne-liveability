@@ -2,7 +2,7 @@ import type { Place } from "@/lib/types";
 import { buildDataCoverage } from "@/lib/data-coverage";
 
 /**
- * "Data coverage" — a compact, honest statement of what the data actually
+ * "Data coverage" - a compact, honest statement of what the data actually
  * represents for this SA2 (vs the drawn geography it's joined to). Transparency
  * only; never a score. Derived entirely from existing place fields.
  */
@@ -42,7 +42,7 @@ export function DataCoverageCard({ place }: { place: Place }) {
 
       {c.nonResidential && (
         <p className="mt-2 rounded-lg border border-[#E9C8B4] bg-[#FBEEE6] px-3 py-2 text-xs leading-relaxed text-[#9A552F]">
-          Low / no resident data — this SA2 is below the population threshold and
+          Low / no resident data - this SA2 is below the population threshold and
           is excluded from rankings and percentile baselines. Treat any values
           here as indicative only.
         </p>

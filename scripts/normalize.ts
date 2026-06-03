@@ -237,7 +237,7 @@ async function main() {
     }
   }
 
-  // Social-housing SUPPLY (context only, never scored) — ABS 2021 Census G37
+  // Social-housing SUPPLY (context only, never scored) - ABS 2021 Census G37
   // landlord-type totals: public (state/territory authority) + community housing
   // as a share of occupied private dwellings. See lib/social-housing.ts.
   for (const row of await loadAttrJsonAsync("abs-sa2-landlord.json")) {
@@ -255,7 +255,7 @@ async function main() {
     if (sh.socialPct != null || sh.dwellings != null) p.socialHousing = sh;
   }
 
-  // Housing stress (context only, never scored) — ABS 2021 Census share of
+  // Housing stress (context only, never scored) - ABS 2021 Census share of
   // households paying >30% of income on rent / mortgage. See lib/housing-stress.
   for (const row of await loadAttrJsonAsync("abs-sa2-stress.json")) {
     const code = String(row.sa2_code_2021 ?? "");
@@ -321,7 +321,7 @@ async function main() {
     }
     console.log("Transport: PTV GTFS precompute");
   } catch {
-    console.warn("gtfs-transport.json missing — run npm run data:gtfs first");
+    console.warn("gtfs-transport.json missing - run npm run data:gtfs first");
   }
 
   if (!usedGtfs) {
@@ -361,7 +361,7 @@ async function main() {
       "{}"
   );
   const osmHospitals = osmPoints(healthJson, (t) => t.amenity === "hospital");
-  // Locked, pin-independent SCORED GP set (nodes only) — feeds gpCount2km.
+  // Locked, pin-independent SCORED GP set (nodes only) - feeds gpCount2km.
   const gps = scoredGpPoints(healthJson);
   // Broader GP/clinic set (nodes + ways) for CONTEXT only (15-min walk access),
   // which is never scored, so it may include clinics mapped as building ways.
@@ -395,7 +395,7 @@ async function main() {
   }
   console.log(`Education: ${schoolPts.length} OSM schools, preschool from ABS`);
 
-  // 15-minute access (context only, never scored) — straight-line reachability
+  // 15-minute access (context only, never scored) - straight-line reachability
   // of everyday amenities from each SA2 centroid. Categories come from OSM:
   // supermarket/pharmacy/park/cafe/gym from osm-amenities.json, GP from
   // osm-health, school/childcare from osm-schools.
@@ -442,7 +442,7 @@ async function main() {
     `15-min access: supermarkets=${walkPoints.supermarket.length} pharmacies=${walkPoints.pharmacy.length} parks=${walkPoints.park.length} cafe/restaurant=${walkPoints.cafe_restaurant.length} gym/leisure=${walkPoints.gym_leisure.length}`
   );
 
-  // Cyclability index (context only, never scored) — OSM cycling infrastructure
+  // Cyclability index (context only, never scored) - OSM cycling infrastructure
   // length per SA2, normalised by land area. See lib/cyclability.ts caveats.
   const cyclewaysJson = JSON.parse(
     (await readFile(path.join(RAW, "osm-cycleways.json"), "utf8").catch(
@@ -504,11 +504,11 @@ async function main() {
     );
   } else {
     console.warn(
-      "Hazard overlays missing — run npm run data:hazards (scores will be missing for hazards domain)"
+      "Hazard overlays missing - run npm run data:hazards (scores will be missing for hazards domain)"
     );
   }
 
-  // Heritage Overlay SHARE (context only, never scored) — a planning CONTROL,
+  // Heritage Overlay SHARE (context only, never scored) - a planning CONTROL,
   // not a hazard. Same overlay-share computation as the hazards above. See
   // lib/planning-overlays.ts (parcel-level caveat). Run data:heritage to fetch.
   const ho = await loadOverlay("vic-ho.geojson");

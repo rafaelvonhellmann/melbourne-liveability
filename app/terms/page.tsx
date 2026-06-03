@@ -20,7 +20,7 @@ export default function TermsPage() {
         <p className="mt-1 text-xs text-ink-muted">Last updated {UPDATED}</p>
 
         <div className="mt-4 rounded-lg border border-[#E9C8B4] bg-[#FBEEE6] p-3 text-sm text-[#9A552F]">
-          <strong>Draft — not yet legal advice.</strong> An honest first draft reflecting how
+          <strong>Draft - not yet legal advice.</strong> An honest first draft reflecting how
           the site works today. Have it reviewed by a qualified Australian lawyer before
           relying on it, especially before charging for any paid tier.
         </div>
@@ -76,11 +76,11 @@ export default function TermsPage() {
         <Section title="5. Intellectual property & attribution">
           <p>
             The underlying datasets remain the property of their publishers and are licensed
-            openly — ABS, PTV, VCSA and Victorian government data under{" "}
+            openly - ABS, PTV, VCSA and Victorian government data under{" "}
             <strong className="text-ink">CC BY 4.0</strong>, and map / point data ©
             OpenStreetMap contributors under <strong className="text-ink">ODbL</strong>. We
-            charge only for tooling, presentation, and derived analysis — never for reselling
-            the open data — and we retain attribution. Our own site design, code, and
+            charge only for tooling, presentation, and derived analysis - never for reselling
+            the open data - and we retain attribution. Our own site design, code, and
             compiled presentation are ours; please do not copy them wholesale.
           </p>
         </Section>

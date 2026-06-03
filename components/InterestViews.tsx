@@ -12,7 +12,7 @@ type InterestViewsProps = {
 };
 
 /**
- * The "Lens" picker — one unified set of one-tap starting points (formerly split
+ * The "Lens" picker - one unified set of one-tap starting points (formerly split
  * across Interest views + Persona presets). Each lens sets the default map layer
  * and the priority weights for how you're exploring.
  */
@@ -24,7 +24,7 @@ export function InterestViews({ active, onSelect }: InterestViewsProps) {
         Lens
       </p>
       <p className="mt-1 text-xs text-ink-muted">
-        A one-tap starting point — sets the map layer and priority weights for how
+        A one-tap starting point - sets the map layer and priority weights for how
         you&apos;re looking. Fine-tune below any time.
       </p>
       <div className="mt-2 flex flex-wrap gap-2">

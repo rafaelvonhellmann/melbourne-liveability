@@ -41,7 +41,7 @@ export function useMapPersonalisation() {
   // A context layer, mutually exclusive with the others.
   const [socialHousingMode, setSocialHousingMode] = useState(false);
   // Colourblind-safe (RdYlBu) score ramp. A display-only preference (device-local,
-  // persisted), independent of the choropleth basis — it recolours whatever is
+  // persisted), independent of the choropleth basis - it recolours whatever is
   // painted, so it is NOT mutually exclusive with the context layers.
   const [colorblindRamp, setColorblindRamp] = useState(false);
   // Optional hazard overlay-share choropleth (bushfire / flood). Mutually
@@ -78,7 +78,7 @@ export function useMapPersonalisation() {
     setInterestView(viewId);
 
     // Only (re)apply the view's default layer + confidence on first load or when
-    // the view itself actually changes — never on plain weight/shortlist edits.
+    // the view itself actually changes - never on plain weight/shortlist edits.
     if (appliedViewRef.current !== viewId) {
       appliedViewRef.current = viewId;
       setActiveDomain(view.defaultDomain);
@@ -91,7 +91,7 @@ export function useMapPersonalisation() {
 
     // One-shot deep link (e.g. /?layer=transport from a profile metric card):
     // activate the requested choropleth domain. Only present when arriving via
-    // such a link — plain weight/shortlist edits never carry it.
+    // such a link - plain weight/shortlist edits never carry it.
     if (url.layer) {
       setActiveDomain(url.layer);
       setConfidenceMode(false);
@@ -102,7 +102,7 @@ export function useMapPersonalisation() {
     }
   }, [searchParams]);
 
-  // Context layers are mutually exclusive — only one choropleth basis at a time.
+  // Context layers are mutually exclusive - only one choropleth basis at a time.
   const toggleConfidenceMode = useCallback(() => {
     setConfidenceMode((v) => {
       if (!v) {

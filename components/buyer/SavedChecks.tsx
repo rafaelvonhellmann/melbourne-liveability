@@ -12,7 +12,7 @@ type SavedChecksProps = {
 /**
  * Device-local list of saved Buyer Location Checks (pins the user wants to
  * return to). Reopening regenerates the deterministic report from the stored
- * coordinates — we persist the location, not the report. Cross-device sync would
+ * coordinates - we persist the location, not the report. Cross-device sync would
  * need an accounts service (out of scope for the static app).
  */
 export function SavedChecks({ checks, onOpen, onRemove }: SavedChecksProps) {

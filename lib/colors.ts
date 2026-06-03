@@ -1,7 +1,7 @@
 import type { DomainId } from "./types";
 
 /**
- * Score ramp — diverging Red→Yellow→Green (ColorBrewer RdYlGn). Low percentile
+ * Score ramp - diverging Red→Yellow→Green (ColorBrewer RdYlGn). Low percentile
  * (worse) = red, high (better) = green, interpolated CONTINUOUSLY so close-but-
  * different areas no longer look identical (the old 5-band YlGnBu flattened the
  * granularity and "blue = good" wasn't intuitive). Red=worse is the universal
@@ -17,7 +17,7 @@ export const SCORE_RAMP: readonly (readonly [number, string])[] = [
 ];
 
 /**
- * Colourblind-safe score ramp — ColorBrewer RdYlBu (a documented CVD-safe
+ * Colourblind-safe score ramp - ColorBrewer RdYlBu (a documented CVD-safe
  * diverging palette). Same red/orange/yellow low-to-mid as RdYlGn, but the
  * "good" end is BLUE instead of green: red-vs-green is the exact pair that
  * deuteranopia/protanopia confound, and red-vs-blue is separable under every
@@ -56,7 +56,7 @@ function rgbToHex(r: number, g: number, b: number): string {
 }
 
 /**
- * Hazard "risk" ramp — ColorBrewer Reds (sequential, single-hue, colorblind-safe
+ * Hazard "risk" ramp - ColorBrewer Reds (sequential, single-hue, colorblind-safe
  * by lightness). Used ONLY for the optional bushfire / flood overlay-share layers,
  * where HIGH = more of the SA2 under a planning hazard overlay = deeper red. Kept
  * separate from the YlGnBu score ramp so risk reads as risk, not as a percentile.
@@ -75,7 +75,7 @@ export const RISK_PALETTE = [
 export const RISK_BANDS = [2, 10, 25, 50] as const;
 
 /**
- * Social-housing SUPPLY ramp — ColorBrewer Purples (sequential, single-hue,
+ * Social-housing SUPPLY ramp - ColorBrewer Purples (sequential, single-hue,
  * colourblind-safe by lightness). Deliberately NOT the red risk ramp: more social
  * housing is a neutral housing-mix fact, not "risk". Used for the optional
  * social-housing context choropleth (share of dwellings that are social housing).
@@ -156,7 +156,7 @@ export function percentileTextColor(pct: number | null, colorblind = false): str
 }
 
 /**
- * Plain-language band for a 0–100 percentile — so a category reads "Strong" /
+ * Plain-language band for a 0–100 percentile - so a category reads "Strong" /
  * "Weak" at a glance instead of a bare number (user feedback: spell it out).
  * Honest framing: these are ranks RELATIVE to Greater Melbourne, not absolutes.
  */

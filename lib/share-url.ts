@@ -18,7 +18,7 @@ export type MapUrlState = {
   pin: [number, number] | null;
 };
 
-// Generous Greater-Melbourne bounding box — rejects junk / out-of-region coords
+// Generous Greater-Melbourne bounding box - rejects junk / out-of-region coords
 // so a crafted URL cannot drop a pin in the ocean or interstate.
 const MEL_BBOX = { minLng: 143.0, maxLng: 147.0, minLat: -39.5, maxLat: -36.5 };
 

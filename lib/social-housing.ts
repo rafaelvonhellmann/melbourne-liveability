@@ -6,7 +6,7 @@
  * State/Territory housing authority OR a community housing provider), from the
  * ABS 2021 Census tenure-and-landlord-type table (G37) at SA2. This is a
  * housing-mix fact about an area, not a judgement about the people who live
- * there. See DIGNITY-STANDARD.md — we map supply, never per-area welfare %.
+ * there. See DIGNITY-STANDARD.md - we map supply, never per-area welfare %.
  *
  * Nothing here enters the locked seven-domain composite, its weights, or Data
  * Confidence.

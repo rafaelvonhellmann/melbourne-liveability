@@ -6,7 +6,7 @@
  * This is the SAME computation scripts/normalize.ts performs inline (both use
  * lib/social-housing.ts). It exists as a standalone step so the metric can be
  * (re)applied to already-built artifacts without a full data:fetch / score
- * rebuild. Context only — never scored.
+ * rebuild. Context only - never scored.
  *
  * Run after fetch-social-housing (so abs-sa2-landlord.json exists). Follow with
  * data:geo (re-emits places.geojson and copies places.json to public).

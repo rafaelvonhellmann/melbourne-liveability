@@ -3,7 +3,7 @@ import { computeHomeBuyerIndex } from "@/lib/home-buyer";
 import { percentileToColor } from "@/lib/colors";
 
 /**
- * Home-buyer index — a context lens built from existing indicators. Shows the
+ * Home-buyer index - a context lens built from existing indicators. Shows the
  * Greater-Melbourne percentile of the blended composite plus the factors that
  * drove it, with an explicit caveat that it is NOT part of the official score
  * and uses NO sale-price data.
@@ -39,7 +39,7 @@ export function HomeBuyerCard({
         </span>
       </div>
       <p className="mt-1 text-xs leading-relaxed text-ink-muted">
-        A buyer-oriented blend of indicators we already hold — weighted toward
+        A buyer-oriented blend of indicators we already hold - weighted toward
         affordability/cost-pressure, safety, schools, transport and low hazard
         exposure. Percentile within Greater Melbourne.
       </p>
@@ -72,7 +72,7 @@ export function HomeBuyerCard({
       <p className="mt-3 text-[11px] leading-relaxed text-ink-muted">
         <b className="text-ink">Caveat:</b> a context lens, not part of the locked
         7-domain liveability score or its weights. It uses{" "}
-        <b className="text-ink">no dwelling sale-price data</b> — &ldquo;affordability&rdquo;
+        <b className="text-ink">no dwelling sale-price data</b> - &ldquo;affordability&rdquo;
         here is the existing rent-to-income cost-pressure proxy, so this is not a
         price, value-for-money, or capital-growth estimate.
         {idx.measured < idx.total

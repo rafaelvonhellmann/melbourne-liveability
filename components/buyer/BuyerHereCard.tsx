@@ -12,7 +12,7 @@ import { BuyerReportPanel } from "@/components/buyer/BuyerReportPanel";
 /**
  * "Buying here?" entry point on the SA2 profile. Links to the full pin-drop
  * Buyer Check on the map, and can generate an area-level (mode: "sa2") report
- * inline — clearly flagged as area-level, computed from the SA2 centroid.
+ * inline - clearly flagged as area-level, computed from the SA2 centroid.
  */
 export function BuyerHereCard({ place }: { place: Place }) {
   const [report, setReport] = useState<BuyerReport | null>(null);
@@ -42,7 +42,7 @@ export function BuyerHereCard({ place }: { place: Place }) {
           <h2 className="font-display text-base font-semibold text-ink">Buying here?</h2>
           <p className="mt-1 text-sm leading-relaxed text-ink-muted">
             Check the hidden risks, nearby amenities and liveability trade-offs around an exact
-            property location — not just the suburb average.
+            property location - not just the suburb average.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Link

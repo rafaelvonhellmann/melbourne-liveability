@@ -1,7 +1,7 @@
 import type { DomainId, Place } from "./types";
 
 /**
- * "Find areas like this" — a multi-criteria similarity match over the per-domain
+ * "Find areas like this" - a multi-criteria similarity match over the per-domain
  * liveability percentiles. Deliberately NOT a single composite or a price model:
  * two areas are "alike" when they rank similarly across the domains, so the match
  * is the mean absolute percentile gap over the domains both areas actually have.
@@ -21,12 +21,12 @@ export type SimilarMatch = {
   similarity: number;
   /** Domains compared = present + non-null in BOTH areas. */
   sharedDomains: DomainId[];
-  /** Up to 3 domains where both areas rank high AND close — the common strengths. */
+  /** Up to 3 domains where both areas rank high AND close - the common strengths. */
   sharedStrengths: DomainId[];
 };
 
 /**
- * Slim, link-ready projection of a match — the only fields the UI needs. Used so
+ * Slim, link-ready projection of a match - the only fields the UI needs. Used so
  * the static profile pages don't inline whole Place objects (with every
  * subIndicator) for each of the 6 peers, x ~354 pages.
  */

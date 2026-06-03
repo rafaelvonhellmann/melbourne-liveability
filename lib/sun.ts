@@ -1,12 +1,12 @@
 /**
- * Proprietary "sun & aspect" geometry for a property — deterministic solar
+ * Proprietary "sun & aspect" geometry for a property - deterministic solar
  * astronomy from latitude alone (no external service, no data licence, unlike a
  * third-party shade map). Buyers care which way a place faces: where the sun
  * rises/sets, how high it climbs, and how long the day runs, summer vs winter.
  *
  * All angles are degrees. Azimuth is measured clockwise from true north
  * (0 = N, 90 = E, 180 = S, 270 = W). Ignores refraction/elevation, which shift
- * sunrise a touch — fine for aspect guidance, not an almanac.
+ * sunrise a touch - fine for aspect guidance, not an almanac.
  */
 const RAD = Math.PI / 180;
 const AXIAL_TILT = 23.44; // Earth's axial tilt -> solstice solar declination

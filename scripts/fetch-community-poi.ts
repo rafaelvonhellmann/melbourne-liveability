@@ -5,7 +5,7 @@
  * attribute. These are CONTEXT pins only; nothing here enters any score.
  *
  * Reshaping "community" to amenities (faith-neutral places of worship + civic
- * community/cultural centres) is deliberate — we do NOT map demographics
+ * community/cultural centres) is deliberate - we do NOT map demographics
  * (religion/ethnicity %) per area. See DIGNITY-STANDARD.md.
  */
 import { writeFile } from "node:fs/promises";

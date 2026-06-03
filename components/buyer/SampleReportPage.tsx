@@ -36,7 +36,7 @@ async function loadSample() {
 
 /**
  * Shared implementation behind both `/buyer/sample-report` (canonical) and the
- * legacy `/buyer/sample` route. Server component — reads the committed data at
+ * legacy `/buyer/sample` route. Server component - reads the committed data at
  * build and renders a fully static, indexable sample Buyer report.
  */
 export default async function SampleReportPage() {
@@ -48,10 +48,10 @@ export default async function SampleReportPage() {
           ← Map
         </Link>
         <h1 className="mt-4 font-display text-2xl font-semibold text-ink">
-          Sample location check — {place.name}
+          Sample location check - {place.name}
         </h1>
         <p className="mt-2 text-sm text-ink-muted">
-          Sample only — this illustrates the kind of due-diligence summary a buyer would receive
+          Sample only - this illustrates the kind of due-diligence summary a buyer would receive
           after dropping a pin. It is <b className="text-ink">not</b> a report for a specific
           property. It is computed at the centre of <b className="text-ink">{place.name}</b> (
           {place.lga}); in the app you drop the pin on the exact address and the &ldquo;nearby&rdquo;

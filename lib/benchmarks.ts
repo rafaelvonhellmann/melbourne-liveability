@@ -2,7 +2,7 @@ import type { DomainId, Place } from "./types";
 import { METRIC_CATALOG } from "./metric-catalog";
 
 /**
- * Greater-Melbourne benchmark statistics for a raw indicator — the distribution
+ * Greater-Melbourne benchmark statistics for a raw indicator - the distribution
  * an area is compared against on its metric card. Computed across residential
  * SA2s only (the same baseline the percentiles are ranked within), so the band
  * shown on a card is consistent with the percentile we already store.
@@ -55,7 +55,7 @@ export type GmBenchmarks = Partial<
 /**
  * Compute the Greater-Melbourne benchmark distribution for every catalogued
  * indicator from the full places dataset (residential SA2s only). Pure and
- * deterministic — intended to run server-side at build in the place page and be
+ * deterministic - intended to run server-side at build in the place page and be
  * passed to the client; it adds no new fetched data file.
  */
 export function computeGmBenchmarks(places: Place[]): GmBenchmarks {

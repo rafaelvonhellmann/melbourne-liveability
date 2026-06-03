@@ -58,12 +58,12 @@ export function MapLegend({
       </div>
       {risk && (
         <div className="mt-0.5 text-[10px] leading-snug">
-          Share of the area under the planning overlay — not a parcel-level result.
+          Share of the area under the planning overlay - not a parcel-level result.
         </div>
       )}
       {social && (
         <div className="mt-0.5 text-[10px] leading-snug">
-          Share of dwellings that are social housing (public + community) — supply,
+          Share of dwellings that are social housing (public + community) - supply,
           not a measure of residents.
         </div>
       )}

@@ -77,7 +77,7 @@ export default function AccountPage() {
         <div className="mt-6 flex items-start gap-3 rounded-lg border border-surface-border bg-surface-sunken p-4">
           <Lock className="mt-0.5 h-5 w-5 shrink-0 text-ink-muted" aria-hidden />
           <div>
-            <h2 className="text-sm font-semibold text-ink">Sign in to sync — coming later</h2>
+            <h2 className="text-sm font-semibold text-ink">Sign in to sync - coming later</h2>
             <p className="mt-0.5 text-sm text-ink-muted">
               Optional accounts to sync your shortlist and lenses across devices may come later.
               For now everything is free and stored only in this browser.
@@ -93,7 +93,7 @@ export default function AccountPage() {
 
         {placesError && (
           <p className="mt-4 rounded-lg border border-[#E9C8B4] bg-[#FBEEE6] px-3 py-2 text-sm text-[#9A552F]">
-            Could not load suburb names — showing area IDs. Reload to retry.
+            Could not load suburb names - showing area IDs. Reload to retry.
           </p>
         )}
 

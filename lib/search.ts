@@ -8,7 +8,7 @@ export type SearchIndexEntry = {
   key: string;
   sa2Code: string;
   slug: string;
-  /** The matched term — either the SA2 name or a geographic suburb alias. */
+  /** The matched term - either the SA2 name or a geographic suburb alias. */
   label: string;
   /** Back-compat alias of `label` (kept so existing Fuse keys still resolve). */
   suburb: string;
@@ -52,7 +52,7 @@ export function buildSearchIndex(places: Place[]): SearchIndexEntry[] {
     for (const alias of p.suburbAliases) {
       const norm = normalizeSearchTerm(alias);
       // Skip aliases that are empty or identical (normalised) to the area name
-      // or an already-added alias — avoids duplicate/redundant rows.
+      // or an already-added alias - avoids duplicate/redundant rows.
       if (!norm || seen.has(norm)) continue;
       seen.add(norm);
       entries.push({

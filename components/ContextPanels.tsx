@@ -10,7 +10,7 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
           Context panels
         </h2>
         <p className="text-xs text-ink-muted">
-          For transparency only — these never change the liveability rank.
+          For transparency only - these never change the liveability rank.
         </p>
       </div>
 
@@ -93,7 +93,7 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
           )}
           <p className="mt-2 text-xs text-ink-muted">
             Share of occupied private dwellings rented from a state/territory housing
-            authority or a community housing provider — a housing-supply mix, not a
+            authority or a community housing provider - a housing-supply mix, not a
             measure of the people who live here. ABS Census 2021 ·{" "}
             {context.socialHousing.period}
           </p>
@@ -114,7 +114,7 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
             />
             <p className="mt-2 text-xs text-ink-muted">
               Share of households (by tenure) spending more than 30% of income on
-              housing — the ABS housing-stress threshold. A cost-pressure signal,
+              housing - the ABS housing-stress threshold. A cost-pressure signal,
               separate from the rent-vs-income score. ABS Census 2021 ·{" "}
               {context.housingStress.period}
             </p>
@@ -194,7 +194,7 @@ function ownerApprox(renterPct: number | null): string | null {
   return `~${Math.max(0, 100 - renterPct).toFixed(1)}%`;
 }
 
-/** Visual renter-vs-owner split — a quick read of whether an area is rental- or
+/** Visual renter-vs-owner split - a quick read of whether an area is rental- or
  * owner-occupier-dominated (a useful buyer / affordability signal). */
 function TenureSplit({ renterPct }: { renterPct: number | null }) {
   if (renterPct == null || !Number.isFinite(renterPct)) return null;

@@ -1,7 +1,7 @@
 /**
  * Personal "fit for your life" + deal-breaker evaluation (context only, never
  * scored). A buyer (or an agent acting for a client) records lightweight, local
- * preferences; we re-FRAME the sourced facts against them — we never change the
+ * preferences; we re-FRAME the sourced facts against them - we never change the
  * locked composite score, and a deal-breaker is a prompt to VERIFY, not a verdict.
  *
  * Pure + deterministic: callers extract `FitSignals` from a place + its buyer
@@ -111,21 +111,21 @@ export function evaluateFit(
     hits.push({
       id: "flood",
       label: "Flood overlay",
-      detail: `You flagged flood as a deal-breaker — about ${pct(signals.floodPct)} of this area is under a flood overlay. Verify the specific parcel.`,
+      detail: `You flagged flood as a deal-breaker - about ${pct(signals.floodPct)} of this area is under a flood overlay. Verify the specific parcel.`,
     });
   }
   if (wants.has("bushfire") && material(signals.bushfirePct, FLOOD_BUSHFIRE_PCT)) {
     hits.push({
       id: "bushfire",
       label: "Bushfire overlay",
-      detail: `You flagged bushfire as a deal-breaker — about ${pct(signals.bushfirePct)} of this area is bushfire-prone overlay. Verify the parcel + BAL rating.`,
+      detail: `You flagged bushfire as a deal-breaker - about ${pct(signals.bushfirePct)} of this area is bushfire-prone overlay. Verify the parcel + BAL rating.`,
     });
   }
   if (wants.has("heritage") && material(signals.heritagePct, HERITAGE_PCT)) {
     hits.push({
       id: "heritage",
       label: "Heritage Overlay",
-      detail: `You flagged heritage controls as a deal-breaker — about ${pct(signals.heritagePct)} of this area is under a Heritage Overlay, which can restrict changes. Verify whether the parcel is included.`,
+      detail: `You flagged heritage controls as a deal-breaker - about ${pct(signals.heritagePct)} of this area is under a Heritage Overlay, which can restrict changes. Verify whether the parcel is included.`,
     });
   }
   if (wants.has("noise") && signals.hasNoiseFlag) {
@@ -133,7 +133,7 @@ export function evaluateFit(
       id: "noise",
       label: "Transport noise",
       detail:
-        "You flagged noise as a deal-breaker — this point is close to a rail line, tram line or freeway/major road. Visit at peak and after dark.",
+        "You flagged noise as a deal-breaker - this point is close to a rail line, tram line or freeway/major road. Visit at peak and after dark.",
     });
   }
   if (wants.has("industry") && signals.hasNuisanceFlag) {
@@ -141,7 +141,7 @@ export function evaluateFit(
       id: "industry",
       label: "Industry / pollution source",
       detail:
-        "You flagged industry/pollution as a deal-breaker — this point is near a mapped industrial area, waste/sewage site or quarry. Check wind direction and any EPA licences.",
+        "You flagged industry/pollution as a deal-breaker - this point is near a mapped industrial area, waste/sewage site or quarry. Check wind direction and any EPA licences.",
     });
   }
   if (
@@ -152,7 +152,7 @@ export function evaluateFit(
     hits.push({
       id: "poor_transport",
       label: "Weak transport",
-      detail: `You flagged transport as a deal-breaker — this area's public-transport access ranks low (${pct(signals.transportPct)} percentile in Greater Melbourne).`,
+      detail: `You flagged transport as a deal-breaker - this area's public-transport access ranks low (${pct(signals.transportPct)} percentile in Greater Melbourne).`,
     });
   }
 
@@ -164,12 +164,12 @@ export function evaluateFit(
   }
   if (profile.car === "no_car" && signals.transportPct != null && signals.transportPct < WEAK_TRANSPORT_PCT) {
     notes.push(
-      "You don't drive, and this area's public transport ranks low — check the actual walk to stops and service frequency."
+      "You don't drive, and this area's public transport ranks low - check the actual walk to stops and service frequency."
     );
   }
   if (profile.quiet === "high" && signals.hasNoiseFlag) {
     notes.push(
-      "You value quiet, and this point is close to a transport-noise source — worth a peak-hour and after-dark visit."
+      "You value quiet, and this point is close to a transport-noise source - worth a peak-hour and after-dark visit."
     );
   }
 

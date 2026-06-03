@@ -4,11 +4,11 @@
  * Complements lib/noise.ts (transport noise) with point sources that can mean
  * odour, dust, pollution, heavy-vehicle traffic or industrial activity: industrial
  * estates, waste/landfill sites, sewage/wastewater works, and quarries (OSM). As
- * with noise we DO NOT measure emissions — this is straight-line distance to the
+ * with noise we DO NOT measure emissions - this is straight-line distance to the
  * representative point of the nearest mapped source, flagged when close, honestly
  * caveated. We only FLAG; we never certify a place "clean".
  *
- * (Data centres are deliberately excluded for now — too sparsely/inconsistently
+ * (Data centres are deliberately excluded for now - too sparsely/inconsistently
  * mapped in OSM to flag reliably.)
  */
 
@@ -19,7 +19,7 @@ export type NuisancePoint = { kind: NuisanceKind; coord: [number, number]; name?
 /**
  * Distance (m) at/under which a source is "worth checking". Odour/dust carry, so
  * waste + sewage are generous; an industrial estate boundary matters closer in.
- * Conservative — the finding says "verify on site", it does not assert harm.
+ * Conservative - the finding says "verify on site", it does not assert harm.
  */
 export const NUISANCE_THRESHOLDS_M: Record<NuisanceKind, number> = {
   industrial: 300,

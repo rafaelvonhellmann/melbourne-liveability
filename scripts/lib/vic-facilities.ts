@@ -5,7 +5,7 @@ const UA = "MelbourneLiveability/1.0";
 const EMERGENCY_FOI_URL =
   "https://enterprise.mapshare.vic.gov.au/server/rest/services/Hosted/Emergency_Services__VMFEAT_FOI_POINT_/FeatureServer/0/query";
 const HOSPITALS_URL = EMERGENCY_FOI_URL;
-/** Vicmap Features of Interest — general points layer (child care, education…). */
+/** Vicmap Features of Interest - general points layer (child care, education…). */
 const VICMAP_FOI_POINT_URL =
   "https://services-ap1.arcgis.com/P744lA0wf4LlBZ84/ArcGIS/rest/services/Vicmap_Features_of_Interest/FeatureServer/1/query";
 
@@ -80,7 +80,7 @@ export function fetchVicChildcare(): Promise<NamedPoint[]> {
   return fetchFoiNamedPoints(VICMAP_FOI_POINT_URL, "feature_subtype='child care'");
 }
 
-/** Vicmap / MapShare emergency services — general hospitals (CC BY 4.0 Vic). */
+/** Vicmap / MapShare emergency services - general hospitals (CC BY 4.0 Vic). */
 export async function fetchVicHospitalPoints(): Promise<[number, number][]> {
   const pts: [number, number][] = [];
   let offset = 0;

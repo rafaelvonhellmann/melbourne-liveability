@@ -42,7 +42,7 @@ type Props = {
 };
 
 /**
- * Lightweight personal-preference form (buyer or agent). Local-only — feeds the
+ * Lightweight personal-preference form (buyer or agent). Local-only - feeds the
  * report's "Fit for your life" + deal-breaker flags via lib/buyer-fit. Never
  * changes the score.
  */
@@ -72,7 +72,7 @@ export function BuyerProfilePanel({ initial, onSave, onClear, onClose }: Props) 
             {p.mode === "agent" ? "Client preferences" : "Your preferences"}
           </h3>
           <p className="mt-0.5 text-[11px] text-ink-muted">
-            Re-frames the report for {p.mode === "agent" ? "your client" : "you"} — never changes
+            Re-frames the report for {p.mode === "agent" ? "your client" : "you"} - never changes
             the score. Saved only in this browser.
           </p>
         </div>

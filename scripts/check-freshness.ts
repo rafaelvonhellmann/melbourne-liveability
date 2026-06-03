@@ -2,7 +2,7 @@
  * Decides automatically which sources are due for refresh.
  *
  * For each source: compares committed `fetchedAt` against its cadence, and —
- * where cheap — probes the upstream "last updated" date. Writes a machine-
+ * where cheap - probes the upstream "last updated" date. Writes a machine-
  * readable report to data/generated/freshness.json and prints a summary.
  *
  * Exit code 0 always (report-only) unless --strict is passed, in which case it

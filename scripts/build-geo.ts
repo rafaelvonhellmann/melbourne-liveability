@@ -58,7 +58,7 @@ async function main() {
     // infrastructure density per SA2). 0–100, not a percentile, not scored.
     props.pct_cyclability = place?.context?.cyclability?.index ?? null;
     // Hazard overlay share (% of the SA2 under a VIC planning overlay) for the
-    // optional bushfire / flood RISK layers — raw exposure, not a percentile and
+    // optional bushfire / flood RISK layers - raw exposure, not a percentile and
     // not the (inverted) hazards score. Parcel-level overlays still vary within.
     props.bushfire_share =
       place?.domains?.hazards?.subIndicators?.bushfirePct?.raw ?? null;

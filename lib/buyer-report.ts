@@ -1,11 +1,11 @@
 /**
- * Buyer "Location Check" due-diligence report — a deterministic, sourced
+ * Buyer "Location Check" due-diligence report - a deterministic, sourced
  * findings engine. Given a point (and the SA2 it falls in) it produces a
  * plain-English screening report: what looks positive, what to verify, what is
  * nearby, and what we cannot determine yet.
  *
  * Hard rules (see Buyer-Mode strategy + product spec):
- * - NO AI calls, NO network, NO randomness — pure + testable.
+ * - NO AI calls, NO network, NO randomness - pure + testable.
  * - NEVER invents data. Missing layers (price, school catchments, parcel-level
  *   overlays) are surfaced as `unavailable` / `verify` with confidence markers,
  *   never fabricated.
@@ -131,7 +131,7 @@ export const DEFAULT_RADIUS_METERS = 1200;
 
 /**
  * A neighbouring SA2 whose centre-point is within this straight-line distance of
- * the pin counts as "close" for the adjacency nudge — the same ~15-minute-walk
+ * the pin counts as "close" for the adjacency nudge - the same ~15-minute-walk
  * threshold used for nearby amenities. Centre-point proximity, NOT a true
  * boundary test (the finding says so).
  */
@@ -139,7 +139,7 @@ export const ADJACENCY_THRESHOLD_KM = DEFAULT_RADIUS_METERS / 1000;
 
 /**
  * A curated VIC Big Build project within this straight-line distance of the pin
- * is "nearby" for the what's-changing nudge. Generous on purpose — a new station
+ * is "nearby" for the what's-changing nudge. Generous on purpose - a new station
  * reshapes a wide catchment, not just its doorstep.
  */
 export const MAJOR_PROJECT_THRESHOLD_KM = 1.5;
@@ -148,7 +148,7 @@ export const STRAIGHT_LINE_CAVEAT =
   "Nearby amenities are estimated using straight-line distance from the dropped pin. This is a quick screening tool, not a street-network routing calculation.";
 
 export const STREET_NETWORK_CAVEAT =
-  "Reachability here is a street-network walk isochrone (OpenRouteService) — what is actually within a ~15-minute walk along streets and paths, not a straight-line radius. The listed distance to each amenity is still straight-line.";
+  "Reachability here is a street-network walk isochrone (OpenRouteService) - what is actually within a ~15-minute walk along streets and paths, not a straight-line radius. The listed distance to each amenity is still straight-line.";
 
 export const BUYER_DISCLAIMER =
   "This report is general information only. It is not financial, property, legal, insurance or planning advice. Data may be incomplete, outdated or geographically approximate. Before buying, verify relevant matters with your conveyancer, council, insurer, lender and qualified property professionals.";
@@ -161,7 +161,7 @@ const METHODOLOGY_REF: BuyerSourceRef = {
 
 const SCHOOL_ZONE_REF: BuyerSourceRef = {
   id: "vic-school-zones",
-  label: "Find My School — official Victorian school zones",
+  label: "Find My School - official Victorian school zones",
   url: "https://www.findmyschool.vic.gov.au/",
 };
 
@@ -225,7 +225,7 @@ type RawPoi = Feature<Point> & {
  * POIs near a point, sorted nearest-first. Reachability is decided one of two
  * ways:
  *  - default (free tier): straight-line (haversine) distance within
- *    `radiusMeters` — same honesty caveat as the 15-min-access layer.
+ *    `radiusMeters` - same honesty caveat as the 15-min-access layer.
  *  - when an `isochrone` polygon is supplied (paid-tier precise walk routing):
  *    the POI is kept iff it falls inside that street-network walk isochrone
  *    (see lib/walk-isochrone). The displayed `distanceMeters` stays straight-line.
@@ -388,7 +388,7 @@ export interface BuildBuyerReportInput {
    * Paid-tier opt-in: a street-network walk isochrone polygon (from
    * lib/walk-isochrone). When supplied, "nearby" is computed by containment in
    * this polygon instead of a straight-line radius, and `accessMode` becomes
-   * "precise". Stays pure — the fetch happens in the client, the polygon is data.
+   * "precise". Stays pure - the fetch happens in the client, the polygon is data.
    */
   isochrone?: Polygon | MultiPolygon;
   /** Inject for deterministic output (SSR/build/tests); defaults to now. */
@@ -400,14 +400,14 @@ export interface BuildBuyerReportInput {
    * when the pin is within {@link ADJACENCY_THRESHOLD_KM} of a neighbouring
    * area's centroid, the report recommends also checking that area. The caller
    * passes the full area list; the engine filters by distance and drops the
-   * containing SA2. Optional — omit to skip the adjacency finding (e.g. SA2-mode
+   * containing SA2. Optional - omit to skip the adjacency finding (e.g. SA2-mode
    * cards or the sample report).
    */
   nearbyAreas?: { sa2Code: string; slug: string; name: string; centroid: [number, number] }[];
   /**
    * Curated flagship VIC Big Build transport projects (see lib/major-projects).
    * When the pin is within {@link MAJOR_PROJECT_THRESHOLD_KM} of one, the report
-   * flags it as "what's changing nearby". Optional — omit to skip the finding.
+   * flags it as "what's changing nearby". Optional - omit to skip the finding.
    */
   majorProjects?: {
     name: string;
@@ -539,7 +539,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
   }
 
   // Transport-noise proximity proxy (pin-level, OSM lines). Only FLAG when a
-  // source is close — we never claim "quiet" (not all noise sources are mapped).
+  // source is close - we never claim "quiet" (not all noise sources are mapped).
   if (point && input.noiseLines && input.noiseLines.length > 0) {
     const flags = noiseFlags(
       nearestNoiseSources([point.lng, point.lat], input.noiseLines)
@@ -555,20 +555,20 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         title: "Possible traffic / rail noise",
         summary: `This point is close to a ${list}.`,
         whyItMatters:
-          "Proximity to a freeway, railway or tram line often means road, train or tram noise — especially at peak hour and overnight.",
+          "Proximity to a freeway, railway or tram line often means road, train or tram noise - especially at peak hour and overnight.",
         verifyAction:
           "Visit at peak hour and after dark to judge the real noise; ask whether the property has double glazing.",
         confidence: "low",
         geography: "pin",
         caveat:
-          "Straight-line distance to the nearest mapped rail line, tram line or freeway/major road (OpenStreetMap, ODbL) — a proximity proxy, NOT a measured noise level. Barriers, cuttings, traffic volume, aspect and time of day all matter and are not modelled.",
+          "Straight-line distance to the nearest mapped rail line, tram line or freeway/major road (OpenStreetMap, ODbL) - a proximity proxy, NOT a measured noise level. Barriers, cuttings, traffic volume, aspect and time of day all matter and are not modelled.",
         sourceRefs: getSourcesByIds(["osm-amenities"]),
       });
     }
   }
 
   // Nuisance / disamenity proximity proxy (pin-level, OSM): industrial estates,
-  // waste/landfill, sewage works, quarries — odour/dust/traffic. Only FLAG close.
+  // waste/landfill, sewage works, quarries - odour/dust/traffic. Only FLAG close.
   if (point && input.nuisancePoints && input.nuisancePoints.length > 0) {
     const nflags = nuisanceFlags(
       nearestNuisances([point.lng, point.lat], input.nuisancePoints)
@@ -590,13 +590,13 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         confidence: "low",
         geography: "pin",
         caveat:
-          "Straight-line distance to the representative point of the nearest mapped industrial area, waste/landfill, sewage works or quarry (OpenStreetMap, ODbL) — a proximity proxy, NOT a measured emission. Whether a site affects this property depends on wind, hours, screening and operations.",
+          "Straight-line distance to the representative point of the nearest mapped industrial area, waste/landfill, sewage works or quarry (OpenStreetMap, ODbL) - a proximity proxy, NOT a measured emission. Whether a site affects this property depends on wind, hours, screening and operations.",
         sourceRefs: getSourcesByIds(["osm-amenities"]),
       });
     }
   }
 
-  // Nearest train station (pin-level, OSM) — a commute-convenience signal.
+  // Nearest train station (pin-level, OSM) - a commute-convenience signal.
   if (point && input.stations && input.stations.length > 0) {
     const st = nearestStation([point.lng, point.lat], input.stations);
     if (st) {
@@ -621,7 +621,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
   }
 
   // 1b) Adjacency nudge. If the pin sits within ~15 min on foot of a NEIGHBOURING
-  //     SA2's centre-point, a boundary is probably close — recommend also checking
+  //     SA2's centre-point, a boundary is probably close - recommend also checking
   //     those areas, since their amenities, scores and recorded-offence figures may
   //     describe this spot just as well as the containing SA2 does.
   if (point && input.nearbyAreas?.length) {
@@ -652,14 +652,14 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         confidence: "medium",
         geography: "sa2",
         caveat:
-          "Closeness is measured to area centre-points (straight-line), not to the actual boundary — check the map for where the borders fall.",
+          "Closeness is measured to area centre-points (straight-line), not to the actual boundary - check the map for where the borders fall.",
         sourceRefs: [METHODOLOGY_REF],
       });
     }
   }
 
   // 1c) Major transport projects (curated VIC Big Build) within ~1.5 km of the
-  //     pin — a factual "what's changing nearby" nudge, never a price prediction.
+  //     pin - a factual "what's changing nearby" nudge, never a price prediction.
   if (point && input.majorProjects?.length) {
     const pin: LngLat = [point.lng, point.lat];
     const near = input.majorProjects
@@ -678,7 +678,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         kind: "neutral",
         severity: "info",
         title: "Major transport project nearby",
-        summary: `A new ${p.label} — ${p.name} station, ~${Math.round(p.km * 1000)} m away — is ${p.status}.${more ? ` Also nearby: ${more}.` : ""}`,
+        summary: `A new ${p.label} - ${p.name} station, ~${Math.round(p.km * 1000)} m away - is ${p.status}.${more ? ` Also nearby: ${more}.` : ""}`,
         whyItMatters:
           "Major transport infrastructure can reshape access and the area over the years it is built and opens.",
         verifyAction:
@@ -686,7 +686,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         confidence: "medium",
         geography: "poi-radius",
         caveat:
-          "Station location is approximate (resolved from OpenStreetMap) and projects can shift — confirm on the project page. This flags what is planned or underway, not a prediction of prices.",
+          "Station location is approximate (resolved from OpenStreetMap) and projects can shift - confirm on the project page. This flags what is planned or underway, not a prediction of prices.",
         sourceRefs: [
           { id: "vic-big-build", label: "Victoria's Big Build", url: p.sourceUrl },
         ],
@@ -694,7 +694,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     }
   }
 
-  // 1d) Sun & aspect — proprietary, deterministic solar geometry from the pin's
+  // 1d) Sun & aspect - proprietary, deterministic solar geometry from the pin's
   //     latitude (no external shade service). Aspect can't be changed, so it's a
   //     real due-diligence factor.
   if (hasPoint) {
@@ -705,9 +705,9 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       kind: "neutral",
       severity: "info",
       title: "Sun & aspect",
-      summary: `In summer the sun rises in the ${sun.summer.sunrise} and sets in the ${sun.summer.sunset} — a long ~${h(sun.summer.dayHours)}-hour day, climbing to ${Math.round(sun.summer.noonElevation)}° at noon. In winter it rises ${sun.winter.sunrise}, sets ${sun.winter.sunset} (~${h(sun.winter.dayHours)} hours, only ${Math.round(sun.winter.noonElevation)}° high). ${sun.sunSide === "north" ? "North" : "South"}-facing rooms and outdoor space get the most sun; morning sun comes from the east, afternoon from the west.`,
+      summary: `In summer the sun rises in the ${sun.summer.sunrise} and sets in the ${sun.summer.sunset} - a long ~${h(sun.summer.dayHours)}-hour day, climbing to ${Math.round(sun.summer.noonElevation)}° at noon. In winter it rises ${sun.winter.sunrise}, sets ${sun.winter.sunset} (~${h(sun.winter.dayHours)} hours, only ${Math.round(sun.winter.noonElevation)}° high). ${sun.sunSide === "north" ? "North" : "South"}-facing rooms and outdoor space get the most sun; morning sun comes from the east, afternoon from the west.`,
       whyItMatters:
-        "Aspect — which way the property faces — drives natural light, winter warmth and running costs, and it can't be changed.",
+        "Aspect - which way the property faces - drives natural light, winter warmth and running costs, and it can't be changed.",
       verifyAction:
         "Walk the property at the time of day you'd use the main rooms, and check which windows face the sunny side.",
       confidence: "high",
@@ -792,7 +792,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
   }
 
   // 5) Hazard & planning overlays (SA2 share; parcel-level NOT matched).
-  //    Established/inner SA2s typically have ~no bushfire/flood overlay — there we
+  //    Established/inner SA2s typically have ~no bushfire/flood overlay - there we
   //    surface a calm "none mapped" note rather than a "verify" flag (a flood/fire
   //    warning in the CBD is noise). Material overlay share keeps the verify/red-flag.
   const bushfire = rawOf(place, "hazards", "bushfirePct");
@@ -814,7 +814,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       confidence: "medium",
       geography: "sa2",
       caveat:
-        "Absence of a mapped planning overlay is not a guarantee — flood or fire risk can exist without one.",
+        "Absence of a mapped planning overlay is not a guarantee - flood or fire risk can exist without one.",
       sourceRefs: getSourcesByIds(["vic-planning-bpa", "vic-planning-flood"]),
     });
   } else {
@@ -824,7 +824,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       severity: elevatedHazard ? "high" : "medium",
       title: "Check hazard and planning overlays",
       summary: hazardBits.length
-        ? `Of this SA2, ${hazardBits.join(" and ")}. Whether THIS parcel is affected needs a parcel-level check — pin-level overlay matching is not yet available in this MVP.`
+        ? `Of this SA2, ${hazardBits.join(" and ")}. Whether THIS parcel is affected needs a parcel-level check - pin-level overlay matching is not yet available in this MVP.`
         : "Hazard/planning overlay checks matter for this location, but exact pin-level overlay matching is not yet available in this MVP.",
       whyItMatters: "Overlays drive building controls, insurance cost and what you can do with the land.",
       verifyAction:
@@ -835,7 +835,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     });
   }
 
-  // 5b) Heritage Overlay (context — a planning CONTROL, never scored). Only
+  // 5b) Heritage Overlay (context - a planning CONTROL, never scored). Only
   //     surfaced when there is material coverage; an AREA share, not parcel-level.
   const heritagePct = place?.context?.planning?.heritageOverlayPct ?? null;
   if (heritagePct != null && heritagePct >= 1) {
@@ -849,13 +849,13 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         : "Part of this area is under a Heritage Overlay",
       summary: `About ${Math.round(heritagePct)}% of this SA2's area is within a Heritage Overlay (HO). Whether THIS property is affected needs a parcel-level check.`,
       whyItMatters:
-        "A Heritage Overlay can restrict demolition, external changes and subdivision — it shapes what you can do with the property.",
+        "A Heritage Overlay can restrict demolition, external changes and subdivision - it shapes what you can do with the property.",
       verifyAction:
         "Check the property's planning certificate / VicPlan for a Heritage Overlay before you offer.",
       confidence: "medium",
       geography: "sa2",
       caveat:
-        "Area share, not a parcel-level result — a property can be affected even where the area share is low, and vice versa.",
+        "Area share, not a parcel-level result - a property can be affected even where the area share is low, and vice versa.",
       sourceRefs: getSourcesByIds(["vic-planning-heritage"]),
     });
   }
@@ -873,10 +873,10 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     severity: "low",
     title: "Review local safety context",
     summary: !place
-      ? "This point is outside our Greater Melbourne coverage, so no local crime context is available here. Recorded offences are published at suburb/LGA level — check the VCSA data for the actual area."
+      ? "This point is outside our Greater Melbourne coverage, so no local crime context is available here. Recorded offences are published at suburb/LGA level - check the VCSA data for the actual area."
       : crimeBits.length
-        ? `Recorded ${crimeBits.join(" and ")} across Greater Melbourne, measured at suburb/LGA level — not the specific street.`
-        : "We do not hold recorded-offence figures for this specific area — check VCSA crime data for the wider council/LGA.",
+        ? `Recorded ${crimeBits.join(" and ")} across Greater Melbourne, measured at suburb/LGA level - not the specific street.`
+        : "We do not hold recorded-offence figures for this specific area - check VCSA crime data for the wider council/LGA.",
     verifyAction: "Walk the immediate street at different times and check recent local reports.",
     caveat:
       "Recorded offences reflect reporting and policing, not true crime levels; percentiles rank areas and do not predict a specific street.",
@@ -911,7 +911,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       "This MVP does not estimate property value or price growth. Future versions may add transparent price-context data where licensing allows.",
     confidence: "unknown",
     geography: "unknown",
-    caveat: "Sale prices, valuations and rental yields are not open data we can license — check a listing portal, recent comparable sales, or an agent for indicative pricing.",
+    caveat: "Sale prices, valuations and rental yields are not open data we can license - check a listing portal, recent comparable sales, or an agent for indicative pricing.",
   });
 
   // 9) Data confidence (meta; neutral).
@@ -946,7 +946,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     ? reachableEveryday >= 5
       ? "Everyday amenities look well-covered within a short walk."
       : reachableEveryday <= 2
-        ? "Few everyday amenities were found nearby in the open data — worth checking on foot."
+        ? "Few everyday amenities were found nearby in the open data - worth checking on foot."
         : "Some everyday amenities are nearby; check the rest on foot."
     : "Drop a pin on the map to measure what is nearby on foot.";
   const liveabilitySentence =
@@ -958,7 +958,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
           : "The surrounding area is around the Greater-Melbourne median on liveability."
       : "";
   const subheadline = place
-    ? `${amenitySentence} ${liveabilitySentence} The detail, sources and caveats are below — use the checklist to verify anything material before you offer.`.replace(
+    ? `${amenitySentence} ${liveabilitySentence} The detail, sources and caveats are below - use the checklist to verify anything material before you offer.`.replace(
         /\s+/g,
         " "
       ).trim()
@@ -979,7 +979,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       ? `pin-${input.lat!.toFixed(5)}-${input.lng!.toFixed(5)}`
       : "buyer-report";
 
-  // Personal "fit for your life" — re-frame the sourced facts against the user's
+  // Personal "fit for your life" - re-frame the sourced facts against the user's
   // profile (deal-breakers to verify + fit notes). Pure; never alters the score.
   const fit: FitResult | undefined = input.profile
     ? evaluateFit(input.profile, {

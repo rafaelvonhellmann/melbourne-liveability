@@ -1,7 +1,7 @@
 import type { DomainId, ScoreWeights } from "./types";
 import { normalizeWeights } from "./weights";
 
-/** Mover interest lenses — set default map layer + optional weight skew. */
+/** Mover interest lenses - set default map layer + optional weight skew. */
 export type InterestViewId =
   | "general"
   | "rental"
@@ -123,7 +123,7 @@ export const INTEREST_VIEWS: Record<InterestViewId, InterestViewConfig> = {
 };
 
 /**
- * The curated "Lens" set shown in the picker — interest views with the two
+ * The curated "Lens" set shown in the picker - interest views with the two
  * most-distinct mover personas (Family, Retiree) folded in. Young-professional
  * and student personas collapse into Renting, and the standalone Education view
  * into Family, since their weight profiles overlap. Other ids (e.g. `education`,

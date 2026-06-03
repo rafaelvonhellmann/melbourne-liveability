@@ -76,7 +76,7 @@ export function LayerToggle({
         Showing on map
       </div>
       <p className="mb-2 px-1 text-[11px] leading-snug text-ink-muted">
-        Recolours the map only — this does not change your ranking.{" "}
+        Recolours the map only - this does not change your ranking.{" "}
         <span className="text-ink">{activeLabel}</span>
       </p>
       <ul className="space-y-1">
@@ -127,7 +127,7 @@ export function LayerToggle({
         </p>
       )}
 
-      {/* Points of interest — user-controlled, off by default, colour-coded by
+      {/* Points of interest - user-controlled, off by default, colour-coded by
           category (a categorical palette, separate from the YlGnBu data ramp). */}
       <div className="mt-2.5 border-t border-surface-border pt-2.5">
         <div className="mb-1.5 flex items-center justify-between gap-2 px-1">

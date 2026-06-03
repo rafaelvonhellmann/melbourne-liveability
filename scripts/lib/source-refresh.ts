@@ -2,7 +2,7 @@
  * Refresh cadence + upstream "last updated" probes per source.
  *
  * Used by check-freshness.ts to decide, automatically, when our committed data
- * is due for a refresh — instead of relying on someone remembering to re-run
+ * is due for a refresh - instead of relying on someone remembering to re-run
  * the pipeline. ArcGIS layers expose editingInfo.lastEditDate; CKAN resources
  * expose last_modified. Sources with no cheap probe fall back to cadence only.
  */

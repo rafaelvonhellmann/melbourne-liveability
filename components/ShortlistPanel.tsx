@@ -27,7 +27,7 @@ export function ShortlistPanel({
 }: ShortlistPanelProps) {
   // Hydrate/subscribe to the persisted shortlist directly. The controlled
   // `slugs` prop is the primary source, but localStorage is the source of
-  // truth across mounts (e.g. returning from a profile page) — without this
+  // truth across mounts (e.g. returning from a profile page) - without this
   // subscription the panel could render its title with no contents.
   const [localSlugs, setLocalSlugs] = useState<string[]>(slugs);
 

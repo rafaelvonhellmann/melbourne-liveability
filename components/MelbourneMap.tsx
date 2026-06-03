@@ -53,12 +53,12 @@ type MelbourneMapProps = {
   visiblePins?: Record<string, boolean>;
   onPlaceSelect?: (props: { slug?: string; name?: string; sa2Code?: string }) => void;
   /**
-   * In-app camera target used by the area search (pan/zoom to a result) — a
+   * In-app camera target used by the area search (pan/zoom to a result) - a
    * `nonce` lets the same place re-trigger a fly-to. Map *clicks* deliberately
    * do NOT set this, so selecting an area on the map preserves the view.
    */
   focusTarget?: { center: [number, number]; nonce: number } | null;
-  /** Slug of the currently-selected SA2 — drawn with a highlight outline. */
+  /** Slug of the currently-selected SA2 - drawn with a highlight outline. */
   selectedSlug?: string | null;
   /** Feature property currently painted on the choropleth (e.g. "pct_affordability"). */
   hoverProp?: string;
@@ -204,7 +204,7 @@ export function MelbourneMap({
         },
       });
 
-      // Highlight outline for the selected SA2 — a distinct warm accent line,
+      // Highlight outline for the selected SA2 - a distinct warm accent line,
       // wider than the base mesh, so the active area is obvious over the
       // YlGnBu choropleth. Filter starts matching nothing; the selectedSlug
       // effect below sets it.
@@ -330,7 +330,7 @@ export function MelbourneMap({
         filter: ["==", ["get", "pinType"], "__none__"],
         paint: {
           "circle-radius": 4.5,
-          // Categorical colour-by-category — independent of the YlGnBu data ramp.
+          // Categorical colour-by-category - independent of the YlGnBu data ramp.
           "circle-color": poiCircleColorExpression() as maplibregl.ExpressionSpecification,
           "circle-stroke-width": 1.5,
           "circle-stroke-color": "#ffffff",
@@ -405,7 +405,7 @@ export function MelbourneMap({
       map.getCanvas().style.cursor = "";
     });
 
-    // Lightweight hover preview (desktop pointers only — touch never fires
+    // Lightweight hover preview (desktop pointers only - touch never fires
     // mousemove). Shows the area name and the value of whatever layer is
     // currently painted, so users can scan the choropleth without clicking.
     const popup = new maplibregl.Popup({
@@ -459,7 +459,7 @@ export function MelbourneMap({
   // eslint-disable-next-line react-hooks/exhaustive-deps -- map init once
   }, []);
 
-  // Buyer pin marker — add / move / remove a coral marker at the dropped point.
+  // Buyer pin marker - add / move / remove a coral marker at the dropped point.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -485,7 +485,7 @@ export function MelbourneMap({
     map.flyTo({ center: buyerPin, zoom: Math.max(map.getZoom(), 14.5), duration: 800 });
   }, [buyerPin]);
 
-  // ~15-min bike reach ring — independent toggle, only shown with a pin down.
+  // ~15-min bike reach ring - independent toggle, only shown with a pin down.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -560,7 +560,7 @@ export function MelbourneMap({
 
   // Highlight the selected SA2 by filtering the dedicated outline layer to its
   // slug. Updating a filter (not re-adding sources/layers) keeps the map view,
-  // choropleth, and pins fully intact — selecting never reloads the map.
+  // choropleth, and pins fully intact - selecting never reloads the map.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;

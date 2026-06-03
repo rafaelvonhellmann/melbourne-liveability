@@ -3,9 +3,9 @@ import type { Cyclability } from "./types";
 /**
  * Cyclability index helpers (context-only, never scored).
  *
- * We compile OpenStreetMap cycling infrastructure — dedicated cycleways
+ * We compile OpenStreetMap cycling infrastructure - dedicated cycleways
  * (`highway=cycleway`), on-road bike lanes (`cycleway=*` tags on roads) and
- * bicycle-designated paths (`bicycle=designated`) — and summarise, per SA2, how
+ * bicycle-designated paths (`bicycle=designated`) - and summarise, per SA2, how
  * much cycle infrastructure exists relative to the SA2's land area.
  *
  * Honesty notes:
@@ -14,7 +14,7 @@ import type { Cyclability } from "./types";
  *    per km²", not "good to cycle in".
  *  - OSM cycle tagging is community-maintained and uneven; separated paths vs
  *    painted on-road lanes are both counted (we record the split but do not
- *    weight them differently — distinguishing quality reliably needs far more
+ *    weight them differently - distinguishing quality reliably needs far more
  *    tag parsing than OSM consistently provides).
  *  - Segments are attributed to the SA2 that contains their midpoint, so a long
  *    trail spanning two SA2s lands wholly in one. Coarse, documented.
@@ -30,7 +30,7 @@ export const CYCLABILITY_SATURATION_KM_PER_KM2 = 4;
 
 /**
  * "~15-min bike" reach radius drawn around the buyer pin. A conservative casual
- * urban speed (allowing for stops, lights and hills), NOT a sports pace — and
+ * urban speed (allowing for stops, lights and hills), NOT a sports pace - and
  * straight-line, like the walk radius, so it OVERSTATES real road-network reach
  * (rivers, freeways and rail are not subtracted). A range indicator, not routing.
  */

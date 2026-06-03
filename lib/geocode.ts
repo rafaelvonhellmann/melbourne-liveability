@@ -105,7 +105,7 @@ export async function geocodeAddress(
   query: string,
   signal?: AbortSignal
 ): Promise<GeocodeResult[]> {
-  // Nominatim resolves a building, not a unit — and an Australian unit prefix
+  // Nominatim resolves a building, not a unit - and an Australian unit prefix
   // ("5/12 Smith St", "Unit 5, ...", "Apt 5 ...") makes it fail. Strip it so the
   // pin still lands on the building; the unit doesn't change the SA2 or what's
   // nearby.

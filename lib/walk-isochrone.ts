@@ -2,24 +2,24 @@
  * Paid-tier "precise walk access" for the Buyer Location Check.
  *
  * The free tier answers "what's within ~15 min on foot of this pin" with
- * straight-line (haversine) distance — honest but it overstates real walking
+ * straight-line (haversine) distance - honest but it overstates real walking
  * access (see {@link amenitiesNear} in ./buyer-location and the caveat copy in
  * BuyerReport). This module is the opt-in upgrade: it asks a routing service for
  * a true street-network walk *isochrone* (the polygon actually reachable on foot
  * in N minutes) and classifies the same already-loaded POIs by whether they fall
- * inside that polygon — not by crow-flies radius.
+ * inside that polygon - not by crow-flies radius.
  *
  * Design constraints honoured here:
  *  - Static export (`output: "export"`): everything is a *runtime, client-side*
  *    fetch. No build step, no Next API/server route, no new server dependency.
  *  - Pure vs networked split: the network call ({@link fetchWalkIsochrone}) and
  *    response parsing ({@link parseOrsIsochrone}) live here; turning the polygon
- *    into reachability is pure and lives in the report engine — `getNearbyAmenities`
+ *    into reachability is pure and lives in the report engine - `getNearbyAmenities`
  *    in ./buyer-report classifies the already-loaded POIs by isochrone containment
  *    (it already imports `pointInPolygon`), so the report engine stays network-free.
  *  - Provider-agnostic: the network call is isolated in {@link fetchWalkIsochrone}
  *    and the response shape in {@link parseOrsIsochrone}, so swapping the backend
- *    (Mapbox, a key-hiding proxy, or — with its own parser — Valhalla) is a small,
+ *    (Mapbox, a key-hiding proxy, or - with its own parser - Valhalla) is a small,
  *    contained change.
  *
  * Default backend: OpenRouteService isochrones (`foot-walking`, time range).
@@ -102,7 +102,7 @@ export function parseOrsIsochrone(
  * Fetch a street-network walk isochrone for `pin` (a [lng, lat]) covering
  * `minutes` of walking. Never throws to the caller: returns `{ ok: false }`
  * when the feature is not configured, the request fails, or no polygon comes
- * back — callers then fall back to the free straight-line `amenitiesNear`.
+ * back - callers then fall back to the free straight-line `amenitiesNear`.
  */
 export async function fetchWalkIsochrone(
   pin: LngLat,

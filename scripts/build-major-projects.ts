@@ -9,7 +9,7 @@
  * guessed. Re-run when the curated list changes.
  *
  * Display use is a proximity NUDGE in the buyer report ("a major project is ~Xm
- * away"), with a generous threshold + the official project link — so ~100-300 m
+ * away"), with a generous threshold + the official project link - so ~100-300 m
  * of geocode error is immaterial and the user verifies specifics at the source.
  */
 import { writeFile } from "node:fs/promises";

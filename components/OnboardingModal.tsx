@@ -14,7 +14,7 @@ type Props = {
 
 /**
  * First-run welcome that orients new visitors and lets them pick a starting
- * lens — shown once (localStorage flag), no signup. Returning users (who already
+ * lens - shown once (localStorage flag), no signup. Returning users (who already
  * have any saved preference) never see it.
  */
 export function OnboardingModal({ onPick }: Props) {
@@ -31,7 +31,7 @@ export function OnboardingModal({ onPick }: Props) {
       }
       setOpen(true);
     } catch {
-      /* localStorage unavailable — just don't onboard */
+      /* localStorage unavailable - just don't onboard */
     }
   }, []);
 
@@ -131,7 +131,7 @@ export function OnboardingModal({ onPick }: Props) {
             onClick={dismiss}
             className="text-sm text-ink-muted underline-offset-2 hover:text-accent hover:underline"
           >
-            Skip — just explore the map
+            Skip - just explore the map
           </button>
           <span className="text-[11px] text-ink-muted">No account needed</span>
         </div>

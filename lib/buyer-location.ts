@@ -1,5 +1,5 @@
 /**
- * Pure geometry/aggregation helpers for the Buyer "Location Check" — what is
+ * Pure geometry/aggregation helpers for the Buyer "Location Check" - what is
  * near a dropped pin, and which SA2 it falls in. Deliberately dependency-free
  * (no Turf) so it stays light in the client map bundle and runs at build time
  * for the static sample report. Straight-line distance only (same honesty

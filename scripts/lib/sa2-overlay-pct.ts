@@ -79,7 +79,7 @@ export function buildHazardIndex(overlay: FeatureCollection): RBush<HazardItem> 
  * bbox index and (2) clip each candidate to the SA2 bounding box with the
  * linear-time `turf.bboxClip`. Because an SA2 polygon is always a subset of
  * its own bbox, clipping a candidate to that bbox discards only area that
- * could not possibly intersect the SA2 — so the resulting overlap area (and
+ * could not possibly intersect the SA2 - so the resulting overlap area (and
  * thus the percentage) is identical to intersecting the full candidate, just
  * far cheaper. The summed-area semantics are unchanged.
  */
@@ -103,7 +103,7 @@ export function overlayPctInSa2(
   let covered = 0;
   for (const c of candidates) {
     try {
-      // Cheap linear clip to the SA2 bbox first — turns the giant candidate
+      // Cheap linear clip to the SA2 bbox first - turns the giant candidate
       // into a small local piece so the polygon-clipping intersect below is
       // fast. Exact for area because the SA2 lies entirely within its bbox.
       const clipped = turf.bboxClip(c.feature, sa2Bbox);

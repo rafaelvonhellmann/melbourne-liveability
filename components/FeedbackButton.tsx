@@ -5,7 +5,7 @@ import { MessageSquarePlus, X } from "lucide-react";
 
 // Same delivery model as /alerts: a Formspree endpoint when configured, with a
 // graceful fallback so feedback is never silently dropped. No personal email is
-// hardcoded — the optional mailto target is also env-configured.
+// hardcoded - the optional mailto target is also env-configured.
 const FORMSPREE_ID = process.env.NEXT_PUBLIC_FORMSPREE_FEEDBACK_ID;
 const FEEDBACK_EMAIL = process.env.NEXT_PUBLIC_FEEDBACK_EMAIL;
 
@@ -89,7 +89,7 @@ export function FeedbackButton({ context, className }: FeedbackButtonProps) {
       message: message.trim(),
       email: email.trim() || "(not provided)",
       context: ctx,
-      _subject: `Melbourne Liveability feedback — ${kind}`,
+      _subject: `Melbourne Liveability feedback - ${kind}`,
     };
 
     if (FORMSPREE_ID) {
@@ -107,7 +107,7 @@ export function FeedbackButton({ context, className }: FeedbackButtonProps) {
       return;
     }
 
-    // No Formspree configured — fall back to a prefilled mailto if a contact
+    // No Formspree configured - fall back to a prefilled mailto if a contact
     // address is set, otherwise tell the deployer how to enable delivery.
     if (FEEDBACK_EMAIL && typeof window !== "undefined") {
       const body = encodeURIComponent(
@@ -178,8 +178,8 @@ export function FeedbackButton({ context, className }: FeedbackButtonProps) {
               <div className="mt-4">
                 <p className="text-sm text-ink">
                   {status === "mailto"
-                    ? "Opening your email app to send — thanks for helping improve the data."
-                    : "Thanks — your feedback was sent. We review reports against the next data refresh."}
+                    ? "Opening your email app to send - thanks for helping improve the data."
+                    : "Thanks - your feedback was sent. We review reports against the next data refresh."}
                 </p>
                 <button
                   type="button"
@@ -278,7 +278,7 @@ export function FeedbackButton({ context, className }: FeedbackButtonProps) {
                 </button>
                 <p className="text-[11px] leading-snug text-ink-muted">
                   Reports help us prioritise fixes and new datasets. We never fold user input
-                  directly into scores — every change goes through the sourced pipeline.
+                  directly into scores - every change goes through the sourced pipeline.
                 </p>
               </form>
             )}

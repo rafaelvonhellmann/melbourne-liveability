@@ -12,7 +12,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const metadata = {
   title: "Methodology & data reference · Melbourne Liveability",
   description:
-    "Every dataset we use, where it comes from, its licence and vintage, and exactly how it is joined to an SA2 — plus scoring, crosswalk, and caveats.",
+    "Every dataset we use, where it comes from, its licence and vintage, and exactly how it is joined to an SA2 - plus scoring, crosswalk, and caveats.",
 };
 
 const TOC: { id: string; label: string }[] = [
@@ -69,7 +69,7 @@ export default function MethodologyPage() {
       {/* ---------------------------------------------------------------- */}
       {/* 1. Data reference                                                */}
       {/* ---------------------------------------------------------------- */}
-      <Section id="reference" title="1. Data reference — what we hold, where it's from, how we use it">
+      <Section id="reference" title="1. Data reference - what we hold, where it's from, how we use it">
         <p>
           The seven <strong className="text-ink">scored</strong> domains below blend to the
           composite (default ULTRAPLAN §1 weights shown). Each row names the underlying
@@ -138,7 +138,7 @@ export default function MethodologyPage() {
         })}
 
         <h3 className="mt-6 text-sm font-semibold text-ink">
-          Context layers &amp; pins — never scored
+          Context layers &amp; pins - never scored
         </h3>
         <p className="text-sm text-ink-muted">
           These are compiled for transparency and exploration. They never enter the
@@ -255,7 +255,7 @@ export default function MethodologyPage() {
           higher is worse (rent, crime, hazard overlay). A domain score is the sub-weighted
           blend of its indicators; the composite is the weight-blend of the seven scored
           domains. Default weights: Rent vs income 30, Transport 18, Crime/Safety 14, Health
-          14, Hazards 8, Education 8, Income/Economy 8 — adjustable by sliders / lens presets.
+          14, Hazards 8, Education 8, Income/Economy 8 - adjustable by sliders / lens presets.
           The score uses each weight&apos;s share (ratio) of the total, so a slider holds the value
           you set.
         </p>
@@ -277,13 +277,13 @@ export default function MethodologyPage() {
           <strong className="text-ink">population-weighted</strong> spatial intersection
           (area-weighted fallback where mesh-block population is unavailable); every
           aggregated value records which method it used. Point data (hospitals, GP,
-          schools, pins) needs no crosswalk — it is assigned to the SA2 it falls in, with
+          schools, pins) needs no crosswalk - it is assigned to the SA2 it falls in, with
           proximity measured from the SA2 centroid. Polygon overlays (hazards) are
           area-weighted against each SA2.
         </p>
         <p>
           <strong className="text-ink">Non-residential SA2s</strong> (estimated resident
-          population &lt; 200 — airports, parkland, industrial, water) are excluded from
+          population &lt; 200 - airports, parkland, industrial, water) are excluded from
           percentile baselines and rankings, and drawn in neutral no-data grey
           (<code className="text-xs">#d9d6cf</code>) rather than a misleading score.
         </p>
@@ -304,13 +304,13 @@ export default function MethodologyPage() {
         <p>
           Inside a domain tab, each indicator card shows its value, unit, honest direction,
           Greater-Melbourne percentile, source, and a <strong className="text-ink">benchmark
-          band</strong> — this area&apos;s raw value against the GM median and P25–P75
+          band</strong> - this area&apos;s raw value against the GM median and P25–P75
           range across residential SA2s, computed at build from the full dataset.{" "}
           <strong className="text-ink">Time-series</strong> are shown only where we hold
           ≥3 real points (population; property &amp; violent crime, labelled LGA-level so
           they are not misread as SA2-precise); every trend line states its geography,
           period range, and any boundary break. Other indicators say
-          &ldquo;single period — no trend data held&rdquo; rather than fabricating one.
+          &ldquo;single period - no trend data held&rdquo; rather than fabricating one.
         </p>
       </Section>
 
@@ -326,7 +326,7 @@ export default function MethodologyPage() {
           <strong className="text-ink">home-buyer index</strong> appear for transparency
           only. The home-buyer index blends indicators we already hold (cost-pressure 28%,
           safety 18%, schools 16%, transport 14%, low hazard 14%, walk access 10%) into a
-          GM percentile — using <strong className="text-ink">no sale-price data</strong>,
+          GM percentile - using <strong className="text-ink">no sale-price data</strong>,
           so it is not a price or capital-growth estimate.
         </p>
         <p>
@@ -342,7 +342,7 @@ export default function MethodologyPage() {
           schools, childcare, post, pathology/NDIS, supermarkets, parks, gyms, cafes) are
           off by default and toggled per category, colour-coded by a categorical palette
           kept separate from the YlGnBu choropleth ramp. NDIS and pathology are sparsely
-          tagged in OSM — treat their coverage as indicative, not complete.
+          tagged in OSM - treat their coverage as indicative, not complete.
         </p>
       </Section>
 
@@ -354,8 +354,8 @@ export default function MethodologyPage() {
           Each SA2 carries a 0–100 data-confidence index combining domain coverage,
           completeness (non-missing sub-indicators), freshness, and aggregation-method
           confidence (directly measured &gt; crosswalk-estimated &gt; proximity). It
-          describes how well-<em>measured</em> an area is — a property of our pipeline, not
-          a judgement of the place — and is shown as an optional map layer and a per-area
+          describes how well-<em>measured</em> an area is - a property of our pipeline, not
+          a judgement of the place - and is shown as an optional map layer and a per-area
           report card. Across Greater Melbourne it is near-uniform (≈86–95) and shows no
           correlation with income or SEIFA (r ≈ 0). The profile&apos;s Data-coverage panel
           states, per domain, what the data actually represents and which indicators are
@@ -383,7 +383,7 @@ export default function MethodologyPage() {
       <Section id="caveats" title="9. Caveats">
         <ul className="list-disc space-y-1.5 pl-5">
           <li>
-            Crime is recorded at suburb/LGA level and allocated to SA2 by crosswalk — not
+            Crime is recorded at suburb/LGA level and allocated to SA2 by crosswalk - not
             resident point-level. Resident-population rates can overstate inner-city areas
             with large daytime worker/visitor populations.
           </li>
@@ -394,7 +394,7 @@ export default function MethodologyPage() {
             (LSIO only).
           </li>
           <li>
-            <strong className="text-ink">GP/clinic count is OSM nodes only</strong> — by
+            <strong className="text-ink">GP/clinic count is OSM nodes only</strong> - by
             design, so widening the map-pin query never shifts the scored Health composite.
             This excludes clinics mapped as building polygons (ways), so it can undercount.
           </li>
@@ -403,7 +403,7 @@ export default function MethodologyPage() {
             counts. NDIS and pathology pins are sparsely tagged in OSM.
           </li>
           <li>
-            Labour-force indicators are Census 2016 — older than income/rent (2021). GTFS
+            Labour-force indicators are Census 2016 - older than income/rent (2021). GTFS
             is a static timetable export, not real-time service quality.
           </li>
           <li>
@@ -419,7 +419,7 @@ export default function MethodologyPage() {
       <Section id="attribution" title="10. Attribution & licences">
         <p>
           ABS, PTV GTFS, VCSA, Victoria planning &amp; MapShare data are CC BY 4.0 (some
-          marked CC BY 4.0 Victoria) — see the per-dataset licences in the{" "}
+          marked CC BY 4.0 Victoria) - see the per-dataset licences in the{" "}
           <a href="#manifest" className="text-accent hover:underline">
             manifest
           </a>{" "}
@@ -430,7 +430,7 @@ export default function MethodologyPage() {
         </p>
         <p className="mt-3 text-sm text-ink-muted">
           Spotted a data problem or want a dataset added? Use the{" "}
-          <strong className="text-ink">Feedback</strong> button in the top bar — reports
+          <strong className="text-ink">Feedback</strong> button in the top bar - reports
           are reviewed against the next refresh and never folded directly into scores.
         </p>
       </Section>

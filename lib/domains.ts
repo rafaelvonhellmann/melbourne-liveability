@@ -29,7 +29,7 @@ export const DOMAIN_REGISTRY: DomainConfig[] = [
     defaultWeight: 30,
     layer: "choropleth",
     description:
-      "Median rent relative to LOCAL median income — a cost-pressure measure for residents, not a sale price. High-income suburbs can score well even with high rents, so it is not a guide to how cheap an area is to move into.",
+      "Median rent relative to LOCAL median income - a cost-pressure measure for residents, not a sale price. High-income suburbs can score well even with high rents, so it is not a guide to how cheap an area is to move into.",
   },
   {
     id: "transport",
@@ -66,7 +66,7 @@ export const DOMAIN_REGISTRY: DomainConfig[] = [
     defaultWeight: 8,
     layer: "choropleth",
     description:
-      "Share of the area under bushfire-prone and flood planning overlays — less overlay scores better.",
+      "Share of the area under bushfire-prone and flood planning overlays - less overlay scores better.",
   },
   {
     id: "education",
@@ -92,7 +92,7 @@ export const DOMAIN_REGISTRY: DomainConfig[] = [
     scored: false,
     defaultWeight: 0,
     layer: "context",
-    description: "SEIFA deciles — context only, never scored.",
+    description: "SEIFA deciles - context only, never scored.",
   },
   {
     id: "population",
@@ -100,7 +100,7 @@ export const DOMAIN_REGISTRY: DomainConfig[] = [
     scored: false,
     defaultWeight: 0,
     layer: "context",
-    description: "Tenure, dwelling mix, First Nations % — context only.",
+    description: "Tenure, dwelling mix, First Nations % - context only.",
   },
   {
     id: "environment",
@@ -108,7 +108,7 @@ export const DOMAIN_REGISTRY: DomainConfig[] = [
     scored: false,
     defaultWeight: 0,
     layer: "context",
-    description: "Heat and air quality — deferred to v2.",
+    description: "Heat and air quality - deferred to v2.",
   },
   {
     id: "politics",
@@ -116,7 +116,7 @@ export const DOMAIN_REGISTRY: DomainConfig[] = [
     scored: false,
     defaultWeight: 0,
     layer: "context",
-    description: "Federal election booth aggregation — deferred to v2.",
+    description: "Federal election booth aggregation - deferred to v2.",
   },
 ];
 

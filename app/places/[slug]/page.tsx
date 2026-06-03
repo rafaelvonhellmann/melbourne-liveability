@@ -38,7 +38,7 @@ async function loadTimeseries(): Promise<TimeseriesFile | null> {
 
 let _benchmarks: ReturnType<typeof computeGmBenchmarks> | null = null;
 function gmBenchmarks(places: PlacesFile["places"]) {
-  // Greater-Melbourne benchmark distribution per indicator — identical for every
+  // Greater-Melbourne benchmark distribution per indicator - identical for every
   // page, so compute it once for the whole static export.
   if (!_benchmarks) _benchmarks = computeGmBenchmarks(places);
   return _benchmarks;
@@ -46,7 +46,7 @@ function gmBenchmarks(places: PlacesFile["places"]) {
 
 let _homeBuyerRanks: ReturnType<typeof rankHomeBuyerPercentiles> | null = null;
 function homeBuyerRanks(places: PlacesFile["places"]) {
-  // Buyer-index percentiles rank the whole dataset — identical for every page,
+  // Buyer-index percentiles rank the whole dataset - identical for every page,
   // so compute once for the static export instead of per slug (O(n) each → O(n^2)).
   if (!_homeBuyerRanks) _homeBuyerRanks = rankHomeBuyerPercentiles(places);
   return _homeBuyerRanks;
@@ -71,10 +71,10 @@ export async function generateMetadata({ params }: Props) {
   const score = computeWeightedScore(place, getDefaultWeights()).total;
   return {
     title: `${place.name} liveability score · Melbourne`,
-    description: `${place.name} (${place.lga}) liveability score ${score.toFixed(0)} — seven-domain breakdown with methodology-linked sources.`,
+    description: `${place.name} (${place.lga}) liveability score ${score.toFixed(0)} - seven-domain breakdown with methodology-linked sources.`,
     openGraph: {
       title: `${place.name} · ${score.toFixed(0)} liveability`,
-      description: `Greater Melbourne SA2 ${place.sa2Code} — compare domains and sources.`,
+      description: `Greater Melbourne SA2 ${place.sa2Code} - compare domains and sources.`,
       type: "website",
     },
   };
@@ -105,7 +105,7 @@ export default async function PlaceProfilePage({ params }: Props) {
   const benchmarks = gmBenchmarks(data.places);
   const timeseries = await loadTimeseries();
   const series = resolvePlaceSeries(place, timeseries);
-  // Closest peer areas by per-domain percentile similarity — equal-weighted and
+  // Closest peer areas by per-domain percentile similarity - equal-weighted and
   // deterministic, so each area's peers are stable across the static export.
   const similar = toSimilarItems(findSimilarAreas(place, data.places, { limit: 6 }));
 

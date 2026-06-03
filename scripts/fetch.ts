@@ -28,7 +28,7 @@ async function main() {
       "SA2_CODE_2021,SA2_NAME_2021,SA3_CODE_2021,SA4_CODE_2021,GCCSA_CODE_2021",
   });
 
-  console.log("Fetching SAL (Victoria — clipped to Melbourne SA2 envelope in crosswalk)...");
+  console.log("Fetching SAL (Victoria - clipped to Melbourne SA2 envelope in crosswalk)...");
   const sal = await fetchAbsGeoJson({
     layerPath: "SAL/FeatureServer/0",
     where: "STATE_CODE_2021='2'",

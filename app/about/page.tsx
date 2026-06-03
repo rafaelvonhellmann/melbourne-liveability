@@ -4,7 +4,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { FeedbackButton } from "@/components/FeedbackButton";
 
 export const metadata = {
-  title: "About & trust — who built liveable.melbourne, and how it stays independent",
+  title: "About & trust - who built liveable.melbourne, and how it stays independent",
   description:
     "Who builds liveable.melbourne, why it exists, how it stays independent, how it will (and won't) make money, what open data it uses, how confidence is calculated, and how to report a data issue.",
 };
@@ -18,7 +18,7 @@ const PILLARS = [
   {
     icon: Database,
     title: "Open data, fully sourced",
-    body: "Every figure is compiled from Australian government / official open data and OpenStreetMap, with the source, licence, data period and fetch date recorded. Where we lack data, we say so — we never invent or overclaim it.",
+    body: "Every figure is compiled from Australian government / official open data and OpenStreetMap, with the source, licence, data period and fetch date recorded. Where we lack data, we say so - we never invent or overclaim it.",
   },
   {
     icon: HeartHandshake,
@@ -28,7 +28,7 @@ const PILLARS = [
   {
     icon: Scale,
     title: "Not advice",
-    body: "Information only — not financial, property, legal, insurance or planning advice. Always verify anything material with the relevant professional.",
+    body: "Information only - not financial, property, legal, insurance or planning advice. Always verify anything material with the relevant professional.",
   },
 ];
 
@@ -44,7 +44,7 @@ export default function AboutPage() {
           About liveable.melbourne
         </h1>
         <p className="mt-3 text-lg leading-relaxed text-ink-muted">
-          Independent, open-data location intelligence for Greater Melbourne — built so that
+          Independent, open-data location intelligence for Greater Melbourne - built so that
           buyers and renters get a transparent, sourced second opinion on a location before they
           commit. Built independently in Melbourne; not affiliated with any agent, portal,
           developer or government body.
@@ -66,19 +66,19 @@ export default function AboutPage() {
         <section className="mt-10">
           <h2 className="font-display text-xl font-medium text-ink">Why this exists</h2>
           <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-            The data that tells you what a <em>location</em> is actually like — transport, schools,
-            hazards and planning overlays, walkable amenities, community context — is scattered
+            The data that tells you what a <em>location</em> is actually like - transport, schools,
+            hazards and planning overlays, walkable amenities, community context - is scattered
             across the ABS, PTV, the Crime Statistics Agency, Victorian planning portals and
             OpenStreetMap, in formats most people never see. Listing portals are funded by agents
             and lead with price and growth. We compile the open data into one transparent view and
-            surface the trade-offs and risks to verify — the second opinion the portals do not give.
+            surface the trade-offs and risks to verify - the second opinion the portals do not give.
           </p>
         </section>
 
         <section className="mt-8">
           <h2 className="font-display text-xl font-medium text-ink">How it stays free</h2>
           <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-            liveable.melbourne is <b className="text-ink">free</b> — the map, every area profile,
+            liveable.melbourne is <b className="text-ink">free</b> - the map, every area profile,
             and the Buyer Location Check. No ads, no behavioural tracking, no agent payments, and
             we never resell the open data. If a paid convenience is ever added later, the map and
             all the underlying facts will stay free.
@@ -106,11 +106,11 @@ export default function AboutPage() {
         <section className="mt-8 rounded-lg border border-surface-border bg-surface-sunken p-5">
           <h2 className="font-display text-lg font-medium text-ink">Found a data issue?</h2>
           <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-            Open data can be incomplete, outdated or wrong. If something looks off, tell us — ideally
-            with the source — and we will check it.
+            Open data can be incomplete, outdated or wrong. If something looks off, tell us - ideally
+            with the source - and we will check it.
           </p>
           <div className="mt-3">
-            <FeedbackButton context="About page — report a data issue" />
+            <FeedbackButton context="About page - report a data issue" />
           </div>
           <p className="mt-3 text-xs text-ink-muted">
             See also our{" "}

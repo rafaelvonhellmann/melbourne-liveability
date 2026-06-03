@@ -51,7 +51,7 @@ export default function AlertsPage() {
             email,
             shortlist: shortlist.join(","),
             suburbs: resolved.map((p) => p.name).join("; "),
-            _subject: "Melbourne Liveability — shortlist update alert signup",
+            _subject: "Melbourne Liveability - shortlist update alert signup",
           }),
         });
         setStatus(res.ok ? "ok" : "error");
@@ -77,7 +77,7 @@ export default function AlertsPage() {
       <h1 className="mt-4 font-display text-2xl font-semibold text-ink">Update alerts</h1>
       <p className="mt-2 text-sm text-ink-muted">
         Get notified when government open data refreshes for suburbs on your shortlist.
-        Free — no account required. Our pipeline checks upstream sources monthly (
+        Free - no account required. Our pipeline checks upstream sources monthly (
         {latestFetch ? `last build ${latestFetch}` : "see methodology"}).
       </p>
 
@@ -148,7 +148,7 @@ export default function AlertsPage() {
 
       {status === "ok" && (
         <p className="mt-4 text-sm text-accent">
-          Thanks — you are on the list. We will email when data for your suburbs is refreshed.
+          Thanks - you are on the list. We will email when data for your suburbs is refreshed.
         </p>
       )}
       {status === "saved-local" && (

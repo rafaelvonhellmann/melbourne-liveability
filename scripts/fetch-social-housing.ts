@@ -1,9 +1,9 @@
 /**
  * Social-housing SUPPLY raw fetch: ABS 2021 Census G37 (Tenure and Landlord Type
- * by Dwelling Structure) at SA2 — the State/Territory housing authority + community
+ * by Dwelling Structure) at SA2 - the State/Territory housing authority + community
  * housing provider totals + the grand total. Writes a new raw file so the apply
  * step (and normalize) can add the context.socialHousing field WITHOUT a full
- * data:fetch. ABS, CC BY 4.0. Context only — never scored. See lib/social-housing.
+ * data:fetch. ABS, CC BY 4.0. Context only - never scored. See lib/social-housing.
  */
 import { writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";

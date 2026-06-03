@@ -2,7 +2,7 @@
  * Nearest train-station distance (context/buyer-report only, never scored). A
  * commute-convenience signal: straight-line distance from the pin to the nearest
  * mapped train station (OSM railway=station/halt). Straight-line, not walking
- * distance — the walk can be longer, and frequency/line matter too.
+ * distance - the walk can be longer, and frequency/line matter too.
  */
 
 export type Station = { name: string; coord: [number, number] };

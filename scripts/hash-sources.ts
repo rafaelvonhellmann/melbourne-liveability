@@ -83,7 +83,7 @@ async function main() {
       s.sha256 = hash;
       hashed++;
     } else {
-      missing.push(`${s.id} (${map.file} not found — run fetch first)`);
+      missing.push(`${s.id} (${map.file} not found - run fetch first)`);
     }
   }
 

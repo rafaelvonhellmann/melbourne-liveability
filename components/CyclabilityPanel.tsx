@@ -22,7 +22,7 @@ export function CyclabilityPanel({ cyclability }: { cyclability?: Cyclability })
         </span>
       </div>
       <p className="mt-1 text-xs text-ink-muted">
-        Mapped cycling infrastructure density in this SA2. Context only — never
+        Mapped cycling infrastructure density in this SA2. Context only - never
         part of the liveability score.
       </p>
 
@@ -50,7 +50,7 @@ export function CyclabilityPanel({ cyclability }: { cyclability?: Cyclability })
         (<code>cycleway=*</code>) and bicycle-designated paths whose midpoint
         falls in this SA2 ({segments} segments), divided by SA2 land area. It is
         an <em>infrastructure-density</em> measure, not a safety, comfort or
-        connectivity rating — separated paths and painted lanes are both counted.
+        connectivity rating - separated paths and painted lanes are both counted.
         OSM cycle tagging is community-maintained and uneven. © OpenStreetMap
         contributors (ODbL).
       </p>

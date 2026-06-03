@@ -74,7 +74,7 @@ export default function ComparePage() {
     [slugs, places]
   );
 
-  // Canonical slugs for sharing — guarantees only resolvable places are encoded.
+  // Canonical slugs for sharing - guarantees only resolvable places are encoded.
   const activeSlugs = selected.map((p) => p.slug);
   const isFull = selected.length >= MAX_COMPARE;
 
@@ -102,7 +102,7 @@ export default function ComparePage() {
       const hit = findSa2ForPoint([r.lng, r.lat], sa2GeoRef.current);
       if (hit?.slug) {
         addSlug(hit.slug);
-        setAddNote(`Added ${hit.name ?? "the area"} — the area that contains ${r.shortLabel}.`);
+        setAddNote(`Added ${hit.name ?? "the area"} - the area that contains ${r.shortLabel}.`);
       } else {
         setAddNote(`${r.shortLabel} isn’t inside our Greater Melbourne coverage yet.`);
       }
@@ -111,7 +111,7 @@ export default function ComparePage() {
     }
   }
 
-  // Saved shortlist places not yet in the comparison — offered as one-tap chips.
+  // Saved shortlist places not yet in the comparison - offered as one-tap chips.
   const shortlistChips = savedShortlist
     .map((slug) => places.find((p) => p.slug === slug))
     .filter((p): p is Place => !!p)
@@ -140,7 +140,7 @@ export default function ComparePage() {
       <main className="mx-auto max-w-5xl px-4 py-6">
         <h1 className="font-display text-2xl font-semibold text-ink">Compare places</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          Search where you want to live — by suburb, area or full street address —
+          Search where you want to live - by suburb, area or full street address —
           to add up to four areas side-by-side. Uses your saved weights when shared
           via link.
         </p>
@@ -200,7 +200,7 @@ export default function ComparePage() {
             )}
             <p className="mt-2 text-xs leading-snug text-ink-muted">
               Areas are administrative boundaries (SA2s). If your target property is
-              near the edge of one, the adjacent area can be just as relevant — add
+              near the edge of one, the adjacent area can be just as relevant - add
               the neighbour and compare both.
             </p>
           </div>
@@ -236,7 +236,7 @@ export default function ComparePage() {
             </h2>
             {selected.length === 0 ? (
               <p className="mt-2 text-sm text-ink-muted">
-                No places yet — search above or add one from your shortlist. Add at
+                No places yet - search above or add one from your shortlist. Add at
                 least two to see the comparison.
               </p>
             ) : (
@@ -270,7 +270,7 @@ export default function ComparePage() {
 }
 
 /**
- * Browse-by-list area picker — a grouped native dropdown so you can add an area
+ * Browse-by-list area picker - a grouped native dropdown so you can add an area
  * WITHOUT knowing its name (friend feedback). Residential areas grouped by
  * council (LGA), alphabetised, already-selected ones omitted.
  */
@@ -512,7 +512,7 @@ function CompareTable({
               colSpan={selected.length + 1}
               className="border-b border-surface-border px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-ink-muted"
             >
-              Context — not part of the score
+              Context - not part of the score
             </td>
           </tr>
 
@@ -537,7 +537,7 @@ function CompareTable({
         Shaded rows are each domain&apos;s Greater-Melbourne percentile; the rows beneath
         are its raw sub-indicators (↑/↓ marks which direction is better). The best value
         per row is marked ★. Context rows are <b className="text-ink">not part of the
-        score</b> — orientation only.
+        score</b> - orientation only.
       </p>
     </div>
   );

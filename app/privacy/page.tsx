@@ -45,7 +45,7 @@ export default function PrivacyPage() {
               page or your browser settings.
             </li>
             <li>
-              <strong className="text-ink">Email address — only if you provide it.</strong>{" "}
+              <strong className="text-ink">Email address - only if you provide it.</strong>{" "}
               If you sign up for update alerts or send feedback, we collect the email
               address you enter (and, for alerts, your shortlisted suburb identifiers; for
               feedback, your message and the page you were on). We use it solely to respond
@@ -161,7 +161,7 @@ export default function PrivacyPage() {
 function DraftNotice() {
   return (
     <div className="mt-4 rounded-lg border border-[#E9C8B4] bg-[#FBEEE6] p-3 text-sm text-[#9A552F]">
-      <strong>Draft — not yet legal advice.</strong> This policy is an honest first draft
+      <strong>Draft - not yet legal advice.</strong> This policy is an honest first draft
       reflecting how the site currently works. Have it reviewed by a qualified
       Australian privacy lawyer before relying on it, especially before enabling
       accounts or payments.

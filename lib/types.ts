@@ -46,7 +46,7 @@ export type DomainScore = {
 
 /**
  * "15-minute access" everyday-amenity walk reachability for an SA2.
- * Context/display-only — compiled from open OSM data, never folded into the
+ * Context/display-only - compiled from open OSM data, never folded into the
  * scored composite, weights, or Data Confidence. Distances are straight-line
  * from the population-weighted SA2 centroid (see methodology caveat).
  */
@@ -58,7 +58,7 @@ export type WalkAccess = {
   reachable: number;
   /** Total number of key categories assessed. */
   total: number;
-  /** reachable / total × 100 — an availability summary, NOT a percentile rank. */
+  /** reachable / total × 100 - an availability summary, NOT a percentile rank. */
   accessPct: number;
   /**
    * Coarse walkability index (0–100), context-only: blends everyday-amenity
@@ -70,7 +70,7 @@ export type WalkAccess = {
 };
 
 /**
- * Cyclability index for an SA2 — context/display-only, never scored.
+ * Cyclability index for an SA2 - context/display-only, never scored.
  * Compiled from open OSM cycling infrastructure; an infrastructure-density
  * measure, NOT a safety/comfort/connectivity rating (see methodology caveat).
  */
@@ -83,7 +83,7 @@ export type Cyclability = {
   onRoadKm: number;
   /** SA2 land area (km²) used as the density denominator. */
   areaKm2: number;
-  /** cyclewayKm / areaKm² — km of cycle infrastructure per km². */
+  /** cyclewayKm / areaKm² - km of cycle infrastructure per km². */
   densityKmPerKm2: number;
   /** Coarse 0–100 context index (saturating density). Not a percentile, not scored. */
   index: number;
@@ -94,7 +94,7 @@ export type Cyclability = {
 };
 
 /**
- * Social-housing SUPPLY for an SA2 — context/display-only, never scored. The
+ * Social-housing SUPPLY for an SA2 - context/display-only, never scored. The
  * share of occupied private dwellings that are social housing (public + community
  * landlord types), from the ABS 2021 Census tenure-and-landlord-type table. A
  * housing-mix fact, NOT a welfare/disadvantage measure (see lib/social-housing).
@@ -110,7 +110,7 @@ export type SocialHousing = {
 };
 
 /**
- * Housing stress for an SA2 — context/display-only, never scored. The share of
+ * Housing stress for an SA2 - context/display-only, never scored. The share of
  * households spending more than 30% of income on housing (the standard ABS
  * "30/40" stress threshold), split by tenure: renting vs mortgaged. From the ABS
  * 2021 Census. A cost-pressure signal distinct from the median rent-vs-income
@@ -126,10 +126,10 @@ export type HousingStress = {
 };
 
 /**
- * Planning overlays affecting an SA2 — context/display-only, never scored. A
+ * Planning overlays affecting an SA2 - context/display-only, never scored. A
  * Heritage Overlay is a planning CONTROL (it can restrict demolition, external
  * changes and subdivision), not a hazard. We report the AREA SHARE of the SA2
- * within the overlay; it is NOT a parcel-level result — a buyer must check the
+ * within the overlay; it is NOT a parcel-level result - a buyer must check the
  * property's planning certificate. From Vicplan (DTP Victoria).
  */
 export type PlanningOverlays = {
@@ -140,7 +140,7 @@ export type PlanningOverlays = {
 };
 
 /**
- * Resident population + density for an SA2 — context/display-only, never scored.
+ * Resident population + density for an SA2 - context/display-only, never scored.
  * Density = ABS ERP ÷ SA2 land area (km²). A size/intensity fact about the area.
  */
 export type PopulationContext = {
@@ -179,7 +179,7 @@ export type PlaceContext = {
 };
 
 /**
- * Meta-measure of how well-measured an SA2 is — about our pipeline, NOT about
+ * Meta-measure of how well-measured an SA2 is - about our pipeline, NOT about
  * whether the place is good to live in. Display-only; never affects rank.
  */
 export type DataConfidence = {
@@ -213,7 +213,7 @@ export type Place = {
   dataConfidence?: DataConfidence;
 };
 
-/** Geography at which a trend series is held — never mislabel LGA data as SA2. */
+/** Geography at which a trend series is held - never mislabel LGA data as SA2. */
 export type TimeseriesGeo = "sa2" | "lga" | "suburb";
 export type TimeseriesCadence = "annual" | "quarterly" | "census-5yr";
 export type TimeseriesCompareMode = "value" | "decile-only";

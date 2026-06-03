@@ -31,7 +31,7 @@ export function SiteFooter() {
         <p className="mt-4 text-xs leading-relaxed">
           <span className="font-medium text-ink">liveable.melbourne</span> compiles
           Australian government / official open data (ABS, PTV, VCSA, Victorian planning
-          &amp; MapShare — CC BY 4.0) with © OpenStreetMap contributors (ODbL) as an
+          &amp; MapShare - CC BY 4.0) with © OpenStreetMap contributors (ODbL) as an
           attributed fallback. Scores are one optional lens over open data —{" "}
           <span className="font-medium text-ink">not relocation, financial, or legal advice</span>.
         </p>

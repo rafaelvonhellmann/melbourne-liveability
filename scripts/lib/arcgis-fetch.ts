@@ -71,7 +71,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
- * Pure retry decision for an Overpass response — kept separate so it is unit
+ * Pure retry decision for an Overpass response - kept separate so it is unit
  * testable without real network or timers. Overpass commonly returns 429 (rate
  * limit) and 504/502/503 (gateway / query timeout) under load; those are
  * transient and worth retrying with exponential backoff. A `Retry-After` header
@@ -124,12 +124,12 @@ ${outClause}
         },
       });
     } catch (e) {
-      // Network / DNS / abort — treat as transient and back off.
+      // Network / DNS / abort - treat as transient and back off.
       lastError = (e as Error).message;
       const plan = overpassRetryPlan("network", attempt);
       if (!plan.retry || attempt === OVERPASS_MAX_ATTEMPTS - 1) break;
       console.warn(
-        `  Overpass network error (attempt ${attempt + 1}/${OVERPASS_MAX_ATTEMPTS}): ${lastError} — retrying in ${Math.round(plan.waitMs / 1000)}s`
+        `  Overpass network error (attempt ${attempt + 1}/${OVERPASS_MAX_ATTEMPTS}): ${lastError} - retrying in ${Math.round(plan.waitMs / 1000)}s`
       );
       await sleep(plan.waitMs);
       continue;
@@ -147,7 +147,7 @@ ${outClause}
         const plan = overpassRetryPlan(504, attempt);
         if (!plan.retry || attempt === OVERPASS_MAX_ATTEMPTS - 1) break;
         console.warn(
-          `  Overpass soft error (attempt ${attempt + 1}/${OVERPASS_MAX_ATTEMPTS}): ${remark.slice(0, 60)} — retrying in ${Math.round(plan.waitMs / 1000)}s`
+          `  Overpass soft error (attempt ${attempt + 1}/${OVERPASS_MAX_ATTEMPTS}): ${remark.slice(0, 60)} - retrying in ${Math.round(plan.waitMs / 1000)}s`
         );
         await sleep(plan.waitMs);
         continue;
@@ -167,7 +167,7 @@ ${outClause}
       break;
     }
     console.warn(
-      `  Overpass ${res.status} (attempt ${attempt + 1}/${OVERPASS_MAX_ATTEMPTS}) — retrying in ${Math.round(plan.waitMs / 1000)}s`
+      `  Overpass ${res.status} (attempt ${attempt + 1}/${OVERPASS_MAX_ATTEMPTS}) - retrying in ${Math.round(plan.waitMs / 1000)}s`
     );
     await sleep(plan.waitMs);
   }

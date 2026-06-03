@@ -31,7 +31,7 @@ export function DataConfidenceCard({ confidence }: { confidence?: DataConfidence
         </span>
       </div>
       <p className="mt-1 text-xs text-ink-muted">
-        How well-measured this area is — about our data pipeline, not a judgement of
+        How well-measured this area is - about our data pipeline, not a judgement of
         the place. Never affects the liveability rank.
       </p>
 

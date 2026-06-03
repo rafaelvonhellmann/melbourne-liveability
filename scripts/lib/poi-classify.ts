@@ -5,7 +5,7 @@
  * top-level `main()` (which reads raw files and writes pois.geojson).
  *
  * Tags are raw OSM key/values. Each predicate decides whether an element belongs
- * to a given pin category. Pins are context-only — never folded into scores.
+ * to a given pin category. Pins are context-only - never folded into scores.
  */
 import type { Feature, Point } from "geojson";
 
@@ -53,7 +53,7 @@ export function isGpClinic(tags: OsmTags): boolean {
 
 /**
  * NDIS / disability-service pin predicate. Requires an explicit disability or
- * NDIS signal. A bare `social_facility=day_care` is NOT treated as NDIS — most
+ * NDIS signal. A bare `social_facility=day_care` is NOT treated as NDIS - most
  * day cares are childcare, not disability services (the previous `day_care`
  * shortcut produced false NDIS pins).
  */
@@ -76,7 +76,7 @@ export function isPlaceOfWorship(tags: OsmTags): boolean {
 }
 
 /**
- * Community / cultural gathering place — community + social centres and civic
+ * Community / cultural gathering place - community + social centres and civic
  * arts/cultural centres. Deliberately faith-neutral and non-commercial: a venue
  * where residents gather, run by the community or council, not a private hall let
  * out for hire (those aren't tagged with these amenity values).
@@ -137,7 +137,7 @@ type OsmElement = {
 };
 
 /**
- * SCORED GP/clinic points — a LOCKED, deliberately narrow definition: OSM
+ * SCORED GP/clinic points - a LOCKED, deliberately narrow definition: OSM
  * *nodes* tagged amenity=doctors|clinic, returned as [lon, lat]. Clinics/doctors
  * mapped as building *ways* are intentionally EXCLUDED.
  *
@@ -145,7 +145,7 @@ type OsmElement = {
  * `way[amenity~doctors|clinic]` (emitted with `out center`), which silently
  * raised the SCORED gpCount2km. Pinning the scored set to nodes keeps the
  * locked seven-domain Health composite independent of the (broader) map-pin
- * fetch. NOTE honestly: this is NARROWER than counting nodes+ways — it reverts
+ * fetch. NOTE honestly: this is NARROWER than counting nodes+ways - it reverts
  * the scored basis to the pre-32c5c83 node-only set, so it lowers gpCount2km vs
  * a build that counted ways. This is the agreed "isolate" choice and is
  * documented in /methodology. CONTEXT layers (e.g. 15-minute walk access) must

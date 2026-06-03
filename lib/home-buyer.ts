@@ -2,7 +2,7 @@ import type { Place } from "./types";
 import { percentileRank } from "./scoring";
 
 /**
- * Home-buyer index — a CONTEXT LENS, never part of the locked 7-domain
+ * Home-buyer index - a CONTEXT LENS, never part of the locked 7-domain
  * composite, its weights, or Data Confidence.
  *
  * It blends indicators ALREADY in the dataset into a single 0–100 figure

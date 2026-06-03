@@ -8,7 +8,7 @@ import type {
 } from "./types";
 
 /**
- * Resolved trend for a single indicator at a single place — the flat, ready-to-
+ * Resolved trend for a single indicator at a single place - the flat, ready-to-
  * render shape the sparkline UI consumes. Context only, never scored.
  */
 export type PlaceSeries = {
@@ -22,7 +22,7 @@ export type PlaceSeries = {
   periodLabel: string;
   sourceId: string;
   boundaryNote: string;
-  /** Ordered real points — never interpolated. */
+  /** Ordered real points - never interpolated. */
   points: { period: string; value: number }[];
 };
 

@@ -20,22 +20,22 @@ export const SCORED_INDICATOR_SOURCING: Record<string, IndicatorSourcing> = {
   rentToIncome: {
     sourceId: "abs-rent-to-income-2021",
     geography: "SA2 (ABS, direct)",
-    method: "Direct — median weekly rent ÷ equivalised household income",
+    method: "Direct - median weekly rent ÷ equivalised household income",
   },
   stops800m: {
     sourceId: "ptv-gtfs",
     geography: "Stop coordinates",
-    method: "Proximity — stops within 800 m of the SA2 centroid (GTFS precompute)",
+    method: "Proximity - stops within 800 m of the SA2 centroid (GTFS precompute)",
   },
   amPeakFreq: {
     sourceId: "ptv-gtfs",
     geography: "Stop coordinates",
-    method: "Proximity — weekday 07:00–09:59 scheduled trips at nearby stops",
+    method: "Proximity - weekday 07:00–09:59 scheduled trips at nearby stops",
   },
   ptModes: {
     sourceId: "ptv-gtfs",
     geography: "Stop coordinates",
-    method: "Proximity — distinct modes (train/tram/bus) reachable",
+    method: "Proximity - distinct modes (train/tram/bus) reachable",
   },
   propertyCrime: {
     sourceId: "vcsa-recorded-offences",
@@ -50,12 +50,12 @@ export const SCORED_INDICATOR_SOURCING: Record<string, IndicatorSourcing> = {
   hospitalDistKm: {
     sourceId: "vic-mapshare-hospitals",
     geography: "Point coordinates",
-    method: "Proximity — straight-line distance to the nearest public hospital",
+    method: "Proximity - straight-line distance to the nearest public hospital",
   },
   gpCount2km: {
     sourceId: "osm-health",
     geography: "Point coordinates (OSM nodes)",
-    method: "Proximity — count of GP/clinic nodes within 2 km (nodes only; see caveat)",
+    method: "Proximity - count of GP/clinic nodes within 2 km (nodes only; see caveat)",
   },
   medianDhi: {
     sourceId: "abs-sa2-income-dbr",
@@ -75,17 +75,17 @@ export const SCORED_INDICATOR_SOURCING: Record<string, IndicatorSourcing> = {
   bushfirePct: {
     sourceId: "vic-planning-bpa",
     geography: "Regulatory polygon overlay",
-    method: "Area-weighted — share of SA2 land inside the overlay",
+    method: "Area-weighted - share of SA2 land inside the overlay",
   },
   floodPct: {
     sourceId: "vic-planning-flood",
     geography: "Regulatory polygon overlay",
-    method: "Area-weighted — share of SA2 land inside the overlay",
+    method: "Area-weighted - share of SA2 land inside the overlay",
   },
   schools2km: {
     sourceId: "osm-schools",
     geography: "Point coordinates (OSM)",
-    method: "Proximity — count within 2 km of the SA2 centroid",
+    method: "Proximity - count within 2 km of the SA2 centroid",
   },
   preschoolEnrolled: {
     sourceId: "abs-census-preschool-2021",
@@ -104,13 +104,13 @@ export type ContextSourcing = {
 
 export const CONTEXT_SOURCING: ContextSourcing[] = [
   {
-    label: "Equity — SEIFA IRSAD / IRSD deciles",
+    label: "Equity - SEIFA IRSAD / IRSD deciles",
     sourceId: "abs-seifa-2021",
     geography: "SA2 (direct)",
     use: "Equity panel + optional map layer",
   },
   {
-    label: "Community — tenure, dwelling mix, First Nations %",
+    label: "Community - tenure, dwelling mix, First Nations %",
     sourceId: "abs-census-community-2021",
     geography: "SA2 (direct)",
     use: "Community panel",
@@ -122,13 +122,13 @@ export const CONTEXT_SOURCING: ContextSourcing[] = [
     use: "Profile trend sparkline",
   },
   {
-    label: "15-minute access — everyday amenities",
+    label: "15-minute access - everyday amenities",
     sourceId: "osm-amenities",
     geography: "Points → SA2 centroid (straight-line)",
     use: "Walk-access panel + map layer. Buyer pin check is straight-line on the free tier; the paid tier can opt into an OpenRouteService street-network walk isochrone for precise reachability.",
   },
   {
-    label: "Cyclability — cycle infrastructure",
+    label: "Cyclability - cycle infrastructure",
     sourceId: "osm-cycleways",
     geography: "Ways → SA2 (segment midpoint)",
     use: "Cyclability panel + map layer",
@@ -143,7 +143,7 @@ export const CONTEXT_SOURCING: ContextSourcing[] = [
     label: "Pathology labs / NDIS-related providers",
     sourceId: "osm-clinical-social",
     geography: "Point coordinates (OSM, sparsely tagged)",
-    use: "Map pins only — coverage limited, badge to follow",
+    use: "Map pins only - coverage limited, badge to follow",
   },
 ];
 

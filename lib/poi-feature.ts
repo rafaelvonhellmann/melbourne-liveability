@@ -65,6 +65,6 @@ export function buildPoiPopupHtml(props: PoiFeatureProps): string {
   <p class="poi-popup-category">${category}</p>
   <p class="poi-popup-name">${name}</p>
   ${linksBlock}
-  <p class="poi-popup-source">Context only — not used in scores</p>
+  <p class="poi-popup-source">Context only - not used in scores</p>
 </div>`;
 }

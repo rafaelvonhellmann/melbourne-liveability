@@ -5,7 +5,7 @@
  * claim measured noise. Instead we measure straight-line distance from the pin to
  * the nearest rail line, tram line, and freeway / major road (OSM line geometry)
  * and flag a property that sits very close to one as "likely to get traffic/rail
- * noise — verify by visiting at peak and after dark". Honest by construction: it
+ * noise - verify by visiting at peak and after dark". Honest by construction: it
  * is a proximity proxy, not decibels; line-of-sight, barriers, cuttings, traffic
  * volume and time of day all matter and are not modelled.
  */
@@ -15,7 +15,7 @@ export type NoiseKind = "rail" | "tram" | "freeway";
 /** A noise-source polyline: ordered [lng, lat] vertices of one OSM way. */
 export type NoiseLine = { kind: NoiseKind; coords: [number, number][] };
 
-/** Distance (m) at/under which a source is "likely noticeable" — conservative. */
+/** Distance (m) at/under which a source is "likely noticeable" - conservative. */
 export const NOISE_THRESHOLDS_M: Record<NoiseKind, number> = {
   freeway: 150,
   rail: 150,
@@ -44,7 +44,7 @@ function distSqToSegment(ax: number, ay: number, bx: number, by: number): number
 /**
  * Nearest distance (rounded metres) from `pin` to each noise-source kind present
  * in `lines`. A kind with no lines is null. Uses a local equirectangular metre
- * projection centred on the pin — accurate at city scale.
+ * projection centred on the pin - accurate at city scale.
  */
 export function nearestNoiseSources(
   pin: [number, number],

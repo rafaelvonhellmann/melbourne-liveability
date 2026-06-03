@@ -6,7 +6,7 @@ import Link from "next/link";
 /**
  * Route-level error boundary (App Router). Catches render/runtime errors in any
  * page below the root layout and shows a recoverable fallback instead of a blank
- * screen — a baseline stability guarantee for the alpha.
+ * screen - a baseline stability guarantee for the alpha.
  */
 export default function Error({
   error,

@@ -109,7 +109,7 @@ export function PlaceProfileClient({
           ‹ Map
         </Link>
         <div className="ml-auto flex items-center gap-2">
-          <FeedbackButton context={`${place.name} — SA2 ${place.sa2Code}`} />
+          <FeedbackButton context={`${place.name} - SA2 ${place.sa2Code}`} />
           <Link
             href="/"
             className="font-display text-base font-medium tracking-tight text-ink"
@@ -120,7 +120,7 @@ export function PlaceProfileClient({
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-6">
-        {/* Score hero — persistent drawer header */}
+        {/* Score hero - persistent drawer header */}
         <div className="flex flex-wrap items-center gap-4 rounded-lg border border-surface-border bg-surface p-5 shadow-card">
           <ScoreBadge value={breakdown.total} size={78} caption="score" />
           <div className="min-w-0 flex-1">
@@ -203,7 +203,7 @@ export function PlaceProfileClient({
         <p className="mt-6 text-xs text-ink-muted">
           Not relocation or financial advice. The composite and persona scores are
           percentile ranks within Greater Melbourne presented as{" "}
-          <b className="text-ink">optional lenses</b> — a data-access tool, not a
+          <b className="text-ink">optional lenses</b> - a data-access tool, not a
           definitive ranking of places. Context metrics are never folded into the
           locked seven-domain composite.
         </p>
@@ -379,7 +379,7 @@ function OverviewPanel({
         <Caveat className="mt-3">
           <b className="text-ink">One optional lens.</b> This composite is the
           default-weight blend of the seven scored domains, shown as percentile
-          ranks within Greater Melbourne — not an authority on where to live. Open
+          ranks within Greater Melbourne - not an authority on where to live. Open
           a persona tab to re-weight it, or a category tab for the underlying
           metrics. Outer-growth areas always rank low on transport.
         </Caveat>
@@ -531,14 +531,14 @@ function DomainPanel({
           <b className="text-ink">Crime caveat:</b> resident-population rates can
           overstate inner-city areas with large daytime worker/visitor populations,
           and offences are recorded at suburb/LGA level then allocated to this SA2
-          via crosswalk — not resident point-level.
+          via crosswalk - not resident point-level.
         </Caveat>
       )}
 
       {domain === "affordability" && (
         <Caveat className="mt-4">
           <b className="text-ink">Read this as cost-pressure, not price.</b> A high score
-          means rent takes a small share of <b className="text-ink">local</b> incomes — so
+          means rent takes a small share of <b className="text-ink">local</b> incomes - so
           wealthy suburbs (Toorak, Brighton, Kew) can rank well despite high absolute rents,
           because residents earn more. It uses no sale or purchase prices.
         </Caveat>
@@ -655,7 +655,7 @@ function MiniMapCard() {
 
 /**
  * Resident-population trend for the SA2 (ABS ERP series). The richest trend we
- * hold — annual, real SA2 geography — but it is not a scored domain metric, so
+ * hold - annual, real SA2 geography - but it is not a scored domain metric, so
  * it renders here in Overview rather than on a domain card. Context only, never
  * folded into any score. The Sparkline states geography, period and any
  * boundary note.
@@ -693,7 +693,7 @@ function PopulationTrendCard({ series }: { series?: PlaceSeries }) {
         ) : (
           <span>{series.sourceId}</span>
         )}{" "}
-        · context only — not in the score.
+        · context only - not in the score.
       </p>
     </div>
   );

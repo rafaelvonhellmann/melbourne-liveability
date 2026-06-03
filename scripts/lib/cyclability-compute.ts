@@ -27,7 +27,7 @@ type Sa2Item = {
  * Aggregate OSM cycling-infrastructure length per SA2 → cyclability summary.
  *
  * Each cycleway way is attributed in full to the SA2 that contains its midpoint
- * (a coarse, documented choice — a long trail straddling two SA2s lands wholly
+ * (a coarse, documented choice - a long trail straddling two SA2s lands wholly
  * in one). Length is straight-line geodesic via turf. A `Cyclability` is emitted
  * for every SA2 (index 0 where no infrastructure is mapped). Context-only.
  */

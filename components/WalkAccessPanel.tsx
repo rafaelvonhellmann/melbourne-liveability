@@ -25,7 +25,7 @@ export function WalkAccessPanel({ walkAccess }: { walkAccess?: WalkAccess }) {
       </div>
       <p className="mt-1 text-xs text-ink-muted">
         Everyday amenities reachable within about a 15-minute walk
-        (~{walkAccess.thresholdKm} km). Context only — never part of the
+        (~{walkAccess.thresholdKm} km). Context only - never part of the
         liveability score.
       </p>
 
@@ -62,7 +62,7 @@ export function WalkAccessPanel({ walkAccess }: { walkAccess?: WalkAccess }) {
 
       <p className="mt-3 text-xs text-ink-muted">
         Method: straight-line distance from the SA2 population-weighted centroid
-        to OpenStreetMap amenities — it overstates real walking access (street
+        to OpenStreetMap amenities - it overstates real walking access (street
         network, rivers, freeways and rail crossings are not modelled) and OSM
         coverage is community-maintained and uneven. © OpenStreetMap
         contributors (ODbL).

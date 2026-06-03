@@ -104,7 +104,7 @@ const METHOD_CONFIDENCE: Record<string, number> = {
 };
 
 /**
- * Meta-measure of data confidence for an SA2 — about the pipeline, not the place.
+ * Meta-measure of data confidence for an SA2 - about the pipeline, not the place.
  * Display-only; never enters the liveability score.
  */
 function computeDataConfidence(
@@ -175,7 +175,7 @@ async function main() {
       if (s.period) PERIOD_BY_ID.set(s.id, s.period);
     }
   } catch {
-    console.warn("sources.json missing — staleness flags will all be false");
+    console.warn("sources.json missing - staleness flags will all be false");
   }
 
   const { places: raw } = JSON.parse(

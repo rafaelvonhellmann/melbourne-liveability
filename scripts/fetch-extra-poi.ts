@@ -1,7 +1,7 @@
 /**
  * Targeted extra buyer-POI categories: banks, TAFE/college, university.
  * Writes new raw files so build-poi can add them WITHOUT a full data:fetch /
- * score rebuild (run `npm run data:poi` after). OSM (ODbL) — attribute.
+ * score rebuild (run `npm run data:poi` after). OSM (ODbL) - attribute.
  */
 import { writeFile } from "node:fs/promises";
 import path from "node:path";

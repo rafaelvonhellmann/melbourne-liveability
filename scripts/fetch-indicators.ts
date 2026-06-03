@@ -191,7 +191,7 @@ async function main() {
   // Everyday amenities for the "15-minute access" context layer (ULTRAPLAN
   // walkability roadmap). Categories beyond health/schools we already fetch:
   // supermarkets/grocery, pharmacy, parks/open space, cafe/restaurant,
-  // gym/leisure. Used straight-line from SA2 centroids — context only, never
+  // gym/leisure. Used straight-line from SA2 centroids - context only, never
   // scored. OSM is ODbL; attribute contributors.
   console.log("Overpass everyday amenities (15-min access)...");
   const amenities = await overpassMelbourne(`
@@ -207,7 +207,7 @@ async function main() {
   // Cycling infrastructure for the "cyclability index" context layer (ULTRAPLAN
   // walkability/cyclability roadmap). Dedicated cycleways, on-road bike lanes
   // (cycleway=* tags on roads) and bicycle-designated paths. `out geom` so we
-  // get full way geometry to measure length per SA2 — context only, never
+  // get full way geometry to measure length per SA2 - context only, never
   // scored. OSM is ODbL; attribute contributors. bbox capped to Greater
   // Melbourne (same envelope as the other OSM extracts) to keep the query
   // bounded; documented in methodology.

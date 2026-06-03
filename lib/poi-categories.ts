@@ -11,11 +11,11 @@
  * Each pin is drawn with a white halo stroke on the map so it reads on top of
  * the cool YlGnBu choropleth and the light basemap.
  *
- * Pins are OFF by default — they only appear when the user explicitly enables a
+ * Pins are OFF by default - they only appear when the user explicitly enables a
  * category in the layer control.
  */
 
-/** POI category ids — the `pinType` values present in `public/data/pois.geojson`. */
+/** POI category ids - the `pinType` values present in `public/data/pois.geojson`. */
 export type PoiCategoryId =
   | "hospital"
   | "gp"
@@ -45,7 +45,7 @@ export type PoiCategory = {
 };
 
 /**
- * Categorical palette — qualitative ColorBrewer Dark2/Set1-derived hues.
+ * Categorical palette - qualitative ColorBrewer Dark2/Set1-derived hues.
  * Distinct from the YlGnBu data ramp, the coral chrome accent (#D97757) and the
  * neutral no-data grey (#d9d6cf).
  */

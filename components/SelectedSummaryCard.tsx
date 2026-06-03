@@ -15,7 +15,7 @@ import { SimilarAreasList } from "./SimilarAreasList";
 type SelectedSummaryCardProps = {
   place: Place;
   weights: ScoreWeights;
-  /** All loaded areas — source for the "find areas like this" peer match. */
+  /** All loaded areas - source for the "find areas like this" peer match. */
   places?: Place[];
   /** Human label of the layer currently painted on the choropleth. */
   activeLayerLabel: string;
@@ -27,7 +27,7 @@ type SelectedSummaryCardProps = {
 /**
  * Lightweight map-side quick view for the selected SA2. Deliberately compact
  * (name, composite match score for the current priorities, the strongest
- * driver, and quick actions) — the full profile lives on its own page, and a
+ * driver, and quick actions) - the full profile lives on its own page, and a
  * richer drawer is a separate later task, so this never imports the heavy
  * profile client.
  */
@@ -79,7 +79,7 @@ export function SelectedSummaryCard({
               type="button"
               onClick={onClose}
               className="-mr-1 -mt-1 inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1.5 text-xs text-ink-muted transition-colors hover:bg-surface-sunken hover:text-accent"
-              aria-label="Close — back to the map"
+              aria-label="Close - back to the map"
             >
               <X className="h-4 w-4" aria-hidden />
               <span className="md:hidden">Close</span>

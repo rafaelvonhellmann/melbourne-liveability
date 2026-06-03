@@ -3,7 +3,7 @@ import { MapPin, ShieldAlert, Footprints, BarChart3 } from "lucide-react";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata = {
-  title: "Buyer location check — a second opinion before you offer · Melbourne",
+  title: "Buyer location check - a second opinion before you offer · Melbourne",
   description:
     "Drop a pin on any Melbourne property and see the hidden liveability, hazard and planning context: nearby amenities on foot, risk indicators, community context, and what to verify before you inspect or bid. Built from open government data. Not advice.",
 };
@@ -69,7 +69,7 @@ export default function BuyerLandingPage() {
           </p>
           <p className="mt-3 max-w-2xl text-xs leading-relaxed text-ink-muted">
             Independent open-data location intelligence. No listings. No agent spin. Information
-            only — not financial, property, legal, insurance or planning advice.
+            only - not financial, property, legal, insurance or planning advice.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
@@ -93,7 +93,7 @@ export default function BuyerLandingPage() {
           </div>
         </section>
 
-        {/* What you get — three cards */}
+        {/* What you get - three cards */}
         <section className="mt-12">
           <h2 className="font-display text-xl font-medium text-ink">What you get</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
@@ -151,17 +151,17 @@ export default function BuyerLandingPage() {
 
         {/* What this is NOT */}
         <section className="mt-12 rounded-lg border border-surface-border bg-surface-sunken p-5">
-          <h2 className="font-display text-lg font-medium text-ink">What this is — and what it is not</h2>
+          <h2 className="font-display text-lg font-medium text-ink">What this is - and what it is not</h2>
           <p className="mt-2 text-sm leading-relaxed text-ink-muted">
             It <b className="text-ink">is</b> an independent, sourced due-diligence layer built
-            from open government and OpenStreetMap data — the risks and context that
+            from open government and OpenStreetMap data - the risks and context that
             agent-funded listing sites do not surface. It is <b className="text-ink">not</b> a
             listings portal, not a price/valuation estimate, and not financial, property, legal,
             insurance or planning advice. Always verify anything material with the relevant
             professional.
           </p>
           <p className="mt-3 text-sm text-ink-muted">
-            Free to use — the map and every report.{" "}
+            Free to use - the map and every report.{" "}
             <Link href="/methodology" className="text-accent hover:underline">
               Methodology &amp; sources
             </Link>

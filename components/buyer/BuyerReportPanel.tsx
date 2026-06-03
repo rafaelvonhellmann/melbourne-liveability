@@ -150,9 +150,9 @@ export function BuyerReportPanel({
       <div className="buyer-print-root space-y-4">
         {/* Not-advice banner */}
         <div className="rounded-lg border border-[#E9C8B4] border-l-[3px] border-l-accent bg-[#FBEEE6] px-3 py-2 text-xs leading-relaxed text-[#9A552F]">
-          <b>Information only — verify before buying.</b> A second opinion to help you decide what
+          <b>Information only - verify before buying.</b> A second opinion to help you decide what
           to <b>verify</b>. Not financial, property, legal, insurance or planning advice.
-          {variant === "sample" && " Sample report — not a report for a specific property."}
+          {variant === "sample" && " Sample report - not a report for a specific property."}
         </div>
 
         {/* 1. Executive summary */}
@@ -197,7 +197,7 @@ export function BuyerReportPanel({
               </ul>
             )}
             <p className="mt-2 text-[11px] leading-snug text-ink-muted">
-              Based on your saved preferences — these re-frame the facts, they never change
+              Based on your saved preferences - these re-frame the facts, they never change
               the score, and a flag means &ldquo;verify&rdquo;, not a verdict.
             </p>
           </Section>
@@ -329,7 +329,7 @@ export function BuyerReportPanel({
               Full area profile →
             </Link>
             <p className="mt-1 text-[11px] leading-snug text-ink-muted">
-              Percentile ranks within Greater Melbourne — one optional lens, never an authority.
+              Percentile ranks within Greater Melbourne - one optional lens, never an authority.
             </p>
           </Section>
         )}
@@ -345,7 +345,7 @@ export function BuyerReportPanel({
             <Row k="Socio-economic ranking (SEIFA)" v={equity?.irsadDecile != null ? `${equity.irsadDecile}/10` : "—"} />
             <p className="mt-2 text-[11px] leading-snug text-ink-muted">
               SEIFA decile: 1 = most disadvantaged, 10 = most advantaged, ranked against all of
-              Australia (ABS) — area context, not a judgement of residents.
+              Australia (ABS) - area context, not a judgement of residents.
             </p>
             <p className="mt-1.5 text-[11px] leading-snug text-ink-muted">
               This describes area-level demographic and tenure context. It is not a judgement about
@@ -383,7 +383,7 @@ export function BuyerReportPanel({
                   <span className="font-medium text-ink">{s.label}</span>
                 )}
                 <span className="text-ink-muted">
-                  {" — "}
+                  {" - "}
                   {formatSourceDate(s)}
                   {s.licence ? ` · ${s.licence}` : ""}
                 </span>
@@ -469,7 +469,7 @@ function FindingCard({ f }: { f: BuyerFinding }) {
             <span>Confidence: {f.confidence}</span>
             <span>Geography: {GEO_LABEL[f.geography]}</span>
             {f.sourceRefs && f.sourceRefs.length > 0 && (
-              <span className="normal-case">Source: {f.sourceRefs.map((s) => s.label.split(" — ")[0]).join("; ")}</span>
+              <span className="normal-case">Source: {f.sourceRefs.map((s) => s.label.split(" - ")[0]).join("; ")}</span>
             )}
           </div>
         </div>

@@ -22,7 +22,7 @@ export type RecentPlace = {
 };
 
 /**
- * A saved Buyer "Location Check" — a pin the user wants to return to (device-local
+ * A saved Buyer "Location Check" - a pin the user wants to return to (device-local
  * only; cross-device would need an accounts service). The deterministic report
  * regenerates from the coordinates, so we persist the location, not the report.
  */

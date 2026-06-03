@@ -20,7 +20,7 @@ export default function MapLayout({ children }: { children: React.ReactNode }) {
             property.
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink-muted">
-            Drop a pin before you buy — see nearby amenities, liveability trade-offs, hazard
+            Drop a pin before you buy - see nearby amenities, liveability trade-offs, hazard
             indicators and what to verify before you make an offer. Built from open government
             data; not advice.
           </p>
