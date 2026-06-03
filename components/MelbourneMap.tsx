@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import type { DomainId } from "@/lib/types";
+import type { BuyerAnchor } from "@/lib/anchors";
 import { MELBOURNE_BOUNDS, MELBOURNE_CENTER, MELBOURNE_MAX_BOUNDS } from "@/lib/region";
 import {
   choroplethFillColor,
@@ -70,6 +71,8 @@ type MelbourneMapProps = {
   buyerPin?: [number, number] | null;
   /** Draw the ~15-min bike reach ring around the buyer pin (off by default). */
   showCycleRadius?: boolean;
+  /** The buyer's saved life-anchors (work/school/family) to plot + line to the pin. */
+  anchorPoints?: BuyerAnchor[];
   /** Called with the dropped pin + the SA2 it falls in (from the fill layer). */
   onPinDrop?: (
     lngLat: [number, number],
@@ -120,6 +123,7 @@ export function MelbourneMap({
   buyerMode = false,
   buyerPin = null,
   showCycleRadius = false,
+  anchorPoints = [],
   onPinDrop,
 }: MelbourneMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -337,6 +341,41 @@ export function MelbourneMap({
           "circle-opacity": 0.95,
         },
       });
+
+      // Social anchors (work/school/family) + a dashed line from the buyer pin to
+      // each. Context only - straight-line, never scored. Purple to stay distinct
+      // from the coral buyer pin and the categorical POI palette.
+      map.addSource("anchor-lines", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+      map.addLayer({
+        id: "anchor-lines",
+        type: "line",
+        source: "anchor-lines",
+        paint: {
+          "line-color": "#5B3A8A",
+          "line-width": 1.5,
+          "line-opacity": 0.7,
+          "line-dasharray": [2, 1.5],
+        },
+      });
+      map.addSource("anchors", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+      map.addLayer({
+        id: "anchor-points",
+        type: "circle",
+        source: "anchors",
+        paint: {
+          "circle-radius": 6,
+          "circle-color": "#5B3A8A",
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#ffffff",
+          "circle-opacity": 0.95,
+        },
+      });
     });
 
     const closePoiPopup = () => {
@@ -496,6 +535,37 @@ export function MelbourneMap({
         buyerPin && showCycleRadius ? [circlePolygon(buyerPin, CYCLE_THRESHOLD_KM)] : [],
     });
   }, [buyerPin, showCycleRadius]);
+
+  // Social anchors + dashed connector lines from the buyer pin to each anchor.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const pointsSrc = map.getSource("anchors") as maplibregl.GeoJSONSource | undefined;
+    const linesSrc = map.getSource("anchor-lines") as maplibregl.GeoJSONSource | undefined;
+    const list = anchorPoints ?? [];
+    pointsSrc?.setData({
+      type: "FeatureCollection",
+      features: list.map((a) => ({
+        type: "Feature" as const,
+        properties: { label: a.label, kind: a.kind },
+        geometry: { type: "Point" as const, coordinates: [a.lng, a.lat] },
+      })),
+    });
+    linesSrc?.setData({
+      type: "FeatureCollection",
+      features:
+        buyerPin && list.length > 0
+          ? list.map((a) => ({
+              type: "Feature" as const,
+              properties: {},
+              geometry: {
+                type: "LineString" as const,
+                coordinates: [buyerPin, [a.lng, a.lat]],
+              },
+            }))
+          : [],
+    });
+  }, [anchorPoints, buyerPin]);
 
   // Crosshair cursor in buyer mode to signal "click to drop a pin".
   useEffect(() => {

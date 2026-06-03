@@ -777,6 +777,7 @@ export default function MapPage() {
             hoverLabel={activeLayerLabel}
             buyerMode={buyerMode}
             buyerPin={buyerPin}
+            anchorPoints={buyerMode ? profile?.anchors ?? [] : []}
             showCycleRadius={showCycleRadius}
             onPinDrop={onPinDrop}
             onPlaceSelect={(props) => {
