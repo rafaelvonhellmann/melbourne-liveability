@@ -5,6 +5,7 @@ import maplibregl from "maplibre-gl";
 import type { DomainId } from "@/lib/types";
 import type { BuyerAnchor } from "@/lib/anchors";
 import type { NoiseLine } from "@/lib/noise";
+import { MAJOR_PROJECTS } from "@/lib/major-projects";
 import { MELBOURNE_BOUNDS, MELBOURNE_CENTER, MELBOURNE_MAX_BOUNDS } from "@/lib/region";
 import {
   choroplethFillColor,
@@ -39,6 +40,17 @@ function circlePolygon(
 // remains the independent data channel on top.
 const BASEMAP =
   "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
+
+// Big Build flagship projects as a static GeoJSON point set (curated; see
+// lib/major-projects). Drawn as an opt-in buyer-mode layer.
+const MAJOR_PROJECTS_FC: GeoJSON.FeatureCollection = {
+  type: "FeatureCollection",
+  features: MAJOR_PROJECTS.map((p) => ({
+    type: "Feature",
+    properties: { name: p.name, label: p.label, status: p.status, sourceUrl: p.sourceUrl },
+    geometry: { type: "Point", coordinates: [p.lng, p.lat] },
+  })),
+};
 
 type MelbourneMapProps = {
   className?: string;
@@ -406,6 +418,27 @@ export function MelbourneMap({
           "circle-opacity": 0.95,
         },
       });
+
+      // Big Build flagship projects (Metro Tunnel + SRL East) - few, city-shaping
+      // points, hidden until buyer mode (see the visibility effect). Click for the
+      // official link. Curated + Nominatim-resolved (lib/major-projects).
+      map.addSource("major-projects", {
+        type: "geojson",
+        data: MAJOR_PROJECTS_FC,
+      });
+      map.addLayer({
+        id: "major-projects",
+        type: "circle",
+        source: "major-projects",
+        layout: { visibility: "none" },
+        paint: {
+          "circle-radius": 6,
+          "circle-color": "#D95F02",
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#ffffff",
+          "circle-opacity": 0.95,
+        },
+      });
     });
 
     const closePoiPopup = () => {
@@ -440,6 +473,36 @@ export function MelbourneMap({
         ? String(f.properties.osmUrl)
         : undefined;
       showPoiPopup(e.lngLat, { pinType, name, url, osmUrl });
+    });
+
+    map.on("click", "major-projects", (e) => {
+      const f = e.features?.[0];
+      if (!f?.properties) return;
+      const name = escapeHtml(String(f.properties.name ?? "Project"));
+      const label = escapeHtml(String(f.properties.label ?? ""));
+      const status = escapeHtml(String(f.properties.status ?? ""));
+      const url = f.properties.sourceUrl ? String(f.properties.sourceUrl) : undefined;
+      const link = url
+        ? `<br/><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Official project page</a>`
+        : "";
+      closePoiPopup();
+      poiPopupRef.current = new maplibregl.Popup({
+        closeButton: true,
+        closeOnClick: true,
+        maxWidth: "260px",
+        className: "poi-popup-container",
+      })
+        .setLngLat(e.lngLat)
+        .setHTML(
+          `<div style="font-size:13px;line-height:1.45"><strong>${name}</strong><br/>${label}<br/><span style="color:#6b6256">${status}</span>${link}</div>`
+        )
+        .addTo(map);
+    });
+    map.on("mouseenter", "major-projects", () => {
+      map.getCanvas().style.cursor = "pointer";
+    });
+    map.on("mouseleave", "major-projects", () => {
+      map.getCanvas().style.cursor = "";
     });
 
     map.on("click", "sa2-fill", (e) => {
@@ -623,6 +686,13 @@ export function MelbourneMap({
         : [];
     src.setData({ type: "FeatureCollection", features: feats });
   }, [transitLines, buyerPin]);
+
+  // Big Build pins show only in buyer mode (city-shaping context for a purchase).
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.getLayer("major-projects")) return;
+    map.setLayoutProperty("major-projects", "visibility", buyerMode ? "visible" : "none");
+  }, [buyerMode]);
 
   // Crosshair cursor in buyer mode to signal "click to drop a pin".
   useEffect(() => {

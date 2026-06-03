@@ -813,17 +813,29 @@ export default function MapPage() {
             }}
           />
 
-          {/* Transit-line legend - only while a pin is down with nearby lines. */}
-          {buyerMode && buyerPin && transitLines.length > 0 && (
+          {/* Buyer-mode map legend: Big Build pins + (with a pin) nearby transit. */}
+          {buyerMode && (
             <div className="pointer-events-none absolute bottom-3 left-3 z-10 rounded-lg border border-surface-border bg-surface/95 px-2.5 py-1.5 text-[11px] shadow-card backdrop-blur">
               <span className="mb-0.5 block font-semibold uppercase tracking-wide text-ink-muted">
-                Transit near pin
+                On the map
               </span>
-              <span className="flex items-center gap-1.5 text-ink">
-                <span className="inline-block h-0.5 w-4" style={{ background: "#2C6FB3" }} aria-hidden />
-                Train
-                <span className="ml-2 inline-block h-0.5 w-4" style={{ background: "#1B9E77" }} aria-hidden />
-                Tram
+              <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-ink">
+                <span className="flex items-center gap-1">
+                  <span className="inline-block h-2.5 w-2.5 rounded-full border border-white" style={{ background: "#D95F02" }} aria-hidden />
+                  Big Build
+                </span>
+                {buyerPin && transitLines.length > 0 && (
+                  <>
+                    <span className="flex items-center gap-1">
+                      <span className="inline-block h-0.5 w-4" style={{ background: "#2C6FB3" }} aria-hidden />
+                      Train
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="inline-block h-0.5 w-4" style={{ background: "#1B9E77" }} aria-hidden />
+                      Tram
+                    </span>
+                  </>
+                )}
               </span>
             </div>
           )}
