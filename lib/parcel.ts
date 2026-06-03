@@ -40,7 +40,7 @@ export function pickParcelArea(
     try {
       if (!turf.booleanPointInPolygon(pt, g as Polygon | MultiPolygon)) continue;
       const areaM2 = turf.area(f);
-      if (!Number.isFinite(areaM2) || areaM2 <= 0) return null;
+      if (!Number.isFinite(areaM2) || areaM2 <= 0) continue;
       const props = (f.properties ?? {}) as Record<string, unknown>;
       return {
         areaM2,

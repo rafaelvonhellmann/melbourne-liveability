@@ -65,7 +65,7 @@ export function parseQuery(text: string): ParsedQuery {
   }
 
   const unmatched: string[] = [];
-  for (const w of q.trim().split(/\s+/)) {
+  for (const w of q.trim().split(/[\s-]+/)) {
     if (w.length < 3 || STOPWORDS.has(w) || matchedWords.has(w) || /^\d+$/.test(w)) continue;
     if (!unmatched.includes(w)) unmatched.push(w);
   }

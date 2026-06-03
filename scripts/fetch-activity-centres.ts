@@ -2,7 +2,8 @@
  * Activity Centre Zones (ACZ) from Vicmap Planning (DTP, CC BY 4.0) - the
  * statutory upzoning instrument directing higher-density development to
  * designated activity centres. The forward "where growth is steered" Horizon
- * layer. GeoServer WFS (WGS84, no reprojection); ~168 polygons statewide.
+ * layer. GeoServer WFS (WGS84, no reprojection); ~175 ACZ polygons after the
+ * Greater-Melbourne bbox clip (the metro bbox also catches Geelong-belt centres).
  *
  * Metro-clip + simplify (~30 m) into a compact public/data/activity-centres.json,
  * lazy-loaded on a pin-drop report. Context only, never scored. Honest framing:

@@ -416,6 +416,10 @@ function OverviewPanel({
           ))}
         </div>
         <PopulationTrendCard series={series.population} />
+        <AffordabilityTrendCard
+          rent={series.rentToIncomeMedianPct}
+          mortgage={series.mortgageToIncomeMedianPct}
+        />
       </div>
     </div>
   );
@@ -694,6 +698,59 @@ function PopulationTrendCard({ series }: { series?: PlaceSeries }) {
           <span>{series.sourceId}</span>
         )}{" "}
         · context only - not in the score.
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Housing-affordability trend for the SA2 - ABS Census ratio of MEDIANS (median
+ * housing cost / median income), 2011/2016/2021. A weaker affordability proxy
+ * than a household >30%-stress share (labelled as such), and DISTINCT from the
+ * scored "Rent vs income" domain card. Context only, never scored.
+ */
+function AffordabilityTrendCard({ rent, mortgage }: { rent?: PlaceSeries; mortgage?: PlaceSeries }) {
+  const lines = [rent, mortgage].filter(
+    (s): s is PlaceSeries => !!s && s.points.length >= MIN_TREND_POINTS
+  );
+  if (lines.length === 0) return null;
+  const source = getSource(lines[0].sourceId);
+  const fmt = (v: number) => `${Math.round(v)}%`;
+  return (
+    <div className="rounded-lg border border-surface-border bg-surface p-4 shadow-card">
+      <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+        Affordability trend (medians)
+      </h3>
+      {lines.map((s) => {
+        const latest = s.points[s.points.length - 1];
+        return (
+          <div key={s.indicator} className="mt-2">
+            <div className="flex flex-wrap items-baseline gap-x-1.5">
+              <span className="text-xs text-ink-muted">{s.label.replace(" (median)", "")}</span>
+              <span className="num text-base font-semibold leading-none text-ink">{fmt(latest.value)}</span>
+              <span className="text-[11px] text-ink-muted">· {latest.period}</span>
+            </div>
+            <div className="overflow-x-auto">
+              <Sparkline series={s} format={fmt} width={132} />
+            </div>
+          </div>
+        );
+      })}
+      <p className="mt-2 border-t border-surface-border pt-2 text-[11px] text-ink-muted">
+        <span>Source: </span>
+        {source ? (
+          <a
+            href={source.url}
+            target="_blank"
+            rel="noreferrer"
+            className="underline decoration-dotted underline-offset-2 hover:text-accent"
+          >
+            {shortSourceName(source.name)}
+          </a>
+        ) : (
+          <span>{lines[0].sourceId}</span>
+        )}{" "}
+        · ratio of medians (cost / income), not a 30%-stress share · context only - not in the score.
       </p>
     </div>
   );

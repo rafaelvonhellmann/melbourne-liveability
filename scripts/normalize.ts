@@ -735,7 +735,9 @@ async function main() {
     if (dp) ctx.developmentPipeline = dp;
     const sa2geom = sa2GeomByCode.get(p.sa2Code);
     if (sa2geom && waterCorps.length) {
-      const ctr = turf.centroid(sa2geom).geometry.coordinates as [number, number];
+      // pointOnFeature (guaranteed inside) - centroid can fall OUTSIDE a concave
+      // or multipart SA2, mis-assigning or dropping the retailer (review 2026-06-04).
+      const ctr = turf.pointOnFeature(sa2geom).geometry.coordinates as [number, number];
       const wr = waterRetailerAt(ctr, waterCorps);
       if (wr) ctx.waterRetailer = { name: wr.name, url: wr.url, sourceId: "vic-water-corp" };
     }

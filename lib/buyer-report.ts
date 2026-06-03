@@ -45,7 +45,6 @@ import { resolveSchoolZones, type SchoolZonesData } from "./school-zones";
 import { busiestRoadNear, type TrafficSegment } from "./traffic";
 import { nearestAirSite, type EpaAirSite } from "./epa-air";
 import { activityCentreAt, type ActivityCentreFeature } from "./activity-centres";
-import { formatMonth } from "./approvals";
 import type { ParcelInfo } from "./parcel";
 
 // ---- Types (stable public contract) ---------------------------------------
@@ -1192,7 +1191,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         ? `${air.distanceMeters} m`
         : `${(air.distanceMeters / 1000).toFixed(1)} km`;
     const when = /^\d{4}-\d{2}/.test(air.since ?? "")
-      ? ` (reading around ${formatMonth(air.since!.slice(0, 7))})`
+      ? ` (reading ${air.since!.slice(0, 10)})`
       : "";
     findings.push({
       id: "air-quality",
@@ -1238,14 +1237,15 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       confidence: "high",
       geography: "pin",
       caveat:
-        "The Activity Centre Zone is the statutory upzoning instrument - it covers only centres that have adopted it (not every Plan Melbourne centre), and built-form controls vary by schedule.",
+        "The Activity Centre Zone is the statutory upzoning instrument - it covers only centres that have adopted it (not every Plan Melbourne centre), built-form controls vary by schedule, and the mapped boundary is simplified, so confirm the exact frontage on the council planning scheme map.",
       sourceRefs: getSourcesByIds(["vic-activity-centres"]),
     });
   }
 
   // 5l) Lot size (context, never scored). Runtime parcel area at the pin from the
   //     Vicmap parcel WFS (turf-derived; a single parcel, not merged lots).
-  const parcel = input.parcel;
+  //     Pin-mode only - a parcel under an SA2 centroid is not the user's property.
+  const parcel = mode === "pin" ? input.parcel : null;
   if (parcel && parcel.areaM2 > 0) {
     const m2 = Math.round(parcel.areaM2);
     findings.push({

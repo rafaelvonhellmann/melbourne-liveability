@@ -230,6 +230,10 @@ async function fetchT02(): Promise<Record<string, Record<string, T02Year>> | nul
   const mi = dims.findIndex((d) => d.id === "MEDAVG");
   const ri = dims.findIndex((d) => d.id === "REGION");
   const ti = dims.findIndex((d) => d.id === "TIME_PERIOD");
+  if (mi < 0 || ri < 0 || ti < 0) {
+    console.warn(`  Affordability (T02) dims not found (MEDAVG=${mi} REGION=${ri} TIME=${ti}) - skipping`);
+    return null;
+  }
   const medVals = dims[mi].values;
   const regVals = dims[ri].values;
   const timeVals = dims[ti].values;
@@ -277,7 +281,7 @@ async function buildAffordabilitySeries(): Promise<IndicatorSeries[]> {
   const series: IndicatorSeries[] = [];
   if (mortgage.length >= 2)
     series.push({
-      indicator: "mortgageToIncome",
+      indicator: "mortgageToIncomeMedianPct",
       label: "Mortgage-to-income (median)",
       unit: "% of income",
       geo: "sa2",
@@ -291,7 +295,7 @@ async function buildAffordabilitySeries(): Promise<IndicatorSeries[]> {
     });
   if (rent.length >= 2)
     series.push({
-      indicator: "rentToIncome",
+      indicator: "rentToIncomeMedianPct",
       label: "Rent-to-income (median)",
       unit: "% of income",
       geo: "sa2",

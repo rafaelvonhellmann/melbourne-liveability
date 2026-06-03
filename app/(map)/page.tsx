@@ -343,7 +343,11 @@ export default function MapPage() {
 
   const buildReportFor = async (
     lngLat: [number, number],
-    sa2: { slug?: string; sa2Code?: string } | null
+    sa2: { slug?: string; sa2Code?: string } | null,
+    // "pin" = an exact dropped/geocoded point (address-level findings allowed);
+    // "sa2" = a suburb-search centroid (NOT a property - address-level findings
+    // must fall back to area-level). Default pin for map clicks / restored pins.
+    mode: "pin" | "sa2" = "pin"
   ) => {
     // A new/moved pin (or a "revert") always starts from the free straight-line
     // report - any prior precise result no longer applies to this point. Cancel
@@ -361,12 +365,17 @@ export default function MapPage() {
       ensureActivityCentres().catch(() => [] as ActivityCentreFeature[]),
       ensureBusStops().catch(() => [] as BusStop[]),
     ]);
-    const parcel = await fetchParcelAreaAt(lngLat[0], lngLat[1]).catch(() => null);
+    // Parcel is an exact-address concept: never query it for a suburb centroid.
+    const parcel = mode === "pin" ? await fetchParcelAreaAt(lngLat[0], lngLat[1]).catch(() => null) : null;
     const place = sa2
       ? places.find((p) => p.slug === sa2.slug || p.sa2Code === sa2.sa2Code) ?? null
       : null;
+    // A newer pin (moved/searched) may have superseded this build while the
+    // parcel/POI fetches were in flight - don't overwrite the current report.
+    if (buyerPinRef.current !== lngLat) return;
     setBuyerReport(
       buildBuyerReport({
+        mode,
         lat: lngLat[1],
         lng: lngLat[0],
         place,
@@ -474,7 +483,7 @@ export default function MapPage() {
     setBuyerSa2({ slug: p.slug, sa2Code: p.sa2Code });
     setBuyerReport(null);
     syncBuyerUrl(true, c);
-    void buildReportFor(c, { slug: p.slug, sa2Code: p.sa2Code });
+    void buildReportFor(c, { slug: p.slug, sa2Code: p.sa2Code }, "sa2");
   };
 
   // Full-address geocode (OSM Nominatim, client-side) → exact-pin deep-dive.
