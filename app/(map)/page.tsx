@@ -36,7 +36,7 @@ import type { TrafficSegment } from "@/lib/traffic";
 import type { EpaAirSite } from "@/lib/epa-air";
 import type { ActivityCentreFeature } from "@/lib/activity-centres";
 import { fetchParcelAreaAt } from "@/lib/parcel";
-import type { Station } from "@/lib/transit";
+import type { Station, BusStop } from "@/lib/transit";
 import { findSa2ForPoint } from "@/lib/buyer-location";
 import { MAJOR_PROJECTS } from "@/lib/major-projects";
 import type { GeocodeResult } from "@/lib/geocode";
@@ -297,6 +297,14 @@ export default function MapPage() {
     activityCentresRef.current = fc.features ?? [];
     return activityCentresRef.current;
   }
+  // GTFS bus stops for the "bus access" finding. Lazy-loaded.
+  const busStopsRef = useRef<BusStop[] | null>(null);
+  async function ensureBusStops(): Promise<BusStop[]> {
+    if (busStopsRef.current) return busStopsRef.current;
+    const res = await fetch(withBase("/data/bus-stops.json"));
+    busStopsRef.current = (await res.json()) as BusStop[];
+    return busStopsRef.current;
+  }
 
   const buyerPlace = useMemo(
     () =>
@@ -342,7 +350,7 @@ export default function MapPage() {
     // any in-flight precise fetch so its (now stale) result can't land late.
     precisionAbortRef.current?.abort();
     setPreciseStatus("idle");
-    const [feats, noiseLines, nuisancePoints, stations, schoolZones, traffic, epaAir, activityCentres] = await Promise.all([
+    const [feats, noiseLines, nuisancePoints, stations, schoolZones, traffic, epaAir, activityCentres, busStops] = await Promise.all([
       ensurePois().catch(() => [] as Feature<Point>[]),
       ensureNoiseLines().catch(() => [] as NoiseLine[]),
       ensureNuisancePoints().catch(() => [] as NuisancePoint[]),
@@ -351,6 +359,7 @@ export default function MapPage() {
       ensureTraffic().catch(() => [] as TrafficSegment[]),
       ensureEpaAir().catch(() => [] as EpaAirSite[]),
       ensureActivityCentres().catch(() => [] as ActivityCentreFeature[]),
+      ensureBusStops().catch(() => [] as BusStop[]),
     ]);
     const parcel = await fetchParcelAreaAt(lngLat[0], lngLat[1]).catch(() => null);
     const place = sa2
@@ -370,6 +379,7 @@ export default function MapPage() {
         epaAir,
         activityCentres,
         parcel,
+        busStops,
         nearbyAreas: areaCentroids,
         majorProjects: MAJOR_PROJECTS,
         profile: profileRef.current,
@@ -399,7 +409,7 @@ export default function MapPage() {
       setPreciseStatus("error");
       return;
     }
-    const [feats, noiseLines, nuisancePoints, stations, schoolZones, traffic, epaAir, activityCentres] = await Promise.all([
+    const [feats, noiseLines, nuisancePoints, stations, schoolZones, traffic, epaAir, activityCentres, busStops] = await Promise.all([
       ensurePois().catch(() => [] as Feature<Point>[]),
       ensureNoiseLines().catch(() => [] as NoiseLine[]),
       ensureNuisancePoints().catch(() => [] as NuisancePoint[]),
@@ -408,6 +418,7 @@ export default function MapPage() {
       ensureTraffic().catch(() => [] as TrafficSegment[]),
       ensureEpaAir().catch(() => [] as EpaAirSite[]),
       ensureActivityCentres().catch(() => [] as ActivityCentreFeature[]),
+      ensureBusStops().catch(() => [] as BusStop[]),
     ]);
     const parcel = await fetchParcelAreaAt(pin[0], pin[1], ctrl.signal).catch(() => null);
     if (ctrl.signal.aborted || buyerPinRef.current !== pin) return;
@@ -426,6 +437,7 @@ export default function MapPage() {
         epaAir,
         activityCentres,
         parcel,
+        busStops,
         nearbyAreas: areaCentroids,
         majorProjects: MAJOR_PROJECTS,
         profile: profileRef.current,

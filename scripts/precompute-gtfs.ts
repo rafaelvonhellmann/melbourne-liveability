@@ -12,7 +12,7 @@ import RBush from "rbush";
 import unzipper from "unzipper";
 import type { FeatureCollection } from "geojson";
 import * as turf from "@turf/turf";
-import { RAW, GENERATED } from "./lib/paths.js";
+import { RAW, GENERATED, PUBLIC_DATA } from "./lib/paths.js";
 import { getProp, featureGeometry } from "./lib/abs-geo.js";
 import {
   AM_PEAK_END,
@@ -264,6 +264,32 @@ function mergeFeeds(feeds: FeedData[]) {
   return { allStops, stopAmTrips, stopWeekdayTrips, tripRoute, routeType, period };
 }
 
+/**
+ * Bus stops (GTFS route_type 3) with their distinct weekday bus-route count,
+ * for the per-pin "bus access" finding. Compact [lng, lat, busRouteCount] tuples
+ * (5dp), reusing the same in-memory maps as the SA2 aggregation. Shapes are NOT
+ * shipped (too heavy) - stop proximity + route count is the honest signal.
+ */
+function buildBusStops(
+  allStops: Map<string, { lat: number; lon: number }>,
+  stopWeekdayTrips: Map<string, Set<string>>,
+  tripRoute: Map<string, string>,
+  routeType: Map<string, number>
+): [number, number, number][] {
+  const out: [number, number, number][] = [];
+  for (const [stopId, { lat, lon }] of allStops) {
+    const routes = new Set<string>();
+    for (const tripId of stopWeekdayTrips.get(stopId) ?? []) {
+      const rid = tripRoute.get(tripId);
+      if (rid && routeType.get(rid) === 3) routes.add(rid);
+    }
+    if (routes.size > 0) {
+      out.push([Math.round(lon * 1e5) / 1e5, Math.round(lat * 1e5) / 1e5, routes.size]);
+    }
+  }
+  return out;
+}
+
 async function loadSa2Centroids(): Promise<Map<string, [number, number]>> {
   const fc = JSON.parse(
     await readFile(path.join(RAW, "sa2-melbourne.geojson"), "utf8")
@@ -390,6 +416,11 @@ async function main() {
     })
   );
   console.log(`Wrote ${OUT_FILE} (${Object.keys(bySa2).length} SA2)`);
+
+  const busStops = buildBusStops(allStops, stopWeekdayTrips, tripRoute, routeType);
+  await mkdir(PUBLIC_DATA, { recursive: true });
+  await writeFile(path.join(PUBLIC_DATA, "bus-stops.json"), JSON.stringify(busStops));
+  console.log(`Wrote bus-stops.json (${busStops.length} bus stops)`);
 }
 
 main().catch((e) => {

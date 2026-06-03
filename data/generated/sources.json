@@ -69,8 +69,8 @@
     "url": "https://opendata.transport.vic.gov.au/dataset/gtfs-schedule",
     "licence": "CC BY 4.0",
     "period": "rolling schedule export",
-    "fetchedAt": "2026-06-02",
-    "sha256": "e8b17f7d8980e053b86c7196db6c09987f25ba7126a2c7faddd848333bab1138"
+    "fetchedAt": "2026-06-03",
+    "sha256": "0bf00a18fbee0625425b5c0ba35aece0eba60df17ccb6ab832bef1e96fee57d8"
   },
   {
     "id": "osm-pt",

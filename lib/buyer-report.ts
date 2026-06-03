@@ -33,7 +33,7 @@ import {
 } from "./nuisance";
 import { evaluateFit, type BuyerProfile, type FitResult } from "./buyer-fit";
 import { anchorDistances, type AnchorDistance } from "./anchors";
-import { nearestStation, type Station } from "./transit";
+import { nearestStation, nearestBusStop, type Station, type BusStop } from "./transit";
 import { computeWeightedScore } from "./scoring";
 import { getDefaultWeights } from "./weights";
 import { getSourcesByIds } from "./source-manifest";
@@ -453,6 +453,8 @@ export interface BuildBuyerReportInput {
   nuisancePoints?: NuisancePoint[];
   /** Train stations for the "nearest train station" finding. Lazy-loaded; omit to skip. */
   stations?: Station[];
+  /** GTFS bus stops [lng,lat,routeCount] for the "bus access" finding. Lazy-loaded; pin mode. */
+  busStops?: BusStop[];
   /**
    * DTP traffic-volume (AADT) road segments for the "busy road nearby" proximity
    * finding. Lazy-loaded client-side; resolved only in pin mode. See lib/traffic.
@@ -1261,6 +1263,33 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       caveat:
         "Area is geometry-derived from the Vicmap parcel boundary (CC BY 4.0) at the dropped point - indicative, a SINGLE parcel (not merged or adjoining lots), and not a substitute for the title.",
       sourceRefs: getSourcesByIds(["vic-parcel"]),
+    });
+  }
+
+  // 5m) Bus access (context, never scored). Nearest GTFS bus stop + its weekday
+  //     route count + stops within 400 m. Straight-line proximity proxy.
+  const bus =
+    point && mode === "pin" && input.busStops
+      ? nearestBusStop([point.lng, point.lat], input.busStops)
+      : null;
+  if (bus && bus.distanceM <= 1200) {
+    const close = bus.distanceM <= 400;
+    const dist = bus.distanceM < 1000 ? `${bus.distanceM} m` : `${(bus.distanceM / 1000).toFixed(1)} km`;
+    findings.push({
+      id: "bus-access",
+      kind: close ? "positive" : "neutral",
+      severity: "info",
+      title: close ? "Bus stop within walking distance" : "Bus stop nearby",
+      summary: `The nearest bus stop is about ${dist} away${bus.routeCount > 0 ? `, served by ${bus.routeCount} bus route${bus.routeCount === 1 ? "" : "s"}` : ""}${bus.stopsWithin400 > 1 ? ` (${bus.stopsWithin400} bus stops within 400 m)` : ""}.`,
+      whyItMatters:
+        "Bus access widens where you can get without a car - though routes, frequency and direction vary, so a nearby stop is not always a useful one.",
+      verifyAction:
+        "Check the actual routes, frequency and direction on the PTV journey planner for the times you would travel.",
+      confidence: "medium",
+      geography: "pin",
+      caveat:
+        "Straight-line distance to a mapped GTFS bus stop (weekday services) - the walking route is longer and timetable / direction matter.",
+      sourceRefs: getSourcesByIds(["ptv-gtfs"]),
     });
   }
 

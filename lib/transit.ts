@@ -32,3 +32,39 @@ export function nearestStation(
   }
   return best;
 }
+
+/** A GTFS bus stop: [lng, lat, distinct weekday bus-route count]. */
+export type BusStop = [number, number, number];
+export type NearestBus = { distanceM: number; routeCount: number; stopsWithin400: number };
+
+/**
+ * Nearest bus stop to `pin` (straight-line metres) + that stop's distinct
+ * weekday bus-route count + how many bus stops sit within 400 m. Route counts
+ * are per-stop (the feed gives counts, not ids), so they are NOT summed across
+ * stops - the nearest stop's count is reported as-is.
+ */
+export function nearestBusStop(
+  pin: [number, number],
+  stops: BusStop[] | null | undefined
+): NearestBus | null {
+  if (!Array.isArray(stops) || stops.length === 0) return null;
+  const [plng, plat] = pin;
+  const kx = mPerDegLng(plat);
+  const ky = M_PER_DEG_LAT;
+  let bestD = Infinity;
+  let routeCount = 0;
+  let within = 0;
+  for (const s of stops) {
+    if (!Array.isArray(s) || s.length < 3) continue;
+    const x = (s[0] - plng) * kx;
+    const y = (s[1] - plat) * ky;
+    const d = Math.sqrt(x * x + y * y);
+    if (d <= 400) within += 1;
+    if (d < bestD) {
+      bestD = d;
+      routeCount = s[2];
+    }
+  }
+  if (!Number.isFinite(bestD)) return null;
+  return { distanceM: Math.round(bestD), routeCount, stopsWithin400: within };
+}
