@@ -50,6 +50,7 @@
     "data:extra-poi": "tsx scripts/fetch-extra-poi.ts",
     "data:community-poi": "tsx scripts/fetch-community-poi.ts",
     "data:ev-poi": "tsx scripts/fetch-ev-poi.ts",
+    "data:aged-care": "tsx scripts/fetch-aged-care.ts",
     "data:noise": "tsx scripts/fetch-noise.ts",
     "data:nuisance": "tsx scripts/fetch-nuisance.ts",
     "data:stations": "tsx scripts/fetch-train-stations.ts",

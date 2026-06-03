@@ -190,6 +190,15 @@
     "sha256": "34202973ef610c010c55213644c7960e3d2a7c5a4a48b0be57e4a6a6589bef23"
   },
   {
+    "id": "osm-aged-care",
+    "name": "OpenStreetMap - aged care / retirement facilities (nursing home, assisted living; Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL - attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-03",
+    "sha256": "526cb984118bc7dd27e9fc4d760a89505d9abf84d84e0c0b7fc8f3c26a5cfa57"
+  },
+  {
     "id": "vicmap-police",
     "name": "Vicmap / MapShare — police stations (Emergency Services FOI)",
     "url": "https://enterprise.mapshare.vic.gov.au/server/rest/services/Hosted/Emergency_Services__VMFEAT_FOI_POINT_/FeatureServer",

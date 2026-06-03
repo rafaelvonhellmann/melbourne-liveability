@@ -12,6 +12,7 @@ import {
   isGpClinic,
   isPlaceOfWorship,
   isCommunityCentre,
+  isAgedCare,
   dedupeFeatures,
 } from "./lib/poi-classify.js";
 import type { NamedPoint } from "./lib/vic-facilities.js";
@@ -148,6 +149,9 @@ async function main() {
   const ev = JSON.parse(
     await readFile(path.join(RAW, "osm-ev.json"), "utf8").catch(() => "{}")
   );
+  const agedCare = JSON.parse(
+    await readFile(path.join(RAW, "osm-aged-care.json"), "utf8").catch(() => "{}")
+  );
   // Authoritative Vicmap point facilities (CC BY 4.0) replace the sparse OSM
   // police + childcare pins. Context only - never scored. See fetch-vic-facilities.
   const vicPolice = JSON.parse(
@@ -171,6 +175,7 @@ async function main() {
     ...osmToFeatures(community, "place_of_worship", isPlaceOfWorship),
     ...osmToFeatures(community, "community_centre", isCommunityCentre),
     ...osmToFeatures(ev, "ev_charging", (t) => t.amenity === "charging_station"),
+    ...osmToFeatures(agedCare, "aged_care", isAgedCare),
     ...amenitiesToFeatures(amenities),
   ]);
 

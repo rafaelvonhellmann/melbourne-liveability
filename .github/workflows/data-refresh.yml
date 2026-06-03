@@ -51,6 +51,7 @@ jobs:
           npm run data:overlays
           npm run data:community-poi
           npm run data:ev-poi
+          npm run data:aged-care
           npm run data:vic-facilities
           npm run data:noise
           npm run data:nuisance

@@ -34,7 +34,8 @@ export type PoiCategoryId =
   | "university"
   | "place_of_worship"
   | "community_centre"
-  | "ev_charging";
+  | "ev_charging"
+  | "aged_care";
 
 export type PoiCategory = {
   id: PoiCategoryId;
@@ -67,6 +68,7 @@ export const POI_CATEGORIES: PoiCategory[] = [
   { id: "place_of_worship", label: "Places of worship", color: "#8E5572" },
   { id: "community_centre", label: "Community / cultural centres", color: "#2B8C8C" },
   { id: "ev_charging", label: "EV charging", color: "#2E8B57" },
+  { id: "aged_care", label: "Aged care / retirement", color: "#B07AA1" },
 ];
 
 export const POI_CATEGORY_IDS: PoiCategoryId[] = POI_CATEGORIES.map((c) => c.id);
@@ -85,7 +87,7 @@ export const POI_GROUPS: { label: string; ids: PoiCategoryId[] }[] = [
     label: "Daily needs",
     ids: ["supermarket", "bank", "post_office", "cafe_restaurant", "gym_leisure"],
   },
-  { label: "Community", ids: ["place_of_worship", "community_centre"] },
+  { label: "Community", ids: ["place_of_worship", "community_centre", "aged_care"] },
   { label: "Getting around", ids: ["ev_charging"] },
   { label: "Safety", ids: ["police"] },
   { label: "Parks & green", ids: ["park"] },

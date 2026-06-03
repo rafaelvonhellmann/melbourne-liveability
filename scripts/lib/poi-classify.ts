@@ -70,6 +70,15 @@ export function isNdisProvider(tags: OsmTags): boolean {
   );
 }
 
+/**
+ * Aged-care / retirement facility - nursing home or assisted living. A place a
+ * buyer looks for (downsizing, or care near ageing parents), not a demographic
+ * signal. Density verified before adding (unlike the sparse NDIS set we dropped).
+ */
+export function isAgedCare(tags: OsmTags): boolean {
+  return /nursing_home|assisted_living/.test(tags.social_facility ?? "");
+}
+
 /** Place of worship of ANY faith (church, mosque, synagogue, temple, gurdwara…). */
 export function isPlaceOfWorship(tags: OsmTags): boolean {
   return tags.amenity === "place_of_worship";

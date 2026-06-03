@@ -35,6 +35,7 @@ const SOURCE_FILES: Record<string, { dir: "raw" | "generated"; file: string }> =
   "osm-schools": { dir: "raw", file: "osm-schools.json" },
   "osm-amenities": { dir: "raw", file: "osm-amenities.json" },
   "osm-cycleways": { dir: "raw", file: "osm-cycleways.json" },
+  "osm-aged-care": { dir: "raw", file: "osm-aged-care.json" },
   "abs-seifa-2021": { dir: "raw", file: "abs-sa2-seifa.json" },
   "abs-census-community-2021": { dir: "raw", file: "abs-sa2-community.json" },
 };

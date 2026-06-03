@@ -6,6 +6,7 @@ import {
   isPathologyLab,
   isPlaceOfWorship,
   isCommunityCentre,
+  isAgedCare,
   dedupeFeatures,
   poiDedupeKey,
   scoredGpPoints,
@@ -93,6 +94,18 @@ describe("isCommunityCentre (community + cultural)", () => {
     expect(isCommunityCentre({ amenity: "theatre" })).toBe(false);
     expect(isCommunityCentre({ amenity: "place_of_worship" })).toBe(false);
     expect(isCommunityCentre({})).toBe(false);
+  });
+});
+
+describe("isAgedCare (nursing home / assisted living)", () => {
+  it("matches aged-care social facilities", () => {
+    expect(isAgedCare({ social_facility: "nursing_home" })).toBe(true);
+    expect(isAgedCare({ social_facility: "assisted_living" })).toBe(true);
+  });
+  it("ignores non-aged-care facilities", () => {
+    expect(isAgedCare({ social_facility: "group_home" })).toBe(false);
+    expect(isAgedCare({ amenity: "social_facility" })).toBe(false);
+    expect(isAgedCare({})).toBe(false);
   });
 });
 
