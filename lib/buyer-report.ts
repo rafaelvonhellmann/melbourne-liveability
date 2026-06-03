@@ -42,6 +42,7 @@ import { presentOverlays } from "./planning-overlays";
 import { worstCoastalScenario } from "./coastal";
 import { projectedGrowth } from "./vif";
 import { resolveSchoolZones, type SchoolZonesData } from "./school-zones";
+import { busiestRoadNear, type TrafficSegment } from "./traffic";
 
 // ---- Types (stable public contract) ---------------------------------------
 
@@ -448,6 +449,11 @@ export interface BuildBuyerReportInput {
   nuisancePoints?: NuisancePoint[];
   /** Train stations for the "nearest train station" finding. Lazy-loaded; omit to skip. */
   stations?: Station[];
+  /**
+   * DTP traffic-volume (AADT) road segments for the "busy road nearby" proximity
+   * finding. Lazy-loaded client-side; resolved only in pin mode. See lib/traffic.
+   */
+  traffic?: TrafficSegment[];
   /**
    * Government school zones (primary + secondary Year 7) for the address-level
    * zone match. Lazy-loaded client-side; resolved only in pin mode (never from
@@ -1104,6 +1110,40 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       caveat:
         "ABS building approvals counted at SA2 (whole-area) level, not your street; an approval is a leading indicator, not a completed home, and the most recent month or two may be revised.",
       sourceRefs: getSourcesByIds(["abs-building-approvals"]),
+    });
+  }
+
+  // 5h) Traffic exposure (context, never scored). Busiest mapped arterial /
+  //     highway within ~250 m of the pin + its measured AADT. Pin-level
+  //     proximity proxy; residential streets are not counted, latest year 2019.
+  const road =
+    point && mode === "pin" && input.traffic
+      ? busiestRoadNear([point.lng, point.lat], input.traffic, 250)
+      : null;
+  if (road && road.aadt >= 5000) {
+    const heavy = road.heavyPct >= 8;
+    const concern = road.aadt >= 20000 && road.distanceMeters <= 150;
+    findings.push({
+      id: "traffic-volume",
+      kind: concern ? "verify" : "neutral",
+      ...(concern ? { tone: "concern" as const } : {}),
+      severity: road.aadt >= 40000 ? "high" : road.aadt >= 15000 ? "medium" : "low",
+      title:
+        road.aadt >= 40000
+          ? "Major traffic route close by"
+          : road.aadt >= 15000
+            ? "Busy road nearby"
+            : "Moderate traffic nearby",
+      summary: `${road.road || "A main road"} is about ${road.distanceMeters} m away and carried roughly ${road.aadt.toLocaleString("en-AU")} vehicles a day (2019)${heavy ? `, with a notable ${road.heavyPct}% heavy vehicles (a truck route)` : ""}.`,
+      whyItMatters:
+        "Busier roads bring more traffic noise, harder on-street parking and pedestrian-safety trade-offs - though they often also mean better bus access and shops.",
+      verifyAction:
+        "Visit at morning and evening peak and after dark to judge the noise and traffic, and check crossing safety if you have children.",
+      confidence: "medium",
+      geography: "pin",
+      caveat:
+        "Straight-line distance to the nearest MAPPED arterial / highway (DTP traffic counts, latest year 2019) - residential streets are not counted, and this is a proximity proxy, not modelled noise or a parcel result.",
+      sourceRefs: getSourcesByIds(["dtp-aadt"]),
     });
   }
 

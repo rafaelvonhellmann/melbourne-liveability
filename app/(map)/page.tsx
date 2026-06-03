@@ -32,6 +32,7 @@ import { buildBuyerReport, type BuyerReport as BuyerReportData } from "@/lib/buy
 import type { NoiseLine } from "@/lib/noise";
 import type { NuisancePoint } from "@/lib/nuisance";
 import type { SchoolZonesData } from "@/lib/school-zones";
+import type { TrafficSegment } from "@/lib/traffic";
 import type { Station } from "@/lib/transit";
 import { findSa2ForPoint } from "@/lib/buyer-location";
 import { MAJOR_PROJECTS } from "@/lib/major-projects";
@@ -266,6 +267,15 @@ export default function MapPage() {
     schoolZonesRef.current = (await res.json()) as SchoolZonesData;
     return schoolZonesRef.current;
   }
+  // DTP traffic-volume (AADT) segments for the buyer report's "busy road nearby"
+  // proximity finding. Lazy-loaded once on first pin (kept out of the map bundle).
+  const trafficRef = useRef<TrafficSegment[] | null>(null);
+  async function ensureTraffic(): Promise<TrafficSegment[]> {
+    if (trafficRef.current) return trafficRef.current;
+    const res = await fetch(withBase("/data/traffic-aadt.json"));
+    trafficRef.current = (await res.json()) as TrafficSegment[];
+    return trafficRef.current;
+  }
 
   const buyerPlace = useMemo(
     () =>
@@ -311,12 +321,13 @@ export default function MapPage() {
     // any in-flight precise fetch so its (now stale) result can't land late.
     precisionAbortRef.current?.abort();
     setPreciseStatus("idle");
-    const [feats, noiseLines, nuisancePoints, stations, schoolZones] = await Promise.all([
+    const [feats, noiseLines, nuisancePoints, stations, schoolZones, traffic] = await Promise.all([
       ensurePois().catch(() => [] as Feature<Point>[]),
       ensureNoiseLines().catch(() => [] as NoiseLine[]),
       ensureNuisancePoints().catch(() => [] as NuisancePoint[]),
       ensureStations().catch(() => [] as Station[]),
       ensureSchoolZones().catch(() => null),
+      ensureTraffic().catch(() => [] as TrafficSegment[]),
     ]);
     const place = sa2
       ? places.find((p) => p.slug === sa2.slug || p.sa2Code === sa2.sa2Code) ?? null
@@ -331,6 +342,7 @@ export default function MapPage() {
         nuisancePoints,
         stations,
         schoolZones: schoolZones ?? undefined,
+        traffic,
         nearbyAreas: areaCentroids,
         majorProjects: MAJOR_PROJECTS,
         profile: profileRef.current,
@@ -360,12 +372,13 @@ export default function MapPage() {
       setPreciseStatus("error");
       return;
     }
-    const [feats, noiseLines, nuisancePoints, stations, schoolZones] = await Promise.all([
+    const [feats, noiseLines, nuisancePoints, stations, schoolZones, traffic] = await Promise.all([
       ensurePois().catch(() => [] as Feature<Point>[]),
       ensureNoiseLines().catch(() => [] as NoiseLine[]),
       ensureNuisancePoints().catch(() => [] as NuisancePoint[]),
       ensureStations().catch(() => [] as Station[]),
       ensureSchoolZones().catch(() => null),
+      ensureTraffic().catch(() => [] as TrafficSegment[]),
     ]);
     if (ctrl.signal.aborted || buyerPinRef.current !== pin) return;
     setBuyerReport(
@@ -379,6 +392,7 @@ export default function MapPage() {
         nuisancePoints,
         stations,
         schoolZones: schoolZones ?? undefined,
+        traffic,
         nearbyAreas: areaCentroids,
         majorProjects: MAJOR_PROJECTS,
         profile: profileRef.current,

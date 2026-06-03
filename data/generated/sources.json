@@ -280,6 +280,15 @@
     "sha256": "df6e6b3e6e5e7edeb409857aab20abdd63222757d8ebf7dcf1475503275df577"
   },
   {
+    "id": "dtp-aadt",
+    "name": "DTP Annual Average Daily Traffic Volume (arterials + highways, vehicles/day)",
+    "url": "https://discover.data.vic.gov.au/dataset/historical-annual-average-daily-traffic-volume",
+    "licence": "CC BY 4.0",
+    "period": "2019 (latest published)",
+    "fetchedAt": "2026-06-03",
+    "sha256": "a8146b13199e96f424a4fa2b6ea471172e01280ba467f27b7c2669ed3cf4cccf"
+  },
+  {
     "id": "osm-noise-corridors",
     "name": "OpenStreetMap - rail / tram / freeway corridors for the transport-noise proximity proxy (Overpass)",
     "url": "https://www.openstreetmap.org/",
