@@ -7,63 +7,90 @@ review pass.
 
 ---
 
-## ⭐⭐ CURRENT GOAL — free launch + buyer-decision depth (autonomous build)
+## START HERE - new-session handover (HEAD `a0a975b`, tree clean, deploy green)
 
-**Decision (founder):** ship the product **FREE** for now; monetisation parked +
-UI removed. Beat NestCheck (the real VIC competitor) on **transparency + buyer
-decision workflow + depth**, not coverage. Build the queue below autonomously
-(gate `typecheck`(capture real exit) · `vitest` · `lint` → commit per item → push).
+**Product.** Free static Next.js + TS liveability map + pin-level **Buyer Location
+Check** for Greater Melbourne, on GitHub Pages (sub-path host via `withBase()`).
+No listings, no backend, no auth. Moat = transparency + buyer-decision DEPTH (beat
+NestCheck, the real VIC competitor, on depth + trust, NOT coverage). Founder's
+north star: "improve how we deliver the information to people."
 
-**Build queue (in order):**
-1. **Personal profile** — `lib/buyer-fit.ts` engine + storage SHIPPED (`1b8f5b0`).
-   TODO: profile form modal → "Fit for your life" + deal-breaker flags in the
-   buyer report → **agent (client-facing) variant** (`mode: "agent"`).
-2. **Population density + trend** — density = ERP ÷ SA2 area (no fetch); trend
-   already in `timeseries.json` (ERP 2001-2023) — surface both.
-3. **Train-station distance** (needs raw GTFS rail-stop parse).
-4. **Social-housing map layer** — data already in `context.socialHousing`; emit to
-   geojson + a context toggle.
-5. **School catchments** (findmyschool.vic / DET polygons + pin-in-polygon).
-6. **Big Build pin-layer** (curated data in `major-projects.json`).
-7. **Parity (NestCheck):** plain-English zone · water retailer · air quality
-   (EPA station) · EV ✅(`b03a9fb`) · childcare quality ratings (ACECQA).
-8. **New-developments trend** (ABS building approvals) · **undergrad/postgrad %**
-   (ABS Census qualification) · **fire history** (Vicmap past-fire) · **traffic
-   AADT** proxy (VicRoads).
-9. **Mobile sheet polish** (Pixel) · surface **Sun & aspect** more prominently
-   (currently only in the Buyer report).
+**Decisions (locked).** Ship FREE; monetisation parked + UI removed. Profile-on-
+register (accounts) = NEXT PHASE only - the local `lib/buyer-fit.ts` profile is the
+seed; keep new profile work account-ready. Never regress: static-export-only,
+Buyer Mode never folded into the locked 7-domain score, every finding shows
+source + freshness + caveat (unit-tested), deterministic no-AI report engine,
+DIGNITY-STANDARD (supply not welfare-%, amenities not demographics), ASCII only
+(no em-dashes - founder stripped them in `5011863`), never fabricate data.
 
-**Dead-ends (flag, don't fake):** hospital catchments (no such concept — use
-hospital distance) · power-grid outage history (distributor-level only) ·
-per-area public/infrastructure spending (not geocoded — Big Build is the proxy).
+**Gate every item.** `node node_modules/typescript/bin/tsc --noEmit` (capture the
+REAL exit - `| rtk cat` MASKS tsc's exit code; use `; echo TSC_EXIT=$?`) ;
+`npx vitest run` (27 files / ~224 tests) ; `npx eslint .`. Commit per item, push =
+auto-deploy. Verify via DOM / data / CI, never the local dev server (OneDrive locks
+`.next`; map canvas rAF-throttles under automation - founder eyeballs renders).
+rtk gotchas: breaks `npx` as a prefix (use `npx ... | rtk cat`), mangles `find` +
+heredoc stdin (use plain git/node there).
 
-**Shipped this thread:** colourblind ramp (G6) · find-areas-like-this (G8) ·
-bike radius (G12a) · community amenities (G3) · social-housing supply data (G2) ·
-authoritative police+childcare (G5b) · housing-stress (G9) · heritage overlay
-(G11) · UX declutter + free-ification · EV parity · transport-noise proxy ·
-nuisance/industry proxy · **profile UI (buyer + agent "Fit for your life")** ·
-**population density + trend** · **nearest train-station distance** ·
-**social-housing map layer**. ~222 vitest, all CI-green.
+**CRITICAL - monthly data-refresh.** `scripts/.github/workflows/data-refresh.yml`
+runs in a clean CI env. The newer raw fetches (community / EV / police+childcare /
+noise / nuisance / stations / heritage) are NOT in `scripts/fetch.ts`, so the
+workflow now fetches them explicitly before `data:build` (fixed `88838c4`). If you
+add ANY new fetch script, ADD IT TO data-refresh.yml or the monthly refresh
+silently drops that layer (this regressed pins 37,723 -> 32,010 on 2026-06).
 
-**Queue remaining:** school catchments (source CONFIRMED — data.vic.gov.au
-"Victorian Government School Zones", EPSG:3111 polys → reprojection + simplify +
-client pin-in-polygon; the heavy one) · Big Build pin-layer · parity (plain-English
-zone · water retailer · air quality · childcare ACECQA ratings) · developments
-(ABS building approvals) · undergrad/postgrad % · fire history · traffic AADT ·
-mobile-sheet polish · surface Sun & aspect on the area card.
+### Tasklist - build queue (recommended order)
 
-**Overnight (founder asleep):** a Codex ultrareview is running — website/UX, data
-quality, content + writing (esp. how info is delivered to users), buyer + agent
-profiles, accessibility, AI-slop (per impeccable.style/slop + gotalab/uxaudit
-criteria), plus stress-testing and remove/add/change recommendations. Did NOT
-start catchments unsupervised overnight (reprojection is error-prone — do it with
-the founder available).
+| # | Item | Status / how |
+|---|------|--------------|
+| 1 | **Conservation / restriction overlays** (ESO, SLO, VPO, PAO, EAO, EMO) | NEXT. Source confirmed: `Vicplan_PlanningSchemeOverlays` MapServer, layers ESO=3 SLO=4 VPO=5 PAO=28 EAO=25 EMO=13 (plan-gis.mapshare.vic.gov.au). Repeat the heritage pattern: fetch script -> normalize overlay-share -> `context.planning` -> caveated buyer finding. |
+| 2 | **Social-anchor scoring** | The differentiator. User drops work / school / family anchors, each property scored by proximity + commute. Reuse geocode + distance (noise/transit already use them). Extends `lib/buyer-fit.ts`. |
+| 3 | **Sun-path SVG** | Founder's visual ask. Honest sun-path diagram from `lib/sun.ts` - NOT a 3D shadow map (liability). Replaces the WSW/degrees copy that confused users. |
+| 4 | **Transit lines near pin** | rail + tram cheap (reuse `noise-lines.json` kind: rail/tram); bus needs GTFS `shapes.txt` (heavier follow-up). |
+| 5 | **School catchments** | data.vic "Victorian Government School Zones" - EPSG:3111 polys -> reproject -> simplify -> client pin-in-polygon. Heaviest; do it with the founder available (reprojection is error-prone). |
+| 6 | **Big Build pin-layer** | curated `major-projects.json` -> map pins. |
+| 7 | **"The Basin" grocery fix** | when no supermarket in the walk circle, report "nearest supermarket ~X km (short drive)" instead of implying none exists. |
+| 8 | **Codex remaining (open)** | per-finding source-freshness badge (founder deferred to PDF); wire profile fields (schools/safety/walkability) into report ordering; specific proxy source labels; inline jargon defs; 44px touch targets; ARIA (search listbox, map role); adjacency real-boundary; flatten nested cards; **axe-in-CI** (G7 was blocked on a clean local env - wire it into CI). |
+| - | **NDIS pins** | EXCLUDED (OSM has ~3; do not fake sparse data). |
+| - | **Accounts / profile-on-register** | NEXT PHASE only (needs backend). Local profile is the seed. |
+| - | **Google Earth premium / Cesium / OpenGeoAgent** | NO - licensed / 3D / AI-pipeline, off-strategy. Parcels + footprints OK later via OPEN Vicmap. |
+| - | **Dead-ends (flag, never fake)** | hospital catchments (no such concept - use distance); power-grid outage history (distributor-level only); per-area infra spending (not geocoded - Big Build is the proxy). |
+
+### Shipped this session (`b9c56b1`..`a0a975b`)
+
+Codex P0-P1 quick wins (contrast `--accent` #ad4f2e passes AA, sub-path share
+links via `shareHref`, heritage copy, agent voice); em-dashes stripped from copy;
+data-refresh durability patch; **report restructure** - "Before you offer, check
+these first" priority TL;DR (top-3 verify/red_flag by severity then materiality),
+on-screen copy now direct with full detail moved to the PDF (`hidden print:block`);
+hazard + school-zone declutter (material vs unavailable); sun-aspect copy
+simplified; walk-circle pin clip (buyer-mode pins now clipped to the bike/walk
+circle, not dumped citywide); pin grouping (Health services aggregated, Hospitals
+separate, NDIS dropped). 27 test files, ~224 vitest, all CI-green.
+
+### Codex ultrareview
+
+`CODEX-ULTRAREVIEW.md` (gpt-5.5 pass). Addressed: report priority restructure,
+contrast, sub-path links, heritage copy, agent voice, em-dashes, hazard/school
+declutter, on-screen-direct + PDF-comprehensive split, data-refresh durability.
+Open items tracked in that doc's status header (mirrored in tasklist #8).
+
+### Non-price research -> product direction
+
+The "property fit profile" model (time / comfort / safety / family / climate /
+social / flexibility / confidence) extends `lib/buyer-fit.ts`. Cheapest high-value
+differentiator = social-anchor scoring (task #2). New buyer lenses to consider:
+investor, land-buyer, agent (existing lenses: Balanced / Renting / Buying /
+Family / Retiree / Data-quality).
 
 ---
 
-## ⭐ START HERE — autonomous build mandate (HEAD `25d659d`, tree clean)
+## (HISTORICAL) Autonomous build mandate - G1-G12 board (superseded)
 
-**Your job this session: keep building the Goal board (G1–G12) below until it's done.**
+> Superseded by the new-session handover at the top of this file. The G1-G12
+> board below is ALL shipped; kept for provenance only. Follow the tasklist
+> above, not this section.
+
+**Original mandate - keep building the Goal board (G1-G12) below until it's done.**
 Founder's instruction, verbatim intent: *"set it as a goal and build everything that is
 pending; if you hit a problem, come to me for a direction — otherwise don't stop."* So:
 
