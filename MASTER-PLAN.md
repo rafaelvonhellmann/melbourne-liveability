@@ -42,7 +42,8 @@ silently drops that layer (this regressed pins 37,723 -> 32,010 on 2026-06).
 
 | # | Item | Status / how |
 |---|------|--------------|
-| 1 | **Conservation / restriction overlays** (ESO, SLO, VPO, PAO, EAO, EMO) | NEXT. Source confirmed: `Vicplan_PlanningSchemeOverlays` MapServer, layers ESO=3 SLO=4 VPO=5 PAO=28 EAO=25 EMO=13 (plan-gis.mapshare.vic.gov.au). Repeat the heritage pattern: fetch script -> normalize overlay-share -> `context.planning` -> caveated buyer finding. |
+| NEXT | **Declutter buyer report** (tracker #7) | Founder priority (info-delivery = the #1 worry). Drop Source / Confidence / Geography from the on-screen findings -> keep them in the generated PDF; add an explicit positives vs negatives split; tighten copy for scanning 10-20 properties/day. |
+| 1 | DONE - **Conservation / restriction overlays** (ESO/SLO/VPO/EMO/EAO/PAO) | Shipped `b993c92`. 6 Vicplan overlays (ids verified live) as a sourced/caveated buyer finding (PAO/EAO = high severity -> before-you-offer checklist) + area-card panel; normalize inline + data-refresh.yml wired. |
 | 2 | **Social-anchor scoring** | The differentiator. User drops work / school / family anchors, each property scored by proximity + commute. Reuse geocode + distance (noise/transit already use them). Extends `lib/buyer-fit.ts`. |
 | 3 | **Sun-path SVG** | Founder's visual ask. Honest sun-path diagram from `lib/sun.ts` - NOT a 3D shadow map (liability). Replaces the WSW/degrees copy that confused users. |
 | 4 | **Transit lines near pin** | rail + tram cheap (reuse `noise-lines.json` kind: rail/tram); bus needs GTFS `shapes.txt` (heavier follow-up). |
@@ -54,6 +55,9 @@ silently drops that layer (this regressed pins 37,723 -> 32,010 on 2026-06).
 | - | **Accounts / profile-on-register** | NEXT PHASE only (needs backend). Local profile is the seed. |
 | - | **Google Earth premium / Cesium / OpenGeoAgent** | NO - licensed / 3D / AI-pipeline, off-strategy. Parcels + footprints OK later via OPEN Vicmap. |
 | - | **Dead-ends (flag, never fake)** | hospital catchments (no such concept - use distance); power-grid outage history (distributor-level only); per-area infra spending (not geocoded - Big Build is the proxy). |
+| + | **Horizon lens** (future-risk theme) | Forward-looking layers for a 5-25yr purchase: sea-level rise + coastal inundation (DEECA Future Coasts scenarios), VIF population/dwelling projections, climate flood/fire trend, Big Build proximity (future transit), upzoning / activity-centre densification. Label everything projections/scenarios with the same source+caveat discipline. Sea-level rise = first add (best source-to-value). |
+| + | **Water retailer** | Which retailer services the SA2 (Yarra Valley / South East / Greater Western Water). Cheap context. Skip generic water-quality (metro is uniform/regulated; localised contamination already via the EAO overlay). |
+| + | **Aged care / retirement pins** | OSM `social_facility=nursing_home/assisted_living` + retirement villages. Context pins (downsizers + care-near-parents). SKIP SDA / shared-support (dignity + sparse, same call as NDIS). |
 
 ### Shipped this session (`b9c56b1`..`a0a975b`)
 
