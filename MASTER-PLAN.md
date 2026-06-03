@@ -60,6 +60,48 @@ silently drops that layer (this regressed pins 37,723 -> 32,010 on 2026-06).
 | + | DONE - **Aged care / retirement pins** | Shipped. 262 OSM nursing-home/assisted-living facilities as a context pin category (Community group). Density verified before adding. SKIPPED SDA / shared-support (dignity + sparse). |
 | + | DONE - **"What's being built" (development pipeline)** | Shipped (this session). ABS Building Approvals dataflow `ABS,BA_SA2,2.0.0` (per-SA2, not just LGA), dataKey `1.9.TOT.110+100.SA2..M` (dwelling units, total sector + work, Houses + Total Residential). `fetch-abs-approvals.ts` decodes SDMX-JSON (no reproject) -> compact per-SA2 monthly series; `lib/approvals.ts` summarizeApprovals = trailing-12-month dwellings + prior-12 trend + house vs higher-density split; normalize inline -> `context.developmentPipeline` (all 361 GM SA2s, latest 2026-03); buyer-report "development-pipeline" finding. BUILT FORM + supply framing only (dignity). data:abs-approvals wired into data-refresh.yml (monthly). Future council permits still have no clean open feed - covered forward via Big Build + approvals trend. |
 
+### Shipped 2026-06-04 (overnight autonomous run)
+
+Seven features, each gated (tsc=0 / vitest / eslint / data:verify) + committed +
+pushed; final `next build` green (371 static pages, export OK). vitest 303 / 40 files.
+- **#11 Water retailer** - Vicmap `water_corp` WFS (CC BY 4.0) bypassed the manual-
+  order blocker; filtered to the 3 metro retailers; `context.waterRetailer` on
+  358/361 SA2 + buyer finding.
+- **#17 EPA air quality** - AirWatch `/sites` (header is `X-API-Key`, NOT the Azure
+  default); 94 sites -> `public/data/epa-air-sites.json`; nearest-monitor finding with a
+  DATED band + live-AirWatch link. Built with the founder's key; fetch self-skips when
+  `EPA_API_KEY` is unset; wired into the monthly workflow.
+- **Activity centres (Horizon)** - Vicmap `plan_zone` ACZ (175 metro polys) -> in-an-
+  activity-centre finding.
+- **Affordability trend** - ABS C21_T02 ratio-of-medians (mortgage + rent vs income,
+  2011/2016/2021 on 2021 boundaries) -> 2 SA2 trend series.
+- **Median lot size** - runtime client query to the Vicmap parcel WFS (CORS-open) +
+  turf.area; per-pin "lot size" finding (no SA2 median - millions of parcels, no area field).
+- **Bus access** - extended GTFS precompute -> `public/data/bus-stops.json` (18,597 stops);
+  nearest-bus-stop + route-count finding (resolves the #4 bus follow-up).
+- New deps: none beyond adm-zip (prior). New sources: vic-water-corp, epa-air,
+  vic-activity-centres, abs-census-tsp-sa2, vic-parcel (manifest 40 sources / 25 cited
+  / no dangling).
+
+**Remaining (NOT built - documented, not blocked-on-me):**
+- **Climate forward flood/fire trend** - NO honest open feed exists (discovery workflow
+  verified: ACS hazard indices are use-restricted + coarse + no flood; VFCT is manual
+  in-tool export; CSIRO/BoM is ~5-12 km grid). Building it would fabricate parcel-level
+  precision. Deliberately NOT built. Only defensible future move = a PDF-only qualitative
+  note citing VFCT/ACS.
+- **"Find areas like this" (criteria filter)** - the similarity ENGINE already exists
+  (`lib/similar-areas.ts` reference-based per-domain match, surfaced on profiles + alerts
+  + summary card), and the map weight-sliders already re-rank areas by chosen priorities.
+  A dedicated criteria-filter page would largely duplicate these - left as a UX design
+  decision for the founder rather than built speculatively.
+- **a11y polish (#8)** - baseline a11y IS enforced (eslint-plugin-jsx-a11y via
+  next/core-web-vitals, passing). The remaining Codex items (axe-in-CI, 44px touch
+  targets, runtime contrast/focus) are runtime/visual and need a clean browser + axe env
+  to verify - the same reason G7 was parked. Best done with the founder present, not blind.
+- **#19 ACECQA childcare ratings** - DECISION (founder + me): do NOT ship the data
+  (all-rights-reserved). Reference-only - point users to the official ACECQA/Starting
+  Blocks rating lookup from the childcare context (small copy add, not a data pipeline).
+
 ### Shipped 2026-06-03 (Horizon + Buyer-depth session)
 
 Five items, each gated (tsc=0 / vitest / eslint / data:verify) + committed + pushed:
@@ -75,17 +117,14 @@ Five items, each gated (tsc=0 / vitest / eslint / data:verify) + committed + pus
 - New deps: `adm-zip` (school-zones unzip). New sources: abs-building-approvals,
   vic-school-zones, dtp-aadt (manifest 35 sources / 21 cited / no dangling).
 
-**Remaining queue - ALL blocked on external / founder action (not code):**
-- **#17 EPA air quality** - live AQI needs a free EPA Victoria API key (Azure APIM,
-  `Ocp-Apim-Subscription-Key`, register at portal.api.epa.vic.gov.au). Endpoint:
-  `gateway.api.epa.vic.gov.au/environmentMonitoring/v1/sites?environmentalSegment=air`.
-  Founder action: register key -> add `EPA_API_KEY` as a CI secret -> ~1 commit to
-  wire fetch + nearest-station finding (deliberately NOT scaffolded inert/unverified).
-- **#11 Water retailer** - DataShare manual-order only (`md=60bfa03f`); no API. Founder
-  places the order, then it ingests via the standard clone pattern.
-- **#19 ACECQA childcare ratings** - the CSV is ALL-RIGHTS-RESERVED; product policy is
-  never to ship questionable-licence data. Blocked unless ACECQA grants CC-BY / written
-  permission. (OSM childcare POINTS already ship via vicmap-foi; only the quality RATING is blocked.)
+**(Historical note - this queue was RESOLVED on 2026-06-04, see the section above.)**
+- **#17 EPA air quality** - DONE 2026-06-04 (header was `X-API-Key`, not the Azure
+  default; founder supplied the key, `EPA_API_KEY` secret still to be added for the
+  automated monthly refresh - the fetch self-skips meanwhile).
+- **#11 Water retailer** - DONE 2026-06-04 (the manual-order blocker was bypassed via the
+  Vicmap `water_corp` WFS - same data, open, no order needed).
+- **#19 ACECQA childcare ratings** - still not shipped as DATA (all-rights-reserved);
+  decided reference-only (link to the official ACECQA rating lookup).
 
 ### Shipped this session (`b9c56b1`..`a0a975b`)
 
