@@ -154,6 +154,8 @@ export default function MapPage() {
   const [buyerMode, setBuyerMode] = useState(false);
   const [buyerPin, setBuyerPin] = useState<[number, number] | null>(null);
   const [showCycleRadius, setShowCycleRadius] = useState(false);
+  // Rail/tram lines near the pin (loaded lazily when buyer mode opens).
+  const [transitLines, setTransitLines] = useState<NoiseLine[]>([]);
   // Personal "fit" profile (buyer/agent), local-only. `profileRef` mirrors it so
   // a rebuild triggered right after save reads the latest profile (not stale state).
   const [profile, setProfile] = useState<BuyerProfile | null>(null);
@@ -180,6 +182,24 @@ export default function MapPage() {
   useEffect(() => {
     buyerPinRef.current = buyerPin;
   }, [buyerPin]);
+
+  // Lazy-load rail/tram lines once buyer mode opens, to draw the local network
+  // around the pin. Reuses the noise-line loader (same OSM source).
+  useEffect(() => {
+    if (!buyerMode || transitLines.length > 0) return;
+    let cancelled = false;
+    void ensureNoiseLines()
+      .then((lines) => {
+        if (!cancelled) {
+          setTransitLines(lines.filter((l) => l.kind === "rail" || l.kind === "tram"));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- ensureNoiseLines is stable
+  }, [buyerMode]);
   const precisionAbortRef = useRef<AbortController | null>(null);
 
   // POIs + SA2 polygons live in the MapLibre sources; for the report maths we
@@ -778,6 +798,7 @@ export default function MapPage() {
             buyerMode={buyerMode}
             buyerPin={buyerPin}
             anchorPoints={buyerMode ? profile?.anchors ?? [] : []}
+            transitLines={buyerMode ? transitLines : []}
             showCycleRadius={showCycleRadius}
             onPinDrop={onPinDrop}
             onPlaceSelect={(props) => {
@@ -791,6 +812,21 @@ export default function MapPage() {
               else selectPlace(p);
             }}
           />
+
+          {/* Transit-line legend - only while a pin is down with nearby lines. */}
+          {buyerMode && buyerPin && transitLines.length > 0 && (
+            <div className="pointer-events-none absolute bottom-3 left-3 z-10 rounded-lg border border-surface-border bg-surface/95 px-2.5 py-1.5 text-[11px] shadow-card backdrop-blur">
+              <span className="mb-0.5 block font-semibold uppercase tracking-wide text-ink-muted">
+                Transit near pin
+              </span>
+              <span className="flex items-center gap-1.5 text-ink">
+                <span className="inline-block h-0.5 w-4" style={{ background: "#2C6FB3" }} aria-hidden />
+                Train
+                <span className="ml-2 inline-block h-0.5 w-4" style={{ background: "#1B9E77" }} aria-hidden />
+                Tram
+              </span>
+            </div>
+          )}
 
           {/* Buyer "Location Check" toggle - the headline interaction. */}
           <div className="absolute left-1/2 top-3 z-10 -translate-x-1/2">

@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import type { DomainId } from "@/lib/types";
 import type { BuyerAnchor } from "@/lib/anchors";
+import type { NoiseLine } from "@/lib/noise";
 import { MELBOURNE_BOUNDS, MELBOURNE_CENTER, MELBOURNE_MAX_BOUNDS } from "@/lib/region";
 import {
   choroplethFillColor,
@@ -73,6 +74,8 @@ type MelbourneMapProps = {
   showCycleRadius?: boolean;
   /** The buyer's saved life-anchors (work/school/family) to plot + line to the pin. */
   anchorPoints?: BuyerAnchor[];
+  /** Rail + tram lines (OSM) to draw near the buyer pin, coloured by mode. */
+  transitLines?: NoiseLine[];
   /** Called with the dropped pin + the SA2 it falls in (from the fill layer). */
   onPinDrop?: (
     lngLat: [number, number],
@@ -124,6 +127,7 @@ export function MelbourneMap({
   buyerPin = null,
   showCycleRadius = false,
   anchorPoints = [],
+  transitLines = [],
   onPinDrop,
 }: MelbourneMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -319,6 +323,32 @@ export function MelbourneMap({
           "line-width": 2.5,
           "line-opacity": 0.95,
           "line-dasharray": [3, 2],
+        },
+      });
+
+      // Nearby rail + tram lines around the buyer pin (context). Coloured by mode
+      // (train vs tram) and clipped near the pin so it shows the local network,
+      // not the whole city. Bus (GTFS shapes) is a heavier follow-up.
+      map.addSource("transit-lines", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+      map.addLayer({
+        id: "transit-lines",
+        type: "line",
+        source: "transit-lines",
+        paint: {
+          "line-color": [
+            "match",
+            ["get", "kind"],
+            "rail",
+            "#2C6FB3",
+            "tram",
+            "#1B9E77",
+            "#888888",
+          ] as maplibregl.ExpressionSpecification,
+          "line-width": 3,
+          "line-opacity": 0.8,
         },
       });
 
@@ -566,6 +596,33 @@ export function MelbourneMap({
           : [],
     });
   }, [anchorPoints, buyerPin]);
+
+  // Nearby rail/tram lines - clipped to ~2.7 km of the pin (cheap vertex check)
+  // so the local network shows without painting every line in Melbourne.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const src = map.getSource("transit-lines") as maplibregl.GeoJSONSource | undefined;
+    if (!src) return;
+    const NEAR_DEG = 0.025; // ~2.7 km
+    const feats =
+      buyerPin && transitLines.length > 0
+        ? transitLines
+            .filter((l) =>
+              l.coords.some(
+                ([lng, lat]) =>
+                  Math.abs(lng - buyerPin[0]) < NEAR_DEG &&
+                  Math.abs(lat - buyerPin[1]) < NEAR_DEG
+              )
+            )
+            .map((l) => ({
+              type: "Feature" as const,
+              properties: { kind: l.kind },
+              geometry: { type: "LineString" as const, coordinates: l.coords },
+            }))
+        : [];
+    src.setData({ type: "FeatureCollection", features: feats });
+  }, [transitLines, buyerPin]);
 
   // Crosshair cursor in buyer mode to signal "click to drop a pin".
   useEffect(() => {
