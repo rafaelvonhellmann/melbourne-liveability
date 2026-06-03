@@ -161,6 +161,31 @@ export function BuyerReportPanel({
           <p className="mt-1 text-sm leading-relaxed text-ink-muted">{report.summary.subheadline}</p>
         </Section>
 
+        {/* 1a. Decision TL;DR - the most material checks, ranked. */}
+        {report.priorityChecks.length > 0 && (
+          <Section title="Before you offer, check these first">
+            <ol className="space-y-2">
+              {report.priorityChecks.map((f, i) => (
+                <li key={f.id} className="flex gap-2.5">
+                  <span className="num mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent text-[11px] font-semibold text-accent-ink">
+                    {i + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-ink">{f.title}</p>
+                    <p className="text-xs leading-snug text-ink-muted">
+                      {f.verifyAction || f.summary}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <p className="mt-2 text-[11px] text-ink-muted">
+              Ranked by how much they affect a buy decision. Full detail, sources and
+              caveats are below.
+            </p>
+          </Section>
+        )}
+
         {/* 1b. Personal fit (only when a profile is set) */}
         {report.fit && (report.fit.hits.length > 0 || report.fit.notes.length > 0) && (
           <Section title={report.fit.mode === "agent" ? "For your client" : "Fit for your life"}>

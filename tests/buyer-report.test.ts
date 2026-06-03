@@ -41,6 +41,37 @@ describe("transport-noise finding (proximity proxy)", () => {
   });
 });
 
+describe("priorityChecks (before-you-offer TL;DR)", () => {
+  const SEV = { high: 0, medium: 1, low: 2, info: 3 } as const;
+
+  it("caps at 3, ranks more-severe checks first, and a medium check ranks above a low one", () => {
+    const r = buildBuyerReport({
+      lat: -37.8,
+      lng: 144.97,
+      pois: [],
+      // ~150 m industrial -> nuisance flag severity "medium"
+      nuisancePoints: [{ kind: "industrial", coord: [144.97, -37.80135] }],
+      // ~100 m freeway -> noise flag severity "low" (only <=50 m is "medium")
+      noiseLines: [{ kind: "freeway", coords: [[144.96, -37.8009], [144.98, -37.8009]] }],
+    });
+    expect(r.priorityChecks.length).toBeLessThanOrEqual(3);
+    for (let i = 1; i < r.priorityChecks.length; i++) {
+      expect(SEV[r.priorityChecks[i].severity]).toBeGreaterThanOrEqual(
+        SEV[r.priorityChecks[i - 1].severity]
+      );
+    }
+    const iNuisance = r.priorityChecks.findIndex((f) => f.id === "nuisance-proximity");
+    const iNoise = r.priorityChecks.findIndex((f) => f.id === "transport-noise");
+    if (iNuisance >= 0 && iNoise >= 0) expect(iNuisance).toBeLessThan(iNoise);
+  });
+
+  it("only ever contains verify/red_flag findings drawn from the report", () => {
+    const r = buildBuyerReport({ lat: -37.8, lng: 144.97, pois: [] });
+    expect(r.priorityChecks.every((f) => f.kind === "verify" || f.kind === "red_flag")).toBe(true);
+    expect(r.priorityChecks.every((f) => r.findings.includes(f))).toBe(true);
+  });
+});
+
 describe("personal fit block", () => {
   it("attaches fit with a deal-breaker hit when a profile is supplied", () => {
     const r = buildBuyerReport({

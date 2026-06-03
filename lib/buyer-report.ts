@@ -115,6 +115,8 @@ export interface BuyerReport {
     confidence: BuyerConfidence;
   };
   findings: BuyerFinding[];
+  /** Top 1-3 most material verify/red_flag findings, ranked - the "check before you offer" TL;DR. */
+  priorityChecks: BuyerFinding[];
   nearbyAmenities: NearbyAmenity[];
   /** Total count of POIs within the radius per category (display: "N within ~1.2 km"). */
   amenityCountsByCategory: Record<string, number>;
@@ -930,7 +932,8 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
   }
 
   // ---- Executive summary (deterministic template) -------------------------
-  const verifyCount = findings.filter((f) => f.kind === "red_flag" || f.kind === "verify").length;
+  const verifyFindings = findings.filter((f) => f.kind === "red_flag" || f.kind === "verify");
+  const verifyCount = verifyFindings.length;
   const positiveCount = findings.filter((f) => f.kind === "positive").length;
   const areaName = place?.name ?? input.sa2Name ?? "this location";
 
@@ -938,8 +941,32 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
   if (!place) confidence = "low";
   else confidence = "medium";
 
+  // "Before you offer, check these first": the most material verify/red_flag
+  // items, ranked by severity then by how decision-critical the category is.
+  // The report's decision TL;DR (Codex review: lead with the next action, not a
+  // count). Unknown ids fall to the default rank, so severity still drives order.
+  const SEV_RANK: Record<BuyerFindingSeverity, number> = { high: 0, medium: 1, low: 2, info: 3 };
+  const MATERIALITY: Record<string, number> = {
+    "hazard-overlays": 0,
+    "heritage-overlay": 1,
+    "safety-context": 2,
+    "transport-noise": 3,
+    "nuisance-proximity": 4,
+    "transport-weak": 5,
+    "amenity-access-low": 6,
+  };
+  const priorityChecks = [...verifyFindings]
+    .sort(
+      (a, b) =>
+        SEV_RANK[a.severity] - SEV_RANK[b.severity] ||
+        (MATERIALITY[a.id] ?? 9) - (MATERIALITY[b.id] ?? 9)
+    )
+    .slice(0, 3);
+
   const headline = place
-    ? `${areaName}: ${positiveCount} positive signal${positiveCount === 1 ? "" : "s"}, ${verifyCount} thing${verifyCount === 1 ? "" : "s"} to verify`
+    ? verifyCount > 0
+      ? `${areaName}: ${verifyCount} thing${verifyCount === 1 ? "" : "s"} to check before you offer`
+      : `${areaName}: no major flags in the open data - still verify on site`
     : "Location outside our Greater Melbourne SA2 coverage";
 
   const amenitySentence = haveNearbyData
@@ -1006,6 +1033,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     },
     summary: { headline, subheadline, confidence },
     findings,
+    priorityChecks,
     nearbyAmenities,
     amenityCountsByCategory,
     sourceRefs,
