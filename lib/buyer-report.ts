@@ -73,6 +73,13 @@ export interface BuyerFinding {
   id: string;
   kind: BuyerFindingKind;
   severity: BuyerFindingSeverity;
+  /**
+   * On-screen grouping direction. "concern" marks a MEASURED downside (shown
+   * under "What to weigh up"), distinct from a neutral "verify" check (a
+   * due-diligence prompt with no positive/negative read yet). red_flag findings
+   * are always treated as concerns. Never enters any score.
+   */
+  tone?: "concern";
   title: string;
   summary: string;
   whyItMatters?: string;
@@ -515,6 +522,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       findings.push({
         id: "amenity-access-low",
         kind: "verify",
+        tone: "concern",
         severity: "medium",
         title: "Check day-to-day convenience",
         summary: `Few everyday amenities (${reachableEveryday} of ${WALK_CATEGORY_IDS.length} types) were found ${walkPhrase} in the available POI data.`,
@@ -554,6 +562,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       findings.push({
         id: "transport-noise",
         kind: "verify",
+        tone: "concern",
         severity: flags.some((f) => f.distance <= 50) ? "medium" : "low",
         title: "Possible traffic / rail noise",
         summary: `This point is close to a ${list}.`,
@@ -583,6 +592,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       findings.push({
         id: "nuisance-proximity",
         kind: "verify",
+        tone: "concern",
         severity: nflags.some((f) => f.distance <= 200) ? "medium" : "low",
         title: "Possible industrial / odour / pollution source nearby",
         summary: `This point is near a ${list}.`,
@@ -769,6 +779,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     findings.push({
       id: "transport-check",
       kind: "verify",
+      tone: "concern",
       severity: "low",
       title: "Inspect the commute at peak hour",
       summary: `Transport sits in the lower range for Greater Melbourne (${Math.round(transportPct)}th percentile) at the SA2 level.`,

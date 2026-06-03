@@ -53,7 +53,11 @@ export function BuyerReportPanel({
   className = "",
 }: BuyerReportPanelProps) {
   const hasPin = report.location.lat != null && report.location.lng != null;
-  const verify = report.findings.filter((f) => f.kind === "red_flag" || f.kind === "verify");
+  // Negatives ("What to weigh up") = measured downsides (engine tone "concern")
+  // plus red flags. Checks ("Things to verify") = neutral due-diligence prompts
+  // with no positive/negative read yet. Positives are their own group.
+  const negatives = report.findings.filter((f) => f.kind === "red_flag" || f.tone === "concern");
+  const checks = report.findings.filter((f) => f.kind === "verify" && f.tone !== "concern");
   const positives = report.findings.filter((f) => f.kind === "positive");
   const unavailable = report.findings.filter((f) => f.kind === "unavailable");
   const neutral = report.findings.filter((f) => f.kind === "neutral");
@@ -228,18 +232,29 @@ export function BuyerReportPanel({
           </Section>
         )}
 
-        {/* 2. Things to verify */}
-        {verify.length > 0 && (
-          <Section title="Things to verify" count={verify.length}>
+        {/* 2. What to weigh up - measured downsides + red flags */}
+        {negatives.length > 0 && (
+          <Section title="What to weigh up" count={negatives.length}>
             <div className="space-y-2.5">
-              {verify.map((f) => (
+              {negatives.map((f) => (
                 <FindingCard key={f.id} f={f} />
               ))}
             </div>
           </Section>
         )}
 
-        {/* 3. What looks positive */}
+        {/* 3. Things to verify - neutral due-diligence prompts */}
+        {checks.length > 0 && (
+          <Section title="Things to verify" count={checks.length}>
+            <div className="space-y-2.5">
+              {checks.map((f) => (
+                <FindingCard key={f.id} f={f} />
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* 4. What looks positive */}
         {positives.length > 0 && (
           <Section title="What looks positive" count={positives.length}>
             <div className="space-y-2.5">

@@ -344,6 +344,24 @@ describe("buildBuyerReport", () => {
     expect(r.findings.find((f) => f.id === "conservation-overlays")).toBeFalsy();
   });
 
+  it("tags measured downsides with tone 'concern' (negatives split) but never positives", () => {
+    const base = samplePlace();
+    const weakTransport = {
+      ...base,
+      domains: {
+        ...base.domains,
+        transport: { domain: "transport" as const, scored: true, percentile: 20, subIndicators: {} },
+      },
+    };
+    const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: weakTransport, pois: POIS, generatedAt: "x" });
+    const tc = r.findings.find((f) => f.id === "transport-check");
+    expect(tc?.kind).toBe("verify");
+    expect(tc?.tone).toBe("concern"); // routes to "What to weigh up", not "Things to verify"
+    const pos = r.findings.find((f) => f.kind === "positive");
+    expect(pos).toBeTruthy();
+    expect(pos?.tone).toBeUndefined();
+  });
+
   it("handles a pin outside SA2 coverage (no place) gracefully", () => {
     const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: null, pois: POIS, generatedAt: "x" });
     expect(r.summary.confidence).toBe("low");
