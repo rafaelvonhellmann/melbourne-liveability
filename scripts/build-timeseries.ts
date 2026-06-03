@@ -192,6 +192,123 @@ function buildCrimeSeries(): IndicatorSeries[] {
   return [property, violent].filter((s) => s.points.length >= 2);
 }
 
+const AFFORD_YEARS = ["2011", "2016", "2021"];
+
+type T02Year = { income?: number; mortgage?: number; rent?: number };
+
+/**
+ * ABS Census 2021 Time Series Profile (C21_T02_SA2) median household income,
+ * mortgage repayment and rent by SA2 for 2011/2016/2021 - the ABS recompiles all
+ * three onto 2021 SA2 boundaries, so NO concordance is applied. Returns a
+ * ratio-of-MEDIANS affordability trend (median housing cost / median income),
+ * which is a different, weaker measure than a household >30%-stress share and is
+ * labelled as such. Context only, never scored.
+ */
+async function fetchT02(): Promise<Record<string, Record<string, T02Year>> | null> {
+  const url =
+    "https://data.api.abs.gov.au/rest/data/ABS,C21_T02_SA2,1.0.0/4+5+6..SA2.2" +
+    "?startPeriod=2011&dimensionAtObservation=AllDimensions";
+  let json: {
+    data?: { structures?: { dimensions?: { observation?: { id: string; values: { id: string }[] }[] } }[]; dataSets?: { observations?: Record<string, (number | null)[]> }[] };
+  };
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: "application/vnd.sdmx.data+json", "User-Agent": "MelbourneLiveability/1.0" },
+    });
+    if (!res.ok) {
+      console.warn(`  Affordability (T02) fetch ${res.status}`);
+      return null;
+    }
+    json = await res.json();
+  } catch (e) {
+    console.warn("  Affordability fetch failed:", (e as Error).message);
+    return null;
+  }
+  const dims = json.data?.structures?.[0]?.dimensions?.observation;
+  const obs = json.data?.dataSets?.[0]?.observations;
+  if (!dims || !obs) return null;
+  const mi = dims.findIndex((d) => d.id === "MEDAVG");
+  const ri = dims.findIndex((d) => d.id === "REGION");
+  const ti = dims.findIndex((d) => d.id === "TIME_PERIOD");
+  const medVals = dims[mi].values;
+  const regVals = dims[ri].values;
+  const timeVals = dims[ti].values;
+  const out: Record<string, Record<string, T02Year>> = {};
+  for (const [key, arr] of Object.entries(obs)) {
+    const pos = key.split(":").map(Number);
+    const med = medVals[pos[mi]]?.id;
+    const sa2 = regVals[pos[ri]]?.id;
+    const year = timeVals[pos[ti]]?.id;
+    const val = Number(arr?.[0]);
+    if (!med || !sa2 || !year || !Number.isFinite(val)) continue;
+    const rec = (out[sa2] ??= {});
+    const yr = (rec[year] ??= {});
+    if (med === "4") yr.income = val;
+    else if (med === "5") yr.mortgage = val;
+    else if (med === "6") yr.rent = val;
+  }
+  return out;
+}
+
+async function buildAffordabilitySeries(): Promise<IndicatorSeries[]> {
+  const data = await fetchT02();
+  if (!data) return [];
+  await mkdir(RAW, { recursive: true });
+  await writeFile(path.join(RAW, "abs-sa2-affordability.json"), JSON.stringify(data));
+
+  const mkPoints = (calc: (y: T02Year) => number | null): TimeseriesPoint[] =>
+    AFFORD_YEARS.map((period) => {
+      const values: Record<string, number> = {};
+      for (const [sa2, byYear] of Object.entries(data)) {
+        const y = byYear[period];
+        if (!y) continue;
+        const v = calc(y);
+        if (v != null && Number.isFinite(v)) values[sa2] = Math.round(v * 10) / 10;
+      }
+      return { period, values };
+    }).filter((p) => Object.keys(p.values).length > 0);
+
+  // Mortgage is $/month, income + rent are $/week -> convert mortgage to weekly.
+  const mortgage = mkPoints((y) => (y.mortgage && y.income ? ((y.mortgage * 12) / 52 / y.income) * 100 : null));
+  const rent = mkPoints((y) => (y.rent && y.income ? (y.rent / y.income) * 100 : null));
+  const boundaryNote =
+    "Ratio of MEDIANS (median housing cost divided by median household income), NOT a household >30%-stress share - a weaker affordability proxy. ABS 2021 Time Series Profile recompiles 2011 + 2016 onto 2021 SA2 boundaries, so no concordance is applied here.";
+
+  const series: IndicatorSeries[] = [];
+  if (mortgage.length >= 2)
+    series.push({
+      indicator: "mortgageToIncome",
+      label: "Mortgage-to-income (median)",
+      unit: "% of income",
+      geo: "sa2",
+      cadence: "census-5yr",
+      compareMode: "value",
+      higherIsBetter: false,
+      periodLabel: "Census year",
+      sourceId: "abs-census-tsp-sa2",
+      boundaryNote,
+      points: mortgage,
+    });
+  if (rent.length >= 2)
+    series.push({
+      indicator: "rentToIncome",
+      label: "Rent-to-income (median)",
+      unit: "% of income",
+      geo: "sa2",
+      cadence: "census-5yr",
+      compareMode: "value",
+      higherIsBetter: false,
+      periodLabel: "Census year",
+      sourceId: "abs-census-tsp-sa2",
+      boundaryNote,
+      points: rent,
+    });
+  console.log(
+    `  Affordability: mortgage ${mortgage.length} yrs, rent ${rent.length} yrs, ${Object.keys(data).length} SA2`
+  );
+  return series;
+}
+
 async function main() {
   console.log("Building timeseries.json (historical trend context)...");
 
@@ -203,6 +320,9 @@ async function main() {
 
   console.log("VCSA crime series (2016–2025, LGA)...");
   for (const s of buildCrimeSeries()) series[s.indicator] = s;
+
+  console.log("ABS affordability ratio-of-medians (2011/2016/2021, SA2)...");
+  for (const s of await buildAffordabilitySeries()) series[s.indicator] = s;
 
   const file: TimeseriesFile = {
     generatedAt: new Date().toISOString(),

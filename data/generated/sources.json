@@ -46,6 +46,15 @@
     "sha256": "c92104ab3b584e59cfe979ed52edf28a92e24af6e6fbcc77445b0d0ba226cfc1"
   },
   {
+    "id": "abs-census-tsp-sa2",
+    "name": "ABS Census 2021 Time Series Profile (C21_T02_SA2) - median income/mortgage/rent by SA2 (2011/2016/2021)",
+    "url": "https://www.abs.gov.au/census/find-census-data",
+    "licence": "CC BY 4.0",
+    "period": "2011-2021",
+    "fetchedAt": "2026-06-03",
+    "sha256": "2eec953bb6743416b7d4fea655e8f02f90ef96b1f6239b27629e59d75bbc7e3f"
+  },
+  {
     "id": "vcsa-recorded-offences",
     "name": "VCSA Recorded offences — suburb (Table 03) + LGA fallback (Table 02)",
     "url": "https://www.crimestatistics.vic.gov.au/crime-statistics/latest-victorian-crime-data/download-data",

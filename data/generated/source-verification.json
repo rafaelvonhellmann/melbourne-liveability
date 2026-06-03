@@ -1,6 +1,6 @@
 {
-  "checkedAt": "2026-06-03T14:01:28.949Z",
-  "sources": 38,
+  "checkedAt": "2026-06-03T14:07:06.980Z",
+  "sources": 39,
   "referencedInCode": 24,
   "networkChecked": true,
   "errors": [],
@@ -29,6 +29,12 @@
     {
       "id": "abs-erp-sa2-series",
       "url": "https://www.abs.gov.au/statistics/people/population/regional-population",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "abs-census-tsp-sa2",
+      "url": "https://www.abs.gov.au/census/find-census-data",
       "ok": true,
       "status": 200
     },

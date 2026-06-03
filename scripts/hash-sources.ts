@@ -40,6 +40,7 @@ const SOURCE_FILES: Record<string, { dir: "raw" | "generated" | "public"; file: 
   "dtp-aadt": { dir: "public", file: "traffic-aadt.json" },
   "vic-water-corp": { dir: "raw", file: "water-corp.geojson" },
   "epa-air": { dir: "public", file: "epa-air-sites.json" },
+  "abs-census-tsp-sa2": { dir: "raw", file: "abs-sa2-affordability.json" },
   "vic-activity-centres": { dir: "public", file: "activity-centres.json" },
   "osm-noise-corridors": { dir: "public", file: "noise-lines.json" },
   "osm-nuisance-points": { dir: "public", file: "nuisance-points.json" },

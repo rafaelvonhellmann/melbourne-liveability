@@ -152,6 +152,10 @@ export const SOURCE_REFRESH: Record<
     cadence: "rolling",
     probe: { type: "none" },
   },
+  "abs-census-tsp-sa2": {
+    cadence: "census",
+    probe: { type: "none" },
+  },
   "vic-activity-centres": {
     cadence: "annual",
     probe: { type: "none" },
