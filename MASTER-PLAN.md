@@ -42,9 +42,9 @@ silently drops that layer (this regressed pins 37,723 -> 32,010 on 2026-06).
 
 | # | Item | Status / how |
 |---|------|--------------|
-| NEXT | **Declutter buyer report** (tracker #7) | Founder priority (info-delivery = the #1 worry). Drop Source / Confidence / Geography from the on-screen findings -> keep them in the generated PDF; add an explicit positives vs negatives split; tighten copy for scanning 10-20 properties/day. |
+| DONE | **Declutter buyer report** (#7) | Shipped: per-finding Source/Confidence/Geography -> PDF-only (`e3ce360`); engine `tone:"concern"` drives a "What to weigh up" negatives section vs neutral "Things to verify" (`43e02e5`). Copy can iterate after founder eyeballs it live. |
 | 1 | DONE - **Conservation / restriction overlays** (ESO/SLO/VPO/EMO/EAO/PAO) | Shipped `b993c92`. 6 Vicplan overlays (ids verified live) as a sourced/caveated buyer finding (PAO/EAO = high severity -> before-you-offer checklist) + area-card panel; normalize inline + data-refresh.yml wired. |
-| 2 | **Social-anchor scoring** | The differentiator. User drops work / school / family anchors, each property scored by proximity + commute. Reuse geocode + distance (noise/transit already use them). Extends `lib/buyer-fit.ts`. |
+| NEXT (2) | **Social-anchor scoring** | The differentiator. User drops work / school / family anchors, each property scored by proximity + commute. Reuse geocode + distance (noise/transit already use them). Extends `lib/buyer-fit.ts`. |
 | 3 | **Sun-path SVG** | Founder's visual ask. Honest sun-path diagram from `lib/sun.ts` - NOT a 3D shadow map (liability). Replaces the WSW/degrees copy that confused users. |
 | 4 | **Transit lines near pin** | rail + tram cheap (reuse `noise-lines.json` kind: rail/tram); bus needs GTFS `shapes.txt` (heavier follow-up). |
 | 5 | **School catchments** | data.vic "Victorian Government School Zones" - EPSG:3111 polys -> reproject -> simplify -> client pin-in-polygon. Heaviest; do it with the founder available (reprojection is error-prone). |
