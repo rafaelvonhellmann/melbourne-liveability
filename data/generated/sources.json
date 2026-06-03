@@ -298,6 +298,24 @@
     "sha256": "a6cbbbdc26bdab74759ade807c2ad556791a63159b2bfd13fc7f8707fcc98151"
   },
   {
+    "id": "epa-air",
+    "name": "EPA Victoria Air Monitoring (AirWatch) - nearest fixed site + latest health-advice band",
+    "url": "https://www.epa.vic.gov.au/for-community/airwatch",
+    "licence": "CC BY 4.0",
+    "period": "hourly (snapshot captured at build)",
+    "fetchedAt": "2026-06-03",
+    "sha256": "6a65c3d3d846d3494318afab514576d4369632a1e7d0e6171b9bd8036956250d"
+  },
+  {
+    "id": "vic-activity-centres",
+    "name": "Vicmap Planning - Activity Centre Zones (ACZ) directing higher-density development",
+    "url": "https://discover.data.vic.gov.au/dataset/vicmap-planning",
+    "licence": "CC BY 4.0 (Victoria)",
+    "period": "current",
+    "fetchedAt": "2026-06-03",
+    "sha256": "cd81bf21e8fc8e56f650372aaa27f8a7149098966e484093e2cacb399ffb27be"
+  },
+  {
     "id": "osm-noise-corridors",
     "name": "OpenStreetMap - rail / tram / freeway corridors for the transport-noise proximity proxy (Overpass)",
     "url": "https://www.openstreetmap.org/",

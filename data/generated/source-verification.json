@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-06-03T13:55:37.063Z",
-  "sources": 36,
-  "referencedInCode": 22,
+  "checkedAt": "2026-06-03T14:01:28.949Z",
+  "sources": 38,
+  "referencedInCode": 24,
   "networkChecked": true,
   "errors": [],
   "warnings": [
@@ -197,6 +197,18 @@
     {
       "id": "vic-water-corp",
       "url": "https://discover.data.vic.gov.au/dataset/melbourne-water-retailers",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "epa-air",
+      "url": "https://www.epa.vic.gov.au/for-community/airwatch",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vic-activity-centres",
+      "url": "https://discover.data.vic.gov.au/dataset/vicmap-planning",
       "ok": true,
       "status": 200
     },

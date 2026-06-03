@@ -54,6 +54,7 @@ jobs:
           npm run data:vif
           npm run data:abs-approvals
           npm run data:water-corp
+          EPA_API_KEY=${{ secrets.EPA_API_KEY }} npm run data:epa-air
           npm run data:community-poi
           npm run data:ev-poi
           npm run data:aged-care
@@ -61,11 +62,12 @@ jobs:
           npm run data:noise
           npm run data:nuisance
           npm run data:stations
-          # ANNUAL layers (data:school-zones, data:traffic) are deliberately NOT
-          # here: they write committed public/data files (school-zones.json,
-          # traffic-aadt.json) that persist across rebuilds, and re-downloading
-          # their large source bundles monthly is wasteful. Refresh them yearly by
-          # running the script + committing when a new edition ships.
+          # ANNUAL layers (data:school-zones, data:traffic, data:activity-centres)
+          # are deliberately NOT here: they write committed public/data files that
+          # persist across rebuilds, and re-fetching them monthly is wasteful.
+          # Refresh yearly by running the script + committing when an edition ships.
+          # (data:epa-air IS monthly above - its band snapshot is worth refreshing,
+          # and it self-skips when the EPA_API_KEY secret is absent.)
 
       - name: Rebuild scored + derived artifacts
         run: npm run data:build

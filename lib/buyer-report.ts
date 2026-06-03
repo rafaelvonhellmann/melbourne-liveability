@@ -43,6 +43,9 @@ import { worstCoastalScenario } from "./coastal";
 import { projectedGrowth } from "./vif";
 import { resolveSchoolZones, type SchoolZonesData } from "./school-zones";
 import { busiestRoadNear, type TrafficSegment } from "./traffic";
+import { nearestAirSite, type EpaAirSite } from "./epa-air";
+import { activityCentreAt, type ActivityCentreFeature } from "./activity-centres";
+import { formatMonth } from "./approvals";
 
 // ---- Types (stable public contract) ---------------------------------------
 
@@ -454,6 +457,10 @@ export interface BuildBuyerReportInput {
    * finding. Lazy-loaded client-side; resolved only in pin mode. See lib/traffic.
    */
   traffic?: TrafficSegment[];
+  /** EPA air-monitoring sites for the "air quality monitored nearby" finding. Lazy-loaded; pin mode. */
+  epaAir?: EpaAirSite[];
+  /** Activity Centre Zone polygons for the "in a designated activity centre" finding. Lazy-loaded; pin mode. */
+  activityCentres?: ActivityCentreFeature[];
   /**
    * Government school zones (primary + secondary Year 7) for the address-level
    * zone match. Lazy-loaded client-side; resolved only in pin mode (never from
@@ -1164,6 +1171,70 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       caveat:
         "Resolved from the Vicmap water-corporation boundary at the area level - confirm the exact address on your water bill.",
       sourceRefs: getSourcesByIds(["vic-water-corp"]),
+    });
+  }
+
+  // 5j) Air quality (context, never scored). Nearest EPA monitor + its last
+  //     CAPTURED band (dated - air is hourly and this site is static, so we
+  //     always point to live AirWatch). Network is sparse, so caveat distance.
+  const air =
+    point && mode === "pin" && input.epaAir
+      ? nearestAirSite([point.lng, point.lat], input.epaAir)
+      : null;
+  if (air && air.distanceMeters <= 15000) {
+    const dist =
+      air.distanceMeters < 1000
+        ? `${air.distanceMeters} m`
+        : `${(air.distanceMeters / 1000).toFixed(1)} km`;
+    const when = /^\d{4}-\d{2}/.test(air.since ?? "")
+      ? ` (reading around ${formatMonth(air.since!.slice(0, 7))})`
+      : "";
+    findings.push({
+      id: "air-quality",
+      kind: "neutral",
+      severity: "info",
+      title: "Air quality monitored nearby",
+      summary: air.band
+        ? `The nearest EPA air monitor, ${air.name} (~${dist} away), last read ${air.param ?? "air quality"} "${air.band}"${when}.`
+        : `The nearest EPA air monitor is ${air.name} (~${dist} away).`,
+      whyItMatters:
+        "Air quality affects health - it can spike near busy roads and during bushfire-smoke season.",
+      verifyAction:
+        "Air quality changes hour to hour - check live readings at EPA AirWatch (airquality.epa.vic.gov.au).",
+      confidence: "medium",
+      geography: "pin",
+      caveat:
+        "Nearest FIXED EPA monitor - the network is sparse so it may be several km away, and the band is the last hourly reading we captured, NOT live. Check AirWatch for current conditions.",
+      sourceRefs: getSourcesByIds(["epa-air"]),
+    });
+  }
+
+  // 5k) Activity-centre zoning (context, never scored). Is the pin inside an
+  //     Activity Centre Zone - the statutory instrument steering higher-density
+  //     development. Forward "where growth is directed" signal; built form only.
+  const acz =
+    point && mode === "pin" && input.activityCentres
+      ? activityCentreAt([point.lng, point.lat], input.activityCentres)
+      : null;
+  if (acz) {
+    const lga = acz.lga
+      ? acz.lga.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())
+      : null;
+    findings.push({
+      id: "activity-centre",
+      kind: "neutral",
+      severity: "info",
+      title: "Inside a designated activity centre",
+      summary: `This location sits in an Activity Centre Zone (${acz.zone}${lga ? `, ${lga}` : ""}) - land the planning scheme steers toward higher-density housing, shops and services.`,
+      whyItMatters:
+        "Activity-centre zoning points to more apartments, mixed-use and streetscape change over time - convenient for some buyers, denser for others.",
+      verifyAction:
+        "Check the council's activity-centre / structure plan for the height and built-form controls that apply near the address.",
+      confidence: "high",
+      geography: "pin",
+      caveat:
+        "The Activity Centre Zone is the statutory upzoning instrument - it covers only centres that have adopted it (not every Plan Melbourne centre), and built-form controls vary by schedule.",
+      sourceRefs: getSourcesByIds(["vic-activity-centres"]),
     });
   }
 

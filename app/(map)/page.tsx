@@ -33,6 +33,8 @@ import type { NoiseLine } from "@/lib/noise";
 import type { NuisancePoint } from "@/lib/nuisance";
 import type { SchoolZonesData } from "@/lib/school-zones";
 import type { TrafficSegment } from "@/lib/traffic";
+import type { EpaAirSite } from "@/lib/epa-air";
+import type { ActivityCentreFeature } from "@/lib/activity-centres";
 import type { Station } from "@/lib/transit";
 import { findSa2ForPoint } from "@/lib/buyer-location";
 import { MAJOR_PROJECTS } from "@/lib/major-projects";
@@ -276,6 +278,24 @@ export default function MapPage() {
     trafficRef.current = (await res.json()) as TrafficSegment[];
     return trafficRef.current;
   }
+  // EPA air-monitoring sites for the "air quality nearby" finding. Lazy-loaded.
+  const epaAirRef = useRef<EpaAirSite[] | null>(null);
+  async function ensureEpaAir(): Promise<EpaAirSite[]> {
+    if (epaAirRef.current) return epaAirRef.current;
+    const res = await fetch(withBase("/data/epa-air-sites.json"));
+    const j = (await res.json()) as { sites?: EpaAirSite[] };
+    epaAirRef.current = j.sites ?? [];
+    return epaAirRef.current;
+  }
+  // Activity Centre Zones for the "in a designated activity centre" finding. Lazy-loaded.
+  const activityCentresRef = useRef<ActivityCentreFeature[] | null>(null);
+  async function ensureActivityCentres(): Promise<ActivityCentreFeature[]> {
+    if (activityCentresRef.current) return activityCentresRef.current;
+    const res = await fetch(withBase("/data/activity-centres.json"));
+    const fc = (await res.json()) as { features?: ActivityCentreFeature[] };
+    activityCentresRef.current = fc.features ?? [];
+    return activityCentresRef.current;
+  }
 
   const buyerPlace = useMemo(
     () =>
@@ -321,13 +341,15 @@ export default function MapPage() {
     // any in-flight precise fetch so its (now stale) result can't land late.
     precisionAbortRef.current?.abort();
     setPreciseStatus("idle");
-    const [feats, noiseLines, nuisancePoints, stations, schoolZones, traffic] = await Promise.all([
+    const [feats, noiseLines, nuisancePoints, stations, schoolZones, traffic, epaAir, activityCentres] = await Promise.all([
       ensurePois().catch(() => [] as Feature<Point>[]),
       ensureNoiseLines().catch(() => [] as NoiseLine[]),
       ensureNuisancePoints().catch(() => [] as NuisancePoint[]),
       ensureStations().catch(() => [] as Station[]),
       ensureSchoolZones().catch(() => null),
       ensureTraffic().catch(() => [] as TrafficSegment[]),
+      ensureEpaAir().catch(() => [] as EpaAirSite[]),
+      ensureActivityCentres().catch(() => [] as ActivityCentreFeature[]),
     ]);
     const place = sa2
       ? places.find((p) => p.slug === sa2.slug || p.sa2Code === sa2.sa2Code) ?? null
@@ -343,6 +365,8 @@ export default function MapPage() {
         stations,
         schoolZones: schoolZones ?? undefined,
         traffic,
+        epaAir,
+        activityCentres,
         nearbyAreas: areaCentroids,
         majorProjects: MAJOR_PROJECTS,
         profile: profileRef.current,
@@ -372,13 +396,15 @@ export default function MapPage() {
       setPreciseStatus("error");
       return;
     }
-    const [feats, noiseLines, nuisancePoints, stations, schoolZones, traffic] = await Promise.all([
+    const [feats, noiseLines, nuisancePoints, stations, schoolZones, traffic, epaAir, activityCentres] = await Promise.all([
       ensurePois().catch(() => [] as Feature<Point>[]),
       ensureNoiseLines().catch(() => [] as NoiseLine[]),
       ensureNuisancePoints().catch(() => [] as NuisancePoint[]),
       ensureStations().catch(() => [] as Station[]),
       ensureSchoolZones().catch(() => null),
       ensureTraffic().catch(() => [] as TrafficSegment[]),
+      ensureEpaAir().catch(() => [] as EpaAirSite[]),
+      ensureActivityCentres().catch(() => [] as ActivityCentreFeature[]),
     ]);
     if (ctrl.signal.aborted || buyerPinRef.current !== pin) return;
     setBuyerReport(
@@ -393,6 +419,8 @@ export default function MapPage() {
         stations,
         schoolZones: schoolZones ?? undefined,
         traffic,
+        epaAir,
+        activityCentres,
         nearbyAreas: areaCentroids,
         majorProjects: MAJOR_PROJECTS,
         profile: profileRef.current,
