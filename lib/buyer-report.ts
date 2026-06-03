@@ -724,7 +724,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       kind: "neutral",
       severity: "info",
       title: "Sun & aspect",
-      summary: `${sunny}-facing rooms and yards get the most sun. For morning sun, look for east-facing living areas; west-facing rooms get strong, hot afternoon sun in summer. Winter sun sits low, so buildings or trees to the ${sunny.toLowerCase()} can overshadow.`,
+      summary: `${sunny}-facing rooms and yards get the most sun here - see the sun-path diagram for the summer vs winter arc.`,
       whyItMatters:
         "Which way the main rooms face decides natural light and winter warmth - and it can't be changed.",
       verifyAction:

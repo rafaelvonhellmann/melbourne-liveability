@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Printer, X, ShieldAlert, CheckCircle2, HelpCircle, Info, Bookmark, BookmarkCheck } from "lucide-react";
 import type { BuyerReport, BuyerFinding, BuyerConfidence, BuyerGeography } from "@/lib/buyer-report";
 import { anchorKindLabel, bandLabel } from "@/lib/anchors";
+import { SunPathDiagram } from "./SunPathDiagram";
 import { AMENITY_GROUPS } from "@/lib/buyer-report";
 import { formatSourceDate } from "@/lib/source-manifest";
 import { withBase } from "@/lib/asset-path";
@@ -60,6 +61,8 @@ export function BuyerReportPanel({
   const negatives = report.findings.filter((f) => f.kind === "red_flag" || f.tone === "concern");
   const checks = report.findings.filter((f) => f.kind === "verify" && f.tone !== "concern");
   const positives = report.findings.filter((f) => f.kind === "positive");
+  // Southern hemisphere -> north-facing rooms/yards get the most sun (vice versa north).
+  const sunSideWord = (report.location.lat ?? -37.8) < 0 ? "north" : "south";
   const unavailable = report.findings.filter((f) => f.kind === "unavailable");
   const neutral = report.findings.filter((f) => f.kind === "neutral");
   const community = place?.context?.community;
@@ -293,6 +296,20 @@ export function BuyerReportPanel({
                 <FindingCard key={f.id} f={f} />
               ))}
             </div>
+          </Section>
+        )}
+
+        {/* 3b. Sun & light - honest sun-path diagram (lib/sun, not a shadow map). */}
+        {report.location.lat != null && (
+          <Section title="Sun & light">
+            <SunPathDiagram lat={report.location.lat} />
+            <p className="mt-2 text-[11px] leading-snug text-ink-muted">
+              The sun&apos;s path at this latitude (same for the whole street). Rooms
+              and outdoor areas facing {sunSideWord} get the most light; winter sun
+              sits low, so tall buildings or trees on that side can overshadow. Real
+              light depends on the dwelling&apos;s orientation, windows and what&apos;s
+              next door - verify on site.
+            </p>
           </Section>
         )}
 
