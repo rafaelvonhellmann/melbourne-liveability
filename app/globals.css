@@ -173,6 +173,10 @@ body {
  * not depend on the surrounding (often fixed / clipped) app shell.
  */
 @media print {
+  @page {
+    margin: 15mm 14mm 16mm;
+  }
+
   .no-print {
     display: none !important;
   }
@@ -189,8 +193,16 @@ body {
     position: absolute;
     inset: 0 auto auto 0;
     width: 100%;
-    padding: 16px;
+    padding: 0;
     background: #fff;
+    /* Print the warm accent, card borders, badges + the sun-path diagram. By
+       default Chrome strips colour from print - that flatness is what made the
+       PDF feel robotic. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color: #2b2722;
+    font-size: 10.5pt;
+    line-height: 1.5;
   }
 
   /* Let fixed / overflow-hidden shells flow naturally onto paper. */
@@ -198,11 +210,44 @@ body {
   body {
     height: auto !important;
     overflow: visible !important;
+    background: #fff !important;
   }
 
-  /* Report cards: avoid awkward page breaks mid-finding. */
+  /* Editorial rhythm: section titles read as headings, kept with their content. */
+  .buyer-print-root h3 {
+    font-size: 12.5pt;
+    letter-spacing: -0.005em;
+    margin-bottom: 3px;
+  }
+  .buyer-print-root section {
+    margin-top: 13px;
+  }
+  .buyer-print-root h2,
+  .buyer-print-root h3,
+  .buyer-print-root section > :first-child {
+    break-after: avoid;
+  }
   .buyer-print-root section,
-  .buyer-print-root .rounded-md {
+  .buyer-print-root .rounded-md,
+  .buyer-print-root .rounded-lg,
+  .buyer-print-root li,
+  .buyer-print-root svg {
     break-inside: avoid;
+  }
+
+  /* Branded header band: a warm accent rule under the title + meta. */
+  .buyer-print-root header {
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 10px;
+    margin-bottom: 4px;
+  }
+  .buyer-print-root header h2 {
+    font-size: 17pt;
+  }
+
+  /* Links read as ink in print (the Sources list carries the real addresses). */
+  .buyer-print-root a {
+    color: #9c4221 !important;
+    text-decoration: none;
   }
 }

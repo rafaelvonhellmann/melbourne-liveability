@@ -496,6 +496,14 @@ export function BuyerReportPanel({
             </p>
           ))}
         </div>
+
+        {/* Print-only footer: brand + provenance reminder on every PDF page set. */}
+        <div className="mt-4 hidden border-t border-surface-border pt-2 text-[10px] leading-snug text-ink-muted print:block">
+          <span className="font-display font-semibold text-ink">liveable.melbourne</span>
+          {" - Buyer Location Check. Generated "}
+          {generated}. Information only, not advice - every figure is sourced above and on the
+          methodology page. Verify anything material before you offer.
+        </div>
       </div>
     </div>
   );
