@@ -82,6 +82,16 @@ pushed; final `next build` green (371 static pages, export OK). vitest 303 / 40 
 - New deps: none beyond adm-zip (prior). New sources: vic-water-corp, epa-air,
   vic-activity-centres, abs-census-tsp-sa2, vic-parcel (manifest 40 sources / 25 cited
   / no dangling).
+- **Self-review pass** (8-agent adversarial workflow over the night's diff) caught + FIXED
+  3 high + 2 medium real bugs before anyone saw them: (1) suburb-SEARCH ran the report in
+  pin mode at the SA2 centroid -> address-level findings shown for a non-property; now
+  threads mode, centroid -> "sa2". (2) lot-size finding now gated on pin mode. (3) the
+  affordability trend key collided with the scored "rentToIncome" sub-indicator (100x
+  mislabel on the card); renamed + rendered in a dedicated AffordabilityTrendCard.
+  (4) water used turf.centroid (outside 14/361 SA2s) -> switched to pointOnFeature
+  (Hastings/Glen Waverley/Armadale corrected). (5) free-path report race guard added.
+  Plus area-search hyphen double-report, SDMX crash-guard, parcel scan, EPA date, ACZ
+  caveat. All committed; next build green (372 pages).
 
 **Remaining (NOT built - documented, not blocked-on-me):**
 - **Climate forward flood/fire trend** - NO honest open feed exists (discovery workflow
