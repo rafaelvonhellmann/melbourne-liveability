@@ -242,5 +242,14 @@
     "period": "2040-2100 projection",
     "fetchedAt": "2026-06-03",
     "sha256": "fb4305f4d2ab3294ae084620dad1f3b8df45187bc234064ba89933c2daeab5b9"
+  },
+  {
+    "id": "vic-fire-history",
+    "name": "Vicmap / DEECA Fire History - Last Burnt (burnt-area share per SA2)",
+    "url": "https://discover.data.vic.gov.au/dataset/fire-history-overlay-of-most-recent-fires",
+    "licence": "CC BY 4.0 (Victoria)",
+    "period": "to 2022-23",
+    "fetchedAt": "2026-06-03",
+    "sha256": "2585cb140356426e4fb51ba7d33d722d3996f86c25920feee21e83f722388a89"
   }
 ]

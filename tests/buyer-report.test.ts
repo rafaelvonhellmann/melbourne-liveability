@@ -393,6 +393,23 @@ describe("buildBuyerReport", () => {
     expect(s?.summary).toMatch(/km/);
   });
 
+  it("surfaces a past-fire-history finding when the burnt share is material", () => {
+    const base = samplePlace();
+    const withFire = {
+      ...base,
+      context: {
+        ...base.context,
+        fireHistory: { burntPct: 45, sourceId: "vic-fire-history", period: "to 2022-23" },
+      },
+    };
+    const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: withFire, pois: POIS, generatedAt: "x" });
+    const f = r.findings.find((x) => x.id === "fire-history");
+    expect(f).toBeTruthy();
+    expect(f?.severity).toBe("high"); // >= 40%
+    expect(f?.tone).toBe("concern");
+    expect(f?.caveat).toMatch(/history|forward/i);
+  });
+
   it("handles a pin outside SA2 coverage (no place) gracefully", () => {
     const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: null, pois: POIS, generatedAt: "x" });
     expect(r.summary.confidence).toBe("low");

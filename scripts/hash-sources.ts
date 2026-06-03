@@ -33,6 +33,7 @@ const SOURCE_FILES: Record<string, { dir: "raw" | "generated"; file: string }> =
   "vic-planning-heritage": { dir: "raw", file: "vic-ho.geojson" },
   "vic-planning-overlays": { dir: "raw", file: "vic-conservation-overlays.geojson" },
   "vic-coastal-inundation": { dir: "raw", file: "vic-sea-level.geojson" },
+  "vic-fire-history": { dir: "raw", file: "vic-fire-history.geojson" },
   "osm-schools": { dir: "raw", file: "osm-schools.json" },
   "osm-amenities": { dir: "raw", file: "osm-amenities.json" },
   "osm-cycleways": { dir: "raw", file: "osm-cycleways.json" },

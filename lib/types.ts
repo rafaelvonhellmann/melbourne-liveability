@@ -178,6 +178,18 @@ export type CoastalInundation = {
   period: string;
 };
 
+/**
+ * Past-fire history exposure for an SA2 - context only, never scored. The % of
+ * SA2 land mapped as burnt in the Vicmap fire-history record. HISTORY (where fire
+ * has been), distinct from the forward-looking Bushfire Prone Area overlay; NOT
+ * parcel-level, and public-land-biased (private-land fires recorded only from 2009).
+ */
+export type FireHistory = {
+  burntPct: number | null;
+  sourceId: string;
+  period: string;
+};
+
 /** Display-only context (never affects liveability rank). */
 export type PlaceContext = {
   equity?: {
@@ -201,6 +213,7 @@ export type PlaceContext = {
   housingStress?: HousingStress;
   planning?: PlanningOverlays;
   coastalInundation?: CoastalInundation;
+  fireHistory?: FireHistory;
   population?: PopulationContext;
   environment?: { note: string };
   politics?: { note: string };

@@ -53,13 +53,31 @@ function bboxItem(f: Feature<Polygon | MultiPolygon>): HazardItem | null {
   };
 }
 
-export function buildHazardIndex(overlay: FeatureCollection): RBush<HazardItem> {
+export function buildHazardIndex(
+  overlay: FeatureCollection,
+  opts: { simplifyTolerance?: number } = {}
+): RBush<HazardItem> {
   const tree = new RBush<HazardItem>();
   const items: HazardItem[] = [];
   for (const f of overlay.features) {
     if (!f.geometry) continue;
     if (f.geometry.type !== "Polygon" && f.geometry.type !== "MultiPolygon") continue;
-    const item = bboxItem(f as Feature<Polygon | MultiPolygon>);
+    let feat = f as Feature<Polygon | MultiPolygon>;
+    // Optional pre-simplify for very vertex-dense overlays (e.g. the 16k detailed
+    // fire-history scars) so the per-SA2 intersect stays tractable. The overlap
+    // SHARE is area-level + caveated, so a ~150 m tolerance is immaterial.
+    if (opts.simplifyTolerance) {
+      try {
+        feat = turf.simplify(feat, {
+          tolerance: opts.simplifyTolerance,
+          highQuality: false,
+          mutate: false,
+        });
+      } catch {
+        /* keep the original geometry if simplify fails */
+      }
+    }
+    const item = bboxItem(feat);
     if (item) items.push(item);
   }
   tree.load(items);

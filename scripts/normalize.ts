@@ -82,6 +82,7 @@ type Sa2Raw = {
   heritageOverlayPct?: number | null;
   overlayShares?: Partial<Record<ConservationOverlayCode, number>>;
   coastalShares?: Partial<Record<CoastalScenario, number>>;
+  fireBurntPct?: number | null;
   context?: PlaceContext;
 };
 
@@ -595,6 +596,20 @@ async function main() {
     }
   }
 
+  // Past-fire burnt SHARE (context only, never scored). Single index over all
+  // fire-history polygons; HISTORY, not the forward bushfire overlay. Run
+  // data:fire-history to fetch.
+  const fireHistory = await loadOverlay("vic-fire-history.geojson");
+  if (fireHistory && fireHistory.features.length > 0) {
+    const fireIdx = buildHazardIndex(fireHistory, { simplifyTolerance: 0.0015 });
+    for (const p of byCode.values()) {
+      const geom = sa2GeomByCode.get(p.sa2Code);
+      if (!geom) continue;
+      p.fireBurntPct = roundOverlayPct(overlayPctInSa2(geom, fireIdx));
+    }
+    console.log(`Fire history: ${fireHistory.features.length} polygons`);
+  }
+
   for (const p of byCode.values()) {
     const ctx: PlaceContext = {
       environment: {
@@ -649,6 +664,13 @@ async function main() {
         scenarioShares: p.coastalShares,
         sourceId: "vic-coastal-inundation",
         period: "2040-2100 projection",
+      };
+    }
+    if (p.fireBurntPct != null && p.fireBurntPct > 0) {
+      ctx.fireHistory = {
+        burntPct: p.fireBurntPct,
+        sourceId: "vic-fire-history",
+        period: "to 2022-23",
       };
     }
     if (p.population != null || p.cyclability?.areaKm2 != null) {

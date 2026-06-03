@@ -66,6 +66,8 @@
     "data:apply-overlays": "tsx scripts/apply-overlays.ts",
     "data:sea-level": "tsx scripts/fetch-sea-level.ts",
     "data:apply-sea-level": "tsx scripts/apply-sea-level.ts",
+    "data:fire-history": "tsx scripts/fetch-fire-history.ts",
+    "data:apply-fire-history": "tsx scripts/apply-fire-history.ts",
     "data:timeseries": "tsx scripts/build-timeseries.ts",
     "data:walkaccess": "tsx scripts/apply-walk-access.ts",
     "data:cyclability": "tsx scripts/apply-cyclability.ts",

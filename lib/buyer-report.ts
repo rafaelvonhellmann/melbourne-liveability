@@ -981,6 +981,30 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     });
   }
 
+  // 5e) Past-fire history (context, never scored). % of SA2 mapped as burnt in
+  //     the Vicmap record - HISTORY, distinct from the forward-looking bushfire
+  //     overlay; only surfaced at meaningful coverage. NOT parcel-level.
+  const burntPct = place?.context?.fireHistory?.burntPct ?? null;
+  if (burntPct != null && burntPct >= 10) {
+    findings.push({
+      id: "fire-history",
+      kind: "verify",
+      tone: "concern",
+      severity: burntPct >= 40 ? "high" : "medium",
+      title: "This area has a history of bushfire",
+      summary: `About ${Math.round(burntPct)}% of this area's land is mapped as burnt by past fires in the Victorian record.`,
+      whyItMatters:
+        "Fire in the surrounding landscape signals bushfire exposure that affects safety, insurance and what you must build to.",
+      verifyAction:
+        "Check the bushfire planning overlay (BMO/BPA), CFA fire history and an insurance quote; confirm the BAL rating for the specific property.",
+      confidence: "medium",
+      geography: "sa2",
+      caveat:
+        "Mapped fire HISTORY (fires since ~1903; severity from 2006, private-land fires from 2009) - an area share, NOT a parcel result and NOT the forward-looking bushfire-prone overlay.",
+      sourceRefs: getSourcesByIds(["vic-fire-history"]),
+    });
+  }
+
   // 6) Local safety / crime context (LGA). Property + offences-against-the-person
   //    split (VCSA). Off-coverage pins (no SA2 match) drop precision to "unknown".
   const propCrimePct = place?.domains?.safety?.subIndicators?.propertyCrime?.percentile ?? null;

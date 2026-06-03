@@ -1,11 +1,12 @@
 {
-  "checkedAt": "2026-06-03T07:12:35.262Z",
-  "sources": 27,
-  "referencedInCode": 13,
+  "checkedAt": "2026-06-03T09:17:47.451Z",
+  "sources": 28,
+  "referencedInCode": 14,
   "networkChecked": true,
   "errors": [],
   "warnings": [
-    "unreachable url vcsa-recorded-offences: https://www.crimestatistics.vic.gov.au/crime-statistics/latest-victorian-crime-data/download-data (403)"
+    "unreachable url vcsa-recorded-offences: https://www.crimestatistics.vic.gov.au/crime-statistics/latest-victorian-crime-data/download-data (403)",
+    "unreachable url vic-fire-history: https://opendata.maps.vic.gov.au/geoserver/wfs (400)"
   ],
   "liveness": [
     {
@@ -163,6 +164,12 @@
       "url": "https://biod-gis.mapshare.vic.gov.au/arcgis/rest/services/CoastKit/LCHAInundation/MapServer",
       "ok": true,
       "status": 200
+    },
+    {
+      "id": "vic-fire-history",
+      "url": "https://opendata.maps.vic.gov.au/geoserver/wfs",
+      "ok": false,
+      "status": 400
     }
   ]
 }

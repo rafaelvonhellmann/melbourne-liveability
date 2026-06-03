@@ -124,6 +124,10 @@ export const SOURCE_REFRESH: Record<
       url: "https://biod-gis.mapshare.vic.gov.au/arcgis/rest/services/CoastKit/LCHAInundation/MapServer/6",
     },
   },
+  "vic-fire-history": {
+    cadence: "annual",
+    probe: { type: "none" },
+  },
   "ptv-gtfs": { cadence: "rolling", probe: { type: "none" } },
   "osm-pt": { cadence: "rolling", probe: { type: "none" } },
   "osm-health": { cadence: "rolling", probe: { type: "none" } },
