@@ -47,7 +47,7 @@ silently drops that layer (this regressed pins 37,723 -> 32,010 on 2026-06).
 | 2 | DONE - **Social-anchor scoring** | Shipped (4 commits). Work/school/family anchors added in the profile by geocoded address -> straight-line distance + plain-English band in the report ("Distance to your places") + purple map pins with dashed lines to the pin. `lib/anchors.ts`; context only, never scored. The NestCheck wedge. |
 | 3 | DONE - **Sun-path SVG** | Shipped. Honest side-on sun-path diagram (`components/buyer/SunPathDiagram.tsx`) - summer/winter arcs; replaced the WSW/degrees copy. |
 | 4 | DONE - **Transit lines near pin** | Shipped. Rail (blue) + tram (green) lines clipped near the pin + map legend; reuses the noise-line loader. Bus (GTFS) still a follow-up. |
-| 5 | BLOCKED (heavy) - **School catchments** | data.vic School Zones is bulk SHP/GDB + EPSG:3111 reproject + a SHP-parser dependency (shared ingestion with sea-level #9). Needs a focused pass + dep decision. |
+| 5 | DONE - **School catchments** | Shipped (this session). The DataVic School Zones release actually ships GeoJSON (CRS84/WGS84 - NO reproject, NO SHP dep needed; the bulk-SHP assumption was wrong). `fetch-school-zones.ts` (adm-zip) takes Primary + Secondary Year 7 integrated zones, metro-clips + simplifies (~30 m) -> `public/data/school-zones.json` (770+216 zones, 0.56 MB, lazy-loaded). `lib/school-zones.ts` resolveSchoolZones (turf point-in-polygon); buyer-report "school-zones" finding now resolves the actual zoned school in pin mode (verified: CBD -> Carlton Gardens PS + University High). |
 | 6 | DONE - **Big Build pin-layer** | Shipped. Metro Tunnel + SRL East pins in buyer mode with click-through to the official page. |
 | 7 | DONE - **"The Basin" grocery fix** | Shipped. Nearest-supermarket fallback ("short drive") when none is within the walk circle. |
 | 8 | **Codex remaining (open)** | per-finding source-freshness badge (founder deferred to PDF); wire profile fields (schools/safety/walkability) into report ordering; specific proxy source labels; inline jargon defs; 44px touch targets; ARIA (search listbox, map role); adjacency real-boundary; flatten nested cards; **axe-in-CI** (G7 was blocked on a clean local env - wire it into CI). |
@@ -55,10 +55,37 @@ silently drops that layer (this regressed pins 37,723 -> 32,010 on 2026-06).
 | - | **Accounts / profile-on-register** | NEXT PHASE only (needs backend). Local profile is the seed. |
 | - | **Google Earth premium / Cesium / OpenGeoAgent** | NO - licensed / 3D / AI-pipeline, off-strategy. Parcels + footprints OK later via OPEN Vicmap. |
 | - | **Dead-ends (flag, never fake)** | hospital catchments (no such concept - use distance); power-grid outage history (distributor-level only); per-area infra spending (not geocoded - Big Build is the proxy). |
-| + | **Horizon lens** (future-risk theme) | Forward-looking layers for a 5-25yr purchase: sea-level rise + coastal inundation (DEECA Future Coasts scenarios), VIF population/dwelling projections, climate flood/fire trend, Big Build proximity (future transit), upzoning / activity-centre densification. Label everything projections/scenarios with the same source+caveat discipline. Sea-level rise was the intended first add BUT is BLOCKED: DEECA Future Coasts is download-only SHP/GDB (no REST service; decommissioned 2022) and explicitly NOT property-level - needs the shared bulk-SHP ingestion pipeline (#5) + a SHP-parser dep. |
-| + | **Water retailer** | Which retailer services the SA2 (Yarra Valley / South East / Greater Western Water). Cheap context. Skip generic water-quality (metro is uniform/regulated; localised contamination already via the EAO overlay). |
+| + | **Horizon lens** (future-risk theme) | LARGELY SHIPPED. Forward-looking layers for a 5-25yr purchase. DONE: sea-level rise + coastal inundation (DEECA Future Coasts via the queryable CoastKit REST service - the "download-only SHP" assumption was overturned by the discovery workflow), past fire history (Vicmap WFS), VIF population/dwelling projections, **ABS building approvals / "what's being built"** (see below), Big Build proximity (future transit). Each labelled projection/scenario with source+caveat. REMAINING (optional): climate flood/fire forward-trend, explicit upzoning / activity-centre densification overlay. |
+| + | BLOCKED (manual order) - **Water retailer** | Which retailer services the SA2 (Yarra Valley / South East / Greater Western Water). The boundary dataset is DataShare manual-order only (`md=60bfa03f`, no direct/API download), so it cannot be auto-fetched. Defer until the order is placed; then ingest the resulting file via the standard clone pattern. Skip generic water-quality (metro is uniform/regulated; localised contamination already via the EAO overlay). |
 | + | DONE - **Aged care / retirement pins** | Shipped. 262 OSM nursing-home/assisted-living facilities as a context pin category (Community group). Density verified before adding. SKIPPED SDA / shared-support (dignity + sparse). |
-| + | **"What's being built" (development pipeline)** | ABS Building Approvals (cat 8731): dwelling approvals by type (house / townhouse / apartment), LGA-level densification trend = the headline "what's coming" layer. Also surface the current mix we already hold (`apartmentPct` / `renterPct`). Median lot size from Vicmap cadastre (OPEN, heavier compute) second. Frame as BUILT FORM + supply, NEVER "type of neighbours" (dignity). No clean open feed for future council permits - cover forward via Big Build + activity centres. PATH: ABS Data API (SDMX-JSON, no reproject) - but the approvals dataflow id needs focused discovery (not in the standard /dataflow/ABS list). Most valuable + tractable of the remaining data items. |
+| + | DONE - **"What's being built" (development pipeline)** | Shipped (this session). ABS Building Approvals dataflow `ABS,BA_SA2,2.0.0` (per-SA2, not just LGA), dataKey `1.9.TOT.110+100.SA2..M` (dwelling units, total sector + work, Houses + Total Residential). `fetch-abs-approvals.ts` decodes SDMX-JSON (no reproject) -> compact per-SA2 monthly series; `lib/approvals.ts` summarizeApprovals = trailing-12-month dwellings + prior-12 trend + house vs higher-density split; normalize inline -> `context.developmentPipeline` (all 361 GM SA2s, latest 2026-03); buyer-report "development-pipeline" finding. BUILT FORM + supply framing only (dignity). data:abs-approvals wired into data-refresh.yml (monthly). Future council permits still have no clean open feed - covered forward via Big Build + approvals trend. |
+
+### Shipped 2026-06-03 (Horizon + Buyer-depth session)
+
+Five items, each gated (tsc=0 / vitest / eslint / data:verify) + committed + pushed:
+- **#14 Codex-audit fixes** - 3 buyer-report findings cited the wrong source
+  (transport-noise/nuisance/train-station all pointed at osm-amenities); corrected
+  to osm-noise-corridors / osm-nuisance-points / osm-train-stations + reworded the
+  price caveat. Proves the double-check mechanism caught real bugs.
+- **#10 ABS building approvals** (development pipeline) - SDMX-JSON, `context.developmentPipeline`, all 361 GM SA2s, monthly.
+- **#5 School zones** - GeoJSON (no SHP/reproject), address-level zoned-school finding.
+- **#18 Traffic AADT** - DTP measured vehicles/day, "busy road nearby" pin finding.
+- data-refresh.yml: `data:abs-approvals` added (monthly); school-zones/traffic are
+  annual committed public files (documented in the workflow).
+- New deps: `adm-zip` (school-zones unzip). New sources: abs-building-approvals,
+  vic-school-zones, dtp-aadt (manifest 35 sources / 21 cited / no dangling).
+
+**Remaining queue - ALL blocked on external / founder action (not code):**
+- **#17 EPA air quality** - live AQI needs a free EPA Victoria API key (Azure APIM,
+  `Ocp-Apim-Subscription-Key`, register at portal.api.epa.vic.gov.au). Endpoint:
+  `gateway.api.epa.vic.gov.au/environmentMonitoring/v1/sites?environmentalSegment=air`.
+  Founder action: register key -> add `EPA_API_KEY` as a CI secret -> ~1 commit to
+  wire fetch + nearest-station finding (deliberately NOT scaffolded inert/unverified).
+- **#11 Water retailer** - DataShare manual-order only (`md=60bfa03f`); no API. Founder
+  places the order, then it ingests via the standard clone pattern.
+- **#19 ACECQA childcare ratings** - the CSV is ALL-RIGHTS-RESERVED; product policy is
+  never to ship questionable-licence data. Blocked unless ACECQA grants CC-BY / written
+  permission. (OSM childcare POINTS already ship via vicmap-foi; only the quality RATING is blocked.)
 
 ### Shipped this session (`b9c56b1`..`a0a975b`)
 
@@ -289,8 +316,8 @@ Still open:
 Composable (stacked) layers · multi-criteria "find areas like this" filter
 (spec Part 6) · deep methodology indicators (mortgage-to-income, rental stress,
 DFFH vacancy, journey-to-work mode share, train-station distance — need new
-ABS/DFFH fetch + 2-source validation vs scores) · school catchments · building
-approvals · zoning/heritage/parcel overlays · Centrelink / social housing
+ABS/DFFH fetch + 2-source validation vs scores) · zoning/heritage/parcel overlays
+· Centrelink / social housing
 (sparse OSM) · primary/secondary school split (sparse `isced`) · cyclability
 radius · national expansion (Sydney/Perth/…) · price/growth context (licensing).
 

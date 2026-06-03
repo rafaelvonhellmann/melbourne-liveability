@@ -52,6 +52,7 @@ jobs:
           npm run data:sea-level
           npm run data:fire-history
           npm run data:vif
+          npm run data:abs-approvals
           npm run data:community-poi
           npm run data:ev-poi
           npm run data:aged-care
@@ -59,6 +60,11 @@ jobs:
           npm run data:noise
           npm run data:nuisance
           npm run data:stations
+          # ANNUAL layers (data:school-zones, data:traffic) are deliberately NOT
+          # here: they write committed public/data files (school-zones.json,
+          # traffic-aadt.json) that persist across rebuilds, and re-downloading
+          # their large source bundles monthly is wasteful. Refresh them yearly by
+          # running the script + committing when a new edition ships.
 
       - name: Rebuild scored + derived artifacts
         run: npm run data:build
