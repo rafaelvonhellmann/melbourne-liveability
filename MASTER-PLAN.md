@@ -89,11 +89,12 @@ pushed; final `next build` green (371 static pages, export OK). vitest 303 / 40 
   in-tool export; CSIRO/BoM is ~5-12 km grid). Building it would fabricate parcel-level
   precision. Deliberately NOT built. Only defensible future move = a PDF-only qualitative
   note citing VFCT/ACS.
-- **"Find areas like this" (criteria filter)** - the similarity ENGINE already exists
-  (`lib/similar-areas.ts` reference-based per-domain match, surfaced on profiles + alerts
-  + summary card), and the map weight-sliders already re-rank areas by chosen priorities.
-  A dedicated criteria-filter page would largely duplicate these - left as a UX design
-  decision for the founder rather than built speculatively.
+- **"Find areas like this" (plain-language search)** - DONE 2026-06-04 (founder
+  clarified it as a SEARCH: type wants -> filter). Built at `/find`: deterministic
+  lexicon maps words -> the 7 scored domains, ranks by mean matched-domain percentile,
+  flags unmatched words. `lib/area-search.ts` (+8 tests), FindAreasClient, footer link.
+  (The reference-based `similar-areas.ts` peer list + the map weight-sliders remain as
+  complementary surfaces.)
 - **a11y polish (#8)** - baseline a11y IS enforced (eslint-plugin-jsx-a11y via
   next/core-web-vitals, passing). The remaining Codex items (axe-in-CI, 44px touch
   targets, runtime contrast/focus) are runtime/visual and need a clean browser + axe env
