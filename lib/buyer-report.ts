@@ -540,6 +540,29 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         sourceRefs: getSourcesByIds(["osm-amenities"]),
       });
     }
+    // "The Basin" fix: a supermarket just outside the walk circle (or unnamed in
+    // OSM) shouldn't read as "none". If none is within the walk radius, surface
+    // the nearest one as a short drive rather than implying there is no shop.
+    if ((amenityCountsByCategory["supermarket"] ?? 0) === 0 && point && input.pois) {
+      const nearestSupermarket = getNearbyAmenities(point, input.pois, {
+        radiusMeters: 8000,
+      }).find((a) => a.category === "supermarket");
+      if (nearestSupermarket) {
+        const km = Math.round((nearestSupermarket.distanceMeters / 1000) * 10) / 10;
+        findings.push({
+          id: "supermarket-nearest",
+          kind: "neutral",
+          severity: "info",
+          title: km <= 3 ? "Nearest supermarket is a short drive" : "Supermarket is further out",
+          summary: `No supermarket within ${walkPhrase}, but the nearest mapped one is about ${km} km away${km <= 3 ? " - a short drive" : ""}.`,
+          confidence: "medium",
+          geography: "poi-radius",
+          caveat:
+            "Straight-line distance to the nearest mapped supermarket (OpenStreetMap, ODbL). Small or unbranded stores may not be tagged, and road distance is longer than straight-line.",
+          sourceRefs: getSourcesByIds(["osm-amenities"]),
+        });
+      }
+    }
     if ((amenityCountsByCategory["park"] ?? 0) > 0) {
       findings.push({
         id: "parks-good",

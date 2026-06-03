@@ -379,6 +379,20 @@ describe("buildBuyerReport", () => {
     expect(r.anchorDistances?.[0].km).toBeGreaterThanOrEqual(0);
   });
 
+  it("surfaces the nearest supermarket as a drive when none is in the walk circle", () => {
+    const farSupermarket = poi("supermarket", "Far Coles", 144.99, -37.78); // ~4 km
+    const r = buildBuyerReport({
+      lat: PIN.lat,
+      lng: PIN.lng,
+      place: samplePlace(),
+      pois: [farSupermarket],
+      generatedAt: "x",
+    });
+    const s = r.findings.find((f) => f.id === "supermarket-nearest");
+    expect(s).toBeTruthy();
+    expect(s?.summary).toMatch(/km/);
+  });
+
   it("handles a pin outside SA2 coverage (no place) gracefully", () => {
     const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: null, pois: POIS, generatedAt: "x" });
     expect(r.summary.confidence).toBe("low");
