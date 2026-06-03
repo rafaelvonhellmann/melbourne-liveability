@@ -498,7 +498,11 @@ function FindingCard({ f }: { f: BuyerFinding }) {
               {f.caveat}
             </p>
           )}
-          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] uppercase tracking-wide text-ink-muted">
+          {/* Provenance (confidence / geography / source) is PDF detail, not part
+              of the on-screen scan. Founder: the screen must be digestible for
+              someone checking 10-20 properties a day; full sourcing lives in the
+              printable report + the "Sources and confidence" section below. */}
+          <div className="mt-1.5 hidden flex-wrap gap-x-3 gap-y-0.5 text-[10px] uppercase tracking-wide text-ink-muted print:flex">
             <span>Confidence: {f.confidence}</span>
             <span>Geography: {GEO_LABEL[f.geography]}</span>
             {f.sourceRefs && f.sourceRefs.length > 0 && (
