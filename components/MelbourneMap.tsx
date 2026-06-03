@@ -542,21 +542,30 @@ export function MelbourneMap({
     // Pins are user-controlled per category and independent of the active
     // choropleth domain. Show only the categories explicitly enabled.
     const allowed = Object.keys(visiblePins).filter((k) => visiblePins[k]);
+    const pin = buyerPin;
     const applyFilter = () => {
       if (!map.getLayer("poi-circles")) return;
-      map.setFilter(
-        "poi-circles",
-        allowed.length === 0
-          ? ["==", ["get", "pinType"], "__none__"]
-          : ["in", ["get", "pinType"], ["literal", allowed]]
-      );
+      if (allowed.length === 0) {
+        map.setFilter("poi-circles", ["==", ["get", "pinType"], "__none__"]);
+        return;
+      }
+      const catFilter: unknown[] = ["in", ["get", "pinType"], ["literal", allowed]];
+      // In buyer mode, clip amenity pins to the ~15-min walk circle around the
+      // pin so they show what is actually nearby, not scattered citywide (founder
+      // feedback). `within` is a supported MapLibre filter expression. In explore
+      // mode (no pin) pins stay citywide, which is correct for browsing.
+      const filter: unknown[] =
+        buyerMode && pin
+          ? ["all", catFilter, ["within", circlePolygon(pin, WALK_THRESHOLD_KM).geometry]]
+          : catFilter;
+      map.setFilter("poi-circles", filter as maplibregl.FilterSpecification);
     };
     if (!map.isStyleLoaded()) {
       map.once("idle", applyFilter);
       return;
     }
     applyFilter();
-  }, [visiblePins]);
+  }, [visiblePins, buyerMode, buyerPin]);
 
   // Highlight the selected SA2 by filtering the dedicated outline layer to its
   // slug. Updating a filter (not re-adding sources/layers) keeps the map view,
