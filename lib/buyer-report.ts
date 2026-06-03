@@ -605,7 +605,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         geography: "pin",
         caveat:
           "Straight-line distance to the nearest mapped rail line, tram line or freeway/major road (OpenStreetMap, ODbL) - a proximity proxy, NOT a measured noise level. Barriers, cuttings, traffic volume, aspect and time of day all matter and are not modelled.",
-        sourceRefs: getSourcesByIds(["osm-amenities"]),
+        sourceRefs: getSourcesByIds(["osm-noise-corridors"]),
       });
     }
   }
@@ -635,7 +635,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         geography: "pin",
         caveat:
           "Straight-line distance to the representative point of the nearest mapped industrial area, waste/landfill, sewage works or quarry (OpenStreetMap, ODbL) - a proximity proxy, NOT a measured emission. Whether a site affects this property depends on wind, hours, screening and operations.",
-        sourceRefs: getSourcesByIds(["osm-amenities"]),
+        sourceRefs: getSourcesByIds(["osm-nuisance-points"]),
       });
     }
   }
@@ -659,7 +659,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         geography: "pin",
         caveat:
           "Straight-line distance to the nearest mapped train station (OpenStreetMap, ODbL). The walking route is longer, and the line, frequency and direction matter too.",
-        sourceRefs: getSourcesByIds(["osm-amenities"]),
+        sourceRefs: getSourcesByIds(["osm-train-stations"]),
       });
     }
   }
@@ -1086,7 +1086,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       "This MVP does not estimate property value or price growth. Future versions may add transparent price-context data where licensing allows.",
     confidence: "unknown",
     geography: "unknown",
-    caveat: "Sale prices, valuations and rental yields are not open data we can license - check a listing portal, recent comparable sales, or an agent for indicative pricing.",
+    caveat: "Price, valuation and rental-yield data are not included in this version - check a listing portal, recent comparable sales, or an agent for indicative pricing.",
   });
 
   // 9) Data confidence (meta; neutral).

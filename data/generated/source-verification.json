@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-06-03T09:33:08.220Z",
-  "sources": 29,
-  "referencedInCode": 15,
+  "checkedAt": "2026-06-03T09:37:29.210Z",
+  "sources": 32,
+  "referencedInCode": 18,
   "networkChecked": true,
   "errors": [],
   "warnings": [
@@ -173,6 +173,24 @@
     {
       "id": "vif2023-sa2",
       "url": "https://www.data.vic.gov.au/victoria-future-2023-vif2023-data-available-excel-spreadsheets",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "osm-noise-corridors",
+      "url": "https://www.openstreetmap.org/",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "osm-nuisance-points",
+      "url": "https://www.openstreetmap.org/",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "osm-train-stations",
+      "url": "https://www.openstreetmap.org/",
       "ok": true,
       "status": 200
     }

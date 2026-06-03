@@ -9,10 +9,10 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
-import { RAW, GENERATED } from "./lib/paths.js";
+import { RAW, GENERATED, PUBLIC_DATA } from "./lib/paths.js";
 
 /** sourceId → raw file (relative to data/raw, or data/generated for derived precompute). */
-const SOURCE_FILES: Record<string, { dir: "raw" | "generated"; file: string }> = {
+const SOURCE_FILES: Record<string, { dir: "raw" | "generated" | "public"; file: string }> = {
   "abs-sa2-income-dbr": { dir: "raw", file: "abs-sa2-income.json" },
   "abs-census-rent-2021": { dir: "raw", file: "abs-sa2-rent.json" },
   "abs-erp-sa2": { dir: "raw", file: "abs-sa2-erp.json" },
@@ -35,6 +35,9 @@ const SOURCE_FILES: Record<string, { dir: "raw" | "generated"; file: string }> =
   "vic-coastal-inundation": { dir: "raw", file: "vic-sea-level.geojson" },
   "vic-fire-history": { dir: "raw", file: "vic-fire-history.geojson" },
   "vif2023-sa2": { dir: "raw", file: "vif2023-sa2.xlsx" },
+  "osm-noise-corridors": { dir: "public", file: "noise-lines.json" },
+  "osm-nuisance-points": { dir: "public", file: "nuisance-points.json" },
+  "osm-train-stations": { dir: "public", file: "train-stations.json" },
   "osm-schools": { dir: "raw", file: "osm-schools.json" },
   "osm-amenities": { dir: "raw", file: "osm-amenities.json" },
   "osm-cycleways": { dir: "raw", file: "osm-cycleways.json" },
@@ -78,7 +81,7 @@ async function main() {
       missing.push(`${s.id} (no file mapping)`);
       continue;
     }
-    const base = map.dir === "raw" ? RAW : GENERATED;
+    const base = map.dir === "raw" ? RAW : map.dir === "public" ? PUBLIC_DATA : GENERATED;
     const hash = await sha256(path.join(base, map.file));
     if (hash) {
       if (s.sha256 !== hash) {

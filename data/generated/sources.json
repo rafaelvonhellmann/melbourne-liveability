@@ -260,5 +260,32 @@
     "period": "2021-2036 projection",
     "fetchedAt": "2026-06-03",
     "sha256": "d84fb90d5ee51aa82a3d96a2bed59db980694c39fa641d72d45e0d704bdeb68e"
+  },
+  {
+    "id": "osm-noise-corridors",
+    "name": "OpenStreetMap - rail / tram / freeway corridors for the transport-noise proximity proxy (Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL - attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-03",
+    "sha256": "0899fb7e83f949b6a6aad283fc4315de57ba0bc21b4ea56e8ae42b187276cf05"
+  },
+  {
+    "id": "osm-nuisance-points",
+    "name": "OpenStreetMap - industrial / waste / sewage / quarry points for the nuisance proximity proxy (Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL - attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-03",
+    "sha256": "5577bc7f8ae342452778f3ef0521dd73ca4b19e8018fe82d76b4b4d638f04bbc"
+  },
+  {
+    "id": "osm-train-stations",
+    "name": "OpenStreetMap - train stations for nearest-station distance (Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL - attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-03",
+    "sha256": "46d8d0e895bd7e5a70fd3b83361ce74242de39167c290cc2f14743bc4e7a74c8"
   }
 ]
