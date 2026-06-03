@@ -1,30 +1,20 @@
 /**
  * Fetches indicator raw files into data/raw (gitignored).
  */
-import { createWriteStream } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { pipeline } from "node:stream/promises";
 import { RAW } from "./lib/paths.js";
 import { loadMelbourneSa2Codes } from "./lib/melbourne-sa2-codes.js";
 import { fetchArcGisTable, overpassMelbourne } from "./lib/arcgis-fetch.js";
+import { downloadToFile } from "./lib/gov-fetch.js";
 import { fetchVicHospitalPoints } from "./lib/vic-facilities.js";
 import { G37_SERVICE, G37_FIELDS } from "../lib/social-housing.js";
 import { STRESS_SERVICE, STRESS_FIELDS } from "../lib/housing-stress.js";
 
+// JSON-API calls (CKAN package_show below) keep the honest project UA; only the
+// static-file download routes through the browser-like helper (gov-fetch.ts),
+// because the .gov.au file hosts are the ones behind a WAF.
 const UA = "MelbourneLiveability/1.0";
-
-async function download(url: string, dest: string) {
-  const res = await fetch(url, {
-    redirect: "follow",
-    headers: { "User-Agent": UA },
-  });
-  if (!res.ok) throw new Error(`Download ${res.status}: ${url}`);
-  await mkdir(path.dirname(dest), { recursive: true });
-  if (res.body) {
-    await pipeline(res.body as NodeJS.ReadableStream, createWriteStream(dest));
-  }
-}
 
 async function main() {
   await mkdir(RAW, { recursive: true });
@@ -126,7 +116,7 @@ async function main() {
       .filter((r) => /xlsx/i.test(r.format ?? "") && /LGA.*Recorded/i.test(r.name ?? ""))
       .sort((a, b) => (b.name ?? "").localeCompare(a.name ?? ""))[0];
     if (xlsx?.url) {
-      await download(xlsx.url, path.join(RAW, "vcsa-lga-offences.xlsx"));
+      await downloadToFile(xlsx.url, path.join(RAW, "vcsa-lga-offences.xlsx"));
       console.log(`  ${xlsx.name}`);
     }
   } catch (e) {
