@@ -25,7 +25,9 @@ import {
   roundOverlayPct,
   CONSERVATION_OVERLAY_CODES,
 } from "../lib/planning-overlays.js";
+import { COASTAL_SCENARIOS } from "../lib/coastal.js";
 import type {
+  CoastalScenario,
   ConservationOverlayCode,
   Cyclability,
   HousingStress,
@@ -79,6 +81,7 @@ type Sa2Raw = {
   housingStress?: HousingStress;
   heritageOverlayPct?: number | null;
   overlayShares?: Partial<Record<ConservationOverlayCode, number>>;
+  coastalShares?: Partial<Record<CoastalScenario, number>>;
   context?: PlaceContext;
 };
 
@@ -561,6 +564,37 @@ async function main() {
     }
   }
 
+  // Coastal inundation (sea-level rise) SHARES (context only, never scored). Each
+  // feature is tagged with its `scenario` (2040/2070/2100). Same overlay-share
+  // computation; see lib/coastal.ts (projection + not-parcel caveat). Run
+  // data:sea-level to fetch.
+  const seaLevel = await loadOverlay("vic-sea-level.geojson");
+  if (seaLevel && seaLevel.features.length > 0) {
+    const featsByScenario = new Map<CoastalScenario, typeof seaLevel.features>();
+    for (const f of seaLevel.features) {
+      const sc = (f.properties?.scenario ?? "") as CoastalScenario;
+      if (!COASTAL_SCENARIOS.some((s) => s.key === sc)) continue;
+      let arr = featsByScenario.get(sc);
+      if (!arr) {
+        arr = [];
+        featsByScenario.set(sc, arr);
+      }
+      arr.push(f);
+    }
+    for (const [sc, feats] of featsByScenario) {
+      const idx = buildHazardIndex({ type: "FeatureCollection", features: feats });
+      for (const p of byCode.values()) {
+        const geom = sa2GeomByCode.get(p.sa2Code);
+        if (!geom) continue;
+        const pct = roundOverlayPct(overlayPctInSa2(geom, idx));
+        if (pct != null && pct > 0) {
+          (p.coastalShares ??= {})[sc] = pct;
+        }
+      }
+      console.log(`Coastal inundation ${sc}: ${feats.length} polygons`);
+    }
+  }
+
   for (const p of byCode.values()) {
     const ctx: PlaceContext = {
       environment: {
@@ -609,6 +643,13 @@ async function main() {
           ? { overlays: p.overlayShares }
           : {}),
       } satisfies PlanningOverlays;
+    }
+    if (p.coastalShares && Object.keys(p.coastalShares).length > 0) {
+      ctx.coastalInundation = {
+        scenarioShares: p.coastalShares,
+        sourceId: "vic-coastal-inundation",
+        period: "2040-2100 projection",
+      };
     }
     if (p.population != null || p.cyclability?.areaKm2 != null) {
       ctx.population = populationContext(p.population, p.cyclability?.areaKm2, {

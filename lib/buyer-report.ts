@@ -39,6 +39,7 @@ import { getDefaultWeights } from "./weights";
 import { getSourcesByIds } from "./source-manifest";
 import { sunAspect } from "./sun";
 import { presentOverlays } from "./planning-overlays";
+import { worstCoastalScenario } from "./coastal";
 
 // ---- Types (stable public contract) ---------------------------------------
 
@@ -955,6 +956,31 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     });
   }
 
+  // 5d) Coastal inundation (sea-level rise) - context, never scored. SA2 area
+  //     share under DEECA Future Coasts modelled inundation by projection year;
+  //     a PROJECTION/scenario at ~1:75,000, never a parcel verdict.
+  const coastalShares = place?.context?.coastalInundation?.scenarioShares ?? null;
+  const worstCoastal = worstCoastalScenario(coastalShares, 1);
+  if (worstCoastal) {
+    findings.push({
+      id: "coastal-inundation",
+      kind: "verify",
+      tone: "concern",
+      severity: worstCoastal.pct >= 10 ? "high" : "medium",
+      title: "Sea-level-rise inundation projected for part of this area",
+      summary: `Under a sea-level-rise projection (about ${worstCoastal.slr} by ${worstCoastal.label}), roughly ${Math.round(worstCoastal.pct)}% of this area's land is modelled as subject to coastal inundation.`,
+      whyItMatters:
+        "Coastal-inundation risk shapes insurance, future planning controls and long-term value over the decades you would own the property.",
+      verifyAction:
+        "Check the property's elevation and the council / VicPlan coastal-hazard + flood overlays before you offer - this is area-level, not parcel-level.",
+      confidence: "medium",
+      geography: "sa2",
+      caveat:
+        "Modelled projection from DEECA Future Coasts at ~1:75,000 - an indicative area share for the wider SA2, NOT a parcel-level result, and a scenario rather than a forecast.",
+      sourceRefs: getSourcesByIds(["vic-coastal-inundation"]),
+    });
+  }
+
   // 6) Local safety / crime context (LGA). Property + offences-against-the-person
   //    split (VCSA). Off-coverage pins (no SA2 match) drop precision to "unknown".
   const propCrimePct = place?.domains?.safety?.subIndicators?.propertyCrime?.percentile ?? null;
@@ -1040,6 +1066,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
   const SEV_RANK: Record<BuyerFindingSeverity, number> = { high: 0, medium: 1, low: 2, info: 3 };
   const MATERIALITY: Record<string, number> = {
     "hazard-overlays": 0,
+    "coastal-inundation": 1,
     "conservation-overlays": 1,
     "heritage-overlay": 2,
     "safety-context": 3,

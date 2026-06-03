@@ -49,6 +49,7 @@ jobs:
         run: |
           npm run data:heritage
           npm run data:overlays
+          npm run data:sea-level
           npm run data:community-poi
           npm run data:ev-poi
           npm run data:aged-care

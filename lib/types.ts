@@ -164,6 +164,20 @@ export type PopulationContext = {
   sourceId: string;
 };
 
+/** Sea-level-rise projection years we surface (DEECA Future Coasts scenarios). */
+export type CoastalScenario = "2040" | "2070" | "2100";
+
+/**
+ * Coastal inundation (sea-level rise) exposure for an SA2 - context only, never
+ * scored. The % of SA2 land under modelled inundation by projection year. A
+ * PROJECTION/scenario at ~1:75,000, NOT a parcel-level result - never a verdict.
+ */
+export type CoastalInundation = {
+  scenarioShares: Partial<Record<CoastalScenario, number>>;
+  sourceId: string;
+  period: string;
+};
+
 /** Display-only context (never affects liveability rank). */
 export type PlaceContext = {
   equity?: {
@@ -186,6 +200,7 @@ export type PlaceContext = {
   socialHousing?: SocialHousing;
   housingStress?: HousingStress;
   planning?: PlanningOverlays;
+  coastalInundation?: CoastalInundation;
   population?: PopulationContext;
   environment?: { note: string };
   politics?: { note: string };

@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-06-03T06:28:20.371Z",
-  "sources": 26,
-  "referencedInCode": 12,
+  "checkedAt": "2026-06-03T07:12:35.262Z",
+  "sources": 27,
+  "referencedInCode": 13,
   "networkChecked": true,
   "errors": [],
   "warnings": [
@@ -155,6 +155,12 @@
     {
       "id": "vic-planning-overlays",
       "url": "https://plan-gis.mapshare.vic.gov.au/arcgis/rest/services/Planning/Vicplan_PlanningSchemeOverlays/MapServer",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vic-coastal-inundation",
+      "url": "https://biod-gis.mapshare.vic.gov.au/arcgis/rest/services/CoastKit/LCHAInundation/MapServer",
       "ok": true,
       "status": 200
     }

@@ -233,5 +233,14 @@
     "period": "current",
     "fetchedAt": "2026-06-03",
     "sha256": "dbf1ae110cdec202794ba3aeeee96ec7b77315f1a4c7b84c491fbd2ea3392f5a"
+  },
+  {
+    "id": "vic-coastal-inundation",
+    "name": "DEECA Future Coasts - coastal inundation (sea-level rise) scenario share per SA2, via CoastKit",
+    "url": "https://biod-gis.mapshare.vic.gov.au/arcgis/rest/services/CoastKit/LCHAInundation/MapServer",
+    "licence": "CC BY 4.0 (Victoria)",
+    "period": "2040-2100 projection",
+    "fetchedAt": "2026-06-03",
+    "sha256": "fb4305f4d2ab3294ae084620dad1f3b8df45187bc234064ba89933c2daeab5b9"
   }
 ]
