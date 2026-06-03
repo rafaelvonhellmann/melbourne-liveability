@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-06-03T11:02:36.018Z",
-  "sources": 33,
-  "referencedInCode": 19,
+  "checkedAt": "2026-06-03T11:18:24.205Z",
+  "sources": 34,
+  "referencedInCode": 20,
   "networkChecked": true,
   "errors": [],
   "warnings": [
@@ -179,6 +179,12 @@
     {
       "id": "abs-building-approvals",
       "url": "https://www.abs.gov.au/statistics/industry/building-and-construction/building-approvals-australia",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vic-school-zones",
+      "url": "https://discover.data.vic.gov.au/dataset/victorian-government-school-zones-2026",
       "ok": true,
       "status": 200
     },

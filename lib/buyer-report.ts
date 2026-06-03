@@ -41,6 +41,7 @@ import { sunAspect } from "./sun";
 import { presentOverlays } from "./planning-overlays";
 import { worstCoastalScenario } from "./coastal";
 import { projectedGrowth } from "./vif";
+import { resolveSchoolZones, type SchoolZonesData } from "./school-zones";
 
 // ---- Types (stable public contract) ---------------------------------------
 
@@ -178,8 +179,8 @@ const METHODOLOGY_REF: BuyerSourceRef = {
 };
 
 const SCHOOL_ZONE_REF: BuyerSourceRef = {
-  id: "vic-school-zones",
-  label: "Find My School - official Victorian school zones",
+  id: "vic-findmyschool",
+  label: "Find My School - official Victorian school-zone lookup",
   url: "https://www.findmyschool.vic.gov.au/",
 };
 
@@ -447,6 +448,13 @@ export interface BuildBuyerReportInput {
   nuisancePoints?: NuisancePoint[];
   /** Train stations for the "nearest train station" finding. Lazy-loaded; omit to skip. */
   stations?: Station[];
+  /**
+   * Government school zones (primary + secondary Year 7) for the address-level
+   * zone match. Lazy-loaded client-side; resolved only in pin mode (never from
+   * an SA2 centroid). Omit to fall back to the "confirm at the exact address"
+   * note. See lib/school-zones.
+   */
+  schoolZones?: SchoolZonesData;
   /**
    * The user's personal "fit" profile (buyer or agent). When provided, the report
    * gains a `fit` block: deal-breakers to verify + plain-language fit notes,
@@ -1124,20 +1132,55 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     sourceRefs: getSourcesByIds(["vcsa-recorded-offences"]),
   });
 
-  // 7) School zones (catchment data NOT available).
-  findings.push({
-    id: "school-zones",
-    kind: "unavailable",
-    severity: "info",
-    title: "School zones not included yet",
-    summary: "Official school-catchment matching is not in this version.",
-    verifyAction:
-      "Confirm the address on the official Victorian school-zone tool if schools matter to you.",
-    confidence: "unknown",
-    geography: "unknown",
-    caveat: "We do not hold official school-catchment boundaries; zones change yearly and must be checked at the exact address.",
-    sourceRefs: [SCHOOL_ZONE_REF],
-  });
+  // 7) School zones. Address-level: which Victorian Government school zone(s)
+  //    contain the pin (point-in-polygon, never from an SA2 centroid). Resolved
+  //    only in pin mode when the zone set is loaded; otherwise an honest
+  //    "not matched here" fallback. Context only, never scored.
+  const zones =
+    point && mode === "pin" && input.schoolZones
+      ? resolveSchoolZones(point, input.schoolZones)
+      : { primary: null, secondary: null };
+  if (zones.primary || zones.secondary) {
+    const zoneYear = input.schoolZones?.year;
+    const parts: string[] = [];
+    if (zones.primary) parts.push(`primary at ${zones.primary}`);
+    if (zones.secondary) parts.push(`secondary (Year 7) at ${zones.secondary}`);
+    findings.push({
+      id: "school-zones",
+      kind: "neutral",
+      severity: "info",
+      title: "Government school zones for this location",
+      summary: `This location falls in the ${zoneYear ? `${zoneYear} ` : ""}Victorian Government school zone for ${parts.join(", and ")}.`,
+      whyItMatters:
+        "Your address-based zone is the government school you are guaranteed a place at; it shapes schooling options and can affect resale appeal to families.",
+      verifyAction:
+        "Confirm the exact address on findmyschool.vic.gov.au - zones are set each year and the boundary can move.",
+      confidence: "high",
+      geography: "pin",
+      caveat:
+        "Official DataVic zones simplified (~30 m) for display; a result near a boundary is indicative - confirm the exact address on findmyschool.vic.gov.au. Selective-entry, specialist and non-government schools are not zoned.",
+      sourceRefs: getSourcesByIds(["vic-school-zones"]),
+    });
+  } else {
+    findings.push({
+      id: "school-zones",
+      kind: "unavailable",
+      severity: "info",
+      title:
+        mode === "pin" ? "No government school zone matched here" : "School zones need an exact address",
+      summary:
+        mode === "pin"
+          ? "We could not match a Victorian Government primary or secondary zone to this exact point (it may be outside Greater Melbourne, or in an unzoned/selective area)."
+          : "Official school-zone matching needs a dropped pin - it is address-level, not an area average.",
+      verifyAction:
+        "Confirm the address on findmyschool.vic.gov.au if schools matter to you.",
+      confidence: "unknown",
+      geography: "unknown",
+      caveat:
+        "Government school zones change yearly and must be checked at the exact address; selective-entry and non-government schools are not zoned.",
+      sourceRefs: [SCHOOL_ZONE_REF],
+    });
+  }
 
   // 8) Price / sales context (NOT included).
   findings.push({

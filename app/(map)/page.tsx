@@ -31,6 +31,7 @@ import type { BuyerProfile } from "@/lib/buyer-fit";
 import { buildBuyerReport, type BuyerReport as BuyerReportData } from "@/lib/buyer-report";
 import type { NoiseLine } from "@/lib/noise";
 import type { NuisancePoint } from "@/lib/nuisance";
+import type { SchoolZonesData } from "@/lib/school-zones";
 import type { Station } from "@/lib/transit";
 import { findSa2ForPoint } from "@/lib/buyer-location";
 import { MAJOR_PROJECTS } from "@/lib/major-projects";
@@ -256,6 +257,15 @@ export default function MapPage() {
     stationsRef.current = (await res.json()) as Station[];
     return stationsRef.current;
   }
+  // Government school zones (DataVic) for the buyer report's address-level
+  // zone match. Lazy-loaded once on first pin (kept out of the map bundle).
+  const schoolZonesRef = useRef<SchoolZonesData | null>(null);
+  async function ensureSchoolZones(): Promise<SchoolZonesData | null> {
+    if (schoolZonesRef.current) return schoolZonesRef.current;
+    const res = await fetch(withBase("/data/school-zones.json"));
+    schoolZonesRef.current = (await res.json()) as SchoolZonesData;
+    return schoolZonesRef.current;
+  }
 
   const buyerPlace = useMemo(
     () =>
@@ -301,11 +311,12 @@ export default function MapPage() {
     // any in-flight precise fetch so its (now stale) result can't land late.
     precisionAbortRef.current?.abort();
     setPreciseStatus("idle");
-    const [feats, noiseLines, nuisancePoints, stations] = await Promise.all([
+    const [feats, noiseLines, nuisancePoints, stations, schoolZones] = await Promise.all([
       ensurePois().catch(() => [] as Feature<Point>[]),
       ensureNoiseLines().catch(() => [] as NoiseLine[]),
       ensureNuisancePoints().catch(() => [] as NuisancePoint[]),
       ensureStations().catch(() => [] as Station[]),
+      ensureSchoolZones().catch(() => null),
     ]);
     const place = sa2
       ? places.find((p) => p.slug === sa2.slug || p.sa2Code === sa2.sa2Code) ?? null
@@ -319,6 +330,7 @@ export default function MapPage() {
         noiseLines,
         nuisancePoints,
         stations,
+        schoolZones: schoolZones ?? undefined,
         nearbyAreas: areaCentroids,
         majorProjects: MAJOR_PROJECTS,
         profile: profileRef.current,
@@ -348,11 +360,12 @@ export default function MapPage() {
       setPreciseStatus("error");
       return;
     }
-    const [feats, noiseLines, nuisancePoints, stations] = await Promise.all([
+    const [feats, noiseLines, nuisancePoints, stations, schoolZones] = await Promise.all([
       ensurePois().catch(() => [] as Feature<Point>[]),
       ensureNoiseLines().catch(() => [] as NoiseLine[]),
       ensureNuisancePoints().catch(() => [] as NuisancePoint[]),
       ensureStations().catch(() => [] as Station[]),
+      ensureSchoolZones().catch(() => null),
     ]);
     if (ctrl.signal.aborted || buyerPinRef.current !== pin) return;
     setBuyerReport(
@@ -365,6 +378,7 @@ export default function MapPage() {
         noiseLines,
         nuisancePoints,
         stations,
+        schoolZones: schoolZones ?? undefined,
         nearbyAreas: areaCentroids,
         majorProjects: MAJOR_PROJECTS,
         profile: profileRef.current,

@@ -271,6 +271,15 @@
     "sha256": "5f9615d79a90c7d8bca3922bd27904efa87bb320e954bb7fe6d14ff04820c7d5"
   },
   {
+    "id": "vic-school-zones",
+    "name": "Victorian Government School Zones (Dept of Education) - primary + secondary (Year 7) zones",
+    "url": "https://discover.data.vic.gov.au/dataset/victorian-government-school-zones-2026",
+    "licence": "CC BY 4.0",
+    "period": "2026 school year",
+    "fetchedAt": "2026-06-03",
+    "sha256": "df6e6b3e6e5e7edeb409857aab20abdd63222757d8ebf7dcf1475503275df577"
+  },
+  {
     "id": "osm-noise-corridors",
     "name": "OpenStreetMap - rail / tram / freeway corridors for the transport-noise proximity proxy (Overpass)",
     "url": "https://www.openstreetmap.org/",
