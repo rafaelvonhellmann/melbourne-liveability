@@ -35,6 +35,7 @@ const SOURCE_FILES: Record<string, { dir: "raw" | "generated" | "public"; file: 
   "vic-coastal-inundation": { dir: "raw", file: "vic-sea-level.geojson" },
   "vic-fire-history": { dir: "raw", file: "vic-fire-history.geojson" },
   "vif2023-sa2": { dir: "raw", file: "vif2023-sa2.xlsx" },
+  "abs-building-approvals": { dir: "raw", file: "abs-sa2-approvals.json" },
   "osm-noise-corridors": { dir: "public", file: "noise-lines.json" },
   "osm-nuisance-points": { dir: "public", file: "nuisance-points.json" },
   "osm-train-stations": { dir: "public", file: "train-stations.json" },

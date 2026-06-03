@@ -27,6 +27,8 @@ import {
 } from "../lib/planning-overlays.js";
 import { COASTAL_SCENARIOS } from "../lib/coastal.js";
 import { readVifProjections } from "./lib/vif-parse.js";
+import { readApprovalsFile } from "./lib/abs-approvals.js";
+import { summarizeApprovals, type MonthlySeries } from "../lib/approvals.js";
 import type {
   CoastalScenario,
   ConservationOverlayCode,
@@ -624,6 +626,16 @@ async function main() {
     /* VIF file optional */
   }
 
+  // ABS building approvals per SA2 (context only, never scored) - the "what's
+  // being built" pipeline. Optional file (run data:abs-approvals to fetch).
+  let approvalsMap = new Map<string, MonthlySeries>();
+  try {
+    approvalsMap = await readApprovalsFile(path.join(RAW, "abs-sa2-approvals.json"));
+    if (approvalsMap.size) console.log(`Building approvals: ${approvalsMap.size} SA2s`);
+  } catch {
+    /* approvals file optional */
+  }
+
   for (const p of byCode.values()) {
     const ctx: PlaceContext = {
       environment: {
@@ -696,6 +708,8 @@ async function main() {
         period: "2021-2036",
       };
     }
+    const dp = summarizeApprovals(approvalsMap.get(p.sa2Code));
+    if (dp) ctx.developmentPipeline = dp;
     if (p.population != null || p.cyclability?.areaKm2 != null) {
       ctx.population = populationContext(p.population, p.cyclability?.areaKm2, {
         sourceId: "abs-erp-sa2",

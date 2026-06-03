@@ -1036,6 +1036,69 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     });
   }
 
+  // 5g) Development pipeline (context, never scored). ABS building approvals -
+  //     dwelling units approved in the trailing 12 months, split houses vs
+  //     higher-density, with a year-on-year trend. The "what's being built"
+  //     signal: built-form + supply only, never an inference about residents.
+  const pipe = place?.context?.developmentPipeline;
+  if (pipe) {
+    const { trailing12, prior12, housePct, period } = pipe;
+    const mix =
+      housePct == null
+        ? ""
+        : housePct >= 80
+          ? "almost all detached houses"
+          : housePct >= 55
+            ? "mostly houses"
+            : housePct <= 20
+              ? "almost all townhouses or apartments"
+              : housePct <= 45
+                ? "mostly townhouses or apartments"
+                : "a mix of houses and higher-density homes";
+    let trend = "";
+    if (prior12 != null && prior12 > 0) {
+      const r = trailing12 / prior12;
+      trend =
+        r >= 1.25
+          ? "up sharply on the year before"
+          : r >= 1.1
+            ? "up on the year before"
+            : r <= 0.75
+              ? "down sharply on the year before"
+              : r <= 0.9
+                ? "down on the year before"
+                : "broadly steady year on year";
+    }
+    const active = trailing12 >= 300;
+    const moderate = trailing12 >= 50;
+    findings.push({
+      id: "development-pipeline",
+      kind: "neutral",
+      severity: "info",
+      title:
+        trailing12 === 0
+          ? "No new dwellings approved here recently"
+          : active
+            ? "Active development pipeline nearby"
+            : moderate
+              ? "Steady development pipeline nearby"
+              : "A few new dwellings approved nearby",
+      summary:
+        trailing12 === 0
+          ? `No new dwellings were approved across this area in the ${period} (ABS building approvals).`
+          : `About ${trailing12.toLocaleString("en-AU")} new ${trailing12 === 1 ? "dwelling was" : "dwellings were"} approved across this area in the ${period}${mix ? ` - ${mix}` : ""}${trend ? `, ${trend}` : ""}.`,
+      whyItMatters:
+        "Approvals are a leading sign of construction: more building work, new supply and streetscape change ahead. They come before - and do not guarantee - completed homes.",
+      verifyAction:
+        "Check the council planning register and VicPlan for current applications and any major projects near the address.",
+      confidence: "high",
+      geography: "sa2",
+      caveat:
+        "ABS building approvals counted at SA2 (whole-area) level, not your street; an approval is a leading indicator, not a completed home, and the most recent month or two may be revised.",
+      sourceRefs: getSourcesByIds(["abs-building-approvals"]),
+    });
+  }
+
   // 6) Local safety / crime context (LGA). Property + offences-against-the-person
   //    split (VCSA). Off-coverage pins (no SA2 match) drop precision to "unknown".
   const propCrimePct = place?.domains?.safety?.subIndicators?.propertyCrime?.percentile ?? null;

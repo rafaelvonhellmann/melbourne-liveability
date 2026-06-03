@@ -205,6 +205,27 @@ export type VifProjection = {
   period: string;
 };
 
+/**
+ * ABS Building Approvals by SA2 (BA_SA2) - dwelling units approved, the
+ * "what's being built" pipeline signal. Context only, never scored. An APPROVAL
+ * is a LEADING indicator of construction (it precedes, and does not guarantee,
+ * completion) and counts the wider SA2, not a single street. We surface only
+ * built-form + supply (houses vs higher-density, trailing-12-month volume and
+ * trend) - never any inference about who lives or will live there.
+ */
+export type DevelopmentPipeline = {
+  /** Most recent month present in the series (e.g. "2026-03"). */
+  latestMonth: string;
+  /** Total dwelling units approved in the trailing 12 months. */
+  trailing12: number;
+  /** Dwellings approved in the 12 months ending a year earlier (YoY trend); null if not fully covered. */
+  prior12: number | null;
+  /** Detached-house share of trailing-12 dwellings (0-100); null if zero base. */
+  housePct: number | null;
+  sourceId: string;
+  period: string;
+};
+
 /** Display-only context (never affects liveability rank). */
 export type PlaceContext = {
   equity?: {
@@ -230,6 +251,7 @@ export type PlaceContext = {
   coastalInundation?: CoastalInundation;
   fireHistory?: FireHistory;
   projections?: VifProjection;
+  developmentPipeline?: DevelopmentPipeline;
   population?: PopulationContext;
   environment?: { note: string };
   politics?: { note: string };

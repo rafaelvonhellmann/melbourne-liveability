@@ -1,7 +1,7 @@
 {
-  "checkedAt": "2026-06-03T09:37:29.210Z",
-  "sources": 32,
-  "referencedInCode": 18,
+  "checkedAt": "2026-06-03T11:02:36.018Z",
+  "sources": 33,
+  "referencedInCode": 19,
   "networkChecked": true,
   "errors": [],
   "warnings": [
@@ -173,6 +173,12 @@
     {
       "id": "vif2023-sa2",
       "url": "https://www.data.vic.gov.au/victoria-future-2023-vif2023-data-available-excel-spreadsheets",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "abs-building-approvals",
+      "url": "https://www.abs.gov.au/statistics/industry/building-and-construction/building-approvals-australia",
       "ok": true,
       "status": 200
     },

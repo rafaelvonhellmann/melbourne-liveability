@@ -132,6 +132,10 @@ export const SOURCE_REFRESH: Record<
     cadence: "annual",
     probe: { type: "none" },
   },
+  "abs-building-approvals": {
+    cadence: "rolling",
+    probe: { type: "none" },
+  },
   "osm-noise-corridors": { cadence: "rolling", probe: { type: "none" } },
   "osm-nuisance-points": { cadence: "rolling", probe: { type: "none" } },
   "osm-train-stations": { cadence: "rolling", probe: { type: "none" } },

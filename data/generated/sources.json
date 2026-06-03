@@ -262,6 +262,15 @@
     "sha256": "d84fb90d5ee51aa82a3d96a2bed59db980694c39fa641d72d45e0d704bdeb68e"
   },
   {
+    "id": "abs-building-approvals",
+    "name": "ABS Building Approvals by SA2 (BA_SA2) - dwelling units approved, monthly",
+    "url": "https://www.abs.gov.au/statistics/industry/building-and-construction/building-approvals-australia",
+    "licence": "CC BY 4.0",
+    "period": "monthly (rolling)",
+    "fetchedAt": "2026-06-03",
+    "sha256": "5f9615d79a90c7d8bca3922bd27904efa87bb320e954bb7fe6d14ff04820c7d5"
+  },
+  {
     "id": "osm-noise-corridors",
     "name": "OpenStreetMap - rail / tram / freeway corridors for the transport-noise proximity proxy (Overpass)",
     "url": "https://www.openstreetmap.org/",
