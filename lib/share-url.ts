@@ -12,6 +12,8 @@ export type MapUrlState = {
   view: InterestViewId | null;
   /** Optional one-shot deep-link to activate a specific choropleth domain. */
   layer: DomainId | null;
+  /** Optional one-shot deep-link to focus a place by slug (?select=<slug>). */
+  select: string | null;
   /** Buyer "Location Check" mode active (?buyer=1). */
   buyer: boolean;
   /** Dropped buyer pin as [lng, lat], or null. Restored from ?lat=&lng=. */
@@ -37,6 +39,14 @@ function parseLayer(raw: string | null): DomainId | null {
   return (V1_SCORED_DOMAINS as string[]).includes(raw)
     ? (raw as DomainId)
     : null;
+}
+
+// Place slugs are kebab-case name + numeric SA2 code (e.g. "brunswick-east-206011106").
+// Constrain the deep-link to that alphabet so a crafted ?select= can only ever
+// match a real slug lookup, never inject anything else.
+function parseSelect(raw: string | null): string | null {
+  if (!raw) return null;
+  return /^[a-z0-9-]{1,64}$/.test(raw) ? raw : null;
 }
 
 export function parseListParam(raw: string | null): string[] {
@@ -65,6 +75,7 @@ export function parseMapUrlState(search: string): MapUrlState {
         : null,
     view: parseInterestView(params.get("view")),
     layer: parseLayer(params.get("layer")),
+    select: parseSelect(params.get("select")),
     buyer: params.get("buyer") === "1",
     pin: parsePin(params.get("lat"), params.get("lng")),
   };
@@ -84,6 +95,7 @@ export function buildMapUrl(
   if (state.persona) params.set("persona", state.persona);
   if (state.view && state.view !== "general") params.set("view", state.view);
   if (state.layer) params.set("layer", state.layer);
+  if (state.select) params.set("select", state.select);
   if (state.buyer) params.set("buyer", "1");
   if (state.pin) {
     // URL exposes lat/lng (human-readable); pin is stored [lng, lat] internally.

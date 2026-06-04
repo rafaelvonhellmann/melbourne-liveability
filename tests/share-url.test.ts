@@ -61,6 +61,18 @@ describe("share-url", () => {
     expect(url).toContain("layer=safety");
   });
 
+  it("round-trips the select (focus-place) deep-link and rejects junk slugs", () => {
+    const url = buildMapUrl("/", { select: "brunswick-east-206011106", layer: "safety" });
+    expect(url).toContain("select=brunswick-east-206011106");
+    const state = parseMapUrlState(new URL(url, "http://localhost").search.slice(1));
+    expect(state.select).toBe("brunswick-east-206011106");
+    expect(state.layer).toBe("safety");
+    // Reject anything outside the kebab+digits slug alphabet (no spaces, slashes, scripts).
+    expect(parseMapUrlState("select=../etc/passwd").select).toBeNull();
+    expect(parseMapUrlState("select=Hello%20World").select).toBeNull();
+    expect(parseMapUrlState("").select).toBeNull();
+  });
+
   it("builds compare url", () => {
     const url = buildCompareUrl(["a", "b"]);
     const list = new URL(url, "http://localhost").searchParams.get("list");

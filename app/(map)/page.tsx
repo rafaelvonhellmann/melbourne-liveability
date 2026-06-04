@@ -577,6 +577,11 @@ export default function MapPage() {
       setBuyerMode(true);
       setSelected(null);
       if (url.pin) void restorePin(url.pin);
+    } else if (url.select) {
+      // Deep-link from a /places profile ("View on the map"): select the area and
+      // pan to it. The hook already applied any &layer= one-shot.
+      const target = places.find((pl) => pl.slug === url.select);
+      if (target) focusPlace(target);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [places]);

@@ -103,7 +103,7 @@ export function PlaceProfileClient({
     <div className="min-h-screen bg-bg text-ink">
       <header className="flex items-center gap-3 border-b border-surface-border bg-surface px-4 py-3">
         <Link
-          href="/"
+          href={`/?select=${place.slug}`}
           className="inline-flex items-center gap-1 rounded-full border border-surface-border bg-surface-sunken px-2.5 py-1 text-xs text-ink-muted transition-colors hover:border-accent hover:text-accent"
         >
           ‹ Map
@@ -403,7 +403,7 @@ function OverviewPanel({
       </div>
 
       <div className="space-y-4">
-        <MiniMapCard />
+        <MiniMapCard slug={place.slug} />
         <div className="rounded-lg border border-surface-border bg-surface p-4 shadow-card">
           <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
             Key facts
@@ -510,7 +510,7 @@ function DomainPanel({
           <p className="mt-0.5 text-sm text-ink-muted">{cfg?.description}</p>
         </div>
         <Link
-          href={`/?layer=${domain}`}
+          href={`/?select=${place.slug}&layer=${domain}`}
           className="rounded-full border border-surface-border bg-surface-sunken px-3 py-1.5 text-xs text-ink-muted transition-colors hover:border-accent hover:text-accent"
         >
           Show on map →
@@ -525,7 +525,7 @@ function DomainPanel({
             value={ds?.subIndicators?.[def.key]}
             benchmark={domainBenchmarks[def.key]}
             series={series[def.key]}
-            mapHref={`/?layer=${domain}`}
+            mapHref={`/?select=${place.slug}&layer=${domain}`}
           />
         ))}
       </div>
@@ -637,10 +637,10 @@ function Fact({
   );
 }
 
-function MiniMapCard() {
+function MiniMapCard({ slug }: { slug: string }) {
   return (
     <Link
-      href="/"
+      href={`/?select=${slug}`}
       className="block overflow-hidden rounded-lg border border-surface-border shadow-card"
     >
       <div
@@ -650,7 +650,7 @@ function MiniMapCard() {
         }}
       >
         <span className="rounded-md bg-surface/80 px-2 py-1 text-[10px] uppercase tracking-wide text-ink-muted backdrop-blur">
-          View SA2 on map →
+          Show this area on the map &rarr;
         </span>
       </div>
     </Link>
