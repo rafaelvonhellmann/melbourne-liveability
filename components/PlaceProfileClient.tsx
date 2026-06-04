@@ -570,15 +570,32 @@ function DomainPanel({
         </Caveat>
       )}
 
-      {domain === "education" && place.context?.community?.year12Pct != null && (
-        <Caveat className="mt-4">
-          <b className="text-ink">Attainment (context, not scored):</b>{" "}
-          {place.context.community.year12Pct.toFixed(1)}% of residents completed Year 12 or
-          equivalent (ABS Census 2021). The scored Education domain measures school &amp;
-          preschool <i>access</i>, not attainment; university / postgraduate data is not in
-          our current source.
-        </Caveat>
-      )}
+      {domain === "education" &&
+        (place.context?.community?.year12Pct != null ||
+          place.context?.community?.bachelorPlusPct != null) && (
+          <Caveat className="mt-4">
+            <b className="text-ink">Attainment (context, not scored):</b>{" "}
+            {place.context.community.year12Pct != null && (
+              <>
+                {place.context.community.year12Pct.toFixed(1)}% of residents completed Year 12
+                or equivalent.{" "}
+              </>
+            )}
+            {place.context.community.bachelorPlusPct != null && (
+              <>
+                Among residents who hold a post-school qualification,{" "}
+                {place.context.community.bachelorPlusPct.toFixed(1)}% hold a bachelor degree or
+                higher
+                {place.context.community.postgradPct != null
+                  ? ` (${place.context.community.postgradPct.toFixed(1)}% a postgraduate degree)`
+                  : ""}
+                .{" "}
+              </>
+            )}
+            ABS Census 2021. The scored Education domain measures school &amp; preschool{" "}
+            <i>access</i>, not attainment.
+          </Caveat>
+        )}
     </div>
   );
 }

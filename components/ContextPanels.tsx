@@ -75,10 +75,29 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
               value={fmtPct(context.community.year12Pct)}
             />
           )}
+          {context.community.bachelorPlusPct != null && (
+            <Row
+              label="Bachelor degree or higher"
+              value={fmtPct(context.community.bachelorPlusPct)}
+            />
+          )}
+          {context.community.postgradPct != null && (
+            <Row
+              label="Postgraduate degree"
+              value={fmtPct(context.community.postgradPct)}
+            />
+          )}
           <p className="mt-2 text-xs text-ink-muted">
             Owner-occupied is the non-renter remainder (owned outright + with mortgage +
             other). ABS Census 2021 · {context.community.period}
           </p>
+          {context.community.bachelorPlusPct != null && (
+            <p className="mt-2 text-xs text-ink-muted">
+              Education shares are measured among residents who hold a post-school
+              (non-school) qualification - <b className="text-ink">not</b> all adults - so
+              they read higher than a whole-of-population rate. ABS Census 2021 (G49).
+            </p>
+          )}
         </Panel>
       )}
 

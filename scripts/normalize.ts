@@ -28,6 +28,7 @@ import {
 import { COASTAL_SCENARIOS } from "../lib/coastal.js";
 import { readVifProjections } from "./lib/vif-parse.js";
 import { readApprovalsFile } from "./lib/abs-approvals.js";
+import { readQualificationsFile, type QualPlace } from "./lib/abs-qualifications.js";
 import { summarizeApprovals, type MonthlySeries } from "../lib/approvals.js";
 import { waterRetailerAt, type WaterCorp } from "../lib/water.js";
 import type {
@@ -637,6 +638,17 @@ async function main() {
     /* approvals file optional */
   }
 
+  // Post-school qualification level per SA2 (context only, never scored) -
+  // bachelor+ and postgraduate share among residents who hold a non-school
+  // qualification. Optional file (run data:abs-qualifications to fetch).
+  let qualMap = new Map<string, QualPlace>();
+  try {
+    qualMap = await readQualificationsFile(path.join(RAW, "abs-sa2-qualifications.json"));
+    if (qualMap.size) console.log(`Qualifications: ${qualMap.size} SA2s`);
+  } catch {
+    /* qualifications file optional */
+  }
+
   // Water retailer per SA2 (context only) - which corporation services the area.
   // Optional file (run data:water-corp to fetch from the Vicmap WFS).
   let waterCorps: WaterCorp[] = [];
@@ -676,11 +688,14 @@ async function main() {
         period: "2021",
       };
     }
+    const qrec = qualMap.get(p.sa2Code);
+    const hasQual = !!qrec && qrec.bachelorPlusPct != null;
     if (
       p.renterPct != null ||
       p.apartmentPct != null ||
       p.firstNationsPct != null ||
-      p.year12Pct != null
+      p.year12Pct != null ||
+      hasQual
     ) {
       ctx.community = {
         renterPct: p.renterPct,
@@ -689,6 +704,13 @@ async function main() {
         year12Pct: p.year12Pct,
         sourceId: "abs-census-community-2021",
         period: "2021",
+        ...(hasQual
+          ? {
+              bachelorPlusPct: qrec!.bachelorPlusPct,
+              postgradPct: qrec!.postgradPct,
+              qualSourceId: "abs-census-g49-sa2",
+            }
+          : {}),
       };
     }
     if (p.walkAccess) ctx.walkAccess = p.walkAccess;

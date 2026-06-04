@@ -181,6 +181,15 @@
     "sha256": "6b836f174b35ebd0f06f15c0e944210def0ee0edd8b16678918c1bc31095c0bf"
   },
   {
+    "id": "abs-census-g49-sa2",
+    "name": "ABS Census 2021 non-school qualification level (C21_G49_SA2) - bachelor+ and postgraduate share by SA2",
+    "url": "https://www.abs.gov.au/census/find-census-data",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-06-04",
+    "sha256": "7e779ac5321cb70e5d16227328acc79d2d8872de97dc732a2309dadd0e84350c"
+  },
+  {
     "id": "osm-amenities",
     "name": "OpenStreetMap — everyday amenities for 15-min access (supermarket, pharmacy, park, cafe/restaurant, gym/leisure; Overpass)",
     "url": "https://www.openstreetmap.org/",

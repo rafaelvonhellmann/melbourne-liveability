@@ -251,6 +251,16 @@ export type PlaceContext = {
     firstNationsPct: number | null;
     /** % of residents who completed Year 12 or equivalent (ABS Census 2021). */
     year12Pct?: number | null;
+    /**
+     * Of residents who hold a post-school (non-school) qualification, the % whose
+     * highest is a bachelor degree or above (ABS Census 2021 G49). NOT a share of
+     * all adults - the base is qualification holders only.
+     */
+    bachelorPlusPct?: number | null;
+    /** Of qualification holders, the % whose highest is a postgraduate degree. */
+    postgradPct?: number | null;
+    /** Source id for the qualification figures (distinct from the Census base). */
+    qualSourceId?: string;
     sourceId: string;
     period: string;
   };

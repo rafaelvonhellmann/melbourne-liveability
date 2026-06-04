@@ -322,7 +322,8 @@ export default function MethodologyPage() {
         <p>
           <strong className="text-ink">Equity</strong> (SEIFA IRSAD/IRSD deciles),{" "}
           <strong className="text-ink">community</strong> (tenure / renter %, apartment %,
-          First Nations %, Year-12 completion %),{" "}
+          First Nations %, Year-12 completion %, and - among residents who hold a post-school
+          qualification - the bachelor+ / postgraduate share),{" "}
           <strong className="text-ink">population trend</strong>, and{" "}
           <strong className="text-ink">home-buyer index</strong> appear for transparency
           only. The home-buyer index blends indicators we already hold (cost-pressure 28%,

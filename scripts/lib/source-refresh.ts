@@ -53,6 +53,10 @@ export const SOURCE_REFRESH: Record<
     cadence: "census",
     probe: { type: "arcgis", url: ABS("ABS_Education_and_employment_by_2021_SA2") },
   },
+  "abs-census-g49-sa2": {
+    cadence: "census",
+    probe: { type: "arcgis", url: ABS("ABS_Education_and_employment_by_2021_SA2") },
+  },
   "abs-seifa-2021": {
     cadence: "census",
     probe: {

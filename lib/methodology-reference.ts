@@ -116,6 +116,12 @@ export const CONTEXT_SOURCING: ContextSourcing[] = [
     use: "Community panel",
   },
   {
+    label: "Education attainment - bachelor+ / postgraduate share",
+    sourceId: "abs-census-g49-sa2",
+    geography: "SA2 (direct)",
+    use: "Community panel - share among residents with a post-school qualification (not all adults)",
+  },
+  {
     label: "Population trend (ERP)",
     sourceId: "abs-erp-sa2-series",
     geography: "SA2 (direct, 2001–2023)",
