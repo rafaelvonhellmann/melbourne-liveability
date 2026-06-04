@@ -72,6 +72,11 @@ export function BuyerReportPanel({
   // isochrone; the free tier uses a straight-line radius. Drive the copy off it.
   const precise = report.accessMode === "precise";
   const reachLabel = precise ? "reachable on foot" : "within ~1.2 km";
+  // The live map panel is a LIGHT set of pin-specific hints; the heavy chrome and
+  // the area-level sections (which duplicate the /places profile) are hidden there
+  // and reached via the "See the full area report" button. The sample + embedded
+  // (/places) variants render the full report.
+  const isLive = variant === "live";
 
   return (
     <div className={`space-y-4 text-ink ${className}`}>
@@ -80,11 +85,13 @@ export function BuyerReportPanel({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h2 className="font-display text-base font-semibold text-ink">Buyer Location Check</h2>
-            <p className="text-xs text-ink-muted">
-              A sourced, plain-English screening report for this location.
-            </p>
+            {!isLive && (
+              <p className="text-xs text-ink-muted">
+                A sourced, plain-English screening report for this location.
+              </p>
+            )}
           </div>
-          <ConfidenceBadge confidence={report.summary.confidence} />
+          {!isLive && <ConfidenceBadge confidence={report.summary.confidence} />}
         </div>
         <dl className="flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-ink-muted">
           {report.location.sa2Name && (
@@ -162,12 +169,15 @@ export function BuyerReportPanel({
 
       {/* Printable region begins */}
       <div className="buyer-print-root space-y-4">
-        {/* Not-advice banner */}
-        <div className="rounded-lg border border-[#E9C8B4] border-l-[3px] border-l-accent bg-[#FBEEE6] px-3 py-2 text-xs leading-relaxed text-[#9A552F]">
-          <b>Information only - verify before buying.</b> A second opinion to help you decide what
-          to <b>verify</b>. Not financial, property, legal, insurance or planning advice.
-          {variant === "sample" && " Sample report - not a report for a specific property."}
-        </div>
+        {/* Not-advice banner (full report only; the live hint panel keeps the
+            compact disclaimer at the foot instead). */}
+        {!isLive && (
+          <div className="rounded-lg border border-[#E9C8B4] border-l-[3px] border-l-accent bg-[#FBEEE6] px-3 py-2 text-xs leading-relaxed text-[#9A552F]">
+            <b>Information only - verify before buying.</b> A second opinion to help you decide what
+            to <b>verify</b>. Not financial, property, legal, insurance or planning advice.
+            {variant === "sample" && " Sample report - not a report for a specific property."}
+          </div>
+        )}
 
         {/* 1. Executive summary */}
         <Section title="Executive summary">
@@ -193,10 +203,12 @@ export function BuyerReportPanel({
                 </li>
               ))}
             </ol>
-            <p className="mt-2 text-[11px] text-ink-muted">
-              Ranked by how much they affect a buy decision. Full detail, sources and
-              caveats are below.
-            </p>
+            {!isLive && (
+              <p className="mt-2 text-[11px] text-ink-muted">
+                Ranked by how much they affect a buy decision. Full detail, sources and
+                caveats are below.
+              </p>
+            )}
           </Section>
         )}
 
@@ -390,8 +402,9 @@ export function BuyerReportPanel({
           )}
         </Section>
 
-        {/* 5. Area liveability snapshot */}
-        {place && (
+        {/* 5. Area liveability snapshot (full report only - the live panel sends
+            the user to the richer /places profile via the header button). */}
+        {place && !isLive && (
           <Section
             title="Area liveability snapshot"
             precision="Area-level (the suburb/area, not the parcel) · src: see methodology"
@@ -429,8 +442,8 @@ export function BuyerReportPanel({
           </Section>
         )}
 
-        {/* 6. Community & census context */}
-        {place && (
+        {/* 6. Community & census context (full report only - it lives on /places) */}
+        {place && !isLive && (
           <Section title="Community & census context" precision="Area-level · src: ABS Census 2021 / SEIFA">
             <Row k="Renter households" v={fmtPct(community?.renterPct) ?? "—"} />
             <Row k="Apartment dwellings" v={fmtPct(community?.apartmentPct) ?? "—"} />
@@ -449,8 +462,9 @@ export function BuyerReportPanel({
           </Section>
         )}
 
-        {/* (neutral findings, e.g. data confidence) */}
-        {neutral.length > 0 && (
+        {/* (neutral findings, e.g. data confidence) - data notes belong in the
+            full report / methodology, not the live hint panel. */}
+        {neutral.length > 0 && !isLive && (
           <Section title="Data notes">
             <div className="space-y-2.5">
               {neutral.map((f) => (
@@ -460,7 +474,9 @@ export function BuyerReportPanel({
           </Section>
         )}
 
-        {/* 7. Sources & confidence */}
+        {/* 7. Sources & confidence (full report only; live links out to /places
+            + methodology, and amenity rows carry their own OSM/ABS attribution). */}
+        {!isLive && (
         <Section title="Sources and confidence">
           <ul className="space-y-1.5">
             {report.sourceRefs.map((s) => (
@@ -494,6 +510,7 @@ export function BuyerReportPanel({
             </p>
           )}
         </Section>
+        )}
 
         {/* 8. Disclaimer */}
         <div className="rounded-lg border border-surface-border bg-surface-sunken px-3 py-2.5">
