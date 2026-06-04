@@ -774,7 +774,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       kind: "neutral",
       severity: "info",
       title: "Sun & aspect",
-      summary: `${sunny}-facing rooms and yards get the most sun here - see the sun-path diagram for the summer vs winter arc.`,
+      summary: `The midday sun is to the ${sunny.toLowerCase()} here, so ${sunny.toLowerCase()}-facing living areas, windows and yards get the best, warmest light - which way the property faces is what decides it (see the sun diagram).`,
       whyItMatters:
         "Which way the main rooms face decides natural light and winter warmth - and it can't be changed.",
       verifyAction:

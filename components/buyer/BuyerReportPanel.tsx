@@ -300,11 +300,12 @@ export function BuyerReportPanel({
           <Section title="Sun & light">
             <SunPathDiagram lat={report.location.lat} />
             <p className="mt-2 text-[11px] leading-snug text-ink-muted">
-              The sun&apos;s path at this latitude (same for the whole street). Rooms
-              and outdoor areas facing {sunSideWord} get the most light; winter sun
-              sits low, so tall buildings or trees on that side can overshadow. Real
-              light depends on the dwelling&apos;s orientation, windows and what&apos;s
-              next door - verify on site.
+              <b className="text-ink">Best light comes from the {sunSideWord}.</b> Living
+              areas, windows or a yard facing {sunSideWord} get the warmest, most reliable
+              sun - and winter sun sits low, so tall buildings or trees on that side can
+              overshadow it. {sunSideWord === "north" ? "South" : "North"}-facing rooms get
+              little direct sun. We can&apos;t see your specific building, so check which way
+              the main rooms face when you visit (same path for the whole street).
             </p>
           </Section>
         )}
