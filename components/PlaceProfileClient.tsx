@@ -556,8 +556,8 @@ function DomainPanel({
         <Caveat className="mt-4">
           <b className="text-ink">Crime caveat:</b> resident-population rates can
           overstate inner-city areas with large daytime worker/visitor populations,
-          and offences are recorded at suburb/LGA level then allocated to this SA2
-          via crosswalk - not resident point-level.
+          and offences are recorded at suburb / council level then allocated to this
+          area via crosswalk - not resident point-level.
         </Caveat>
       )}
 

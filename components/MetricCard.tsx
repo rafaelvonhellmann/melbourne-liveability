@@ -134,10 +134,10 @@ function BenchmarkBand({
         role="img"
         aria-label={`${def.label}: this area ${formatMetricValue(raw, def.format)} ${def.unit}${
           percentile != null ? `, ${Math.round(percentile)}th percentile` : ""
-        }. GM median ${formatMetricValue(median, def.format)}, P25–P75 ${formatMetricValue(
+        }. Greater Melbourne median ${formatMetricValue(median, def.format)}, 25th to 75th percentile ${formatMetricValue(
           p25,
           def.format
-        )}–${formatMetricValue(p75, def.format)}.`}
+        )} to ${formatMetricValue(p75, def.format)}.`}
       >
         <div
           className="absolute top-0 h-full rounded bg-ink-muted/25"
@@ -146,7 +146,7 @@ function BenchmarkBand({
         <div
           className="absolute top-[-2px] h-[calc(100%+4px)] w-px bg-ink-muted"
           style={{ left: `${medPos}%` }}
-          title={`GM median: ${formatMetricValue(median, def.format)}`}
+          title={`Greater Melbourne median: ${formatMetricValue(median, def.format)}`}
         />
         <div
           className="absolute top-[-3px] h-[calc(100%+6px)] w-1.5 rounded-full border border-white shadow-sm"
@@ -155,9 +155,9 @@ function BenchmarkBand({
         />
       </div>
       <div className="num mt-1 flex justify-between text-[10px] text-ink-muted">
-        <span>P25 {formatMetricValue(p25, def.format)}</span>
+        <span>Lower 25% {formatMetricValue(p25, def.format)}</span>
         <span>Median {formatMetricValue(median, def.format)}</span>
-        <span>P75 {formatMetricValue(p75, def.format)}</span>
+        <span>Top 25% {formatMetricValue(p75, def.format)}</span>
       </div>
       <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] text-ink-muted">
         <span className="inline-flex items-center gap-1">
@@ -169,7 +169,7 @@ function BenchmarkBand({
           this area
         </span>
         <span className="inline-flex items-center gap-1">
-          <span className="inline-block h-3 w-px bg-ink-muted" aria-hidden /> GM median
+          <span className="inline-block h-3 w-px bg-ink-muted" aria-hidden /> Greater Melbourne median
         </span>
         <span className="inline-flex items-center gap-1">
           <span className="inline-block h-2 w-3 rounded-sm bg-ink-muted/25" aria-hidden />{" "}
