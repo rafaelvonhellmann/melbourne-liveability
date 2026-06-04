@@ -576,7 +576,15 @@ export default function MapPage() {
     if (url.buyer) {
       setBuyerMode(true);
       setSelected(null);
-      if (url.pin) void restorePin(url.pin);
+      if (url.pin) {
+        void restorePin(url.pin);
+      } else if (url.select) {
+        // Entered Buyer Check from a specific area profile - pan there so the
+        // user drops their exact-address pin in the right place (no selection
+        // card; buyer mode owns the panel).
+        const area = places.find((pl) => pl.slug === url.select);
+        if (area) setFocusTarget({ center: area.centroid, nonce: Date.now() });
+      }
     } else if (url.select) {
       // Deep-link from a /places profile ("View on the map"): select the area and
       // pan to it. The hook already applied any &layer= one-shot.

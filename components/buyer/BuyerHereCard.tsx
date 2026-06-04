@@ -41,15 +41,15 @@ export function BuyerHereCard({ place }: { place: Place }) {
         <div className="min-w-0 flex-1">
           <h2 className="font-display text-base font-semibold text-ink">Buying here?</h2>
           <p className="mt-1 text-sm leading-relaxed text-ink-muted">
-            Check the hidden risks, nearby amenities and liveability trade-offs around an exact
-            property location - not just the suburb average.
+            Two ways to look past the suburb average: drop a pin on the exact property for a
+            precise check, or run a quick area-level read right here.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
-              href="/?buyer=1"
+              href={`/?buyer=1&select=${place.slug}`}
               className="rounded-md bg-accent px-3.5 py-1.5 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-focus"
             >
-              Open Buyer Check →
+              Check an exact address on the map →
             </Link>
             {!report && (
               <button
@@ -58,10 +58,14 @@ export function BuyerHereCard({ place }: { place: Place }) {
                 disabled={loading}
                 className="rounded-md border border-surface-border px-3.5 py-1.5 text-sm text-ink transition-colors hover:border-accent hover:text-accent disabled:opacity-60"
               >
-                {loading ? "Generating…" : "Show area-level check"}
+                {loading ? "Generating…" : "Quick area-level check"}
               </button>
             )}
           </div>
+          <p className="mt-2 text-xs leading-relaxed text-ink-muted">
+            The exact-address check measures amenities, hazards and noise from the pin you
+            drop. The quick check uses this area&apos;s centre point, so it is approximate.
+          </p>
         </div>
       </div>
 
