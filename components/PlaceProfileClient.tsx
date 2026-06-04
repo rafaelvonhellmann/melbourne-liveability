@@ -358,7 +358,20 @@ function OverviewPanel({
     { id: "ctx-equity", label: "Equity & community", blurb: "SEIFA, tenure, dwelling mix (context)." },
   ];
 
+  // Trends render full-width below the score bars (more room than the 300px
+  // rail). Only mount the section when at least one real >=3-point series exists,
+  // so the heading never sits above an empty grid.
+  const rentSeries = series.rentToIncomeMedianPct;
+  const mortgageSeries = series.mortgageToIncomeMedianPct;
+  const hasPopTrend =
+    !!series.population && series.population.points.length >= MIN_TREND_POINTS;
+  const hasAffTrend = [rentSeries, mortgageSeries].some(
+    (s) => !!s && s.points.length >= MIN_TREND_POINTS
+  );
+  const hasAnyTrend = hasPopTrend || hasAffTrend;
+
   return (
+    <div className="space-y-6">
     <div className="grid gap-5 lg:grid-cols-[1fr_300px]">
       <div>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">
@@ -415,12 +428,21 @@ function OverviewPanel({
             <Fact key={f.k} k={f.k} v={f.v} swatch={f.pct} />
           ))}
         </div>
-        <PopulationTrendCard series={series.population} />
-        <AffordabilityTrendCard
-          rent={series.rentToIncomeMedianPct}
-          mortgage={series.mortgageToIncomeMedianPct}
-        />
       </div>
+    </div>
+
+    {hasAnyTrend && (
+      <section>
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          Trends over time{" "}
+          <span className="font-normal normal-case">- context only, never in the score</span>
+        </h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          <PopulationTrendCard series={series.population} />
+          <AffordabilityTrendCard rent={rentSeries} mortgage={mortgageSeries} />
+        </div>
+      </section>
+    )}
     </div>
   );
 }
@@ -680,9 +702,7 @@ function PopulationTrendCard({ series }: { series?: PlaceSeries }) {
         </span>
         <span className="text-[11px] text-ink-muted">people · {latest.period}</span>
       </div>
-      <div className="overflow-x-auto">
-        <Sparkline series={series} format={fmt} width={132} />
-      </div>
+      <Sparkline series={series} format={fmt} fluid width={360} height={48} />
       <p className="mt-2 border-t border-surface-border pt-2 text-[11px] text-ink-muted">
         <span>Source: </span>
         {source ? (
@@ -730,9 +750,7 @@ function AffordabilityTrendCard({ rent, mortgage }: { rent?: PlaceSeries; mortga
               <span className="num text-base font-semibold leading-none text-ink">{fmt(latest.value)}</span>
               <span className="text-[11px] text-ink-muted">· {latest.period}</span>
             </div>
-            <div className="overflow-x-auto">
-              <Sparkline series={s} format={fmt} width={132} />
-            </div>
+            <Sparkline series={s} format={fmt} fluid width={360} height={42} />
           </div>
         );
       })}

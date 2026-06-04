@@ -92,7 +92,7 @@ async function buildPopulationSeries(): Promise<IndicatorSeries | null> {
     periodLabel: "estimated resident population, 30 June",
     sourceId: "abs-erp-sa2-series",
     boundaryNote:
-      "ABS supplies the full 2001–2023 series on 2021 ASGS SA2 boundaries, so no 2016→2021 concordance is applied and no boundary break is introduced.",
+      "ABS supplies the full 2001-2023 series on 2021 ASGS SA2 boundaries, so no 2016-to-2021 concordance is applied and no boundary break is introduced.",
     points: nonEmpty,
   };
 }

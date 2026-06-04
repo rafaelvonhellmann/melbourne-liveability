@@ -109,10 +109,10 @@ export const MIN_TREND_POINTS = 3;
 export function geoLabel(geo: TimeseriesGeo): string {
   switch (geo) {
     case "sa2":
-      return "SA2-level series";
+      return "Area-level";
     case "lga":
-      return "LGA-level series";
+      return "Council-level";
     case "suburb":
-      return "Suburb-level series";
+      return "Suburb-level";
   }
 }

@@ -307,10 +307,11 @@ export default function MethodologyPage() {
           band</strong> - this area&apos;s raw value against the GM median and P25–P75
           range across residential SA2s, computed at build from the full dataset.{" "}
           <strong className="text-ink">Time-series</strong> are shown only where we hold
-          ≥3 real points (population; property &amp; violent crime, labelled LGA-level so
-          they are not misread as SA2-precise); every trend line states its geography,
-          period range, and any boundary break. Other indicators say
-          &ldquo;single period - no trend data held&rdquo; rather than fabricating one.
+          ≥3 real points (population; property &amp; violent crime, labelled council-level
+          (LGA) so they are not misread as SA2-precise); every trend line states its
+          geography, the number of points and period range, and links here for any boundary
+          break. Indicators with a single period simply omit the trend rather than
+          fabricating one.
         </p>
       </Section>
 

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { PlaceSeries } from "@/lib/timeseries";
 import { geoLabel } from "@/lib/timeseries";
 
@@ -7,6 +8,8 @@ type SparklineProps = {
   format: (v: number) => string;
   width?: number;
   height?: number;
+  /** Stretch the chart to fill its container (the wide /places trend cards). */
+  fluid?: boolean;
 };
 
 /**
@@ -20,7 +23,7 @@ type SparklineProps = {
  * (arrow glyph + sign + a colourblind-safe blue/orange pair, never colour
  * alone). No animation - reduced-motion friendly by construction.
  */
-export function Sparkline({ series, format, width = 132, height = 34 }: SparklineProps) {
+export function Sparkline({ series, format, width = 132, height = 34, fluid = false }: SparklineProps) {
   const pts = series.points;
   const first = pts[0];
   const last = pts[pts.length - 1];
@@ -73,12 +76,12 @@ export function Sparkline({ series, format, width = 132, height = 34 }: Sparklin
     <figure className="mt-3 m-0">
       <div className="flex items-center gap-2.5">
         <svg
-          width={width}
+          width={fluid ? "100%" : width}
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           role="img"
           aria-label={ariaLabel}
-          className="shrink-0 overflow-visible"
+          className={`overflow-visible ${fluid ? "w-full min-w-0 flex-1" : "shrink-0"}`}
           preserveAspectRatio="none"
         >
           <path d={areaPath} fill={color} fillOpacity={0.1} stroke="none" />
@@ -114,14 +117,19 @@ export function Sparkline({ series, format, width = 132, height = 34 }: Sparklin
             </span>
           </div>
           <figcaption className="text-[10px] leading-tight text-ink-muted">
-            {geoLabel(series.geo)} · {pts.length} pts · {series.periodLabel}
+            {geoLabel(series.geo)} · {pts.length} points
             {series.compareMode === "decile-only" && " · deciles only"}
           </figcaption>
         </div>
       </div>
       {series.boundaryNote && (
         <p className="mt-1.5 text-[10px] leading-tight text-ink-muted">
-          {series.boundaryNote}
+          <Link
+            href="/methodology#profile"
+            className="underline decoration-dotted underline-offset-2 hover:text-accent"
+          >
+            How this trend is built (geography &amp; boundary notes)
+          </Link>
         </p>
       )}
     </figure>

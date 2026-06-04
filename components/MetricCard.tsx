@@ -7,7 +7,6 @@ import type { PlaceSeries } from "@/lib/timeseries";
 import { MIN_TREND_POINTS } from "@/lib/timeseries";
 import { getSource, shortSourceName } from "@/lib/sources";
 import { percentileToColor } from "@/lib/colors";
-import { StalenessBadge } from "./StalenessBadge";
 import { Sparkline } from "./Sparkline";
 
 type MetricCardProps = {
@@ -57,38 +56,33 @@ export function MetricCard({ def, value, benchmark, series, mapHref }: MetricCar
         />
       ) : (
         <p className="mt-3 rounded-lg border border-dashed border-surface-border bg-surface-sunken px-3 py-2 text-xs text-ink-muted">
-          No data held for this SA2 - omitted from the benchmark.
+          No data held for this area - omitted from the benchmark.
         </p>
       )}
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-surface-border pt-2.5">
-        <div className="min-w-0 text-[11px] text-ink-muted">
-          <span className="text-ink-muted">Source: </span>
-          {source ? (
-            <a
-              href={source.url}
-              target="_blank"
-              rel="noreferrer"
-              className="text-ink-muted underline decoration-dotted underline-offset-2 hover:text-accent"
-            >
-              {shortSourceName(source.name)}
-            </a>
-          ) : (
-            <span className="text-ink">{value?.sourceId ?? "—"}</span>
-          )}
-        </div>
-        <StalenessBadge period={source?.period} stale={value?.stale} />
+      <div className="mt-3 border-t border-surface-border pt-2.5 text-[11px] text-ink-muted">
+        <span className="text-ink-muted">Source: </span>
+        {source ? (
+          <a
+            href={source.url}
+            target="_blank"
+            rel="noreferrer"
+            className="text-ink-muted underline decoration-dotted underline-offset-2 hover:text-accent"
+          >
+            {shortSourceName(source.name)}
+          </a>
+        ) : (
+          <span className="text-ink">{value?.sourceId ?? "—"}</span>
+        )}
+        {source?.period && <span> · as of {source.period}</span>}
+        {value?.stale && <span className="text-[#9A552F]"> · may be out of date</span>}
       </div>
 
-      {hasTrend ? (
+      {hasTrend && (
         <Sparkline
           series={series!}
           format={(v) => formatMetricValue(v, def.format)}
         />
-      ) : (
-        <p className="mt-2 text-[11px] text-ink-muted">
-          <span aria-hidden>•</span> Single period - no trend data held.
-        </p>
       )}
 
       {mapHref && (
