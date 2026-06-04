@@ -8,6 +8,8 @@ type MapLegendProps = {
   risk?: boolean;
   /** Social-housing supply layer active → use the Purples ramp + "less/more". */
   social?: boolean;
+  /** Safety layer active → label the score ramp by crime direction (greener = less crime). */
+  safety?: boolean;
   /** Colourblind-safe score ramp (RdYlBu) instead of the default RdYlGn. */
   colorblind?: boolean;
 };
@@ -17,6 +19,7 @@ export function MapLegend({
   visiblePins = {},
   risk = false,
   social = false,
+  safety = false,
   colorblind = false,
 }: MapLegendProps) {
   const activePins = POI_CATEGORIES.filter((c) => visiblePins[c.id]);
@@ -49,6 +52,11 @@ export function MapLegend({
             <span>Less</span>
             <span>More</span>
           </>
+        ) : safety ? (
+          <>
+            <span>more crime</span>
+            <span>less crime</span>
+          </>
         ) : (
           <>
             <span>worse</span>
@@ -56,6 +64,12 @@ export function MapLegend({
           </>
         )}
       </div>
+      {safety && (
+        <div className="mt-0.5 text-[10px] leading-snug">
+          Greener = lower recorded crime, ranked against Greater Melbourne - a relative
+          position, not an absolute crime rate.
+        </div>
+      )}
       {risk && (
         <div className="mt-0.5 text-[10px] leading-snug">
           Share of the area under the planning overlay - not a parcel-level result.

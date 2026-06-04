@@ -818,10 +818,20 @@ export default function MapPage() {
     </div>
   );
 
+  // Safety choropleth is painted (no override layer) -> the legend labels the ramp
+  // by crime direction (greener = less crime) instead of generic worse/better.
+  const safetyLegend =
+    activeDomain === "safety" &&
+    !hazardLayer &&
+    !walkAccessMode &&
+    !cyclabilityMode &&
+    !socialHousingMode &&
+    !confidenceMode;
+
   const legendLabel = hazardLayer === "bushfire"
     ? "Bushfire-prone overlay share (context)"
     : hazardLayer === "flood"
-      ? "Flood (LSIO) overlay share (context)"
+      ? "Flood overlay share (context)"
       : walkAccessMode
         ? "15-min walk access (context, not in score)"
         : cyclabilityMode
@@ -1058,6 +1068,7 @@ export default function MapPage() {
               visiblePins={visiblePins}
               risk={!!hazardLayer}
               social={socialHousingMode}
+              safety={safetyLegend}
               colorblind={colorblindRamp}
             />
             <Attribution />
@@ -1189,6 +1200,7 @@ export default function MapPage() {
               visiblePins={visiblePins}
               risk={!!hazardLayer}
               social={socialHousingMode}
+              safety={safetyLegend}
               colorblind={colorblindRamp}
             />
           </div>

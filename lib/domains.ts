@@ -42,12 +42,13 @@ export const DOMAIN_REGISTRY: DomainConfig[] = [
   },
   {
     id: "safety",
-    label: "Crime / Safety",
+    label: "Safety (less crime)",
     scored: true,
     defaultWeight: 14,
     layer: "choropleth+pins",
     pinTypes: ["police"],
-    description: "Recorded property and violent crime rates; nearby police stations shown as context.",
+    description:
+      "Recorded property and violent crime, ranked against Greater Melbourne - greener = lower crime. It is a relative rank, so an area with low crime can still sit mid-pack if most of Melbourne is lower. Nearby police stations shown as context.",
   },
   {
     id: "health",
