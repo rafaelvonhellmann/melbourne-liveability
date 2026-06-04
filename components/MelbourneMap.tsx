@@ -82,6 +82,12 @@ type MelbourneMapProps = {
   buyerMode?: boolean;
   /** Coordinates of the dropped buyer pin to render ([lng, lat]). */
   buyerPin?: [number, number] | null;
+  /**
+   * Pin known at FIRST mount (parsed from the shared ?pin= URL). When set, the
+   * map initialises centred on it instead of flashing the whole-metro view and
+   * then flying in - so a shared link / "open buyer check" lands at the spot.
+   */
+  initialBuyerPin?: [number, number] | null;
   /** Draw the ~15-min bike reach ring around the buyer pin (off by default). */
   showCycleRadius?: boolean;
   /** The buyer's saved life-anchors (work/school/family) to plot + line to the pin. */
@@ -137,6 +143,7 @@ export function MelbourneMap({
   hoverLabel,
   buyerMode = false,
   buyerPin = null,
+  initialBuyerPin = null,
   showCycleRadius = false,
   anchorPoints = [],
   transitLines = [],
@@ -190,7 +197,13 @@ export function MelbourneMap({
     // Nav (+/–) lives top-left so it never collides with the floating layer
     // control / legend card pinned to the top-right.
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
-    map.fitBounds(MELBOURNE_BOUNDS, { padding: 40, duration: 0 });
+    // Land directly on the shared pin (no whole-metro flash) if one is in the URL;
+    // otherwise frame Greater Melbourne.
+    if (initialBuyerPin) {
+      map.jumpTo({ center: initialBuyerPin, zoom: 14.5 });
+    } else {
+      map.fitBounds(MELBOURNE_BOUNDS, { padding: 40, duration: 0 });
+    }
 
     map.on("load", () => {
       map.addSource("sa2", {
@@ -324,16 +337,24 @@ export function MelbourneMap({
         id: "buyer-radius-fill",
         type: "fill",
         source: "buyer-radius",
-        paint: { "fill-color": "#AD4F2E", "fill-opacity": 0.1 },
+        paint: { "fill-color": "#AD4F2E", "fill-opacity": 0.16 },
+      });
+      // White casing under the dashed ring so it stays legible on dark / satellite
+      // basemaps as well as light ones (the 0.1-opacity ring was too faint - user feedback).
+      map.addLayer({
+        id: "buyer-radius-casing",
+        type: "line",
+        source: "buyer-radius",
+        paint: { "line-color": "#ffffff", "line-width": 5, "line-opacity": 0.6 },
       });
       map.addLayer({
         id: "buyer-radius-line",
         type: "line",
         source: "buyer-radius",
         paint: {
-          "line-color": "#AD4F2E",
-          "line-width": 2.5,
-          "line-opacity": 0.95,
+          "line-color": "#9A3D1E",
+          "line-width": 3,
+          "line-opacity": 1,
           "line-dasharray": [3, 2],
         },
       });
@@ -614,7 +635,7 @@ export function MelbourneMap({
     }
     // Deep-dive: ease into the area at neighbourhood zoom (never zoom back out
     // if the user is already closer).
-    map.flyTo({ center: buyerPin, zoom: Math.max(map.getZoom(), 14.5), duration: 800 });
+    map.flyTo({ center: buyerPin, zoom: Math.max(map.getZoom(), 14.5), duration: 550 });
   }, [buyerPin]);
 
   // ~15-min bike reach ring - independent toggle, only shown with a pin down.

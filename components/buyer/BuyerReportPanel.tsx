@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Printer, X, ShieldAlert, CheckCircle2, HelpCircle, Info, Bookmark, BookmarkCheck } from "lucide-react";
+import { X, ShieldAlert, CheckCircle2, HelpCircle, Info, Bookmark, BookmarkCheck } from "lucide-react";
 import type { BuyerReport, BuyerFinding, BuyerConfidence, BuyerGeography } from "@/lib/buyer-report";
 import { anchorKindLabel, bandLabel } from "@/lib/anchors";
 import { SunPathDiagram } from "./SunPathDiagram";
@@ -111,16 +111,13 @@ export function BuyerReportPanel({
         </dl>
         {(variant !== "embedded") && (
           <div className="no-print flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                track("buyer_report_print");
-                if (typeof window !== "undefined") window.print();
-              }}
-              className="inline-flex items-center gap-1.5 rounded-md border border-surface-border px-2.5 py-1 text-xs text-ink transition-colors hover:border-accent hover:text-accent"
-            >
-              <Printer className="h-3.5 w-3.5" aria-hidden /> Print / Save as PDF
-            </button>
+            {shareUrl && (
+              <ShareViewButton
+                getUrl={() => shareUrl}
+                label="Copy shareable link"
+                className="inline-flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-accent-ink transition-colors hover:bg-accent-focus"
+              />
+            )}
             {onSaveCheck && hasPin && (
               <button
                 type="button"
@@ -140,7 +137,6 @@ export function BuyerReportPanel({
                 {isSaved ? "Saved" : "Save this check"}
               </button>
             )}
-            {shareUrl && <ShareViewButton getUrl={() => shareUrl} label="Copy share link" />}
             {onClear && (
               <button
                 type="button"

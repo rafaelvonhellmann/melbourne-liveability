@@ -158,6 +158,12 @@ export default function MapPage() {
   const searchParams = useSearchParams();
   const [buyerMode, setBuyerMode] = useState(false);
   const [buyerPin, setBuyerPin] = useState<[number, number] | null>(null);
+  // Pin from the shared URL at first render, so the map can initialise centred on
+  // it (no whole-metro flash). Computed once; the async restore below still
+  // resolves the SA2 + report.
+  const [initialBuyerPin] = useState<[number, number] | null>(
+    () => parseMapUrlState(searchParams.toString()).pin ?? null
+  );
   const [showCycleRadius, setShowCycleRadius] = useState(false);
   // Rail/tram lines near the pin (loaded lazily when buyer mode opens).
   const [transitLines, setTransitLines] = useState<NoiseLine[]>([]);
@@ -878,6 +884,7 @@ export default function MapPage() {
             hoverProp={paintedProp}
             hoverLabel={activeLayerLabel}
             buyerMode={buyerMode}
+            initialBuyerPin={initialBuyerPin}
             buyerPin={buyerPin}
             anchorPoints={buyerMode ? profile?.anchors ?? [] : []}
             transitLines={buyerMode ? transitLines : []}
