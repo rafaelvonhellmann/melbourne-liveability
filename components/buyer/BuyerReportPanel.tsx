@@ -109,6 +109,16 @@ export function BuyerReportPanel({
             <dd className="num inline">{generated}</dd>
           </div>
         </dl>
+        {place && variant !== "embedded" && (
+          <Link
+            href={`/places/${place.slug}`}
+            onClick={() => track("buyer_see_full_report", { slug: place.slug })}
+            className="no-print mt-1 flex items-center justify-between gap-2 rounded-lg bg-accent px-3.5 py-2.5 text-sm font-semibold text-white shadow-card transition hover:bg-accent/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            <span>See the full area report</span>
+            <span aria-hidden className="text-base leading-none">&rarr;</span>
+          </Link>
+        )}
         {(variant !== "embedded") && (
           <div className="no-print flex flex-wrap gap-2">
             {shareUrl && (
