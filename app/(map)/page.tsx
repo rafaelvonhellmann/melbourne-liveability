@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { MapPin, PanelRightClose, PanelRightOpen, Bike, Layers } from "lucide-react";
+import { MapPin, PanelRightClose, PanelRightOpen, Bike, Layers, ChevronDown } from "lucide-react";
 import { MelbourneMap } from "@/components/MelbourneMap";
 import { LayerToggle } from "@/components/LayerToggle";
 import { SearchBox } from "@/components/SearchBox";
@@ -605,16 +605,22 @@ export default function MapPage() {
 
       <div className="border-t border-surface-border" aria-hidden />
 
-      {/* Adjust priorities - manual fine-tuning, separated from the lens. */}
-      <section aria-label="Adjust priorities" className="space-y-2">
-        <h3 className="px-1 text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
-          Fine-tune priorities
-        </h3>
-        <DomainSliders
-          weights={weights}
-          onChange={setWeightsAndSync}
-          onReset={resetWeights}
-        />
+      {/* Adjust priorities - manual fine-tuning, collapsed by default so the
+          panel stays uncluttered; the Lens presets cover most users (feedback). */}
+      <section aria-label="Adjust priorities">
+        <details className="group">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded px-1 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-ink-muted hover:text-accent">
+            <span>Fine-tune priorities</span>
+            <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" aria-hidden />
+          </summary>
+          <div className="mt-2">
+            <DomainSliders
+              weights={weights}
+              onChange={setWeightsAndSync}
+              onReset={resetWeights}
+            />
+          </div>
+        </details>
       </section>
     </div>
   );
