@@ -55,7 +55,7 @@ export const POI_CATEGORIES: PoiCategory[] = [
   { id: "pharmacy", label: "Pharmacies", color: "#1B9E77" },
   { id: "pathology_lab", label: "Pathology / labs", color: "#6A3D9A" },
   { id: "police", label: "Police", color: "#7570B3" },
-  { id: "post_office", label: "Post offices / LPO", color: "#984EA3" },
+  { id: "post_office", label: "Post offices", color: "#984EA3" },
   { id: "school", label: "Schools", color: "#E7298A" },
   { id: "childcare", label: "Childcare / kinder", color: "#D95F02" },
   { id: "supermarket", label: "Supermarkets", color: "#66A61E" },

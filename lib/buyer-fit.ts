@@ -122,7 +122,7 @@ export function evaluateFit(
     hits.push({
       id: "bushfire",
       label: "Bushfire overlay",
-      detail: `You flagged bushfire as a deal-breaker - about ${pct(signals.bushfirePct)} of this area is bushfire-prone overlay. Verify the parcel + BAL rating.`,
+      detail: `You flagged bushfire as a deal-breaker - about ${pct(signals.bushfirePct)} of this area is bushfire-prone overlay. Verify the parcel and its Bushfire Attack Level (BAL) rating.`,
     });
   }
   if (wants.has("heritage") && material(signals.heritagePct, HERITAGE_PCT)) {

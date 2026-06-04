@@ -20,11 +20,11 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
       </div>
 
       {context.equity && (
-        <Panel title="Equity">
-          <Row label="IRSAD decile (advantage)" value={context.equity.irsadDecile} />
-          <Row label="IRSD decile (disadvantage)" value={context.equity.irsdDecile} />
+        <Panel title="Socio-economic ranking">
+          <Row label="Advantage ranking 1-10 (SEIFA IRSAD)" value={context.equity.irsadDecile} />
+          <Row label="Disadvantage ranking 1-10 (SEIFA IRSD)" value={context.equity.irsdDecile} />
           <p className="mt-2 text-xs text-ink-muted">
-            ABS SEIFA 2021 · {context.equity.period}
+            ABS SEIFA 2021, decile within Australia (10 = most advantaged) · {context.equity.period}
           </p>
         </Panel>
       )}
@@ -32,7 +32,7 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
       {context.population && (context.population.count != null || context.population.densityPerKm2 != null) && (
         <Panel title="Population">
           <Row
-            label="Resident population (ERP)"
+            label="Resident population"
             value={context.population.count != null ? context.population.count.toLocaleString() : null}
           />
           <Row
@@ -47,8 +47,8 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
             <Row label="Land area (km²)" value={context.population.areaKm2.toLocaleString()} />
           )}
           <p className="mt-2 text-xs text-ink-muted">
-            ABS Estimated Resident Population ÷ SA2 land area. Population trend over time is
-            on the area profile. ABS ERP · {context.population.period}
+            ABS Estimated Resident Population per square km of land. Population trend over
+            time is on the area profile. ABS estimate · {context.population.period}
           </p>
         </Panel>
       )}
@@ -136,7 +136,7 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
                   value={fmtPct(context.planning.heritageOverlayPct)}
                 />
                 <p className="mt-2 text-xs text-ink-muted">
-                  Share of this SA2&apos;s area inside a Heritage Overlay (HO), which
+                  Share of this area inside a Heritage Overlay, which
                   can restrict demolition, external changes and subdivision. This is
                   an <b className="text-ink">area share, not a parcel-level result</b>{" "}
                   - always check the planning certificate for the specific property.

@@ -38,8 +38,8 @@ const fmtPct = (v: number | null | undefined) =>
 const GEO_LABEL: Record<BuyerGeography, string> = {
   pin: "this point",
   "poi-radius": "within ~1.2 km",
-  sa2: "suburb / SA2 area",
-  lga: "council / LGA area",
+  sa2: "suburb / area",
+  lga: "council area",
   gccsa: "Greater Melbourne",
   unknown: "not determined",
 };
@@ -384,7 +384,7 @@ export function BuyerReportPanel({
         {place && (
           <Section
             title="Area liveability snapshot"
-            precision="SA2-level (the suburb/area, not the parcel) · src: see methodology"
+            precision="Area-level (the suburb/area, not the parcel) · src: see methodology"
           >
             <div className="space-y-1">
               {V1_SCORED_DOMAINS.map((d) => {
@@ -421,7 +421,7 @@ export function BuyerReportPanel({
 
         {/* 6. Community & census context */}
         {place && (
-          <Section title="Community & census context" precision="SA2-level · src: ABS Census 2021 / SEIFA">
+          <Section title="Community & census context" precision="Area-level · src: ABS Census 2021 / SEIFA">
             <Row k="Renter households" v={fmtPct(community?.renterPct) ?? "—"} />
             <Row k="Apartment dwellings" v={fmtPct(community?.apartmentPct) ?? "—"} />
             {community?.year12Pct != null && (
@@ -479,8 +479,8 @@ export function BuyerReportPanel({
             <p className="mt-2 text-[11px] leading-snug text-ink-muted">
               <b className="text-ink">Known limitations:</b>{" "}
               {unavailable.map((f) => f.title).join("; ")}. Geographic precision varies by row
-              (point-level for amenities; SA2 for liveability/community; LGA for crime; SA2 overlay
-              share for hazards).
+              (point-level for amenities; area-level for liveability/community; council-level for
+              crime; area overlay share for hazards).
             </p>
           )}
         </Section>

@@ -872,7 +872,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
   const elevatedHazard = (bushfire != null && bushfire >= 50) || (flood != null && flood >= 10);
   const hazardBits: string[] = [];
   if (bushfire != null) hazardBits.push(`about ${Math.round(bushfire)}% mapped as bushfire-prone overlay`);
-  if (flood != null) hazardBits.push(`about ${Math.round(flood)}% under a flood (LSIO) overlay`);
+  if (flood != null) hazardBits.push(`about ${Math.round(flood)}% under a flood planning overlay`);
   if (haveHazardData && negligibleHazard) {
     findings.push({
       id: "hazard-overlays",
@@ -1022,7 +1022,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       whyItMatters:
         "Fire in the surrounding landscape signals bushfire exposure that affects safety, insurance and what you must build to.",
       verifyAction:
-        "Check the bushfire planning overlay (BMO/BPA), CFA fire history and an insurance quote; confirm the BAL rating for the specific property.",
+        "Check the bushfire planning overlay (Bushfire Management Overlay / Bushfire-Prone Area), the local fire-history record and an insurance quote; confirm the property's Bushfire Attack Level (BAL) rating.",
       confidence: "medium",
       geography: "sa2",
       caveat:

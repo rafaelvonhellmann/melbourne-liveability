@@ -128,7 +128,7 @@ export function PlaceProfileClient({
               {place.name}
             </h1>
             <p className="mt-1 text-sm text-ink-muted">
-              SA2 {place.sa2Code} · {place.lga} · default-weight liveability
+              {place.lga} council · default-weight liveability
             </p>
             {place.suburbAliases.length > 0 && (
               <p className="mt-1 text-xs text-ink-muted">
@@ -408,8 +408,8 @@ function OverviewPanel({
           <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
             Key facts
           </h3>
-          <Fact k="LGA" v={place.lga} />
-          <Fact k="SA2 code" v={place.sa2Code} />
+          <Fact k="Council" v={place.lga} />
+          <Fact k="Area code (ABS SA2)" v={place.sa2Code} />
           <Fact k="Domains measured" v={`${measured}/${total}`} />
           {topAndBottom(place).map((f) => (
             <Fact key={f.k} k={f.k} v={f.v} swatch={f.pct} />
