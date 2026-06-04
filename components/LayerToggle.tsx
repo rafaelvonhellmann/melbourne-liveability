@@ -99,7 +99,7 @@ export function LayerToggle({
             >
               <span>{d.label}</span>
               {!activeContext && activeDomain === d.id && (
-                <span className="text-[10px] font-medium uppercase tracking-wide text-accent-ink/80">
+                <span className="text-[10px] font-medium uppercase tracking-wide text-accent-ink">
                   On map
                 </span>
               )}
@@ -153,7 +153,7 @@ export function LayerToggle({
         <div className="space-y-1.5">
           {POI_GROUPS.map((group) => (
             <div key={group.label}>
-              <div className="px-1 text-[10px] font-semibold uppercase tracking-wide text-ink-muted/80">
+              <div className="px-1 text-[10px] font-semibold uppercase tracking-wide text-ink-muted">
                 {group.label}
               </div>
               <ul className="space-y-0.5">

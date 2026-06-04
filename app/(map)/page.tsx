@@ -859,6 +859,9 @@ export default function MapPage() {
 
   return (
     <main className="flex h-screen w-screen flex-col overflow-hidden bg-bg text-ink">
+      <h1 className="sr-only">
+        liveable.melbourne - Greater Melbourne liveability map and pin-level Buyer Check
+      </h1>
       <TopBar
         searchIndex={searchIndex}
         onSearchSelect={selectFromSearch}
