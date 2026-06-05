@@ -57,20 +57,13 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
     if (!mapEl.current) return;
     const map = new maplibregl.Map({
       container: mapEl.current,
+      // Tile-free style: a plain background so the map "load" event fires
+      // immediately (no basemap tiles to wait on / be CSP-blocked) - the value
+      // here is the extruded building massing + sun direction, not streets.
       style: {
         version: 8,
-        sources: {
-          carto: {
-            type: "raster",
-            tiles: [
-              "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
-              "https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
-            ],
-            tileSize: 256,
-            attribution: "&copy; CARTO &copy; OpenStreetMap contributors",
-          },
-        },
-        layers: [{ id: "carto", type: "raster", source: "carto" }],
+        sources: {},
+        layers: [{ id: "bg", type: "background", paint: { "background-color": "#eceeea" } }],
       },
       center: [lng, lat],
       zoom: 15.6,
