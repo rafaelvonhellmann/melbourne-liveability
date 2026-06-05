@@ -21,10 +21,12 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
 
       {context.equity && (
         <Panel title="Socio-economic ranking">
-          <Row label="Advantage ranking 1-10 (SEIFA IRSAD)" value={context.equity.irsadDecile} />
-          <Row label="Disadvantage ranking 1-10 (SEIFA IRSD)" value={context.equity.irsdDecile} />
+          <Row label="Socio-economic ranking (1-10)" value={context.equity.irsadDecile} />
           <p className="mt-2 text-xs text-ink-muted">
-            ABS SEIFA 2021, decile within Australia (10 = most advantaged) · {context.equity.period}
+            Where this area sits on the ABS socio-economic scale: <b className="text-ink">1</b> =
+            among the most disadvantaged areas in Australia, <b className="text-ink">10</b> = among
+            the most advantaged. It blends local income, education and occupation - a description of
+            the area, not the people who live here. ABS SEIFA 2021 · {context.equity.period}
           </p>
         </Panel>
       )}
@@ -189,6 +191,16 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
             </p>
           </Panel>
         )}
+
+      {context.waterRetailer && (
+        <Panel title="Water supply">
+          <Row label="Water retailer" value={context.waterRetailer.name} />
+          <p className="mt-2 text-xs text-ink-muted">
+            The corporation that bills your water and sewerage at this location. Confirm on a
+            current rates notice - a few boundary streets can differ.
+          </p>
+        </Panel>
+      )}
 
       {context.environment && (
         <Panel title="Environment">

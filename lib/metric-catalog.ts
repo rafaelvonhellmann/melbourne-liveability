@@ -50,7 +50,7 @@ export const METRIC_CATALOG: MetricDef[] = [
     unit: "stops",
     format: "count",
     higherIsBetter: true,
-    description: "Public-transport stops within 800 m of the SA2 centroid.",
+    description: "Train, tram and bus stops within an 800 m walk of the area's centre.",
   },
   {
     domain: "transport",
@@ -78,7 +78,7 @@ export const METRIC_CATALOG: MetricDef[] = [
     format: "rate",
     higherIsBetter: false,
     description:
-      "Recorded property-offence rate (VCSA suburb/LGA, allocated to SA2 via crosswalk).",
+      "Recorded property offences (theft, burglary, car crime) per person, for the wider suburb / council area.",
   },
   {
     domain: "safety",
@@ -88,7 +88,7 @@ export const METRIC_CATALOG: MetricDef[] = [
     format: "rate",
     higherIsBetter: false,
     description:
-      "Recorded person-offence rate (VCSA suburb/LGA, allocated to SA2 via crosswalk).",
+      "Recorded offences against the person (assault and similar) per person, for the wider suburb / council area.",
   },
   {
     domain: "health",
@@ -106,7 +106,7 @@ export const METRIC_CATALOG: MetricDef[] = [
     unit: "GPs",
     format: "count",
     higherIsBetter: true,
-    description: "GP/clinic points within 2 km (OpenStreetMap).",
+    description: "GP and medical-clinic locations within 2 km.",
   },
   {
     domain: "income",
@@ -124,7 +124,7 @@ export const METRIC_CATALOG: MetricDef[] = [
     unit: "ratio",
     format: "ratio",
     higherIsBetter: true,
-    description: "Employed persons ÷ resident population (ABS Census 2016).",
+    description: "Share of residents who are in a job.",
   },
   {
     domain: "income",
@@ -133,7 +133,7 @@ export const METRIC_CATALOG: MetricDef[] = [
     unit: "%",
     format: "percent",
     higherIsBetter: true,
-    description: "Labour-force participation rate (ABS Census 2016).",
+    description: "Share of working-age residents who are working or actively looking for work - a measure of how economically active the area is.",
   },
   {
     domain: "hazards",
@@ -143,7 +143,7 @@ export const METRIC_CATALOG: MetricDef[] = [
     format: "percent",
     higherIsBetter: false,
     description:
-      "Share of SA2 land in a bushfire-prone planning overlay (regulatory, not a risk model).",
+      "How much of this area is officially mapped as bushfire-prone, which can trigger building rules. It is a planning flag, not a prediction that a specific home will burn - always check the exact address.",
   },
   {
     domain: "hazards",
@@ -153,7 +153,7 @@ export const METRIC_CATALOG: MetricDef[] = [
     format: "percent",
     higherIsBetter: false,
     description:
-      "Share of SA2 land in a flood planning overlay (LSIO; regulatory, not a risk model).",
+      "How much of this area sits inside a flood planning overlay, which can trigger building rules. It is a planning flag, not a prediction that a specific home will flood - always check the exact address.",
   },
   {
     domain: "education",
@@ -162,7 +162,7 @@ export const METRIC_CATALOG: MetricDef[] = [
     unit: "schools",
     format: "count",
     higherIsBetter: true,
-    description: "Schools within 2 km of the SA2 centroid (OpenStreetMap).",
+    description: "Schools within 2 km of the area's centre.",
   },
   {
     domain: "education",
@@ -171,7 +171,7 @@ export const METRIC_CATALOG: MetricDef[] = [
     unit: "children",
     format: "count",
     higherIsBetter: true,
-    description: "Children enrolled in preschool (ABS Census 2021, SA2).",
+    description: "Number of local children enrolled in preschool.",
   },
 ];
 
