@@ -99,16 +99,27 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
           setStatus("no-buildings");
           return;
         }
-        const apply = () => {
-          try {
-            addBuildings(fc);
-            setStatus("ready");
-          } catch {
-            setStatus("error");
+        // Poll until the style is parsed, then add the layer - no dependency on
+        // the "load" event (which can fail to fire). Bounded so it can't hang.
+        let tries = 0;
+        const tryApply = () => {
+          if (!mapRef.current) return;
+          if (map.isStyleLoaded()) {
+            try {
+              addBuildings(fc);
+              setStatus("ready");
+            } catch {
+              setStatus("error");
+            }
+            return;
           }
+          if (++tries > 50) {
+            setStatus("error");
+            return;
+          }
+          setTimeout(tryApply, 150);
         };
-        if (map.isStyleLoaded()) apply();
-        else map.once("load", apply);
+        tryApply();
       } catch {
         setStatus("error");
       }
