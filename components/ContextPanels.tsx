@@ -103,6 +103,20 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
         </Panel>
       )}
 
+      {context.schools &&
+        context.schools.government + context.schools.catholic + context.schools.independent > 0 && (
+          <Panel title="Schools in this area">
+            <Row label="Government" value={context.schools.government} />
+            <Row label="Catholic" value={context.schools.catholic} />
+            <Row label="Independent" value={context.schools.independent} />
+            <p className="mt-2 text-xs text-ink-muted">
+              Open schools located inside this area, counted by sector (not enrolment numbers).
+              A count of what&apos;s here - enrolment zones still decide where a child can go, so
+              check findmyschool.vic.gov.au for the address. VIC Dept of Education 2025.
+            </p>
+          </Panel>
+        )}
+
       {context.socialHousing && context.socialHousing.socialPct != null && (
         <Panel title="Social housing supply">
           <Row label="Social housing %" value={fmtPct(context.socialHousing.socialPct)} />

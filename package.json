@@ -77,6 +77,8 @@
     "data:abs-qualifications": "tsx scripts/fetch-abs-qualifications.ts",
     "data:apply-abs-qualifications": "tsx scripts/apply-abs-qualifications.ts",
     "data:future-transport": "tsx scripts/fetch-future-transport.ts",
+    "data:schools": "tsx scripts/fetch-schools.ts",
+    "data:apply-schools": "tsx scripts/apply-schools.ts",
     "data:school-zones": "tsx scripts/fetch-school-zones.ts",
     "data:traffic": "tsx scripts/fetch-traffic-aadt.ts",
     "data:water-corp": "tsx scripts/fetch-water-corp.ts",

@@ -128,6 +128,12 @@ export const CONTEXT_SOURCING: ContextSourcing[] = [
     use: "Buyer Check proximity finding + future-transport map pins",
   },
   {
+    label: "School sector mix - government / Catholic / independent",
+    sourceId: "vic-doe-school-locations",
+    geography: "Point -> SA2 (point-in-polygon)",
+    use: "Community-context school-mix panel",
+  },
+  {
     label: "Population trend (ERP)",
     sourceId: "abs-erp-sa2-series",
     geography: "SA2 (direct, 2001–2023)",

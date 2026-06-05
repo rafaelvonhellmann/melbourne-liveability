@@ -377,5 +377,14 @@
     "period": "current",
     "fetchedAt": "2026-06-05",
     "sha256": "38d9f72c1e5c23a46853b6d197e79ea283fde996dc0164bd9b687507be104e50"
+  },
+  {
+    "id": "vic-doe-school-locations",
+    "name": "Victorian Dept of Education - School Locations (sector + coordinates)",
+    "url": "https://discover.data.vic.gov.au/dataset/school-locations-2025",
+    "licence": "CC BY 4.0",
+    "period": "2025",
+    "fetchedAt": "2026-06-05",
+    "sha256": "deafc6f1e67d2d8e1cdbfa5cc2e9b23e9845775784e76c3686009a70262f67d5"
   }
 ]

@@ -53,6 +53,7 @@ const SOURCE_FILES: Record<string, { dir: "raw" | "generated" | "public"; file: 
   "abs-census-community-2021": { dir: "raw", file: "abs-sa2-community.json" },
   "abs-census-g49-sa2": { dir: "raw", file: "abs-sa2-qualifications.json" },
   "osm-future-transport": { dir: "public", file: "future-transport.json" },
+  "vic-doe-school-locations": { dir: "raw", file: "vic-schools-by-sa2.json" },
 };
 
 type Source = {

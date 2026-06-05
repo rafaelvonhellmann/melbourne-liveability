@@ -264,6 +264,14 @@ export type PlaceContext = {
     sourceId: string;
     period: string;
   };
+  /** School sector mix in this area (counts of open schools by sector). */
+  schools?: {
+    government: number;
+    catholic: number;
+    independent: number;
+    sourceId: string;
+    period: string;
+  };
   walkAccess?: WalkAccess;
   cyclability?: Cyclability;
   socialHousing?: SocialHousing;

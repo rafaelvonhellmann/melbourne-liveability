@@ -649,6 +649,19 @@ async function main() {
     /* qualifications file optional */
   }
 
+  // School sector mix per SA2 (context only) - government/Catholic/independent
+  // counts from VIC DoE. Optional file (run data:schools to fetch).
+  let schoolsMix: Record<string, { government: number; catholic: number; independent: number }> = {};
+  try {
+    const sf = JSON.parse(
+      await readFile(path.join(RAW, "vic-schools-by-sa2.json"), "utf8")
+    ) as { places?: Record<string, { government: number; catholic: number; independent: number }> };
+    schoolsMix = sf.places ?? {};
+    if (Object.keys(schoolsMix).length) console.log(`School mix: ${Object.keys(schoolsMix).length} SA2s`);
+  } catch {
+    /* schools file optional */
+  }
+
   // Water retailer per SA2 (context only) - which corporation services the area.
   // Optional file (run data:water-corp to fetch from the Vicmap WFS).
   let waterCorps: WaterCorp[] = [];
@@ -768,6 +781,16 @@ async function main() {
         sourceId: "abs-erp-sa2",
         period: "2023",
       });
+    }
+    const sm = schoolsMix[p.sa2Code];
+    if (sm && sm.government + sm.catholic + sm.independent > 0) {
+      ctx.schools = {
+        government: sm.government,
+        catholic: sm.catholic,
+        independent: sm.independent,
+        sourceId: "vic-doe-school-locations",
+        period: "2025",
+      };
     }
     p.context = ctx;
   }
