@@ -28,7 +28,7 @@ import {
   type SavedCheck,
 } from "@/lib/user-prefs";
 import type { BuyerProfile } from "@/lib/buyer-fit";
-import { buildBuyerReport, type BuyerReport as BuyerReportData } from "@/lib/buyer-report";
+import { buildBuyerReport, type BuyerReport as BuyerReportData, type FutureStationLite } from "@/lib/buyer-report";
 import type { NoiseLine } from "@/lib/noise";
 import type { NuisancePoint } from "@/lib/nuisance";
 import type { SchoolZonesData } from "@/lib/school-zones";
@@ -267,6 +267,14 @@ export default function MapPage() {
     stationsRef.current = (await res.json()) as Station[];
     return stationsRef.current;
   }
+  // Future PT stations (OSM) for the buyer report's "future transport" finding.
+  const futureTransportRef = useRef<FutureStationLite[] | null>(null);
+  async function ensureFutureTransport(): Promise<FutureStationLite[]> {
+    if (futureTransportRef.current) return futureTransportRef.current;
+    const res = await fetch(withBase("/data/future-transport.json"));
+    futureTransportRef.current = (await res.json()) as FutureStationLite[];
+    return futureTransportRef.current;
+  }
   // Government school zones (DataVic) for the buyer report's address-level
   // zone match. Lazy-loaded once on first pin (kept out of the map bundle).
   const schoolZonesRef = useRef<SchoolZonesData | null>(null);
@@ -360,7 +368,7 @@ export default function MapPage() {
     // any in-flight precise fetch so its (now stale) result can't land late.
     precisionAbortRef.current?.abort();
     setPreciseStatus("idle");
-    const [feats, noiseLines, nuisancePoints, stations, schoolZones, traffic, epaAir, activityCentres, busStops] = await Promise.all([
+    const [feats, noiseLines, nuisancePoints, stations, schoolZones, traffic, epaAir, activityCentres, busStops, futureStations] = await Promise.all([
       ensurePois().catch(() => [] as Feature<Point>[]),
       ensureNoiseLines().catch(() => [] as NoiseLine[]),
       ensureNuisancePoints().catch(() => [] as NuisancePoint[]),
@@ -370,6 +378,7 @@ export default function MapPage() {
       ensureEpaAir().catch(() => [] as EpaAirSite[]),
       ensureActivityCentres().catch(() => [] as ActivityCentreFeature[]),
       ensureBusStops().catch(() => [] as BusStop[]),
+      ensureFutureTransport().catch(() => [] as FutureStationLite[]),
     ]);
     // Parcel is an exact-address concept: never query it for a suburb centroid.
     const parcel = mode === "pin" ? await fetchParcelAreaAt(lngLat[0], lngLat[1]).catch(() => null) : null;
@@ -389,6 +398,7 @@ export default function MapPage() {
         noiseLines,
         nuisancePoints,
         stations,
+        futureStations,
         schoolZones: schoolZones ?? undefined,
         traffic,
         epaAir,
@@ -424,7 +434,7 @@ export default function MapPage() {
       setPreciseStatus("error");
       return;
     }
-    const [feats, noiseLines, nuisancePoints, stations, schoolZones, traffic, epaAir, activityCentres, busStops] = await Promise.all([
+    const [feats, noiseLines, nuisancePoints, stations, schoolZones, traffic, epaAir, activityCentres, busStops, futureStations] = await Promise.all([
       ensurePois().catch(() => [] as Feature<Point>[]),
       ensureNoiseLines().catch(() => [] as NoiseLine[]),
       ensureNuisancePoints().catch(() => [] as NuisancePoint[]),
@@ -434,6 +444,7 @@ export default function MapPage() {
       ensureEpaAir().catch(() => [] as EpaAirSite[]),
       ensureActivityCentres().catch(() => [] as ActivityCentreFeature[]),
       ensureBusStops().catch(() => [] as BusStop[]),
+      ensureFutureTransport().catch(() => [] as FutureStationLite[]),
     ]);
     const parcel = await fetchParcelAreaAt(pin[0], pin[1], ctrl.signal).catch(() => null);
     if (ctrl.signal.aborted || buyerPinRef.current !== pin) return;
@@ -447,6 +458,7 @@ export default function MapPage() {
         noiseLines,
         nuisancePoints,
         stations,
+        futureStations,
         schoolZones: schoolZones ?? undefined,
         traffic,
         epaAir,

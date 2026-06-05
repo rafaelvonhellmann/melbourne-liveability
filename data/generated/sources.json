@@ -368,5 +368,14 @@
     "period": "current",
     "fetchedAt": "2026-06-03",
     "sha256": "46d8d0e895bd7e5a70fd3b83361ce74242de39167c290cc2f14743bc4e7a74c8"
+  },
+  {
+    "id": "osm-future-transport",
+    "name": "OpenStreetMap - under-construction / proposed PT stations (Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL - attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-05",
+    "sha256": "38d9f72c1e5c23a46853b6d197e79ea283fde996dc0164bd9b687507be104e50"
   }
 ]

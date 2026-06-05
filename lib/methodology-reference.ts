@@ -122,6 +122,12 @@ export const CONTEXT_SOURCING: ContextSourcing[] = [
     use: "Community panel - share among residents with a post-school qualification (not all adults)",
   },
   {
+    label: "Future transport - under-construction / proposed stations",
+    sourceId: "osm-future-transport",
+    geography: "Point (OSM)",
+    use: "Buyer Check proximity finding + future-transport map pins",
+  },
+  {
     label: "Population trend (ERP)",
     sourceId: "abs-erp-sa2-series",
     geography: "SA2 (direct, 2001–2023)",

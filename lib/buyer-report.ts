@@ -34,6 +34,14 @@ import {
 import { evaluateFit, type BuyerProfile, type FitResult } from "./buyer-fit";
 import { anchorDistances, type AnchorDistance } from "./anchors";
 import { nearestStation, nearestBusStop, type Station, type BusStop } from "./transit";
+
+/** Under-construction / proposed PT stop (OSM) - the "future transport" signal. */
+export type FutureStationLite = {
+  name: string;
+  coord: [number, number];
+  status: "construction" | "proposed";
+  mode: "rail" | "tram";
+};
 import { computeWeightedScore } from "./scoring";
 import { getDefaultWeights } from "./weights";
 import { getSourcesByIds } from "./source-manifest";
@@ -452,6 +460,8 @@ export interface BuildBuyerReportInput {
   nuisancePoints?: NuisancePoint[];
   /** Train stations for the "nearest train station" finding. Lazy-loaded; omit to skip. */
   stations?: Station[];
+  /** Under-construction / proposed stations (OSM) for the "future transport" finding. */
+  futureStations?: FutureStationLite[];
   /** GTFS bus stops [lng,lat,routeCount] for the "bus access" finding. Lazy-loaded; pin mode. */
   busStops?: BusStop[];
   /**
@@ -685,6 +695,32 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         caveat:
           "Straight-line distance to the nearest mapped train station (OpenStreetMap, ODbL). The walking route is longer, and the line, frequency and direction matter too.",
         sourceRefs: getSourcesByIds(["osm-train-stations"]),
+      });
+    }
+  }
+
+  // Future transport - a planned/under-construction station nearby (price-relevant).
+  if (point && input.futureStations && input.futureStations.length > 0) {
+    const fut = nearestStation([point.lng, point.lat], input.futureStations as Station[]);
+    if (fut && fut.distanceM <= 2000) {
+      const match = input.futureStations.find((f) => f.name === fut.name);
+      const statusWord = match?.status === "construction" ? "under-construction" : "planned";
+      const modeWord = match?.mode === "tram" ? "tram" : "train";
+      const dist =
+        fut.distanceM < 1000 ? `${fut.distanceM} m` : `${(fut.distanceM / 1000).toFixed(1)} km`;
+      findings.push({
+        id: "future-transport",
+        kind: "neutral",
+        severity: "info",
+        title: "Future transport nearby",
+        summary: `A ${statusWord} ${modeWord} station (${fut.name}) is mapped about ${dist} away.`,
+        whyItMatters:
+          "New transport is often priced into an area early - it can lift access and demand, but timelines and final stops can still change.",
+        confidence: "low",
+        geography: "pin",
+        caveat:
+          "Community-mapped under-construction / proposed stops (OpenStreetMap, ODbL) - indicative only, not a committed-project guarantee. Check the official project page for status and the final location.",
+        sourceRefs: getSourcesByIds(["osm-future-transport"]),
       });
     }
   }
