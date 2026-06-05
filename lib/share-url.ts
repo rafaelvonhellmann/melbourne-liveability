@@ -24,6 +24,22 @@ export type MapUrlState = {
 // so a crafted URL cannot drop a pin in the ocean or interstate.
 const MEL_BBOX = { minLng: 143.0, maxLng: 147.0, minLat: -39.5, maxLat: -36.5 };
 
+/**
+ * Whether a coordinate falls inside the Greater-Melbourne bounding box. Exported
+ * so the geocode/address path can enforce the same hard bound that URL pins get
+ * (Nominatim's bounded=1 is a preference, not a guarantee).
+ */
+export function inMelbourneBBox(lng: number, lat: number): boolean {
+  return (
+    Number.isFinite(lng) &&
+    Number.isFinite(lat) &&
+    lat >= MEL_BBOX.minLat &&
+    lat <= MEL_BBOX.maxLat &&
+    lng >= MEL_BBOX.minLng &&
+    lng <= MEL_BBOX.maxLng
+  );
+}
+
 function parsePin(latRaw: string | null, lngRaw: string | null): [number, number] | null {
   if (latRaw == null || lngRaw == null) return null;
   const lat = Number(latRaw);

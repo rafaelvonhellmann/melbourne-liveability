@@ -15,7 +15,7 @@ import {
 } from "@/lib/map-expressions";
 import { withBase } from "@/lib/asset-path";
 import { poiCircleColorExpression } from "@/lib/poi-categories";
-import { buildPoiPopupHtml, escapeHtml, type PoiFeatureProps } from "@/lib/poi-feature";
+import { buildPoiPopupHtml, escapeHtml, safeHttpUrl, type PoiFeatureProps } from "@/lib/poi-feature";
 import { WALK_THRESHOLD_KM } from "@/lib/walk-access";
 import { CYCLE_THRESHOLD_KM } from "@/lib/cyclability";
 
@@ -502,7 +502,9 @@ export function MelbourneMap({
       const name = escapeHtml(String(f.properties.name ?? "Project"));
       const label = escapeHtml(String(f.properties.label ?? ""));
       const status = escapeHtml(String(f.properties.status ?? ""));
-      const url = f.properties.sourceUrl ? String(f.properties.sourceUrl) : undefined;
+      // Scheme-allowlist the URL (http/https only) like the POI popup, so a bad
+      // sourceUrl can never become a javascript: link in this innerHTML sink.
+      const url = f.properties.sourceUrl ? safeHttpUrl(String(f.properties.sourceUrl)) : null;
       const link = url
         ? `<br/><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Official project page</a>`
         : "";

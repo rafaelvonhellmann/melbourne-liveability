@@ -57,7 +57,7 @@ import { MAJOR_PROJECTS } from "@/lib/major-projects";
 import type { GeocodeResult } from "@/lib/geocode";
 import { fetchWalkIsochrone, isPreciseWalkConfigured, WALK_MINUTES } from "@/lib/walk-isochrone";
 import { withBase } from "@/lib/asset-path";
-import { parseMapUrlState, buildMapUrl } from "@/lib/share-url";
+import { parseMapUrlState, buildMapUrl, inMelbourneBBox } from "@/lib/share-url";
 import { track } from "@/lib/analytics";
 import type { Feature, FeatureCollection, Point } from "geojson";
 import type { Place } from "@/lib/types";
@@ -543,6 +543,9 @@ export default function MapPage() {
   // mirrors a map click at the geocoded coordinate; suburb/SA2 search + map
   // clicks remain the primary flows.
   const selectFromAddress = async (r: GeocodeResult) => {
+    // Enforce the same hard Greater-Melbourne bound that URL pins get - Nominatim's
+    // bounded=1 is a preference, so don't trust an out-of-region geocode result.
+    if (!inMelbourneBBox(r.lng, r.lat)) return;
     const lngLat: [number, number] = [r.lng, r.lat];
     setBuyerMode(true);
     setSelected(null);
@@ -551,6 +554,9 @@ export default function MapPage() {
     setBuyerReport(null);
     syncBuyerUrl(true, lngLat);
     const fc = await ensureSa2Geo().catch(() => null);
+    // A map click during the await may have moved the pin - don't stomp the new
+    // pin's SA2/label with this (now stale) address result.
+    if (buyerPinRef.current !== lngLat) return;
     const sa2 = fc ? findSa2ForPoint(lngLat, fc) : null;
     setBuyerSa2(sa2);
     void buildReportFor(lngLat, sa2);
@@ -562,6 +568,7 @@ export default function MapPage() {
     setBuyerPin(lngLat);
     setBuyerReport(null);
     const fc = await ensureSa2Geo().catch(() => null);
+    if (buyerPinRef.current !== lngLat) return;
     const sa2 = fc ? findSa2ForPoint(lngLat, fc) : null;
     setBuyerSa2(sa2);
     void buildReportFor(lngLat, sa2);
