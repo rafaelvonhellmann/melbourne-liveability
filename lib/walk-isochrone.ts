@@ -35,6 +35,7 @@
  */
 import type { Polygon, MultiPolygon } from "geojson";
 import type { LngLat } from "./buyer-location";
+import { timeoutSignal } from "./fetch-timeout";
 
 /** Walk budget for the buyer "on foot" check (minutes / seconds). */
 export const WALK_MINUTES = 15;
@@ -113,10 +114,11 @@ export async function fetchWalkIsochrone(
   if (!key) return { ok: false, reason: "not-configured" };
 
   const seconds = Math.max(1, Math.round(minutes * 60));
+  const t = timeoutSignal(9000, opts.signal);
   try {
     const res = await fetch(isochroneUrl(), {
       method: "POST",
-      signal: opts.signal,
+      signal: t.signal,
       headers: {
         Authorization: key,
         "Content-Type": "application/json",
@@ -135,5 +137,7 @@ export async function fetchWalkIsochrone(
     return { ok: true, geom };
   } catch (e) {
     return { ok: false, reason: (e as Error)?.name === "AbortError" ? "aborted" : "network" };
+  } finally {
+    t.clear();
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { timeoutSignal } from "@/lib/fetch-timeout";
 import { MessageSquarePlus, X } from "lucide-react";
 
 // Same delivery model as /alerts: a Formspree endpoint when configured, with a
@@ -94,15 +95,19 @@ export function FeedbackButton({ context, className }: FeedbackButtonProps) {
 
     if (FORMSPREE_ID) {
       setStatus("sending");
+      const t = timeoutSignal(10000);
       try {
         const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
           method: "POST",
+          signal: t.signal,
           headers: { Accept: "application/json", "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         setStatus(res.ok ? "ok" : "error");
       } catch {
         setStatus("error");
+      } finally {
+        t.clear();
       }
       return;
     }

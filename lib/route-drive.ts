@@ -14,6 +14,7 @@
  * production hardening = a key-hiding proxy via NEXT_PUBLIC_DRIVE_ROUTE_URL.
  */
 import type { LngLat } from "./buyer-location";
+import { timeoutSignal } from "./fetch-timeout";
 
 const ORS_DRIVE_URL =
   "https://api.openrouteservice.org/v2/directions/driving-car/geojson";
@@ -74,10 +75,11 @@ export async function fetchDriveRoute(
 ): Promise<DriveRoute> {
   const key = orsApiKey();
   if (!key) return { ok: false, reason: "not-configured" };
+  const t = timeoutSignal(9000, opts.signal);
   try {
     const res = await fetch(driveUrl(), {
       method: "POST",
-      signal: opts.signal,
+      signal: t.signal,
       headers: {
         Authorization: key,
         "Content-Type": "application/json",
@@ -91,5 +93,7 @@ export async function fetchDriveRoute(
     return { ok: true, ...parsed };
   } catch (e) {
     return { ok: false, reason: (e as Error)?.name === "AbortError" ? "aborted" : "network" };
+  } finally {
+    t.clear();
   }
 }

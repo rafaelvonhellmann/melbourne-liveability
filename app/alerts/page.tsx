@@ -6,6 +6,7 @@ import { usePlaces } from "@/lib/use-places";
 import type { Place } from "@/lib/types";
 import { loadUserPrefs, saveUserPrefs } from "@/lib/user-prefs";
 import { allSources } from "@/lib/sources";
+import { timeoutSignal } from "@/lib/fetch-timeout";
 import { ShareViewButton } from "@/components/ShareViewButton";
 
 const FORMSPREE_ID = process.env.NEXT_PUBLIC_FORMSPREE_ALERTS_ID;
@@ -43,9 +44,11 @@ export default function AlertsPage() {
 
     if (FORMSPREE_ID) {
       setStatus("sending");
+      const t = timeoutSignal(10000);
       try {
         const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
           method: "POST",
+          signal: t.signal,
           headers: { Accept: "application/json", "Content-Type": "application/json" },
           body: JSON.stringify({
             email,
@@ -57,6 +60,8 @@ export default function AlertsPage() {
         setStatus(res.ok ? "ok" : "error");
       } catch {
         setStatus("error");
+      } finally {
+        t.clear();
       }
       return;
     }

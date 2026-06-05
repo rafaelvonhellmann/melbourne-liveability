@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import type { FeatureCollection } from "geojson";
 import { sunPosition } from "@/lib/sun";
+import { timeoutSignal } from "@/lib/fetch-timeout";
 
 /**
  * 3D sun/shadow context for a dropped pin. Renders the real building massing
@@ -90,11 +91,16 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
       });
     };
     // Fetch buildings immediately (don't gate on the map's "load" event, which
-    // can be flaky); apply as soon as the style is parsed.
+    // can be flaky); apply as soon as the style is parsed. Time-bounded so a
+    // stalled CoM endpoint can't leave the panel on "Loading" forever, and
+    // guarded so a late response never sets state on an unmounted component.
+    let cancelled = false;
     (async () => {
+      const t = timeoutSignal(10000);
       try {
-        const res = await fetch(buildingsUrl(lng, lat));
+        const res = await fetch(buildingsUrl(lng, lat), { signal: t.signal });
         const fc = (await res.json()) as FeatureCollection;
+        if (cancelled) return;
         if (!(fc.features?.length)) {
           setStatus("no-buildings");
           return;
@@ -103,7 +109,7 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
         // the "load" event (which can fail to fire). Bounded so it can't hang.
         let tries = 0;
         const tryApply = () => {
-          if (!mapRef.current) return;
+          if (cancelled || !mapRef.current) return;
           if (map.isStyleLoaded()) {
             try {
               addBuildings(fc);
@@ -121,7 +127,9 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
         };
         tryApply();
       } catch {
-        setStatus("error");
+        if (!cancelled) setStatus("error");
+      } finally {
+        t.clear();
       }
     })();
     // Non-fatal MapLibre errors (e.g. a missing basemap tile) are logged, not
@@ -129,6 +137,7 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
     map.on("error", (e) => console.warn("SunShadowView map:", e?.error?.message ?? e));
 
     return () => {
+      cancelled = true;
       map.remove();
       mapRef.current = null;
     };
