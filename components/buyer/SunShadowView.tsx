@@ -59,9 +59,18 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
       container: mapEl.current,
       style: {
         version: 8,
-        sources: {},
-        layers: [{ id: "bg", type: "background", paint: { "background-color": "#e7eae6" } }],
-        glyphs: undefined,
+        sources: {
+          carto: {
+            type: "raster",
+            tiles: [
+              "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+              "https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+            ],
+            tileSize: 256,
+            attribution: "&copy; CARTO &copy; OpenStreetMap contributors",
+          },
+        },
+        layers: [{ id: "carto", type: "raster", source: "carto" }],
       },
       center: [lng, lat],
       zoom: 15.6,
@@ -98,7 +107,9 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
         setStatus("error");
       }
     });
-    map.on("error", () => setStatus((s) => (s === "ready" ? s : "error")));
+    // Non-fatal MapLibre errors (e.g. a missing basemap tile) are logged, not
+    // surfaced - status is driven purely by the buildings fetch above.
+    map.on("error", (e) => console.warn("SunShadowView map:", e?.error?.message ?? e));
 
     return () => {
       map.remove();
