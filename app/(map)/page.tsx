@@ -4,7 +4,21 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MapPin, PanelRightClose, PanelRightOpen, Bike, Layers, ChevronDown } from "lucide-react";
-import { MelbourneMap } from "@/components/MelbourneMap";
+import dynamic from "next/dynamic";
+// Code-split MapLibre out of the initial bundle: the page shell (header, search,
+// side panels) paints first, then the heavy map chunk loads. ssr:false because
+// MapLibre needs the browser and this is a static-export client view anyway.
+const MelbourneMap = dynamic(
+  () => import("@/components/MelbourneMap").then((m) => m.MelbourneMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="absolute inset-0 grid place-items-center bg-surface-sunken text-sm text-ink-muted">
+        Loading map...
+      </div>
+    ),
+  }
+);
 import { LayerToggle } from "@/components/LayerToggle";
 import { SearchBox } from "@/components/SearchBox";
 import { DomainSliders } from "@/components/DomainSliders";
