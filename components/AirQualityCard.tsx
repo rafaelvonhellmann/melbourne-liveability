@@ -75,7 +75,7 @@ export function AirQualityCard({ centroid }: { centroid: [number, number] }) {
           href="https://www.airquality.epa.vic.gov.au/"
           target="_blank"
           rel="noreferrer"
-          className="text-accent hover:underline"
+          className="text-accent underline decoration-dotted underline-offset-2"
         >
           EPA AirWatch
         </a>
