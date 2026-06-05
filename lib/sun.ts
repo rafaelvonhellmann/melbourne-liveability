@@ -70,6 +70,47 @@ function season(latDeg: number, declDeg: number): SunSeason {
   };
 }
 
+/**
+ * Sun POSITION (altitude + azimuth from north) at a specific instant + location.
+ * Compact inline of the SunCalc algorithm (Mihai/Agafonkin, BSD) - pure, no
+ * dependency. `altitudeDeg` is degrees above the horizon (negative = below);
+ * `azimuthDeg` is clockwise from true north (0 = N, 90 = E, 180 = S, 270 = W),
+ * matching MapLibre's `light.position` azimuth so it can drive 3D shading.
+ */
+export function sunPosition(
+  date: Date,
+  latDeg: number,
+  lngDeg: number
+): { altitudeDeg: number; azimuthDeg: number } {
+  const dayMs = 86400000;
+  const J1970 = 2440588;
+  const J2000 = 2451545;
+  const e = RAD * 23.4397; // obliquity of the ecliptic
+  const lw = RAD * -lngDeg;
+  const phi = RAD * latDeg;
+  const d = date.valueOf() / dayMs - 0.5 + J1970 - J2000;
+
+  const M = RAD * (357.5291 + 0.98560028 * d); // solar mean anomaly
+  const C = RAD * (1.9148 * Math.sin(M) + 0.02 * Math.sin(2 * M) + 0.0003 * Math.sin(3 * M));
+  const L = M + C + RAD * 102.9372 + Math.PI; // ecliptic longitude
+  const dec = Math.asin(Math.sin(0) * Math.cos(e) + Math.cos(0) * Math.sin(e) * Math.sin(L));
+  const ra = Math.atan2(Math.sin(L) * Math.cos(e) - Math.tan(0) * Math.sin(e), Math.cos(L));
+  const sidereal = RAD * (280.16 + 360.9856235 * d) - lw;
+  const H = sidereal - ra; // hour angle
+
+  const altitude = Math.asin(
+    Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(H)
+  );
+  // SunCalc azimuth is measured from due south, +ve toward west; shift to
+  // clockwise-from-north so it lines up with compass bearings + MapLibre light.
+  const azSouth = Math.atan2(
+    Math.sin(H),
+    Math.cos(H) * Math.sin(phi) - Math.tan(dec) * Math.cos(phi)
+  );
+  const azimuthDeg = (((azSouth / RAD + 180) % 360) + 360) % 360;
+  return { altitudeDeg: altitude / RAD, azimuthDeg };
+}
+
 /** Full sun-aspect summary for a latitude (longitude doesn't change aspect). */
 export function sunAspect(latDeg: number): SunAspect {
   const southern = latDeg < 0;

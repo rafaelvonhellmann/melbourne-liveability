@@ -1,10 +1,17 @@
 "use client";
 
+import { useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { X, ShieldAlert, CheckCircle2, HelpCircle, Info, Bookmark, BookmarkCheck } from "lucide-react";
 import type { BuyerReport, BuyerFinding, BuyerConfidence, BuyerGeography } from "@/lib/buyer-report";
 import { anchorKindLabel, bandLabel } from "@/lib/anchors";
 import { SunPathDiagram } from "./SunPathDiagram";
+// 3D building/sun view is heavy (MapLibre) - load it only when the user opens it.
+const SunShadowView = dynamic(
+  () => import("./SunShadowView").then((m) => m.SunShadowView),
+  { ssr: false, loading: () => <p className="mt-3 text-xs text-ink-muted">Loading 3D view...</p> }
+);
 import { AMENITY_GROUPS } from "@/lib/buyer-report";
 import { formatSourceDate } from "@/lib/source-manifest";
 import { withBase } from "@/lib/asset-path";
@@ -77,6 +84,7 @@ export function BuyerReportPanel({
   // and reached via the "See the full area report" button. The sample + embedded
   // (/places) variants render the full report.
   const isLive = variant === "live";
+  const [show3d, setShow3d] = useState(false);
 
   return (
     <div className={`space-y-4 text-ink ${className}`}>
@@ -345,6 +353,27 @@ export function BuyerReportPanel({
               little direct sun. We can&apos;t see your specific building, so check which way
               the main rooms face when you visit (same path for the whole street).
             </p>
+            {hasPin && (
+              <div className="mt-3">
+                {show3d ? (
+                  <SunShadowView
+                    lng={report.location.lng as number}
+                    lat={report.location.lat as number}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShow3d(true);
+                      track("buyer_sun_3d");
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-surface-border bg-surface-sunken px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-accent hover:text-accent"
+                  >
+                    View buildings in 3D + shadow simulator &rarr;
+                  </button>
+                )}
+              </div>
+            )}
           </Section>
         )}
 
