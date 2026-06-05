@@ -74,32 +74,45 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
     mapRef.current = map;
     new maplibregl.Marker({ color: "#D97757" }).setLngLat([lng, lat]).addTo(map);
 
-    map.on("load", async () => {
+    const addBuildings = (fc: FeatureCollection) => {
+      if (map.getSource("blds")) return;
+      map.addSource("blds", { type: "geojson", data: fc });
+      map.addLayer({
+        id: "blds-3d",
+        type: "fill-extrusion",
+        source: "blds",
+        paint: {
+          "fill-extrusion-color": "#c9d2c9",
+          "fill-extrusion-height": ["coalesce", ["get", "structure_extrusion"], 6],
+          "fill-extrusion-base": 0,
+          "fill-extrusion-opacity": 0.92,
+        },
+      });
+    };
+    // Fetch buildings immediately (don't gate on the map's "load" event, which
+    // can be flaky); apply as soon as the style is parsed.
+    (async () => {
       try {
         const res = await fetch(buildingsUrl(lng, lat));
         const fc = (await res.json()) as FeatureCollection;
-        const n = fc.features?.length ?? 0;
-        if (!n) {
+        if (!(fc.features?.length)) {
           setStatus("no-buildings");
           return;
         }
-        map.addSource("blds", { type: "geojson", data: fc });
-        map.addLayer({
-          id: "blds-3d",
-          type: "fill-extrusion",
-          source: "blds",
-          paint: {
-            "fill-extrusion-color": "#c9d2c9",
-            "fill-extrusion-height": ["coalesce", ["get", "structure_extrusion"], 6],
-            "fill-extrusion-base": 0,
-            "fill-extrusion-opacity": 0.92,
-          },
-        });
-        setStatus("ready");
+        const apply = () => {
+          try {
+            addBuildings(fc);
+            setStatus("ready");
+          } catch {
+            setStatus("error");
+          }
+        };
+        if (map.isStyleLoaded()) apply();
+        else map.once("load", apply);
       } catch {
         setStatus("error");
       }
-    });
+    })();
     // Non-fatal MapLibre errors (e.g. a missing basemap tile) are logged, not
     // surfaced - status is driven purely by the buildings fetch above.
     map.on("error", (e) => console.warn("SunShadowView map:", e?.error?.message ?? e));
