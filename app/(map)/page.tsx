@@ -556,8 +556,26 @@ export default function MapPage() {
 
   const toggleBuyerMode = () => {
     const next = !buyerMode;
-    if (next) setSelected(null);
-    else {
+    if (next) {
+      // If an area is already selected, carry it INTO buyer mode instead of
+      // dropping the user back on the whole-metro map: drop the pin at its
+      // centroid (area-level report) and keep the current view, so they don't
+      // have to find the area again. Click the map to refine to an exact address.
+      const carry = selected;
+      setSelected(null);
+      if (carry && !buyerPin) {
+        const c = carry.centroid as [number, number];
+        setBuyerMode(true);
+        setBuyerPin(c);
+        setBuyerSa2({ slug: carry.slug, sa2Code: carry.sa2Code });
+        setBuyerReport(null);
+        setFocusTarget({ center: c, nonce: Date.now() });
+        syncBuyerUrl(true, c);
+        track("buyer_mode", { on: true, from: "selection" });
+        void buildReportFor(c, { slug: carry.slug, sa2Code: carry.sa2Code }, "sa2");
+        return;
+      }
+    } else {
       setBuyerPin(null);
       setBuyerSa2(null);
       setBuyerReport(null);
