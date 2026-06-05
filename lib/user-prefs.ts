@@ -103,16 +103,23 @@ export function loadUserPrefs(): UserPrefs {
 
 export function saveUserPrefs(prefs: UserPrefs): void {
   if (!isBrowser()) return;
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify({
-      ...prefs,
-      version: 1,
-      shortlist: prefs.shortlist.slice(0, MAX_SHORTLIST),
-      recent: prefs.recent.slice(0, MAX_RECENT),
-      savedChecks: (prefs.savedChecks ?? []).slice(0, MAX_SAVED_CHECKS),
-    })
-  );
+  // setItem throws when storage is blocked/full (Safari private mode, quota).
+  // These writers run from click handlers, which React error boundaries don't
+  // catch - so a blocked store would crash the handler. Degrade to in-memory.
+  try {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ...prefs,
+        version: 1,
+        shortlist: prefs.shortlist.slice(0, MAX_SHORTLIST),
+        recent: prefs.recent.slice(0, MAX_RECENT),
+        savedChecks: (prefs.savedChecks ?? []).slice(0, MAX_SAVED_CHECKS),
+      })
+    );
+  } catch {
+    /* storage unavailable - prefs stay in memory for this session */
+  }
   window.dispatchEvent(new Event(PREFS_CHANGED_EVENT));
 }
 

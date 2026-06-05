@@ -41,8 +41,14 @@ export function IncomeAffordabilityCard({ place }: { place: Place }) {
   }, []);
 
   const commit = (text: string) => {
-    const n = Number(text.replace(/[^0-9.]/g, ""));
-    if (Number.isFinite(n) && n > 0) {
+    // Reject malformed input (scientific notation / multiple dots) and clamp to a
+    // sane annual household-income range, so a fat-finger - e.g. a weekly figure
+    // typed into the annual field - can't render nonsense like "43000% of income".
+    const cleaned = text.replace(/[^0-9.]/g, "");
+    const n = Number(cleaned);
+    const ok =
+      /^[0-9]+(\.[0-9]+)?$/.test(cleaned) && Number.isFinite(n) && n >= 10000 && n <= 5_000_000;
+    if (ok) {
       setAnnual(n);
       try {
         window.localStorage.setItem(STORAGE_KEY, String(Math.round(n)));
@@ -115,19 +121,31 @@ export function IncomeAffordabilityCard({ place }: { place: Place }) {
               }`}
             >
               The typical home here rents for about{" "}
-              <b>${medianRentWeekly.toLocaleString("en-AU")}/week</b>. At your income that is{" "}
-              <b>{rentShare.toFixed(0)}%</b> of your gross income -{" "}
-              {stressed
-                ? "above the 30% the ABS treats as housing stress."
-                : "under the 30% housing-stress mark."}
+              <b>${medianRentWeekly.toLocaleString("en-AU")}/week</b>.{" "}
+              {rentShare > 100 ? (
+                <>
+                  That is <b>more than your entire gross income</b> - check you entered your{" "}
+                  annual (pre-tax) household income.
+                </>
+              ) : (
+                <>
+                  At your income that is <b>{rentShare.toFixed(0)}%</b> of your gross income -{" "}
+                  {stressed
+                    ? "above the 30% the ABS treats as housing stress."
+                    : "under the 30% housing-stress mark."}
+                </>
+              )}
             </div>
           )}
           {incomeVsMedianPct != null && (
             <p className="text-xs leading-relaxed text-ink-muted">
-              Your household income is about{" "}
+              Your household income is{" "}
               <b className="text-ink">
-                {Math.abs(incomeVsMedianPct).toFixed(0)}%{" "}
-                {incomeVsMedianPct >= 0 ? "above" : "below"}
+                {Math.abs(incomeVsMedianPct) > 300
+                  ? incomeVsMedianPct >= 0
+                    ? "several times above"
+                    : "well below"
+                  : `about ${Math.abs(incomeVsMedianPct).toFixed(0)}% ${incomeVsMedianPct >= 0 ? "above" : "below"}`}
               </b>{" "}
               this area&apos;s median. (The median is the ABS figure adjusted for household
               size, so treat this as a guide, not an exact rank.)
