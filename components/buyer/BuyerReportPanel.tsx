@@ -273,15 +273,29 @@ export function BuyerReportPanel({
                     </span>
                   </span>
                   <span className="shrink-0 text-right">
-                    <span className="num block text-sm font-semibold text-ink">{d.km} km</span>
-                    <span className="block text-[11px] text-ink-muted">{bandLabel(d.band)}</span>
+                    {d.driveMin != null ? (
+                      <>
+                        <span className="num block text-sm font-semibold text-ink">
+                          {d.driveMin} min drive
+                        </span>
+                        <span className="num block text-[11px] text-ink-muted">
+                          {d.driveKm} km by road
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="num block text-sm font-semibold text-ink">{d.km} km</span>
+                        <span className="block text-[11px] text-ink-muted">{bandLabel(d.band)}</span>
+                      </>
+                    )}
                   </span>
                 </li>
               ))}
             </ul>
             <p className="mt-2 text-[11px] leading-snug text-ink-muted">
-              Straight-line distance from this pin to your saved places - not drive or
-              public-transport time. Verify the real commute at peak hour.
+              {report.anchorDistances.some((d) => d.driveMin != null)
+                ? "Off-peak driving time + road distance where routing is available (OpenRouteService / OpenStreetMap), otherwise straight-line. Verify the real commute at peak hour."
+                : "Straight-line distance from this pin to your saved places - not drive or public-transport time. Verify the real commute at peak hour."}
             </p>
           </Section>
         )}

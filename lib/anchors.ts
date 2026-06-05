@@ -55,6 +55,10 @@ export type AnchorDistance = {
   /** Straight-line distance from the property pin, km, rounded to 1 dp. */
   km: number;
   band: DistanceBand;
+  /** Real driving time (minutes), when routing is configured + succeeded. */
+  driveMin?: number;
+  /** Real road distance (km), when routing is configured + succeeded. */
+  driveKm?: number;
 };
 
 /**

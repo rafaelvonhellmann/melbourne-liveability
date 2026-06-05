@@ -29,6 +29,7 @@ import {
 } from "@/lib/user-prefs";
 import type { BuyerProfile } from "@/lib/buyer-fit";
 import { buildBuyerReport, type BuyerReport as BuyerReportData, type FutureStationLite } from "@/lib/buyer-report";
+import { fetchDriveRoute, isDriveRoutingConfigured } from "@/lib/route-drive";
 import type { NoiseLine } from "@/lib/noise";
 import type { NuisancePoint } from "@/lib/nuisance";
 import type { SchoolZonesData } from "@/lib/school-zones";
@@ -355,6 +356,25 @@ export default function MapPage() {
     );
   };
 
+  // Upgrade the straight-line anchor distances to real driving time + road
+  // distance (OpenRouteService), when configured. Runs after the report is shown
+  // (non-blocking) and patches it; bails if the pin moved underneath it.
+  const enrichAnchorsWithDrive = async (report: BuyerReportData, pin: [number, number]) => {
+    if (!isDriveRoutingConfigured()) return;
+    const ad = report.anchorDistances;
+    if (!ad || ad.length === 0) return;
+    const enriched = await Promise.all(
+      ad.map(async (d) => {
+        const r = await fetchDriveRoute(pin, [d.anchor.lng, d.anchor.lat]).catch(
+          () => ({ ok: false as const, reason: "error" })
+        );
+        return r.ok ? { ...d, driveMin: r.durationMin, driveKm: r.distanceKm } : d;
+      })
+    );
+    if (buyerPinRef.current !== pin) return;
+    setBuyerReport((prev) => (prev ? { ...prev, anchorDistances: enriched } : prev));
+  };
+
   const buildReportFor = async (
     lngLat: [number, number],
     sa2: { slug?: string; sa2Code?: string } | null,
@@ -388,8 +408,7 @@ export default function MapPage() {
     // A newer pin (moved/searched) may have superseded this build while the
     // parcel/POI fetches were in flight - don't overwrite the current report.
     if (buyerPinRef.current !== lngLat) return;
-    setBuyerReport(
-      buildBuyerReport({
+    const builtReport = buildBuyerReport({
         mode,
         lat: lngLat[1],
         lng: lngLat[0],
@@ -408,9 +427,10 @@ export default function MapPage() {
         nearbyAreas: areaCentroids,
         majorProjects: MAJOR_PROJECTS,
         profile: profileRef.current,
-      })
-    );
+      });
+    setBuyerReport(builtReport);
     track("buyer_report", { coverage: place ? "in" : "off" });
+    void enrichAnchorsWithDrive(builtReport, lngLat);
   };
 
   // Paid-tier opt-in: recompute "nearby on foot" against a real street-network
@@ -448,8 +468,7 @@ export default function MapPage() {
     ]);
     const parcel = await fetchParcelAreaAt(pin[0], pin[1], ctrl.signal).catch(() => null);
     if (ctrl.signal.aborted || buyerPinRef.current !== pin) return;
-    setBuyerReport(
-      buildBuyerReport({
+    const builtPreciseReport = buildBuyerReport({
         lat: pin[1],
         lng: pin[0],
         place: buyerPlace,
@@ -468,9 +487,10 @@ export default function MapPage() {
         nearbyAreas: areaCentroids,
         majorProjects: MAJOR_PROJECTS,
         profile: profileRef.current,
-      })
-    );
+      });
+    setBuyerReport(builtPreciseReport);
     setPreciseStatus("idle");
+    void enrichAnchorsWithDrive(builtPreciseReport, pin);
   };
 
   // Live map click in buyer mode (SA2 comes from the clicked map feature).
