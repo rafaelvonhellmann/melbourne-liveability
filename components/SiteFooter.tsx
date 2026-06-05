@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { PRODUCT_NAME } from "@/lib/brand";
 
 const LINKS: { href: string; label: string }[] = [
   { href: "/", label: "Map" },
+  { href: "/welcome", label: "How it works" },
   { href: "/buyer", label: "Buyer check" },
   { href: "/find", label: "Find areas" },
   { href: "/about", label: "About & trust" },
@@ -30,7 +32,7 @@ export function SiteFooter() {
           ))}
         </nav>
         <p className="mt-4 text-xs leading-relaxed">
-          <span className="font-medium text-ink">liveable.melbourne</span> compiles
+          <span className="font-medium text-ink">{PRODUCT_NAME}</span> compiles
           Australian government / official open data (ABS, PTV, VCSA, Victorian planning
           &amp; MapShare - CC BY 4.0) with © OpenStreetMap contributors (ODbL) as an
           attributed fallback. Scores are one optional lens over open data —{" "}

@@ -251,3 +251,36 @@ body {
     text-decoration: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Motion tokens (transitions.dev approach): animate only transform + opacity,
+ * short ease-out entrances, and a prefers-reduced-motion guard. Used by the
+ * onboarding scroll-story; reusable site-wide.
+ * ------------------------------------------------------------------------- */
+:root {
+  --t-dur-micro: 0.18s;
+  --t-dur-std: 0.5s;
+  --t-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Scroll-reveal: hidden until the element gets .is-visible (IntersectionObserver). */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity var(--t-dur-std) var(--t-ease-out),
+    transform var(--t-dur-std) var(--t-ease-out);
+  will-change: transform, opacity;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
