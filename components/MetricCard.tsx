@@ -118,8 +118,11 @@ function BenchmarkBand({
   const p25Pos = pos(p25, min, max);
   const medPos = pos(median, min, max);
   const p75Pos = pos(p75, min, max);
-  const dotColor =
-    percentile != null ? percentileToColor(percentile) : "var(--ink-muted)";
+  // "This area" marker is a single uniform colour everywhere - it marks WHERE the
+  // area sits, not whether that is good or bad (the bar position + the percentile
+  // already convey that). Colouring it by value made the same marker green on one
+  // card and red on the next, which read as inconsistent.
+  const dotColor = "var(--accent)";
 
   return (
     <div className="mt-3">

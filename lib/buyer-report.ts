@@ -796,7 +796,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         kind: "positive",
         severity: "info",
         title: "Strong area-level liveability score",
-        summary: `The surrounding SA2 scores ${Math.round(overall)}/100 on the current liveability model.`,
+        summary: `The surrounding area scores ${Math.round(overall)}/100 on the current liveability model.`,
         confidence: "medium",
         geography: "sa2",
         caveat: "This is an area-level score and may not reflect the exact street or property.",
@@ -808,7 +808,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         kind: "verify",
         severity: "low",
         title: "Review area-level liveability trade-offs",
-        summary: `The surrounding SA2 scores ${Math.round(overall)}/100 and has some weaker indicators in the current model.`,
+        summary: `The surrounding area scores ${Math.round(overall)}/100 and has some weaker indicators in the current model.`,
         verifyAction: "Review the domain breakdown rather than relying on the overall score.",
         confidence: "medium",
         geography: "sa2",
@@ -825,7 +825,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       kind: "positive",
       severity: "info",
       title: "Strong public transport proximity",
-      summary: `Transport scores in the top tier for Greater Melbourne (${Math.round(transportPct)}th percentile) at the SA2 level.`,
+      summary: `Transport scores in the top tier for Greater Melbourne (${Math.round(transportPct)}th percentile) for this wider area.`,
       confidence: "medium",
       geography: "sa2",
       caveat: "Area-level; confirm the actual stops, lines and peak-hour commute for this address.",
@@ -838,7 +838,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       tone: "concern",
       severity: "low",
       title: "Inspect the commute at peak hour",
-      summary: `Transport sits in the lower range for Greater Melbourne (${Math.round(transportPct)}th percentile) at the SA2 level.`,
+      summary: `Transport sits in the lower range for Greater Melbourne (${Math.round(transportPct)}th percentile) for this wider area.`,
       verifyAction: "Test the door-to-door commute at peak hour before relying on public transport.",
       confidence: "medium",
       geography: "sa2",
@@ -854,7 +854,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       kind: "positive",
       severity: "info",
       title: "Good access to health services",
-      summary: `Health access scores in the top tier for Greater Melbourne (${Math.round(healthPct)}th percentile) at the SA2 level.`,
+      summary: `Health access scores in the top tier for Greater Melbourne (${Math.round(healthPct)}th percentile) for this wider area.`,
       confidence: "medium",
       geography: "sa2",
       sourceRefs: getSourcesByIds(["vic-mapshare-hospitals", "osm-health"]),
@@ -930,7 +930,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       title: extensive
         ? "Much of this area is under a Heritage Overlay"
         : "Part of this area is under a Heritage Overlay",
-      summary: `About ${Math.round(heritagePct)}% of this SA2's area is within a Heritage Overlay (HO). Whether THIS property is affected needs a parcel-level check.`,
+      summary: `About ${Math.round(heritagePct)}% of this area sits inside a Heritage Overlay. Whether THIS property is affected needs a check of its planning certificate.`,
       whyItMatters:
         "A Heritage Overlay can restrict demolition, external changes and subdivision - it shapes what you can do with the property.",
       verifyAction:
@@ -1389,7 +1389,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       kind: "neutral",
       severity: "info",
       title: "Data completeness for this area",
-      summary: `Our pipeline rates this SA2 ${Math.round(dc)}/100 for data completeness. This describes how well-measured the area is, not how good it is to live in.`,
+      summary: `Our pipeline rates this area ${Math.round(dc)}/100 for data completeness. This describes how well-measured the area is, not how good it is to live in.`,
       confidence: "medium",
       geography: "sa2",
       sourceRefs: [METHODOLOGY_REF],
@@ -1434,7 +1434,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     ? verifyCount > 0
       ? `${areaName}: ${verifyCount} thing${verifyCount === 1 ? "" : "s"} to check before you offer`
       : `${areaName}: no major flags in the open data - still verify on site`
-    : "Location outside our Greater Melbourne SA2 coverage";
+    : "Location outside our Greater Melbourne coverage";
 
   const amenitySentence = haveNearbyData
     ? reachableEveryday >= 5
@@ -1456,7 +1456,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         /\s+/g,
         " "
       ).trim()
-    : "We could not match this point to a Greater Melbourne SA2. Drop the pin on a Melbourne property to get the full report.";
+    : "We could not match this point to a Greater Melbourne area. Drop the pin on a Melbourne property to get the full report.";
 
   // ---- Report-level source manifest ---------------------------------------
   const refMap = new Map<string, BuyerSourceRef>();

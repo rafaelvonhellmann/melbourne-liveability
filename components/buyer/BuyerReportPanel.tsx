@@ -196,9 +196,11 @@ export function BuyerReportPanel({
                   </span>
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-ink">{f.title}</p>
-                    <p className="text-xs leading-snug text-ink-muted">
-                      {f.verifyAction || f.summary}
-                    </p>
+                    {!isLive && (
+                      <p className="text-xs leading-snug text-ink-muted">
+                        {f.verifyAction || f.summary}
+                      </p>
+                    )}
                   </div>
                 </li>
               ))}
@@ -289,7 +291,7 @@ export function BuyerReportPanel({
           <Section title="What to weigh up" count={negatives.length}>
             <div className="space-y-2.5">
               {negatives.map((f) => (
-                <FindingCard key={f.id} f={f} />
+                <FindingCard key={f.id} f={f} compact={isLive} />
               ))}
             </div>
           </Section>
@@ -300,7 +302,7 @@ export function BuyerReportPanel({
           <Section title="Things to verify" count={checks.length}>
             <div className="space-y-2.5">
               {checks.map((f) => (
-                <FindingCard key={f.id} f={f} />
+                <FindingCard key={f.id} f={f} compact={isLive} />
               ))}
             </div>
           </Section>
@@ -311,7 +313,7 @@ export function BuyerReportPanel({
           <Section title="What looks positive" count={positives.length}>
             <div className="space-y-2.5">
               {positives.map((f) => (
-                <FindingCard key={f.id} f={f} />
+                <FindingCard key={f.id} f={f} compact={isLive} />
               ))}
             </div>
           </Section>
@@ -468,7 +470,7 @@ export function BuyerReportPanel({
           <Section title="Data notes">
             <div className="space-y-2.5">
               {neutral.map((f) => (
-                <FindingCard key={f.id} f={f} />
+                <FindingCard key={f.id} f={f} compact={isLive} />
               ))}
             </div>
           </Section>
@@ -548,7 +550,7 @@ function ConfidenceBadge({ confidence }: { confidence: BuyerConfidence }) {
   );
 }
 
-function FindingCard({ f }: { f: BuyerFinding }) {
+function FindingCard({ f, compact = false }: { f: BuyerFinding; compact?: boolean }) {
   const Icon =
     f.kind === "positive"
       ? CheckCircle2
@@ -581,8 +583,9 @@ function FindingCard({ f }: { f: BuyerFinding }) {
               <span className="font-medium text-ink">Why it matters:</span> {f.whyItMatters}
             </p>
           )}
-          {/* The action stays on screen - it's the useful, direct part. */}
-          {f.verifyAction && (
+          {/* The "Verify:" action is due-diligence detail - it belongs in the full
+              report, not the live hint panel (compact). */}
+          {f.verifyAction && !compact && (
             <p className="mt-1 text-[11px] leading-snug text-ink-muted">
               <span className="font-medium text-ink">Verify:</span> {f.verifyAction}
             </p>

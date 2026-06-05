@@ -42,7 +42,7 @@ export const DOMAIN_REGISTRY: DomainConfig[] = [
   },
   {
     id: "safety",
-    label: "Safety (less crime)",
+    label: "Safety",
     scored: true,
     defaultWeight: 14,
     layer: "choropleth+pins",
