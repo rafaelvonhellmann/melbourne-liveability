@@ -73,6 +73,12 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
       attributionControl: false,
     });
     mapRef.current = map;
+    // The map is decorative context (the controls + readout below carry the
+    // meaning), so take its canvas out of the tab order + AT tree - rather than
+    // aria-hidden the container, which would hide a still-focusable canvas
+    // (WCAG 4.1.2 / a keyboard trap).
+    map.getCanvas().setAttribute("tabindex", "-1");
+    map.getCanvas().setAttribute("aria-hidden", "true");
     new maplibregl.Marker({ color: "#D97757" }).setLngLat([lng, lat]).addTo(map);
 
     const addBuildings = (fc: FeatureCollection) => {
@@ -171,7 +177,12 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
 
   return (
     <div className="overflow-hidden rounded-lg border border-surface-border">
-      <div ref={mapEl} className="h-64 w-full bg-surface-sunken" aria-hidden />
+      <div
+        ref={mapEl}
+        className="h-64 w-full bg-surface-sunken"
+        role="img"
+        aria-label="3D building massing around the pin, used to judge sun direction and overshadowing"
+      />
       <div className="space-y-3 border-t border-surface-border bg-surface p-3">
         {status === "loading" && (
           <p className="text-xs text-ink-muted">Loading 3D buildings...</p>
@@ -200,6 +211,7 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
                   <button
                     key={s}
                     type="button"
+                    aria-pressed={season === s}
                     onClick={() => setSeason(s)}
                     className={`rounded-full px-2.5 py-0.5 text-[11px] ${
                       season === s
@@ -221,6 +233,7 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
               min={4}
               max={21}
               value={hour}
+              aria-valuetext={`${String(hour).padStart(2, "0")}:00`}
               onChange={(e) => setHour(Number(e.target.value))}
               className="w-full accent-accent"
             />

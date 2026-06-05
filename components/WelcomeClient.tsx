@@ -66,6 +66,7 @@ export function WelcomeClient() {
   const [places, setPlaces] = useState<Place[]>([]);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(-1);
 
   useEffect(() => {
     loadPlaces()
@@ -91,8 +92,23 @@ export function WelcomeClient() {
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (suggestions[0]) go(suggestions[0].slug);
+    const pick = active >= 0 ? suggestions[active] : suggestions[0];
+    if (pick) go(pick.slug);
     else router.push("/");
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (!open || suggestions.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActive((i) => Math.min(i + 1, suggestions.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Escape") {
+      setOpen(false);
+      setActive(-1);
+    }
   };
 
   return (
@@ -118,21 +134,35 @@ export function WelcomeClient() {
               onChange={(e) => {
                 setQ(e.target.value);
                 setOpen(true);
+                setActive(-1);
               }}
               onFocus={() => setOpen(true)}
+              onKeyDown={onKeyDown}
               placeholder="Search where you want to live..."
               className="w-full bg-transparent text-base text-ink outline-none placeholder:text-ink-muted"
               autoComplete="off"
+              role="combobox"
+              aria-expanded={open && suggestions.length > 0}
+              aria-controls="welcome-suggestions"
+              aria-autocomplete="list"
+              aria-activedescendant={active >= 0 ? `welcome-opt-${active}` : undefined}
             />
           </div>
           {open && suggestions.length > 0 && (
-            <ul className="absolute z-10 mt-2 w-full overflow-hidden rounded-2xl border border-surface-border bg-surface text-left shadow-card">
-              {suggestions.map((s) => (
-                <li key={s.slug}>
+            <ul
+              id="welcome-suggestions"
+              role="listbox"
+              className="absolute z-10 mt-2 w-full overflow-hidden rounded-2xl border border-surface-border bg-surface text-left shadow-card"
+            >
+              {suggestions.map((s, i) => (
+                <li key={s.slug} role="option" id={`welcome-opt-${i}`} aria-selected={i === active}>
                   <button
                     type="button"
                     onClick={() => go(s.slug)}
-                    className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-surface-sunken"
+                    onMouseEnter={() => setActive(i)}
+                    className={`flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm ${
+                      i === active ? "bg-surface-sunken" : "hover:bg-surface-sunken"
+                    }`}
                   >
                     <MapPin className="h-4 w-4 shrink-0 text-accent" aria-hidden />
                     <span className="text-ink">{s.name}</span>
@@ -155,7 +185,7 @@ export function WelcomeClient() {
             Or describe what you want
           </Link>
         </div>
-        <p className="mt-10 animate-pulse text-xs text-ink-muted" aria-hidden>
+        <p className="mt-10 animate-pulse text-xs text-ink-muted">
           scroll to see how it works
         </p>
       </section>
