@@ -23,6 +23,7 @@ import { DataConfidenceCard } from "./DataConfidenceCard";
 import { DataCoverageCard } from "./DataCoverageCard";
 import { HomeBuyerCard } from "./HomeBuyerCard";
 import { IncomeAffordabilityCard } from "./IncomeAffordabilityCard";
+import { AirQualityCard } from "./AirQualityCard";
 import { SourceDrawer } from "./SourceDrawer";
 import { ProfileEngagement } from "./ProfileEngagement";
 import { FeedbackButton } from "./FeedbackButton";
@@ -636,7 +637,12 @@ function ContextTabPanel({
       </div>
     );
   }
-  return <ContextPanels context={place.context} />;
+  return (
+    <div className="space-y-4">
+      <ContextPanels context={place.context} />
+      <AirQualityCard centroid={place.centroid as [number, number]} />
+    </div>
+  );
 }
 
 /* ----------------------------- Shared bits ---------------------------- */
