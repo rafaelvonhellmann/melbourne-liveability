@@ -393,7 +393,11 @@ function pctOf(place: Place | null | undefined, domain: keyof Place["domains"]):
 
 function safeOverallScore(place: Place | null | undefined, override?: number | null): number | null {
   if (override != null && Number.isFinite(override)) return override;
-  if (!place) return null;
+  // Non-residential SA2s (airports, racecourse, parkland, industrial) carry no
+  // scored domains, so computeWeightedScore returns 0 - that is "unscored", NOT
+  // a real 0/100. Return null so callers never frame these as a poor place to
+  // live (and skip the liveability finding entirely).
+  if (!place || place.nonResidential) return null;
   try {
     const s = computeWeightedScore(place, getDefaultWeights()).total;
     return Number.isFinite(s) ? s : null;
@@ -1455,7 +1459,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     "safety-context": 3,
     "transport-noise": 4,
     "nuisance-proximity": 5,
-    "transport-weak": 6,
+    "transport-check": 6,
     "amenity-access-low": 7,
   };
   const priorityChecks = [...verifyFindings]

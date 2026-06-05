@@ -124,7 +124,7 @@ export function BuyerReportPanel({
             <dd className="num inline">{generated}</dd>
           </div>
         </dl>
-        {place && variant !== "embedded" && (
+        {place && !place.nonResidential && variant !== "embedded" && (
           <Link
             href={`/places/${place.slug}`}
             onClick={() => track("buyer_see_full_report", { slug: place.slug })}
@@ -448,8 +448,9 @@ export function BuyerReportPanel({
         </Section>
 
         {/* 5. Area liveability snapshot (full report only - the live panel sends
-            the user to the richer /places profile via the header button). */}
-        {place && !isLive && (
+            the user to the richer /places profile via the header button).
+            Skipped for non-residential SA2s, which have no scored domains. */}
+        {place && !place.nonResidential && !isLive && (
           <Section
             title="Area liveability snapshot"
             precision="Area-level (the suburb/area, not the parcel) · src: see methodology"

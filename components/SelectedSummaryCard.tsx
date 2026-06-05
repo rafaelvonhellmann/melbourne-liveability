@@ -116,12 +116,16 @@ export function SelectedSummaryCard({
       </div>
 
       <div className="mt-3 flex items-center gap-2">
-        <Link
-          href={`/places/${place.slug}`}
-          className="rounded-md border border-surface-border px-3 py-1.5 text-sm text-ink transition-colors hover:border-accent hover:text-accent"
-        >
-          Full profile →
-        </Link>
+        {/* Non-residential SA2s have no statically-generated /places page - don't
+            link to a 404. */}
+        {!place.nonResidential && (
+          <Link
+            href={`/places/${place.slug}`}
+            className="rounded-md border border-surface-border px-3 py-1.5 text-sm text-ink transition-colors hover:border-accent hover:text-accent"
+          >
+            Full profile →
+          </Link>
+        )}
         <AddToShortlistButton
           slug={place.slug}
           onShortlistChange={onShortlistChange}
