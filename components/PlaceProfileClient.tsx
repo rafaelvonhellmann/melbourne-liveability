@@ -22,6 +22,7 @@ import { CyclabilityPanel } from "./CyclabilityPanel";
 import { DataConfidenceCard } from "./DataConfidenceCard";
 import { DataCoverageCard } from "./DataCoverageCard";
 import { HomeBuyerCard } from "./HomeBuyerCard";
+import { IncomeAffordabilityCard } from "./IncomeAffordabilityCard";
 import { SourceDrawer } from "./SourceDrawer";
 import { ProfileEngagement } from "./ProfileEngagement";
 import { FeedbackButton } from "./FeedbackButton";
@@ -612,7 +613,12 @@ function ContextTabPanel({
   homeBuyerPercentile: number | null;
 }) {
   if (context === "homebuyer") {
-    return <HomeBuyerCard place={place} gmPercentile={homeBuyerPercentile} />;
+    return (
+      <div className="space-y-4">
+        <HomeBuyerCard place={place} gmPercentile={homeBuyerPercentile} />
+        <IncomeAffordabilityCard place={place} />
+      </div>
+    );
   }
   if (context === "coverage") {
     return (
