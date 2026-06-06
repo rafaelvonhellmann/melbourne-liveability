@@ -154,7 +154,10 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
     // once the style is parsed. Time-bounded + unmount-guarded.
     let cancelled = false;
     (async () => {
-      const t = timeoutSignal(10000);
+      // The CoM export API is a live endpoint with variable latency (≈1-12s),
+      // not a static asset - give it a generous bound so a slow-but-fine
+      // response isn't aborted as a false timeout.
+      const t = timeoutSignal(20000);
       try {
         const res = await fetch(buildingsUrl(lng, lat), { signal: t.signal });
         const fc = (await res.json()) as FeatureCollection;
@@ -244,7 +247,9 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
         aria-label="Buildings around the pin with their cast shadows at the chosen time of day"
       />
       <div className="space-y-3 border-t border-surface-border bg-surface p-3">
-        {status === "loading" && <p className="text-xs text-ink-muted">Loading buildings + shadows...</p>}
+        {status === "loading" && (
+          <p className="text-xs text-ink-muted">Loading buildings + shadows (a few seconds)...</p>
+        )}
         {status === "no-buildings" && (
           <p className="text-xs text-ink-muted">
             Building heights aren&apos;t available here (they cover the City of Melbourne council
