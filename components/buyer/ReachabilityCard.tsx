@@ -303,8 +303,8 @@ export function ReachabilityCard({ lng, lat }: { lng: number; lat: number }) {
 
         <p className="text-[11px] leading-snug text-ink-muted">
           {mode === "drive" ? "Driving" : "Walking"} times are typical off-peak estimates from
-          OpenRouteService (OpenStreetMap, ODbL) - real peak-hour trips run longer. The score is
-          our all-round liveability blend across all measured topics (higher = better).
+          OpenStreetMap routing (ODbL) - real peak-hour trips run longer. The score is our
+          all-round liveability blend across all measured topics (higher = better).
         </p>
       </div>
     </div>
