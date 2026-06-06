@@ -45,6 +45,14 @@ export const WALK_RANGE_SECONDS = WALK_MINUTES * 60;
 const ORS_FOOT_ISOCHRONE_URL =
   "https://api.openrouteservice.org/v2/isochrones/foot-walking";
 
+/** Keyless public OpenStreetMap Valhalla isochrone endpoint (pedestrian). */
+const VALHALLA_ISOCHRONE_URL = "https://valhalla1.openstreetmap.de/isochrone";
+
+function valhallaIsochroneUrl(): string {
+  const u = process.env.NEXT_PUBLIC_VALHALLA_ISOCHRONE_URL;
+  return u && u.trim() ? u.trim() : VALHALLA_ISOCHRONE_URL;
+}
+
 /** ORS API key, if configured. Public by necessity (client-side fetch). */
 function orsApiKey(): string | undefined {
   const k = process.env.NEXT_PUBLIC_ORS_API_KEY;
@@ -68,7 +76,10 @@ function isochroneUrl(): string {
  * opt-in button is never rendered.
  */
 export function isPreciseWalkConfigured(): boolean {
-  return orsApiKey() !== undefined;
+  // Always available now: a keyless default (public Valhalla pedestrian
+  // isochrone) means precise street-network walk works on every deploy; an ORS
+  // key just upgrades the backend.
+  return true;
 }
 
 export type IsochroneResult =
@@ -111,25 +122,31 @@ export async function fetchWalkIsochrone(
   opts: { signal?: AbortSignal } = {}
 ): Promise<IsochroneResult> {
   const key = orsApiKey();
-  if (!key) return { ok: false, reason: "not-configured" };
-
   const seconds = Math.max(1, Math.round(minutes * 60));
   const t = timeoutSignal(9000, opts.signal);
   try {
-    const res = await fetch(isochroneUrl(), {
-      method: "POST",
-      signal: t.signal,
-      headers: {
-        Authorization: key,
-        "Content-Type": "application/json",
-        Accept: "application/geo+json, application/json",
-      },
-      body: JSON.stringify({
-        locations: [pin],
-        range: [seconds],
-        range_type: "time",
-      }),
-    });
+    const res = key
+      ? await fetch(isochroneUrl(), {
+          method: "POST",
+          signal: t.signal,
+          headers: {
+            Authorization: key,
+            "Content-Type": "application/json",
+            Accept: "application/geo+json, application/json",
+          },
+          body: JSON.stringify({ locations: [pin], range: [seconds], range_type: "time" }),
+        })
+      : await fetch(valhallaIsochroneUrl(), {
+          method: "POST",
+          signal: t.signal,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            locations: [{ lat: pin[1], lon: pin[0] }],
+            costing: "pedestrian",
+            contours: [{ time: Math.max(1, Math.round(minutes)) }],
+            polygons: true,
+          }),
+        });
     if (!res.ok) return { ok: false, reason: `HTTP ${res.status}` };
     const json: unknown = await res.json();
     const geom = parseOrsIsochrone(json);

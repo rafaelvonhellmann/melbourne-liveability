@@ -310,7 +310,7 @@ export function BuyerReportPanel({
             </ul>
             <p className="mt-2 text-[11px] leading-snug text-ink-muted">
               {report.anchorDistances.some((d) => d.driveMin != null)
-                ? "Off-peak driving time + road distance where routing is available (OpenRouteService / OpenStreetMap), otherwise straight-line. Verify the real commute at peak hour."
+                ? "Off-peak driving time + road distance where routing is available (OpenStreetMap routing, ODbL), otherwise straight-line. Verify the real commute at peak hour."
                 : "Straight-line distance from this pin to your saved places - not drive or public-transport time. Verify the real commute at peak hour."}
             </p>
           </Section>
@@ -419,7 +419,7 @@ export function BuyerReportPanel({
           title="Nearby amenities"
           precision={
             precise
-              ? "Point-level · street-network ~15-min walk · src: OpenRouteService + OpenStreetMap (ODbL)"
+              ? "Point-level · street-network ~15-min walk · src: OpenStreetMap routing (ODbL)"
               : "Point-level · straight-line from the pin · src: OpenStreetMap (ODbL)"
           }
         >
@@ -475,7 +475,7 @@ export function BuyerReportPanel({
               })}
               <p className="text-[11px] leading-snug text-ink-muted">
                 {precise
-                  ? "Street-network ~15-minute walk isochrone (OpenRouteService); the distance shown to each amenity is still straight-line."
+                  ? "Street-network ~15-minute walk isochrone (OpenStreetMap routing); the distance shown to each amenity is still straight-line."
                   : "Straight-line, not street-network walking time."}{" "}
                 Public-transport stop proximity is reflected in the Transport score below, not in this
                 pin-level list yet.

@@ -68,15 +68,19 @@ describe("fetchWalkIsochrone", () => {
     else process.env.NEXT_PUBLIC_ORS_API_KEY = ORIG_KEY;
   });
 
-  it("short-circuits without a key and never calls fetch", async () => {
+  it("uses the keyless Valhalla fallback when no ORS key is set", async () => {
     delete process.env.NEXT_PUBLIC_ORS_API_KEY;
-    const spy = vi.fn();
+    // Keyless default is on; the fetch goes to Valhalla and is parsed the same way.
+    expect(isPreciseWalkConfigured()).toBe(true);
+    const spy = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ type: "FeatureCollection", features: [{ geometry: square }] }),
+    }));
     vi.stubGlobal("fetch", spy);
-    expect(isPreciseWalkConfigured()).toBe(false);
-    const r = await fetchWalkIsochrone([144.96, -37.81]);
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.reason).toBe("not-configured");
-    expect(spy).not.toHaveBeenCalled();
+    const r = await fetchWalkIsochrone([144.96, -37.81], 15);
+    expect(spy).toHaveBeenCalled();
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.geom).toEqual(square);
   });
 
   it("returns the parsed geometry on a successful response", async () => {
