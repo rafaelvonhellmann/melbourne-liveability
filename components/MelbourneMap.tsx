@@ -36,6 +36,28 @@ function circlePolygon(
   return { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [coords] } };
 }
 
+// Lazily add the POI source + circle layer. The full pin set (pois.geojson) is
+// ~7.5MB, and all categories are OFF by default, so we defer the fetch+parse
+// until the user first enables a category instead of paying it on every map
+// open. Idempotent. Layer starts hidden; the visiblePins effect sets the filter.
+function addPoiLayer(map: maplibregl.Map): void {
+  if (map.getSource("pois")) return;
+  map.addSource("pois", { type: "geojson", data: withBase("/data/pois.geojson") });
+  map.addLayer({
+    id: "poi-circles",
+    type: "circle",
+    source: "pois",
+    filter: ["==", ["get", "pinType"], "__none__"],
+    paint: {
+      "circle-radius": 4.5,
+      "circle-color": poiCircleColorExpression() as maplibregl.ExpressionSpecification,
+      "circle-stroke-width": 1.5,
+      "circle-stroke-color": "#ffffff",
+      "circle-opacity": 0.95,
+    },
+  });
+}
+
 // Light basemap to sit under the warm-editorial chrome; the YlGnBu choropleth
 // remains the independent data channel on top.
 const BASEMAP =
@@ -385,25 +407,9 @@ export function MelbourneMap({
         },
       });
 
-      map.addSource("pois", {
-        type: "geojson",
-        data: withBase("/data/pois.geojson"),
-      });
-      map.addLayer({
-        id: "poi-circles",
-        type: "circle",
-        source: "pois",
-        // Hidden until the user enables a category (all pins off by default).
-        filter: ["==", ["get", "pinType"], "__none__"],
-        paint: {
-          "circle-radius": 4.5,
-          // Categorical colour-by-category - independent of the YlGnBu data ramp.
-          "circle-color": poiCircleColorExpression() as maplibregl.ExpressionSpecification,
-          "circle-stroke-width": 1.5,
-          "circle-stroke-color": "#ffffff",
-          "circle-opacity": 0.95,
-        },
-      });
+      // POI source/layer (pois.geojson, ~7.5MB) is NOT added here - it is created
+      // lazily by addPoiLayer() the first time the user enables a pin category
+      // (see the visiblePins effect), so a default no-pins session never pays it.
 
       // Social anchors (work/school/family) + a dashed line from the buyer pin to
       // each. Context only - straight-line, never scored. Purple to stay distinct
@@ -757,18 +763,24 @@ export function MelbourneMap({
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !map.getLayer("poi-circles")) return;
+    if (!map) return;
 
     // Pins are user-controlled per category and independent of the active
     // choropleth domain. Show only the categories explicitly enabled.
     const allowed = Object.keys(visiblePins).filter((k) => visiblePins[k]);
     const pin = buyerPin;
     const applyFilter = () => {
-      if (!map.getLayer("poi-circles")) return;
       if (allowed.length === 0) {
-        map.setFilter("poi-circles", ["==", ["get", "pinType"], "__none__"]);
+        // Nothing enabled. If the POI layer was created on an earlier enable,
+        // hide it; if it was never created (the default), there's nothing to do.
+        if (map.getLayer("poi-circles")) {
+          map.setFilter("poi-circles", ["==", ["get", "pinType"], "__none__"]);
+        }
         return;
       }
+      // First enable: lazily fetch + add the (heavy) POI source/layer.
+      addPoiLayer(map);
+      if (!map.getLayer("poi-circles")) return;
       const catFilter: unknown[] = ["in", ["get", "pinType"], ["literal", allowed]];
       // In buyer mode, clip amenity pins to the ~15-min walk circle around the
       // pin so they show what is actually nearby, not scattered citywide (founder
