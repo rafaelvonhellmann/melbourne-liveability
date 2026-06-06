@@ -12,7 +12,14 @@ const SunShadowView = dynamic(
   () => import("./SunShadowView").then((m) => m.SunShadowView),
   { ssr: false, loading: () => <p className="mt-3 text-xs text-ink-muted">Loading 3D view...</p> }
 );
+// Reachability ("how far can you get") is also MapLibre-heavy + fires routing
+// calls - load + run it only when the user opens it.
+const ReachabilityCard = dynamic(
+  () => import("./ReachabilityCard").then((m) => m.ReachabilityCard),
+  { ssr: false, loading: () => <p className="mt-3 text-xs text-ink-muted">Loading map...</p> }
+);
 import { AMENITY_GROUPS } from "@/lib/buyer-report";
+import { isReachabilityConfigured } from "@/lib/reachability";
 import { formatSourceDate } from "@/lib/source-manifest";
 import { withBase } from "@/lib/asset-path";
 import { track } from "@/lib/analytics";
@@ -85,6 +92,7 @@ export function BuyerReportPanel({
   // (/places) variants render the full report.
   const isLive = variant === "live";
   const [show3d, setShow3d] = useState(false);
+  const [showReach, setShowReach] = useState(false);
 
   return (
     <div className={`space-y-4 text-ink ${className}`}>
@@ -374,6 +382,35 @@ export function BuyerReportPanel({
                 )}
               </div>
             )}
+          </Section>
+        )}
+
+        {/* 3c. How far you can get - reachability isochrone (opt-in; fires routing). */}
+        {hasPin && isLive && isReachabilityConfigured() && (
+          <Section title="How far you can get">
+            <p className="text-[11px] leading-snug text-ink-muted">
+              See the area you can reach by car or on foot in a set time - and which Melbourne
+              suburbs fall inside, with their all-round liveability score.
+            </p>
+            <div className="mt-3">
+              {showReach ? (
+                <ReachabilityCard
+                  lng={report.location.lng as number}
+                  lat={report.location.lat as number}
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowReach(true);
+                    track("buyer_reachability");
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-surface-border bg-surface-sunken px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-accent hover:text-accent"
+                >
+                  Show how far you can get &rarr;
+                </button>
+              )}
+            </div>
           </Section>
         )}
 
