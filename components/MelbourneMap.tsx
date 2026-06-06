@@ -643,7 +643,11 @@ export function MelbourneMap({
     }
     // Deep-dive: ease into the area at neighbourhood zoom (never zoom back out
     // if the user is already closer).
-    map.flyTo({ center: buyerPin, zoom: Math.max(map.getZoom(), 14.5), duration: 550 });
+    map.flyTo({
+      center: buyerPin,
+      zoom: Math.max(map.getZoom(), 14.5),
+      duration: prefersReducedMotion() ? 0 : 550,
+    });
   }, [buyerPin]);
 
   // ~15-min bike reach ring - independent toggle, only shown with a pin down.

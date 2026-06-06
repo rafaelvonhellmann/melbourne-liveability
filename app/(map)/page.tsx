@@ -205,6 +205,12 @@ export default function MapPage() {
   // it; `precisionAbortRef` cancels a superseded fetch. Without these, a slow ORS
   // response for an old pin could overwrite the report for a newly dropped pin.
   const buyerPinRef = useRef<[number, number] | null>(null);
+  // Monotonic report-build counter. The pin-identity guard catches a MOVED pin,
+  // but not a new report generation for the SAME pin (free build -> precise
+  // recompute -> revert). Async drive-enrichment captures the seq at build time
+  // and only patches if it's still current, so a stale enrichment can't land on
+  // a newer generation's report.
+  const buildSeqRef = useRef(0);
   useEffect(() => {
     buyerPinRef.current = buyerPin;
   }, [buyerPin]);
@@ -373,7 +379,11 @@ export default function MapPage() {
   // Upgrade the straight-line anchor distances to real driving time + road
   // distance (OpenRouteService), when configured. Runs after the report is shown
   // (non-blocking) and patches it; bails if the pin moved underneath it.
-  const enrichAnchorsWithDrive = async (report: BuyerReportData, pin: [number, number]) => {
+  const enrichAnchorsWithDrive = async (
+    report: BuyerReportData,
+    pin: [number, number],
+    seq: number
+  ) => {
     if (!isDriveRoutingConfigured()) return;
     const ad = report.anchorDistances;
     if (!ad || ad.length === 0) return;
@@ -385,7 +395,8 @@ export default function MapPage() {
         return r.ok ? { ...d, driveMin: r.durationMin, driveKm: r.distanceKm } : d;
       })
     );
-    if (buyerPinRef.current !== pin) return;
+    // Bail if the pin moved OR a newer report generation has since been built.
+    if (buyerPinRef.current !== pin || seq !== buildSeqRef.current) return;
     setBuyerReport((prev) => (prev ? { ...prev, anchorDistances: enriched } : prev));
   };
 
@@ -442,9 +453,10 @@ export default function MapPage() {
         majorProjects: MAJOR_PROJECTS,
         profile: profileRef.current,
       });
+    const seq = ++buildSeqRef.current;
     setBuyerReport(builtReport);
     track("buyer_report", { coverage: place ? "in" : "off" });
-    void enrichAnchorsWithDrive(builtReport, lngLat);
+    void enrichAnchorsWithDrive(builtReport, lngLat, seq);
   };
 
   // Paid-tier opt-in: recompute "nearby on foot" against a real street-network
@@ -502,9 +514,10 @@ export default function MapPage() {
         majorProjects: MAJOR_PROJECTS,
         profile: profileRef.current,
       });
+    const seq = ++buildSeqRef.current;
     setBuyerReport(builtPreciseReport);
     setPreciseStatus("idle");
-    void enrichAnchorsWithDrive(builtPreciseReport, pin);
+    void enrichAnchorsWithDrive(builtPreciseReport, pin, seq);
   };
 
   // Live map click in buyer mode (SA2 comes from the clicked map feature).
