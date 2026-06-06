@@ -2,29 +2,30 @@
 
 import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
-import type { FeatureCollection } from "geojson";
+import * as turf from "@turf/turf";
+import type { Feature, FeatureCollection, Polygon, MultiPolygon } from "geojson";
 import { sunPosition } from "@/lib/sun";
 import { timeoutSignal } from "@/lib/fetch-timeout";
 
 /**
- * 3D sun/shadow context for a dropped pin. Renders the real building massing
- * around the property (City of Melbourne CC-BY 2020 building footprints,
- * extruded by their height) on a pitched MapLibre map, and lets the user drag
- * the time of day - the sun position (lib/sun) drives the map light so building
- * faces toward the sun are lit and the rest fall into shade, conveying which way
- * the sun comes from and what overshadows the spot.
+ * Sun & shadow check for a dropped pin - the Northlight differentiator.
  *
- * Honest scope: MapLibre shades faces by light direction; it does not cast true
- * ground shadows (that needs a dedicated engine). For an exact shadow simulation
- * at any date/time we deep-link to shademap.app. Buildings cover the City of
- * Melbourne council area (CBD, Southbank, Docklands, Carlton, Parkville, etc.);
- * outside it we show only the simulator link. Loaded only on demand (dynamic
- * import) so MapLibre stays out of the report's initial bundle.
+ * Renders the real building massing around the property (City of Melbourne
+ * CC-BY 2020 building footprints, extruded by height) on a pitched MapLibre map,
+ * AND projects each building's REAL cast shadow onto the ground for the chosen
+ * date/time: shadow length = height / tan(sun altitude), direction = the
+ * anti-solar bearing (lib/sun sunPosition). The pin is flagged in sun or in
+ * shade. Geometry only (turf) - no 3D engine - so it is static-export safe.
+ *
+ * Coverage: building heights exist only for the City of Melbourne council area
+ * (CBD, Southbank, Docklands, Carlton, Parkville, ...). Elsewhere we show the
+ * sun-path summary + a deep-link to shademap.app. Loaded on demand (dynamic
+ * import) so MapLibre + turf stay out of the report's initial bundle.
  */
 const COM_BUILDINGS_API =
   "https://data.melbourne.vic.gov.au/api/explore/v2.1/catalog/datasets/2020-building-footprints/exports/geojson";
 
-function buildingsUrl(lng: number, lat: number, metres = 350): string {
+function buildingsUrl(lng: number, lat: number, metres = 320): string {
   const where = `within_distance(geo_shape, geom'POINT(${lng} ${lat})', ${metres}m)`;
   return `${COM_BUILDINGS_API}?select=structure_extrusion&where=${encodeURIComponent(where)}`;
 }
@@ -33,14 +34,62 @@ function shademapUrl(lng: number, lat: number): string {
   return `https://shademap.app/@${lat.toFixed(5)},${lng.toFixed(5)},17z`;
 }
 
+const RAD = Math.PI / 180;
+
+/**
+ * Project each building footprint to its cast-shadow polygon on flat ground at
+ * the given sun position. The shadow of a vertical prism on the ground is the
+ * convex hull of the footprint and the footprint translated by the shadow
+ * vector (length = height/tan(altitude), bearing = anti-solar). Pure; returns an
+ * empty collection when the sun is low/below the horizon (no meaningful shadow).
+ */
+function computeShadows(
+  fc: FeatureCollection,
+  azimuthDeg: number,
+  altitudeDeg: number,
+  refLat: number
+): FeatureCollection {
+  if (altitudeDeg <= 2) return turf.featureCollection([]);
+  const ratio = Math.min(1 / Math.tan(altitudeDeg * RAD), 25); // shadow length per metre, capped
+  const antiAz = (azimuthDeg + 180) % 360;
+  const sinB = Math.sin(antiAz * RAD);
+  const cosB = Math.cos(antiAz * RAD);
+  const mPerDegLat = 110574;
+  const mPerDegLng = 111320 * Math.cos(refLat * RAD);
+  const out: Feature<Polygon>[] = [];
+  for (const f of fc.features) {
+    const h = Number((f.properties as { structure_extrusion?: number } | null)?.structure_extrusion) || 6;
+    const L = h * ratio; // metres
+    const dLat = (L * cosB) / mPerDegLat;
+    const dLng = (L * sinB) / mPerDegLng;
+    const g = f.geometry as Polygon | MultiPolygon | null;
+    if (!g) continue;
+    const rings: number[][][] =
+      g.type === "Polygon" ? [g.coordinates[0]] : g.type === "MultiPolygon" ? g.coordinates.map((p) => p[0]) : [];
+    for (const ring of rings) {
+      if (!ring || ring.length < 3) continue;
+      const pts = [];
+      for (const c of ring) {
+        pts.push(turf.point([c[0], c[1]]));
+        pts.push(turf.point([c[0] + dLng, c[1] + dLat]));
+      }
+      const hull = turf.convex(turf.featureCollection(pts));
+      if (hull) out.push(hull);
+    }
+  }
+  return turf.featureCollection(out);
+}
+
 type Season = "summer" | "winter";
 
 export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
   const mapEl = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const buildingsRef = useRef<FeatureCollection | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "no-buildings" | "error">("loading");
   const [hour, setHour] = useState(13);
   const [season, setSeason] = useState<Season>("summer");
+  const [pinShaded, setPinShaded] = useState<boolean | null>(null);
 
   // Sun position for the chosen time, in the user's local clock (good enough for
   // a Melbourne property viewed locally; the linked simulator is exact).
@@ -59,47 +108,50 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
     const map = new maplibregl.Map({
       container: mapEl.current,
       // Tile-free style: a plain background so the map "load" event fires
-      // immediately (no basemap tiles to wait on / be CSP-blocked) - the value
-      // here is the extruded building massing + sun direction, not streets.
+      // immediately (no basemap tiles to wait on / be CSP-blocked).
       style: {
         version: 8,
         sources: {},
         layers: [{ id: "bg", type: "background", paint: { "background-color": "#eceeea" } }],
       },
       center: [lng, lat],
-      zoom: 15.6,
-      pitch: 58,
+      zoom: 16,
+      pitch: 55,
       bearing: -20,
       attributionControl: false,
     });
     mapRef.current = map;
-    // The map is decorative context (the controls + readout below carry the
-    // meaning), so take its canvas out of the tab order + AT tree - rather than
-    // aria-hidden the container, which would hide a still-focusable canvas
-    // (WCAG 4.1.2 / a keyboard trap).
+    // Decorative canvas: keep it out of the tab order + AT tree (WCAG 4.1.2).
     map.getCanvas().setAttribute("tabindex", "-1");
     map.getCanvas().setAttribute("aria-hidden", "true");
     new maplibregl.Marker({ color: "#D97757" }).setLngLat([lng, lat]).addTo(map);
 
     const addBuildings = (fc: FeatureCollection) => {
       if (map.getSource("blds")) return;
+      buildingsRef.current = fc;
+      // Ground-shadow fill, drawn under the buildings (data set by the sun effect).
+      map.addSource("shadows", { type: "geojson", data: turf.featureCollection([]) });
       map.addSource("blds", { type: "geojson", data: fc });
+      map.addLayer({
+        id: "shadow-fill",
+        type: "fill",
+        source: "shadows",
+        paint: { "fill-color": "#0f130d", "fill-opacity": 0.28 },
+      });
       map.addLayer({
         id: "blds-3d",
         type: "fill-extrusion",
         source: "blds",
         paint: {
-          "fill-extrusion-color": "#c9d2c9",
+          "fill-extrusion-color": "#cfd6cd",
           "fill-extrusion-height": ["coalesce", ["get", "structure_extrusion"], 6],
           "fill-extrusion-base": 0,
-          "fill-extrusion-opacity": 0.92,
+          "fill-extrusion-opacity": 0.95,
         },
       });
     };
-    // Fetch buildings immediately (don't gate on the map's "load" event, which
-    // can be flaky); apply as soon as the style is parsed. Time-bounded so a
-    // stalled CoM endpoint can't leave the panel on "Loading" forever, and
-    // guarded so a late response never sets state on an unmounted component.
+    // Fetch buildings immediately (not gated on the flaky "load" event); apply
+    // once the style is parsed. Time-bounded + unmount-guarded.
     let cancelled = false;
     (async () => {
       const t = timeoutSignal(10000);
@@ -111,8 +163,6 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
           setStatus("no-buildings");
           return;
         }
-        // Poll until the style is parsed, then add the layer - no dependency on
-        // the "load" event (which can fail to fire). Bounded so it can't hang.
         let tries = 0;
         const tryApply = () => {
           if (cancelled || !mapRef.current) return;
@@ -138,8 +188,6 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
         t.clear();
       }
     })();
-    // Non-fatal MapLibre errors (e.g. a missing basemap tile) are logged, not
-    // surfaced - status is driven purely by the buildings fetch above.
     map.on("error", (e) => console.warn("SunShadowView map:", e?.error?.message ?? e));
 
     return () => {
@@ -149,7 +197,8 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
     };
   }, [lng, lat]);
 
-  // Re-light the scene whenever the chosen time changes.
+  // Recompute cast shadows + the map light whenever the chosen time changes.
+  // Debounced so dragging the slider stays smooth across ~hundreds of buildings.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || status !== "ready") return;
@@ -162,9 +211,20 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
         position: [1.15, sun.azimuthDeg, Math.max(2, 90 - sun.altitudeDeg)],
       });
     } catch {
-      /* style may not be ready on the very first tick */
+      /* style not ready on the very first tick */
     }
-  }, [sun.altitudeDeg, sun.azimuthDeg, status]);
+    const handle = setTimeout(() => {
+      if (!mapRef.current || !buildingsRef.current) return;
+      const shadows = computeShadows(buildingsRef.current, sun.azimuthDeg, sun.altitudeDeg, lat);
+      const src = map.getSource("shadows") as maplibregl.GeoJSONSource | undefined;
+      src?.setData(shadows);
+      const pt = turf.point([lng, lat]);
+      setPinShaded(
+        up && shadows.features.some((p) => turf.booleanPointInPolygon(pt, p as Feature<Polygon>))
+      );
+    }, 70);
+    return () => clearTimeout(handle);
+  }, [sun.altitudeDeg, sun.azimuthDeg, status, lng, lat]);
 
   const sunUp = sun.altitudeDeg > 0;
   const dirLabel = ((): string => {
@@ -181,21 +241,19 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
         ref={mapEl}
         className="h-64 w-full bg-surface-sunken"
         role="img"
-        aria-label="3D building massing around the pin, used to judge sun direction and overshadowing"
+        aria-label="Buildings around the pin with their cast shadows at the chosen time of day"
       />
       <div className="space-y-3 border-t border-surface-border bg-surface p-3">
-        {status === "loading" && (
-          <p className="text-xs text-ink-muted">Loading 3D buildings...</p>
-        )}
+        {status === "loading" && <p className="text-xs text-ink-muted">Loading buildings + shadows...</p>}
         {status === "no-buildings" && (
           <p className="text-xs text-ink-muted">
-            3D building heights aren&apos;t available here (they cover the City of Melbourne
-            council area). Use the shadow simulator below for this address.
+            Building heights aren&apos;t available here (they cover the City of Melbourne council
+            area). Use the shadow simulator below for this address.
           </p>
         )}
         {status === "error" && (
           <p className="text-xs text-ink-muted">
-            Couldn&apos;t load the 3D buildings just now. The shadow simulator below still works.
+            Couldn&apos;t load the buildings just now. The shadow simulator below still works.
           </p>
         )}
         {status === "ready" && (
@@ -203,8 +261,8 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
             <div className="flex items-center justify-between gap-2 text-xs">
               <span className="font-medium text-ink">
                 {sunUp
-                  ? `Sun is in the ${dirLabel}, ${Math.round(sun.altitudeDeg)}° up`
-                  : "Sun is below the horizon"}
+                  ? `Sun in the ${dirLabel}, ${Math.round(sun.altitudeDeg)}° up`
+                  : "Sun below the horizon"}
               </span>
               <div className="flex gap-1">
                 {(["summer", "winter"] as Season[]).map((s) => (
@@ -224,6 +282,21 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
                 ))}
               </div>
             </div>
+
+            {sunUp && pinShaded != null && (
+              <div
+                className={`rounded-md border px-3 py-2 text-xs font-medium ${
+                  pinShaded
+                    ? "border-[#9aa3b2]/40 bg-[#eef1f5] text-[#41506b]"
+                    : "border-[#E6AB02]/40 bg-[#FBF3D8] text-[#7a5a00]"
+                }`}
+              >
+                {pinShaded
+                  ? `This spot is in shade at ${String(hour).padStart(2, "0")}:00 (${season}).`
+                  : `This spot is in direct sun at ${String(hour).padStart(2, "0")}:00 (${season}).`}
+              </div>
+            )}
+
             <label className="block text-[11px] text-ink-muted" htmlFor="sun-hour">
               Time of day: {String(hour).padStart(2, "0")}:00
             </label>
@@ -240,16 +313,16 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
           </>
         )}
         <p className="text-[11px] leading-snug text-ink-muted">
-          3D massing shaded by sun direction (lit faces point at the sun) - it shows where the
-          sun comes from and what blocks it, not exact cast shadows. Buildings &copy; City of
-          Melbourne (CC BY 4.0).{" "}
+          Real cast shadows projected from City of Melbourne building heights at the chosen time
+          (CC BY 4.0). Shadows fall on flat ground - terrain + the building&apos;s own floors aren&apos;t
+          modelled, so treat it as a strong guide.{" "}
           <a
             href={shademapUrl(lng, lat)}
             target="_blank"
             rel="noreferrer"
-            className="font-medium text-accent hover:underline"
+            className="font-medium text-accent underline decoration-dotted underline-offset-2"
           >
-            Open the exact shadow simulator &rarr;
+            Open the full shadow simulator &rarr;
           </a>
         </p>
       </div>
