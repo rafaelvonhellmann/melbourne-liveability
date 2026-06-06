@@ -102,6 +102,20 @@ function pos(v: number, min: number, max: number): number {
   return Math.max(0, Math.min(100, ((v - min) / (max - min)) * 100));
 }
 
+/**
+ * Plain-English reading of a (direction-adjusted) percentile - higher always
+ * means better, since inverted "lower is better" indicators are flipped when
+ * ranked. Leads the benchmark with meaning, not just position (the hardest part
+ * of a chart to convey is what it means).
+ */
+function percentileVerdict(p: number): string {
+  if (p >= 80) return "Top 20% in Greater Melbourne";
+  if (p >= 60) return "Better than most of Greater Melbourne";
+  if (p >= 40) return "About average for Greater Melbourne";
+  if (p >= 20) return "Below most of Greater Melbourne";
+  return "Bottom 20% in Greater Melbourne";
+}
+
 function BenchmarkBand({
   def,
   raw,
@@ -126,6 +140,9 @@ function BenchmarkBand({
 
   return (
     <div className="mt-3">
+      {percentile != null && (
+        <p className="mb-1.5 text-xs font-medium text-ink">{percentileVerdict(percentile)}</p>
+      )}
       <div className="mb-1 flex items-baseline justify-between text-[11px] text-ink-muted">
         <span>Greater Melbourne</span>
         {percentile != null && (

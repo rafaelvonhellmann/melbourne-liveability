@@ -114,6 +114,12 @@ export function Sparkline({ series, format, width = 132, height = 34, fluid = fa
               <span aria-hidden>{arrow}</span>
               {deltaText}
             </span>
+            {/* Say the good/bad meaning in a word, so it never rests on colour alone. */}
+            {!flat && (
+              <span className="text-[10px] font-medium" style={{ color }}>
+                {better ? "better" : "worse"}
+              </span>
+            )}
             <span className="num text-[11px] text-ink-muted">
               {first.period} → {last.period}
             </span>
