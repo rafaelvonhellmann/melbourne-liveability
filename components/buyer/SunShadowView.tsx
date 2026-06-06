@@ -25,7 +25,7 @@ import { timeoutSignal } from "@/lib/fetch-timeout";
 const COM_BUILDINGS_API =
   "https://data.melbourne.vic.gov.au/api/explore/v2.1/catalog/datasets/2020-building-footprints/exports/geojson";
 
-function buildingsUrl(lng: number, lat: number, metres = 320): string {
+function buildingsUrl(lng: number, lat: number, metres = 220): string {
   const where = `within_distance(geo_shape, geom'POINT(${lng} ${lat})', ${metres}m)`;
   return `${COM_BUILDINGS_API}?select=structure_extrusion&where=${encodeURIComponent(where)}`;
 }
@@ -43,11 +43,21 @@ const RAD = Math.PI / 180;
  * vector (length = height/tan(altitude), bearing = anti-solar). Pure; returns an
  * empty collection when the sun is low/below the horizon (no meaningful shadow).
  */
+const SHADOW_CAP = 300; // bound main-thread work: nearest N footprints only
+
+function firstCoord(g: Polygon | MultiPolygon | null): number[] | null {
+  if (!g) return null;
+  if (g.type === "Polygon") return g.coordinates[0]?.[0] ?? null;
+  if (g.type === "MultiPolygon") return g.coordinates[0]?.[0]?.[0] ?? null;
+  return null;
+}
+
 function computeShadows(
   fc: FeatureCollection,
   azimuthDeg: number,
   altitudeDeg: number,
-  refLat: number
+  originLng: number,
+  originLat: number
 ): FeatureCollection {
   if (altitudeDeg <= 2) return turf.featureCollection([]);
   const ratio = Math.min(1 / Math.tan(altitudeDeg * RAD), 25); // shadow length per metre, capped
@@ -55,9 +65,22 @@ function computeShadows(
   const sinB = Math.sin(antiAz * RAD);
   const cosB = Math.cos(antiAz * RAD);
   const mPerDegLat = 110574;
-  const mPerDegLng = 111320 * Math.cos(refLat * RAD);
+  const mPerDegLng = 111320 * Math.cos(originLat * RAD);
+  // Only project the nearest footprints - distant shadows don't reach the pin
+  // and ~900 convex hulls per tick would block the main thread.
+  let feats = fc.features;
+  if (feats.length > SHADOW_CAP) {
+    const d2 = (f: Feature) => {
+      const c = firstCoord(f.geometry as Polygon | MultiPolygon | null);
+      if (!c) return Infinity;
+      const dx = c[0] - originLng;
+      const dy = c[1] - originLat;
+      return dx * dx + dy * dy;
+    };
+    feats = [...feats].sort((a, b) => d2(a) - d2(b)).slice(0, SHADOW_CAP);
+  }
   const out: Feature<Polygon>[] = [];
-  for (const f of fc.features) {
+  for (const f of feats) {
     const h = Number((f.properties as { structure_extrusion?: number } | null)?.structure_extrusion) || 6;
     const L = h * ratio; // metres
     const dLat = (L * cosB) / mPerDegLat;
@@ -218,7 +241,7 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
     }
     const handle = setTimeout(() => {
       if (!mapRef.current || !buildingsRef.current) return;
-      const shadows = computeShadows(buildingsRef.current, sun.azimuthDeg, sun.altitudeDeg, lat);
+      const shadows = computeShadows(buildingsRef.current, sun.azimuthDeg, sun.altitudeDeg, lng, lat);
       const src = map.getSource("shadows") as maplibregl.GeoJSONSource | undefined;
       src?.setData(shadows);
       const pt = turf.point([lng, lat]);
