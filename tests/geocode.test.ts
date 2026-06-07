@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { geocodeAddress, stripUnitPrefix } from "../lib/geocode";
+import { geocodeAddress, stripUnitPrefix, rankGeocodeRows } from "../lib/geocode";
 
 describe("stripUnitPrefix", () => {
   it("strips Australian unit prefixes, keeping the building", () => {
@@ -86,5 +86,46 @@ describe("geocodeAddress", () => {
   it("throws on a non-2xx response so the caller can show an error", async () => {
     mockFetch(null, false, 429);
     await expect(geocodeAddress("rate limited")).rejects.toThrow(/429/);
+  });
+
+  it("returns the suburb-matching house result first (the Abbotsford bug)", async () => {
+    // Nominatim order: a fuzzy Kew road match first, the real Abbotsford house second.
+    mockFetch([
+      {
+        lat: "-37.81",
+        lon: "145.10",
+        type: "road",
+        display_name: "Acacia Place, Kew East, Victoria, Australia",
+        address: { road: "Acacia Place", suburb: "Kew East" },
+      },
+      {
+        lat: "-37.8118",
+        lon: "145.0142",
+        type: "house",
+        display_name: "6, Acacia Place, Abbotsford, Victoria, 3067, Australia",
+        address: { house_number: "6", road: "Acacia Place", suburb: "Abbotsford" },
+      },
+    ]);
+    const out = await geocodeAddress("6 Acacia Place, Abbotsford");
+    expect(out[0].shortLabel).toContain("Abbotsford");
+    expect(out[0].lat).toBeCloseTo(-37.8118);
+  });
+});
+
+describe("rankGeocodeRows", () => {
+  it("floats the named suburb + exact house number to the top", () => {
+    const rows = [
+      { type: "road", address: { road: "Acacia Place", suburb: "Kew East" } },
+      { type: "house", address: { house_number: "6", road: "Acacia Place", suburb: "Abbotsford" } },
+    ];
+    expect(rankGeocodeRows(rows, "6 acacia place, abbotsford")[0].address?.suburb).toBe("Abbotsford");
+  });
+
+  it("is stable for equal scores (keeps Nominatim order)", () => {
+    const rows = [
+      { type: "road", address: { road: "A St" } },
+      { type: "road", address: { road: "B St" } },
+    ];
+    expect(rankGeocodeRows(rows, "no suburb here").map((r) => r.address?.road)).toEqual(["A St", "B St"]);
   });
 });

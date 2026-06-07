@@ -64,6 +64,34 @@ function shortLabelOf(row: NominatimRow): string {
   return (row.display_name ?? "").split(",").slice(0, 2).join(",").trim();
 }
 
+function localityOf(a: NominatimAddress): string {
+  return (a.suburb || a.neighbourhood || a.city || a.town || a.municipality || "").toLowerCase();
+}
+
+/**
+ * Re-rank Nominatim rows for the query. Nominatim's default order can float a
+ * fuzzy road/area match above the exact address the user typed; if the query
+ * names a suburb ("... , Abbotsford"), the row whose locality matches that
+ * suburb - and which carries a house number - should win. Stable: ties keep
+ * Nominatim's original order. Pure + exported for tests.
+ */
+export function rankGeocodeRows(rows: NominatimRow[], query: string): NominatimRow[] {
+  const q = query.toLowerCase();
+  const score = (row: NominatimRow): number => {
+    const a = row.address ?? {};
+    const loc = localityOf(a);
+    let s = 0;
+    if (loc && q.includes(loc)) s += 4; // query explicitly names this suburb/locality
+    if (a.house_number) s += 2; // exact street address, not a road/area centroid
+    if (row.type === "house" || row.type === "building") s += 1;
+    return s;
+  };
+  return rows
+    .map((r, i) => ({ r, i }))
+    .sort((x, y) => score(y.r) - score(x.r) || x.i - y.i)
+    .map((o) => o.r);
+}
+
 function toResult(row: NominatimRow): GeocodeResult | null {
   const lat = Number(row.lat);
   const lng = Number(row.lon);
@@ -128,7 +156,9 @@ export async function geocodeAddress(
   const raw = (await res.json()) as NominatimRow[];
   if (!Array.isArray(raw)) return [];
   const out: GeocodeResult[] = [];
-  for (const row of raw) {
+  // Rank so the suburb the user named + an exact house number win over a fuzzy
+  // road/area match Nominatim might otherwise list first.
+  for (const row of rankGeocodeRows(raw, q)) {
     const r = toResult(row);
     if (r) out.push(r);
   }

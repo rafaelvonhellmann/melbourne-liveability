@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, MapPin } from "lucide-react";
 import Fuse from "fuse.js";
 import type { SearchIndexEntry } from "@/lib/search";
@@ -28,6 +28,16 @@ type GeoState = {
 };
 
 const GEO_IDLE: GeoState = { status: "idle", results: [], forQuery: "" };
+
+/**
+ * Heuristic: a full STREET ADDRESS (has a number, and either starts with it or
+ * has a comma) rather than a suburb / area name. These should resolve to an
+ * exact geocoded pin - not a fuzzy SA2 match - so we auto-geocode them and hide
+ * the fuzzy area results (which were luring users into the wrong nearby area).
+ */
+function isAddressLike(q: string): boolean {
+  return /\d/.test(q) && (/^\s*\d/.test(q) || q.includes(","));
+}
 
 export function SearchBox({ index, onSelect, onGeocode }: SearchBoxProps) {
   const [q, setQ] = useState("");
@@ -64,6 +74,10 @@ export function SearchBox({ index, onSelect, onGeocode }: SearchBoxProps) {
   const canGeocode = !!onGeocode && trimmed.length >= 3;
   // Address results only belong to the query they were fetched for.
   const geoForCurrent = geo.forQuery === trimmed;
+  const addressLike = isAddressLike(trimmed);
+  // For an address-like query, suppress the fuzzy AREA matches so a nearby SA2
+  // (e.g. a Kew area for an Abbotsford address) can't be mistaken for the result.
+  const areaResults = addressLike ? [] : results;
 
   const runGeocode = async () => {
     if (!onGeocode || trimmed.length < 3) return;
@@ -80,6 +94,17 @@ export function SearchBox({ index, onSelect, onGeocode }: SearchBoxProps) {
       setGeo({ status: "error", results: [], forQuery: trimmed });
     }
   };
+
+  // Auto-run the geocode for address-like queries (debounced for Nominatim's
+  // ~1 req/s policy) so the exact address surfaces without a click.
+  useEffect(() => {
+    if (!addressLike || !canGeocode || geoForCurrent || geo.status === "loading") return;
+    const t = setTimeout(() => void runGeocode(), 1200);
+    return () => clearTimeout(t);
+    // runGeocode is a stable closure; keying on it would loop. Key on the query
+    // + geocode state instead.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addressLike, canGeocode, geoForCurrent, geo.status, trimmed]);
 
   const resetGeo = () => {
     abortRef.current?.abort();
@@ -99,7 +124,7 @@ export function SearchBox({ index, onSelect, onGeocode }: SearchBoxProps) {
 
   const showAddressSection =
     canGeocode && (geo.status === "idle" || geoForCurrent);
-  const showDropdown = results.length > 0 || showAddressSection;
+  const showDropdown = areaResults.length > 0 || showAddressSection;
 
   return (
     <div className="relative">
@@ -132,7 +157,7 @@ export function SearchBox({ index, onSelect, onGeocode }: SearchBoxProps) {
           className="absolute left-0 right-0 top-full z-30 mt-1 max-h-72 overflow-auto rounded-lg border border-surface-border bg-surface shadow-card"
           role="listbox"
         >
-          {results.map((item) => {
+          {areaResults.map((item) => {
             const isAlias = item.kind === "alias";
             return (
               <li key={item.key}>
