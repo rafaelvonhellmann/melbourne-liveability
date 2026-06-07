@@ -26,10 +26,6 @@ export function HomeBuyerCard({
           <h2 className="font-display text-lg font-medium text-ink">
             Home buyer index
           </h2>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-surface-border bg-surface-sunken px-2.5 py-0.5 text-[10px] text-ink-muted">
-            <span className="h-1.5 w-1.5 rounded-full bg-ink-muted" aria-hidden />
-            context lens · not in score
-          </span>
         </div>
         <span className="num text-2xl font-bold text-ink">
           {gmPercentile != null ? gmPercentile.toFixed(0) : idx.value.toFixed(0)}

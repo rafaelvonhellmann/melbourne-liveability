@@ -20,10 +20,6 @@ export function DataConfidenceCard({ confidence }: { confidence?: DataConfidence
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="font-display text-lg font-medium text-ink">Data confidence</h2>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-surface-border bg-surface-sunken px-2.5 py-0.5 text-[10px] text-ink-muted">
-            <span className="h-1.5 w-1.5 rounded-full bg-ink-muted" aria-hidden />
-            context only · not in score
-          </span>
         </div>
         <span className="num text-2xl font-bold text-ink">
           {confidence.score.toFixed(0)}

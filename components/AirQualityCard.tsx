@@ -54,10 +54,6 @@ export function AirQualityCard({ centroid }: { centroid: [number, number] }) {
         <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
           Air quality
         </h3>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-surface-border bg-surface-sunken px-2.5 py-0.5 text-[10px] text-ink-muted">
-          <span className="h-1.5 w-1.5 rounded-full bg-ink-muted" aria-hidden />
-          context only · not in score
-        </span>
       </div>
       <div className="flex items-baseline justify-between gap-3 border-b border-surface-border py-1.5 text-sm">
         <span className="text-ink-muted">Last reading</span>

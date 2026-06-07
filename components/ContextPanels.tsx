@@ -231,15 +231,6 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
   );
 }
 
-export function ContextTag() {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-surface-border bg-surface-sunken px-2.5 py-0.5 text-[10px] text-ink-muted">
-      <span className="h-1.5 w-1.5 rounded-full bg-ink-muted" aria-hidden />
-      context only · not in score
-    </span>
-  );
-}
-
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-lg border border-surface-border bg-surface p-4 shadow-card">
@@ -247,7 +238,6 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
         <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
           {title}
         </h3>
-        <ContextTag />
       </div>
       <div>{children}</div>
     </div>

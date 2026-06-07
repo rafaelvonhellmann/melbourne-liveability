@@ -27,6 +27,7 @@ import { ShortlistPanel } from "@/components/ShortlistPanel";
 import { ShareViewButton } from "@/components/ShareViewButton";
 import { MobileSheet } from "@/components/MobileSheet";
 import { MapLegend } from "@/components/MapLegend";
+import { POI_CATEGORY_BY_ID, type PoiCategoryId } from "@/lib/poi-categories";
 import { Attribution } from "@/components/Attribution";
 import { SelectedSummaryCard } from "@/components/SelectedSummaryCard";
 import { FeedbackButton } from "@/components/FeedbackButton";
@@ -826,12 +827,19 @@ export default function MapPage() {
                   type="button"
                   aria-pressed={on}
                   onClick={() => setVisiblePins((v) => ({ ...v, [c.id]: !v[c.id] }))}
-                  className={`rounded-full border px-2 py-0.5 text-[11px] transition-colors ${
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] transition-colors ${
                     on
                       ? "border-accent bg-accent text-accent-ink"
                       : "border-surface-border text-ink-muted hover:border-accent hover:text-accent"
                   }`}
                 >
+                  {/* Swatch = this category's MAP PIN colour, so the toggle and the
+                      coloured dots on the map are unambiguously the same thing. */}
+                  <span
+                    className="inline-block h-2 w-2 shrink-0 rounded-full ring-1 ring-white/70"
+                    style={{ background: POI_CATEGORY_BY_ID[c.id as PoiCategoryId]?.color ?? "#8A857B" }}
+                    aria-hidden
+                  />
                   {c.label}
                 </button>
               );

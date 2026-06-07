@@ -75,10 +75,6 @@ export function IncomeAffordabilityCard({ place }: { place: Place }) {
     <section className="rounded-lg border border-surface-border bg-surface p-4 shadow-card">
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="font-display text-lg font-medium text-ink">How do I compare here?</h2>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-surface-border bg-surface-sunken px-2.5 py-0.5 text-[10px] text-ink-muted">
-          <span className="h-1.5 w-1.5 rounded-full bg-ink-muted" aria-hidden />
-          context lens · not in score
-        </span>
       </div>
       <p className="mt-1 text-xs leading-relaxed text-ink-muted">
         Enter your household&apos;s total income and we&apos;ll show how it sits against this
