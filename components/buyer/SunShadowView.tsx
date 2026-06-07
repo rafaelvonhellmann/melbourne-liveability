@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
-import * as turf from "@turf/turf";
 import type { Feature, FeatureCollection, Polygon, MultiPolygon } from "geojson";
 import { sunPosition } from "@/lib/sun";
+import { pointInPolygon } from "@/lib/buyer-location";
 import { timeoutSignal } from "@/lib/fetch-timeout";
 
 /**
@@ -15,17 +15,18 @@ import { timeoutSignal } from "@/lib/fetch-timeout";
  * AND projects each building's REAL cast shadow onto the ground for the chosen
  * date/time: shadow length = height / tan(sun altitude), direction = the
  * anti-solar bearing (lib/sun sunPosition). The pin is flagged in sun or in
- * shade. Geometry only (turf) - no 3D engine - so it is static-export safe.
+ * shade. Geometry only (hand-rolled convex hull, no turf, no 3D engine) so it
+ * is static-export safe and never blocks the main thread.
  *
  * Coverage: building heights exist only for the City of Melbourne council area
  * (CBD, Southbank, Docklands, Carlton, Parkville, ...). Elsewhere we show the
  * sun-path summary + a deep-link to shademap.app. Loaded on demand (dynamic
- * import) so MapLibre + turf stay out of the report's initial bundle.
+ * import) so MapLibre stays out of the report's initial bundle.
  */
 const COM_BUILDINGS_API =
   "https://data.melbourne.vic.gov.au/api/explore/v2.1/catalog/datasets/2020-building-footprints/exports/geojson";
 
-function buildingsUrl(lng: number, lat: number, metres = 220): string {
+function buildingsUrl(lng: number, lat: number, metres = 180): string {
   const where = `within_distance(geo_shape, geom'POINT(${lng} ${lat})', ${metres}m)`;
   return `${COM_BUILDINGS_API}?select=structure_extrusion&where=${encodeURIComponent(where)}`;
 }
@@ -35,15 +36,35 @@ function shademapUrl(lng: number, lat: number): string {
 }
 
 const RAD = Math.PI / 180;
+const EMPTY_FC: FeatureCollection = { type: "FeatureCollection", features: [] };
 
 /**
- * Project each building footprint to its cast-shadow polygon on flat ground at
- * the given sun position. The shadow of a vertical prism on the ground is the
- * convex hull of the footprint and the footprint translated by the shadow
- * vector (length = height/tan(altitude), bearing = anti-solar). Pure; returns an
- * empty collection when the sun is low/below the horizon (no meaningful shadow).
+ * Andrew's monotone-chain convex hull. Pure + allocation-light + O(n log n).
+ * Replaces turf.convex, whose per-call FeatureCollection allocation across
+ * hundreds of buildings synchronously blocked the main thread (froze the UI).
  */
-const SHADOW_CAP = 300; // bound main-thread work: nearest N footprints only
+function convexHull(points: number[][]): number[][] {
+  if (points.length < 3) return points;
+  const pts = [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (o: number[], a: number[], b: number[]) =>
+    (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lower: number[][] = [];
+  for (const p of pts) {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+    lower.push(p);
+  }
+  const upper: number[][] = [];
+  for (let i = pts.length - 1; i >= 0; i--) {
+    const p = pts[i];
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
+    upper.push(p);
+  }
+  lower.pop();
+  upper.pop();
+  return lower.concat(upper);
+}
+
+const SHADOW_CAP = 150; // bound main-thread work: nearest N footprints only
 
 function firstCoord(g: Polygon | MultiPolygon | null): number[] | null {
   if (!g) return null;
@@ -52,6 +73,12 @@ function firstCoord(g: Polygon | MultiPolygon | null): number[] | null {
   return null;
 }
 
+/**
+ * Project each building footprint to its ground cast-shadow polygon at the given
+ * sun position: the convex hull of the footprint and the footprint translated by
+ * the shadow vector (length = height/tan(altitude), bearing = anti-solar). Pure
+ * + turf-free; empty when the sun is low/below the horizon.
+ */
 function computeShadows(
   fc: FeatureCollection,
   azimuthDeg: number,
@@ -59,15 +86,14 @@ function computeShadows(
   originLng: number,
   originLat: number
 ): FeatureCollection {
-  if (altitudeDeg <= 2) return turf.featureCollection([]);
+  if (altitudeDeg <= 2) return EMPTY_FC;
   const ratio = Math.min(1 / Math.tan(altitudeDeg * RAD), 25); // shadow length per metre, capped
   const antiAz = (azimuthDeg + 180) % 360;
   const sinB = Math.sin(antiAz * RAD);
   const cosB = Math.cos(antiAz * RAD);
   const mPerDegLat = 110574;
   const mPerDegLng = 111320 * Math.cos(originLat * RAD);
-  // Only project the nearest footprints - distant shadows don't reach the pin
-  // and ~900 convex hulls per tick would block the main thread.
+  // Only project the nearest footprints - distant shadows don't reach the pin.
   let feats = fc.features;
   if (feats.length > SHADOW_CAP) {
     const d2 = (f: Feature) => {
@@ -91,16 +117,22 @@ function computeShadows(
       g.type === "Polygon" ? [g.coordinates[0]] : g.type === "MultiPolygon" ? g.coordinates.map((p) => p[0]) : [];
     for (const ring of rings) {
       if (!ring || ring.length < 3) continue;
-      const pts = [];
+      const pts: number[][] = [];
       for (const c of ring) {
-        pts.push(turf.point([c[0], c[1]]));
-        pts.push(turf.point([c[0] + dLng, c[1] + dLat]));
+        pts.push([c[0], c[1]]);
+        pts.push([c[0] + dLng, c[1] + dLat]);
       }
-      const hull = turf.convex(turf.featureCollection(pts));
-      if (hull) out.push(hull);
+      const hull = convexHull(pts);
+      if (hull.length >= 3) {
+        out.push({
+          type: "Feature",
+          properties: {},
+          geometry: { type: "Polygon", coordinates: [[...hull, hull[0]]] },
+        });
+      }
     }
   }
-  return turf.featureCollection(out);
+  return { type: "FeatureCollection", features: out };
 }
 
 type Season = "summer" | "winter";
@@ -153,7 +185,7 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
       if (map.getSource("blds")) return;
       buildingsRef.current = fc;
       // Ground-shadow fill, drawn under the buildings (data set by the sun effect).
-      map.addSource("shadows", { type: "geojson", data: turf.featureCollection([]) });
+      map.addSource("shadows", { type: "geojson", data: EMPTY_FC });
       map.addSource("blds", { type: "geojson", data: fc });
       map.addLayer({
         id: "shadow-fill",
@@ -244,9 +276,8 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
       const shadows = computeShadows(buildingsRef.current, sun.azimuthDeg, sun.altitudeDeg, lng, lat);
       const src = map.getSource("shadows") as maplibregl.GeoJSONSource | undefined;
       src?.setData(shadows);
-      const pt = turf.point([lng, lat]);
       setPinShaded(
-        up && shadows.features.some((p) => turf.booleanPointInPolygon(pt, p as Feature<Polygon>))
+        up && shadows.features.some((p) => pointInPolygon([lng, lat], p.geometry as Polygon))
       );
     }, 70);
     return () => clearTimeout(handle);
