@@ -18,10 +18,12 @@ import { timeoutSignal } from "@/lib/fetch-timeout";
  * shade. Geometry only (hand-rolled convex hull, no turf, no 3D engine) so it
  * is static-export safe and never blocks the main thread.
  *
- * Coverage: building heights exist only for the City of Melbourne council area
- * (CBD, Southbank, Docklands, Carlton, Parkville, ...). Elsewhere we show the
- * sun-path summary + a deep-link to shademap.app. Loaded on demand (dynamic
- * import) so MapLibre stays out of the report's initial bundle.
+ * Coverage: City of Melbourne publishes SURVEYED heights (most accurate) for the
+ * inner city; everywhere else we fall back to OSM building footprints with
+ * heights ESTIMATED from tags (building:levels x storey height, else ~2 storeys),
+ * so the feature works across Greater Melbourne. shademap.app deep-link for the
+ * exact simulation. Loaded on demand (dynamic import) so MapLibre stays out of
+ * the report's initial bundle.
  */
 const COM_BUILDINGS_API =
   "https://data.melbourne.vic.gov.au/api/explore/v2.1/catalog/datasets/2020-building-footprints/exports/geojson";
@@ -33,6 +35,52 @@ function buildingsUrl(lng: number, lat: number, metres = 180): string {
 
 function shademapUrl(lng: number, lat: number): string {
   return `https://shademap.app/@${lat.toFixed(5)},${lng.toFixed(5)},17z`;
+}
+
+// Keyless OSM Overpass building fallback so the sun view works BEYOND the City of
+// Melbourne council area (whose surveyed-height dataset is inner-city only). OSM
+// heights are sparse, so we estimate from building:levels x storey height.
+const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
+
+function osmHeight(tags: Record<string, string> | undefined): number {
+  const t = tags ?? {};
+  const h = parseFloat(t.height ?? "");
+  if (Number.isFinite(h) && h > 0) return h;
+  const levels = parseFloat(t["building:levels"] ?? "");
+  if (Number.isFinite(levels) && levels > 0) return levels * 3.2;
+  return 6; // ~2 storeys when untagged - a reasonable suburban default
+}
+
+async function fetchOsmBuildings(
+  lng: number,
+  lat: number,
+  signal: AbortSignal
+): Promise<FeatureCollection> {
+  const q = `[out:json][timeout:20];way["building"](around:180,${lat},${lng});out geom;`;
+  const res = await fetch(OVERPASS_URL, {
+    method: "POST",
+    signal,
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: "data=" + encodeURIComponent(q),
+  });
+  if (!res.ok) throw new Error(`overpass ${res.status}`);
+  const json = (await res.json()) as {
+    elements?: { type?: string; geometry?: { lat: number; lon: number }[]; tags?: Record<string, string> }[];
+  };
+  const features: Feature<Polygon>[] = [];
+  for (const el of json.elements ?? []) {
+    if (el.type !== "way" || !Array.isArray(el.geometry) || el.geometry.length < 4) continue;
+    const ring: number[][] = el.geometry.map((p) => [p.lon, p.lat]);
+    const a = ring[0];
+    const z = ring[ring.length - 1];
+    if (a[0] !== z[0] || a[1] !== z[1]) ring.push(a);
+    features.push({
+      type: "Feature",
+      properties: { structure_extrusion: osmHeight(el.tags) },
+      geometry: { type: "Polygon", coordinates: [ring] },
+    });
+  }
+  return { type: "FeatureCollection", features };
 }
 
 const RAD = Math.PI / 180;
@@ -145,6 +193,7 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
   const [hour, setHour] = useState(13);
   const [season, setSeason] = useState<Season>("summer");
   const [pinShaded, setPinShaded] = useState<boolean | null>(null);
+  const [source, setSource] = useState<"com" | "osm">("com");
 
   // Sun position for the chosen time, in the user's local clock (good enough for
   // a Melbourne property viewed locally; the linked simulator is exact).
@@ -214,19 +263,39 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
       // response isn't aborted as a false timeout.
       const t = timeoutSignal(20000);
       try {
-        const res = await fetch(buildingsUrl(lng, lat), { signal: t.signal });
-        const fc = (await res.json()) as FeatureCollection;
+        // 1) City of Melbourne surveyed heights (most accurate). 2) Outside the
+        // CoM council area, fall back to OSM building footprints with heights
+        // estimated from tags - so the feature works across Melbourne, not just
+        // the inner city.
+        let fc: FeatureCollection | null = null;
+        let src: "com" | "osm" = "com";
+        try {
+          const res = await fetch(buildingsUrl(lng, lat), { signal: t.signal });
+          const com = (await res.json()) as FeatureCollection;
+          if (com.features?.length) fc = com;
+        } catch {
+          /* CoM endpoint hiccup - fall through to OSM */
+        }
+        if (!fc && !cancelled) {
+          const osm = await fetchOsmBuildings(lng, lat, t.signal).catch(() => null);
+          if (osm && osm.features.length) {
+            fc = osm;
+            src = "osm";
+          }
+        }
         if (cancelled) return;
-        if (!(fc.features?.length)) {
+        if (!fc) {
           setStatus("no-buildings");
           return;
         }
+        const ready = fc;
+        setSource(src);
         let tries = 0;
         const tryApply = () => {
           if (cancelled || !mapRef.current) return;
           if (map.isStyleLoaded()) {
             try {
-              addBuildings(fc);
+              addBuildings(ready);
               setStatus("ready");
             } catch {
               setStatus("error");
@@ -306,8 +375,8 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
         )}
         {status === "no-buildings" && (
           <p className="text-xs text-ink-muted">
-            Building heights aren&apos;t available here (they cover the City of Melbourne council
-            area). Use the shadow simulator below for this address.
+            No mapped buildings here to cast shadows. Use the shadow simulator below for this
+            address.
           </p>
         )}
         {status === "error" && (
@@ -372,9 +441,19 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
           </>
         )}
         <p className="text-[11px] leading-snug text-ink-muted">
-          Real cast shadows projected from City of Melbourne building heights at the chosen time
-          (CC BY 4.0). Shadows fall on flat ground - terrain + the building&apos;s own floors aren&apos;t
-          modelled, so treat it as a strong guide.{" "}
+          {source === "com" ? (
+            <>
+              Real cast shadows from City of Melbourne surveyed building heights (CC BY 4.0).
+            </>
+          ) : (
+            <>
+              Cast shadows from OpenStreetMap building outlines, with heights estimated from
+              tagged storeys (or ~2 storeys where untagged) - approximate. &copy; OpenStreetMap
+              (ODbL).
+            </>
+          )}{" "}
+          Shadows fall on flat ground - terrain + the building&apos;s own floors aren&apos;t
+          modelled, so treat it as a guide.{" "}
           <a
             href={shademapUrl(lng, lat)}
             target="_blank"
