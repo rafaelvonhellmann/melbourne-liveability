@@ -12,6 +12,8 @@ type MapLegendProps = {
   safety?: boolean;
   /** Colourblind-safe score ramp (RdYlBu) instead of the default RdYlGn. */
   colorblind?: boolean;
+  /** "No layer" active → show outline-only legend (no choropleth gradient). */
+  noLayer?: boolean;
 };
 
 export function MapLegend({
@@ -21,8 +23,45 @@ export function MapLegend({
   social = false,
   safety = false,
   colorblind = false,
+  noLayer = false,
 }: MapLegendProps) {
   const activePins = POI_CATEGORIES.filter((c) => visiblePins[c.id]);
+
+  // "No layer": no choropleth painted, so skip the gradient entirely - just say
+  // so + keep the pins key (pins are independent of the choropleth).
+  if (noLayer) {
+    return (
+      <div
+        className="rounded-lg border border-surface-border bg-surface/95 px-3 py-2 text-xs text-ink-muted shadow-card backdrop-blur"
+        aria-label="Map legend"
+      >
+        <div className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted">
+          Showing on map
+        </div>
+        <div className="mb-1 font-medium text-ink">No layer</div>
+        <p className="text-[10px] leading-snug">
+          Areas shown in outline only - drop a pin, or pick a layer above to recolour the map.
+        </p>
+        {activePins.length > 0 && (
+          <div className="mt-2 border-t border-surface-border pt-2">
+            <div className="mb-1 font-medium text-ink">Pins</div>
+            <ul className="space-y-0.5">
+              {activePins.map((c) => (
+                <li key={c.id} className="flex items-center gap-1.5">
+                  <span
+                    className="inline-block h-2.5 w-2.5 rounded-full border border-white shadow-[0_0_0_1px_rgba(0,0,0,0.12)]"
+                    style={{ background: c.color }}
+                    aria-hidden
+                  />
+                  {c.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    );
+  }
   const stepGrad = (palette: readonly string[]) =>
     `linear-gradient(to right, ${palette
       .map((c, i) => `${c} ${(i / (palette.length - 1)) * 100}%`)

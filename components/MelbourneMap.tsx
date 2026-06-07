@@ -86,6 +86,8 @@ type MelbourneMapProps = {
   colorblind?: boolean;
   /** Optional hazard overlay-share choropleth (Reds ramp), or null for none. */
   hazardLayer?: "bushfire" | "flood" | null;
+  /** "No layer": paint the areas transparent (basemap + outlines only). */
+  noLayer?: boolean;
   visiblePins?: Record<string, boolean>;
   onPlaceSelect?: (props: { slug?: string; name?: string; sa2Code?: string }) => void;
   /**
@@ -133,13 +135,17 @@ function prefersReducedMotion(): boolean {
 
 function fillColorFor(
   activeDomain: DomainId,
+  noLayer: boolean,
   confidenceMode: boolean,
   walkAccessMode: boolean,
   cyclabilityMode: boolean,
   socialHousingMode: boolean,
   hazardLayer: "bushfire" | "flood" | null,
   colorblind: boolean
-): unknown[] {
+): unknown {
+  // "No layer": paint the areas transparent so only the basemap + outlines show,
+  // while keeping the fill clickable (pin drop / area select still work).
+  if (noLayer) return "rgba(0,0,0,0)";
   if (hazardLayer) return riskFillColorByProp(`${hazardLayer}_share`);
   if (socialHousingMode) return socialFillColorByProp("social_share");
   if (walkAccessMode) return choroplethFillColorByProp("pct_walkaccess", colorblind);
@@ -157,6 +163,7 @@ export function MelbourneMap({
   socialHousingMode = false,
   colorblind = false,
   hazardLayer = null,
+  noLayer = false,
   visiblePins = {},
   onPlaceSelect,
   focusTarget = null,
@@ -239,6 +246,7 @@ export function MelbourneMap({
         paint: {
           "fill-color": fillColorFor(
             activeDomain,
+            noLayer,
             confidenceMode,
             walkAccessMode,
             cyclabilityMode,
@@ -739,6 +747,7 @@ export function MelbourneMap({
     if (!map || !map.getLayer("sa2-fill")) return;
     const color = fillColorFor(
       activeDomain,
+      noLayer,
       confidenceMode,
       walkAccessMode,
       cyclabilityMode,
@@ -757,6 +766,7 @@ export function MelbourneMap({
     map.setPaintProperty("sa2-fill", "fill-color", color);
   }, [
     activeDomain,
+    noLayer,
     confidenceMode,
     walkAccessMode,
     cyclabilityMode,

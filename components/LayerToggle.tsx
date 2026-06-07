@@ -24,6 +24,9 @@ type LayerToggleProps = {
   onColorblindToggle?: () => void;
   hazardLayer?: "bushfire" | "flood" | null;
   onHazardSelect?: (layer: "bushfire" | "flood") => void;
+  /** "No layer": areas shown in outline only (basemap, no choropleth). */
+  noLayer?: boolean;
+  onNoLayerToggle?: () => void;
 };
 
 export function LayerToggle({
@@ -44,6 +47,8 @@ export function LayerToggle({
   onColorblindToggle,
   hazardLayer = null,
   onHazardSelect,
+  noLayer = false,
+  onNoLayerToggle,
 }: LayerToggleProps) {
   // Which layer's explainer to show (hover or keyboard-focus of its info button).
   const [describe, setDescribe] = useState<DomainId | null>(null);
@@ -52,7 +57,9 @@ export function LayerToggle({
   ).length;
   const activeContext =
     walkAccessMode || cyclabilityMode || socialHousingMode || confidenceMode || !!hazardLayer;
-  const activeLabel = activeContext
+  const activeLabel = noLayer
+    ? "No layer (outlines only)"
+    : activeContext
     ? hazardLayer === "bushfire"
       ? "Bushfire overlay"
       : hazardLayer === "flood"
@@ -80,6 +87,23 @@ export function LayerToggle({
         <span className="text-ink">{activeLabel}</span>
       </p>
       <ul className="space-y-1">
+        <li className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => onNoLayerToggle?.()}
+            className={`flex flex-1 items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-left text-sm transition-colors ${
+              noLayer ? "bg-accent font-semibold text-accent-ink" : "text-ink hover:bg-surface-sunken"
+            }`}
+            aria-pressed={noLayer}
+          >
+            <span>No layer</span>
+            {noLayer && (
+              <span className="text-[10px] font-medium uppercase tracking-wide text-accent-ink">
+                On map
+              </span>
+            )}
+          </button>
+        </li>
         {DOMAIN_REGISTRY.filter((d) => d.scored && d.layer !== "context").map((d) => (
           <li
             key={d.id}
@@ -91,14 +115,14 @@ export function LayerToggle({
               type="button"
               onClick={() => onDomainChange(d.id)}
               className={`flex flex-1 items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-left text-sm transition-colors ${
-                !activeContext && activeDomain === d.id
+                !activeContext && !noLayer && activeDomain === d.id
                   ? "bg-accent font-semibold text-accent-ink"
                   : "text-ink hover:bg-surface-sunken"
               }`}
-              aria-pressed={!activeContext && activeDomain === d.id}
+              aria-pressed={!activeContext && !noLayer && activeDomain === d.id}
             >
               <span>{d.label}</span>
-              {!activeContext && activeDomain === d.id && (
+              {!activeContext && !noLayer && activeDomain === d.id && (
                 <span className="text-[10px] font-medium uppercase tracking-wide text-accent-ink">
                   On map
                 </span>

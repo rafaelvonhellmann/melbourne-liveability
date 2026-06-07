@@ -122,6 +122,21 @@ export default function MapPage() {
     resetWeights,
   } = useMapPersonalisation();
 
+  // "No layer": paint the map with no choropleth (basemap + area outlines only).
+  // Local UI state - not URL-persisted.
+  const [noLayer, setNoLayer] = useState(false);
+  const selectDomain: typeof setActiveDomain = (id) => {
+    setNoLayer(false);
+    setActiveDomain(id);
+  };
+  const toggleNoLayer = () => setNoLayer((v) => !v);
+  // Activating any choropleth/overlay must clear "No layer" so it actually paints.
+  useEffect(() => {
+    if (confidenceMode || walkAccessMode || cyclabilityMode || socialHousingMode || hazardLayer) {
+      setNoLayer(false);
+    }
+  }, [confidenceMode, walkAccessMode, cyclabilityMode, socialHousingMode, hazardLayer]);
+
   useEffect(() => {
     loadPlaces()
       .then((p) => {
@@ -1002,6 +1017,7 @@ export default function MapPage() {
             socialHousingMode={socialHousingMode}
             colorblind={colorblindRamp}
             hazardLayer={hazardLayer}
+            noLayer={noLayer}
             visiblePins={visiblePins}
             focusTarget={focusTarget}
             selectedSlug={selected?.slug ?? null}
@@ -1132,7 +1148,9 @@ export default function MapPage() {
                 </button>
                 <LayerToggle
                   activeDomain={activeDomain}
-                  onDomainChange={setActiveDomain}
+                  onDomainChange={selectDomain}
+                  noLayer={noLayer}
+                  onNoLayerToggle={toggleNoLayer}
                   visiblePins={visiblePins}
                   onPinToggle={(pin) =>
                     setVisiblePins((v) => ({ ...v, [pin]: !v[pin] }))
@@ -1175,7 +1193,8 @@ export default function MapPage() {
               social={socialHousingMode}
               safety={safetyLegend}
               colorblind={colorblindRamp}
-            />
+              noLayer={noLayer}
+/>
             <Attribution />
           </div>
 
@@ -1281,7 +1300,9 @@ export default function MapPage() {
           <div className="space-y-3">
             <LayerToggle
               activeDomain={activeDomain}
-              onDomainChange={setActiveDomain}
+              onDomainChange={selectDomain}
+                  noLayer={noLayer}
+                  onNoLayerToggle={toggleNoLayer}
               visiblePins={visiblePins}
               onPinToggle={(pin) =>
                 setVisiblePins((v) => ({ ...v, [pin]: !v[pin] }))
@@ -1307,7 +1328,8 @@ export default function MapPage() {
               social={socialHousingMode}
               safety={safetyLegend}
               colorblind={colorblindRamp}
-            />
+              noLayer={noLayer}
+/>
           </div>
         }
         weights={
