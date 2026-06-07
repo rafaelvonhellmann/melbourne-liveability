@@ -186,6 +186,32 @@ export default function MapPage() {
 
   // ---- Buyer "Location Check" mode ------------------------------------
   const router = useRouter();
+
+  // First-time visitors land on the onboarding story (/welcome) - unless they
+  // arrived via a deep link (shared pin / area / weights), which we respect.
+  // Remembered in localStorage so returning visitors go straight to the map.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hasDeepLink = /[?&](buyer|select|lat|lng|list|layer|persona|view|w)=/.test(
+      window.location.search
+    );
+    if (hasDeepLink) return;
+    let seen = false;
+    try {
+      seen = localStorage.getItem("nl_seen_welcome") === "1";
+    } catch {
+      /* storage blocked - just show the map */
+    }
+    if (!seen) {
+      try {
+        localStorage.setItem("nl_seen_welcome", "1");
+      } catch {
+        /* ignore */
+      }
+      router.replace("/welcome");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
+  }, []);
   const searchParams = useSearchParams();
   const [buyerMode, setBuyerMode] = useState(false);
   const [buyerPin, setBuyerPin] = useState<[number, number] | null>(null);
