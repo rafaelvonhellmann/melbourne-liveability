@@ -74,3 +74,47 @@ export function computeGmBenchmarks(places: Place[]): GmBenchmarks {
   }
   return out;
 }
+
+/**
+ * Greater-Melbourne MEDIAN for each context-panel metric (the "typical
+ * residential SA2"), so the Equity & community panels can show how an area
+ * compares - the context tab previously showed raw values with no baseline.
+ * Median is robust to the long tail (e.g. a few very dense or very renter-heavy
+ * inner SA2s). Pure; computed server-side from the full dataset.
+ */
+export type GmContext = {
+  irsadDecile?: number;
+  densityPerKm2?: number;
+  renterPct?: number;
+  apartmentPct?: number;
+  firstNationsPct?: number;
+  year12Pct?: number;
+  bachelorPlusPct?: number;
+  postgradPct?: number;
+};
+
+export function computeGmContext(places: Place[]): GmContext {
+  const med = (get: (p: Place) => number | null | undefined): number | undefined => {
+    const vals: number[] = [];
+    for (const p of places) {
+      if (p.nonResidential) continue;
+      const v = get(p);
+      if (v != null && Number.isFinite(v)) vals.push(v);
+    }
+    if (!vals.length) return undefined;
+    return quantileSorted(
+      vals.sort((a, b) => a - b),
+      0.5
+    );
+  };
+  return {
+    irsadDecile: med((p) => p.context?.equity?.irsadDecile),
+    densityPerKm2: med((p) => p.context?.population?.densityPerKm2),
+    renterPct: med((p) => p.context?.community?.renterPct),
+    apartmentPct: med((p) => p.context?.community?.apartmentPct),
+    firstNationsPct: med((p) => p.context?.community?.firstNationsPct),
+    year12Pct: med((p) => p.context?.community?.year12Pct),
+    bachelorPlusPct: med((p) => p.context?.community?.bachelorPlusPct),
+    postgradPct: med((p) => p.context?.community?.postgradPct),
+  };
+}

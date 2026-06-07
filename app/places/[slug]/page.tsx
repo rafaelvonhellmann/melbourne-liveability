@@ -5,7 +5,7 @@ import type { PlacesFile } from "@/lib/places-data";
 import { computeWeightedScore } from "@/lib/scoring";
 import { getDefaultWeights } from "@/lib/weights";
 import { rankHomeBuyerPercentiles } from "@/lib/home-buyer";
-import { computeGmBenchmarks } from "@/lib/benchmarks";
+import { computeGmBenchmarks, computeGmContext } from "@/lib/benchmarks";
 import type { TimeseriesFile } from "@/lib/types";
 import { resolvePlaceSeries } from "@/lib/timeseries";
 import { findSimilarAreas, toSimilarItems } from "@/lib/similar-areas";
@@ -42,6 +42,13 @@ function gmBenchmarks(places: PlacesFile["places"]) {
   // page, so compute it once for the whole static export.
   if (!_benchmarks) _benchmarks = computeGmBenchmarks(places);
   return _benchmarks;
+}
+
+let _gmContext: ReturnType<typeof computeGmContext> | null = null;
+function gmContextStats(places: PlacesFile["places"]) {
+  // GM median for each context-panel metric - compute once for the static export.
+  if (!_gmContext) _gmContext = computeGmContext(places);
+  return _gmContext;
 }
 
 let _homeBuyerRanks: ReturnType<typeof rankHomeBuyerPercentiles> | null = null;
@@ -114,6 +121,7 @@ export default async function PlaceProfilePage({ params }: Props) {
       place={place}
       homeBuyerPercentile={homeBuyerPercentile}
       benchmarks={benchmarks}
+      gmContext={gmContextStats(data.places)}
       series={series}
       similar={similar}
     />

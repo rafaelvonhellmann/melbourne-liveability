@@ -1,7 +1,14 @@
 import type { PlaceContext } from "@/lib/types";
+import type { GmContext } from "@/lib/benchmarks";
 import { presentOverlays, CONSERVATION_OVERLAY_META } from "@/lib/planning-overlays";
 
-export function ContextPanels({ context }: { context?: PlaceContext }) {
+export function ContextPanels({
+  context,
+  gmContext,
+}: {
+  context?: PlaceContext;
+  gmContext?: GmContext;
+}) {
   if (!context) return null;
 
   const overlays = context.planning
@@ -21,7 +28,11 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
 
       {context.equity && (
         <Panel title="Socio-economic ranking">
-          <Row label="Socio-economic ranking (1-10)" value={context.equity.irsadDecile} />
+          <Row
+            label="Socio-economic ranking (1-10)"
+            value={context.equity.irsadDecile}
+            gm={gmContext?.irsadDecile != null ? String(Math.round(gmContext.irsadDecile)) : null}
+          />
           <p className="mt-2 text-xs text-ink-muted">
             Where this area sits on the ABS socio-economic scale: <b className="text-ink">1</b> =
             among the most disadvantaged areas in Australia, <b className="text-ink">10</b> = among
@@ -44,6 +55,11 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
                 ? context.population.densityPerKm2.toLocaleString()
                 : null
             }
+            gm={
+              gmContext?.densityPerKm2 != null
+                ? Math.round(gmContext.densityPerKm2).toLocaleString()
+                : null
+            }
           />
           {context.population.areaKm2 != null && (
             <Row label="Land area (km²)" value={context.population.areaKm2.toLocaleString()} />
@@ -58,7 +74,11 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
       {context.community && (
         <Panel title="Community">
           <TenureSplit renterPct={context.community.renterPct} />
-          <Row label="Renter households" value={fmtPct(context.community.renterPct)} />
+          <Row
+            label="Renter households"
+            value={fmtPct(context.community.renterPct)}
+            gm={fmtPct(gmContext?.renterPct ?? null)}
+          />
           <Row
             label="Owner-occupied (approx)"
             value={ownerApprox(context.community.renterPct)}
@@ -66,27 +86,32 @@ export function ContextPanels({ context }: { context?: PlaceContext }) {
           <Row
             label="Apartment dwellings %"
             value={fmtPct(context.community.apartmentPct)}
+            gm={fmtPct(gmContext?.apartmentPct ?? null)}
           />
           <Row
             label="First Nations %"
             value={fmtPct(context.community.firstNationsPct)}
+            gm={fmtPct(gmContext?.firstNationsPct ?? null)}
           />
           {context.community.year12Pct != null && (
             <Row
               label="Completed Year 12 %"
               value={fmtPct(context.community.year12Pct)}
+              gm={fmtPct(gmContext?.year12Pct ?? null)}
             />
           )}
           {context.community.bachelorPlusPct != null && (
             <Row
               label="Bachelor degree or higher"
               value={fmtPct(context.community.bachelorPlusPct)}
+              gm={fmtPct(gmContext?.bachelorPlusPct ?? null)}
             />
           )}
           {context.community.postgradPct != null && (
             <Row
               label="Postgraduate degree"
               value={fmtPct(context.community.postgradPct)}
+              gm={fmtPct(gmContext?.postgradPct ?? null)}
             />
           )}
           <p className="mt-2 text-xs text-ink-muted">
@@ -244,11 +269,27 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-function Row({ label, value }: { label: string; value: string | number | null }) {
+function Row({
+  label,
+  value,
+  gm,
+}: {
+  label: string;
+  value: string | number | null;
+  /** Preformatted "typical Greater Melbourne area" comparator, if available. */
+  gm?: string | null;
+}) {
   return (
     <div className="flex justify-between gap-4 border-b border-surface-border py-1.5 text-sm last:border-0">
       <span className="text-ink-muted">{label}</span>
-      <span className="num font-medium text-ink">{value ?? "—"}</span>
+      <span className="text-right">
+        <span className="num font-medium text-ink">{value ?? "—"}</span>
+        {gm != null && (
+          <span className="num mt-0.5 block text-[10px] font-normal text-ink-muted">
+            Greater Melbourne median {gm}
+          </span>
+        )}
+      </span>
     </div>
   );
 }

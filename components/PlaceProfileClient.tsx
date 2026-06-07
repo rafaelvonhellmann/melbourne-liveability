@@ -10,7 +10,7 @@ import { PERSONA_PRESETS, personaWeights, type PersonaId } from "@/lib/personas"
 import { sourcesForIndicatorIds, getSource, shortSourceName } from "@/lib/sources";
 import { percentileToColor } from "@/lib/colors";
 import { metricsForDomain } from "@/lib/metric-catalog";
-import type { GmBenchmarks } from "@/lib/benchmarks";
+import type { GmBenchmarks, GmContext } from "@/lib/benchmarks";
 import type { PlaceSeries } from "@/lib/timeseries";
 import { MIN_TREND_POINTS } from "@/lib/timeseries";
 import { Sparkline } from "./Sparkline";
@@ -35,6 +35,7 @@ type Props = {
   place: Place;
   homeBuyerPercentile?: number | null;
   benchmarks?: GmBenchmarks;
+  gmContext?: GmContext;
   series?: Record<string, PlaceSeries>;
   /** Closest peer areas by per-domain percentile similarity (precomputed at build). */
   similar?: SimilarAreaItem[];
@@ -58,6 +59,7 @@ export function PlaceProfileClient({
   place,
   homeBuyerPercentile = null,
   benchmarks = {},
+  gmContext,
   series = {},
   similar = [],
 }: Props) {
@@ -188,6 +190,7 @@ export function PlaceProfileClient({
               place={place}
               context={activeTab.context}
               homeBuyerPercentile={homeBuyerPercentile}
+              gmContext={gmContext}
             />
           )}
         </section>
@@ -608,10 +611,12 @@ function ContextTabPanel({
   place,
   context,
   homeBuyerPercentile,
+  gmContext,
 }: {
   place: Place;
   context: ContextId;
   homeBuyerPercentile: number | null;
+  gmContext?: GmContext;
 }) {
   if (context === "homebuyer") {
     return (
@@ -639,7 +644,7 @@ function ContextTabPanel({
   }
   return (
     <div className="space-y-4">
-      <ContextPanels context={place.context} />
+      <ContextPanels context={place.context} gmContext={gmContext} />
       <AirQualityCard centroid={place.centroid as [number, number]} />
     </div>
   );
