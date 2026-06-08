@@ -219,6 +219,34 @@ function computeShadows(
 
 type Season = "summer" | "winter";
 
+/**
+ * Small compass rose overlaid on the 3D view. The view is pitched + rotated, so
+ * "up" on screen is not north - the rose rotates by the map bearing so N/S/E/W
+ * always mark the true directions around the property (the "rosa dos ventos").
+ */
+function Compass({ bearing }: { bearing: number }) {
+  return (
+    <div
+      className="pointer-events-none absolute right-2 top-2 grid h-10 w-10 place-items-center rounded-full border border-surface-border bg-surface/80 shadow-card backdrop-blur"
+      aria-hidden
+    >
+      <svg
+        viewBox="0 0 44 44"
+        className="h-8 w-8"
+        style={{ transform: `rotate(${-bearing}deg)` }}
+      >
+        {/* Red needle points north; grey points south. */}
+        <polygon points="22,12 25,23 22,20 19,23" fill="#AD4F2E" />
+        <polygon points="22,32 19,21 22,24 25,21" fill="#bcbeb8" />
+        <text x="22" y="9" textAnchor="middle" fontSize="7" fontWeight="700" fill="#AD4F2E">N</text>
+        <text x="22" y="42" textAnchor="middle" fontSize="6" fontWeight="600" fill="#8a857b">S</text>
+        <text x="40" y="24.5" textAnchor="middle" fontSize="6" fontWeight="600" fill="#8a857b">E</text>
+        <text x="4" y="24.5" textAnchor="middle" fontSize="6" fontWeight="600" fill="#8a857b">W</text>
+      </svg>
+    </div>
+  );
+}
+
 export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
   const mapEl = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -228,6 +256,9 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
   const [season, setSeason] = useState<Season>("summer");
   const [pinShaded, setPinShaded] = useState<boolean | null>(null);
   const [source, setSource] = useState<"com" | "osm">("com");
+  // Map bearing, so the compass rose can show which way is true north (the 3D
+  // view is pitched + rotated, so "up" on screen is NOT north).
+  const [bearing, setBearing] = useState(-20);
 
   // Sun position for the chosen time, in the user's local clock (good enough for
   // a Melbourne property viewed locally; the linked simulator is exact).
@@ -263,6 +294,8 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
     map.getCanvas().setAttribute("tabindex", "-1");
     map.getCanvas().setAttribute("aria-hidden", "true");
     new maplibregl.Marker({ color: "#D97757" }).setLngLat([lng, lat]).addTo(map);
+    // Keep the compass rose in sync if the user rotates the 3D view.
+    map.on("rotate", () => setBearing(map.getBearing()));
 
     const addBuildings = (fc: FeatureCollection) => {
       if (map.getSource("blds")) return;
@@ -397,12 +430,15 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
 
   return (
     <div className="overflow-hidden rounded-lg border border-surface-border">
-      <div
-        ref={mapEl}
-        className="h-64 w-full bg-surface-sunken"
-        role="img"
-        aria-label="Buildings around the pin with their cast shadows at the chosen time of day"
-      />
+      <div className="relative">
+        <div
+          ref={mapEl}
+          className="h-64 w-full bg-surface-sunken"
+          role="img"
+          aria-label="Buildings around the pin with their cast shadows at the chosen time of day"
+        />
+        <Compass bearing={bearing} />
+      </div>
       <div className="space-y-3 border-t border-surface-border bg-surface p-3">
         {status === "loading" && (
           <p className="text-xs text-ink-muted">Loading buildings + shadows (a few seconds)...</p>
