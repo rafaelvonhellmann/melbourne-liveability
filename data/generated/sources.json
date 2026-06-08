@@ -396,5 +396,15 @@
     "fetchedAt": "2026-06-08",
     "derived": true,
     "sha256": ""
+  },
+  {
+    "id": "abs-census-volunteering-2021",
+    "name": "ABS Census 2021 G23 - voluntary work, % of residents (SA2), via Digital Atlas of Australia",
+    "url": "https://www.abs.gov.au/census/find-census-data",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-06-08",
+    "derived": true,
+    "sha256": ""
   }
 ]

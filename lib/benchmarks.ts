@@ -91,6 +91,7 @@ export type GmContext = {
   year12Pct?: number;
   bachelorPlusPct?: number;
   postgradPct?: number;
+  volunteerPct?: number;
 };
 
 export function computeGmContext(places: Place[]): GmContext {
@@ -116,5 +117,6 @@ export function computeGmContext(places: Place[]): GmContext {
     year12Pct: med((p) => p.context?.community?.year12Pct),
     bachelorPlusPct: med((p) => p.context?.community?.bachelorPlusPct),
     postgradPct: med((p) => p.context?.community?.postgradPct),
+    volunteerPct: med((p) => p.context?.community?.volunteerPct),
   };
 }

@@ -259,6 +259,8 @@ export type PlaceContext = {
     bachelorPlusPct?: number | null;
     /** Of qualification holders, the % whose highest is a postgraduate degree. */
     postgradPct?: number | null;
+    /** % of residents (15+) who did voluntary work (ABS Census 2021 G23). Civic lens. */
+    volunteerPct?: number | null;
     /** Source id for the qualification figures (distinct from the Census base). */
     qualSourceId?: string;
     sourceId: string;

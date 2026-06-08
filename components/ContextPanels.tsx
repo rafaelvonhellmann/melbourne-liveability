@@ -114,6 +114,13 @@ export function ContextPanels({
               gm={fmtPct(gmContext?.postgradPct ?? null)}
             />
           )}
+          {context.community.volunteerPct != null && (
+            <Row
+              label="Volunteers (did voluntary work)"
+              value={fmtPct(context.community.volunteerPct)}
+              gm={fmtPct(gmContext?.volunteerPct ?? null)}
+            />
+          )}
           <p className="mt-2 text-xs text-ink-muted">
             Owner-occupied is the non-renter remainder (owned outright + with mortgage +
             other). ABS Census 2021 · {context.community.period}

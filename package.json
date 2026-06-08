@@ -72,6 +72,7 @@
     "data:apply-fire-history": "tsx scripts/apply-fire-history.ts",
     "data:vif": "tsx scripts/fetch-vif.ts",
     "data:apply-vif": "tsx scripts/apply-vif.ts",
+    "data:apply-civic": "tsx scripts/apply-civic.ts",
     "data:abs-approvals": "tsx scripts/fetch-abs-approvals.ts",
     "data:apply-abs-approvals": "tsx scripts/apply-abs-approvals.ts",
     "data:abs-qualifications": "tsx scripts/fetch-abs-qualifications.ts",
