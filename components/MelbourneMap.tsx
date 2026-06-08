@@ -49,7 +49,7 @@ function addPoiLayer(map: maplibregl.Map): void {
     source: "pois",
     filter: ["==", ["get", "pinType"], "__none__"],
     paint: {
-      "circle-radius": 4.5,
+      "circle-radius": 5.5,
       "circle-color": poiCircleColorExpression() as maplibregl.ExpressionSpecification,
       "circle-stroke-width": 1.5,
       "circle-stroke-color": "#ffffff",
@@ -543,13 +543,33 @@ export function MelbourneMap({
     });
 
     map.on("click", "sa2-fill", (e) => {
-      // If the click also hit a visible POI pin, let the pin popup own it (pins
-      // draw above sa2-fill and both layer handlers fire independently).
-      if (
-        map.getLayer("poi-circles") &&
-        map.queryRenderedFeatures(e.point, { layers: ["poi-circles"] }).length > 0
-      ) {
-        return;
+      // POI pins are small and draw above the choropleth. Test a BUFFERED box
+      // around the click (not just the exact pixel) so clicking on - or near - an
+      // amenity pin opens ITS popup instead of dropping/moving the buyer pin.
+      // This is what makes the schools/groceries pins usable inside a selected
+      // area (previously a near-miss fell through and re-dropped the pin).
+      if (map.getLayer("poi-circles")) {
+        const r = 10;
+        const near = map.queryRenderedFeatures(
+          [
+            [e.point.x - r, e.point.y - r],
+            [e.point.x + r, e.point.y + r],
+          ],
+          { layers: ["poi-circles"] }
+        );
+        const hit = near[0];
+        if (hit?.properties) {
+          const pinType = String(hit.properties.pinType ?? "");
+          const coords = (hit.geometry as { type: "Point"; coordinates: [number, number] })
+            .coordinates;
+          showPoiPopup(coords, {
+            pinType,
+            name: String(hit.properties.name ?? pinType),
+            url: hit.properties.url ? String(hit.properties.url) : undefined,
+            osmUrl: hit.properties.osmUrl ? String(hit.properties.osmUrl) : undefined,
+          });
+          return;
+        }
       }
       closePoiPopup();
       const f = e.features?.[0];
@@ -650,12 +670,18 @@ export function MelbourneMap({
       pinMarkerRef.current.setLngLat(buyerPin);
     }
     // Deep-dive: ease into the area at neighbourhood zoom (never zoom back out
-    // if the user is already closer).
-    map.flyTo({
-      center: buyerPin,
-      zoom: Math.max(map.getZoom(), 14.5),
-      duration: prefersReducedMotion() ? 0 : 550,
-    });
+    // if the user is already closer). But if the pin is already framed on-screen
+    // at a close zoom (the user is refining it within a selected area), DON'T
+    // replay the fly-to - re-animating on every small move is jarring.
+    const alreadyFramed =
+      map.getZoom() >= 14.5 && map.getBounds().contains(buyerPin as [number, number]);
+    if (!alreadyFramed) {
+      map.flyTo({
+        center: buyerPin,
+        zoom: Math.max(map.getZoom(), 14.5),
+        duration: prefersReducedMotion() ? 0 : 550,
+      });
+    }
   }, [buyerPin]);
 
   // ~15-min bike reach ring - independent toggle, only shown with a pin down.
