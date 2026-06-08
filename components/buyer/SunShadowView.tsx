@@ -40,7 +40,50 @@ function shademapUrl(lng: number, lat: number): string {
 // Keyless OSM Overpass building fallback so the sun view works BEYOND the City of
 // Melbourne council area (whose surveyed-height dataset is inner-city only). OSM
 // heights are sparse, so we estimate from building:levels x storey height.
-const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
+//
+// The public Overpass instances rate-limit / time out under load, which is what
+// made the sun view "not work" outside the CBD. We rotate across mirrors with a
+// short per-mirror timeout and take the first that answers - so a single slow or
+// throttled endpoint no longer kills the feature.
+const OVERPASS_MIRRORS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass.private.coffee/api/interpreter",
+];
+
+type OverpassJson = {
+  elements?: { type?: string; geometry?: { lat: number; lon: number }[]; tags?: Record<string, string> }[];
+};
+
+async function overpassQuery(query: string, signal: AbortSignal): Promise<OverpassJson> {
+  const body = "data=" + encodeURIComponent(query);
+  let lastErr: unknown;
+  for (const url of OVERPASS_MIRRORS) {
+    if (signal.aborted) break;
+    // Per-mirror timeout so one stalled endpoint fails fast and we try the next,
+    // while still honouring the caller's overall abort (unmount / total budget).
+    const ctrl = new AbortController();
+    const onAbort = () => ctrl.abort();
+    signal.addEventListener("abort", onAbort, { once: true });
+    const timer = setTimeout(() => ctrl.abort(), 7000);
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        signal: ctrl.signal,
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body,
+      });
+      if (!res.ok) throw new Error(`overpass ${res.status}`);
+      return (await res.json()) as OverpassJson;
+    } catch (e) {
+      lastErr = e;
+    } finally {
+      clearTimeout(timer);
+      signal.removeEventListener("abort", onAbort);
+    }
+  }
+  throw lastErr ?? new Error("overpass: all mirrors failed");
+}
 
 function osmHeight(tags: Record<string, string> | undefined): number {
   const t = tags ?? {};
@@ -56,17 +99,8 @@ async function fetchOsmBuildings(
   lat: number,
   signal: AbortSignal
 ): Promise<FeatureCollection> {
-  const q = `[out:json][timeout:20];way["building"](around:180,${lat},${lng});out geom;`;
-  const res = await fetch(OVERPASS_URL, {
-    method: "POST",
-    signal,
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: "data=" + encodeURIComponent(q),
-  });
-  if (!res.ok) throw new Error(`overpass ${res.status}`);
-  const json = (await res.json()) as {
-    elements?: { type?: string; geometry?: { lat: number; lon: number }[]; tags?: Record<string, string> }[];
-  };
+  const q = `[out:json][timeout:15];way["building"](around:180,${lat},${lng});out geom;`;
+  const json = await overpassQuery(q, signal);
   const features: Feature<Polygon>[] = [];
   for (const el of json.elements ?? []) {
     if (el.type !== "way" || !Array.isArray(el.geometry) || el.geometry.length < 4) continue;
