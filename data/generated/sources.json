@@ -466,5 +466,15 @@
     "fetchedAt": "2026-06-08",
     "derived": true,
     "sha256": ""
+  },
+  {
+    "id": "bom-solar-climatology",
+    "name": "Bureau of Meteorology - average daily solar exposure (Melbourne climatology); regional figure for the rooftop-solar lens",
+    "url": "http://www.bom.gov.au/climate/data/index.shtml",
+    "licence": "CC BY (BoM)",
+    "period": "long-term mean",
+    "fetchedAt": "2026-06-08",
+    "derived": true,
+    "sha256": ""
   }
 ]

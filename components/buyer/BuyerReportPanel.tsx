@@ -9,6 +9,7 @@ import { anchorKindLabel, bandLabel } from "@/lib/anchors";
 import { SunPathDiagram } from "./SunPathDiagram";
 import { UrbanHeatCard } from "./UrbanHeatCard";
 import { TreeCanopyCard } from "./TreeCanopyCard";
+import { SolarCard } from "./SolarCard";
 import { AircraftNoiseCard } from "./AircraftNoiseCard";
 import { WaterwayHealthCard } from "./WaterwayHealthCard";
 import { BeachQualityCard } from "./BeachQualityCard";
@@ -404,6 +405,9 @@ export function BuyerReportPanel({
             lng={report.location.lng as number}
             lat={report.location.lat as number}
           />
+        )}
+        {hasPin && variant !== "embedded" && (
+          <SolarCard lat={report.location.lat as number} />
         )}
         {hasPin && variant !== "embedded" && (
           <AircraftNoiseCard
