@@ -1,7 +1,7 @@
-# Multi-city expansion plan — Sydney, Brisbane, Adelaide, Perth, Darwin
+# Multi-city expansion plan — Sydney, Brisbane, Adelaide, Perth, Canberra, Hobart, Darwin
 
-Maps the Melbourne build (40 data sources, ABS-SA2 model) to the other five
-mainland capitals. Source-by-source matrix, architecture changes, per-city
+Maps the Melbourne build (40 data sources, ABS-SA2 model) to the other state and
+territory capitals (Sydney, Brisbane, Adelaide, Perth, Canberra, Hobart, Darwin). Source-by-source matrix, architecture changes, per-city
 unique data, gaps, and a rollout order. Researched against live open-data
 portals (11-agent workflow, Jun 2026). **Verify every state URL + licence again
 at build time** — portals move and licence terms vary.
@@ -29,7 +29,7 @@ The pipeline is already GCCSA-scoped, so the refactor is contained:
    { id, label, gccsa, bbox, state, mapCenter, zoom,
      waterRetailer: "single"|"multi", buildingHeightSource, stateSources:{...} }
    ```
-   GCCSA codes (ABS ASGS Ed.3, stable): **Sydney `1GSYD` · Brisbane `3GBRI` · Adelaide `4GADE` · Perth `5GPER` · Darwin `7GDAR`** (Melbourne `2GMEL`).
+   GCCSA codes (ABS ASGS Ed.3, stable): **Sydney `1GSYD` · Brisbane `3GBRI` · Adelaide `4GADE` · Perth `5GPER` · Hobart `6GHOB` · Darwin `7GDAR` · Canberra/ACT `8ACTE`** (Melbourne `2GMEL`). Note `8ACTE` is the whole-of-territory code (the ACT has no GCCSA split) and Canberra has **no councils** - some LGA-keyed joins collapse to one jurisdiction.
 2. **Parameterize the fetch pipeline** — `scripts/fetch.ts` + `fetch-indicators.ts` already filter `GCCSA_CODE_2021='2GMEL'`; take the code as an arg and loop. ABS Data API query templates are identical; only the SA2 list changes. Get each city's SA2 list from the ASGS allocation file filtered by `GCCSA_CODE_2021`, or clip the SA2 boundary FeatureService by `GCC_CODE21`.
 3. **Per-state source modules** — one fetch module per state for the Tier-B layers (crime, planning overlays, flood/fire/coastal, school zones, traffic, air, activity centres). Config-driven where possible.
 4. **Emit per-region data** — `places.<region>.json` (or keep one file keyed by the existing `region` field) + per-region geo.
@@ -102,6 +102,8 @@ Legend: ✓ have-equivalent · ~ partial · ✗ missing · **N** national-covers
 - **Adelaide (SA)** — clean combined PlanSA overlays, fresh traffic, **open City 3D model → the sun feature works here.** Gaps: **paid cadastre** (no open lot-size), coastal SLR viewer-only, no open police layer (OSM).
 - **Perth (WA)** — excellent SLIP ArcGIS REST (bushfire/activity-centres/traffic all keyless), WA Tomorrow SA2 projections. Gaps: **school zones missing (PDF only)**, **paid cadastre**, air needs keyed feed, sun (no open heights).
 - **Darwin (NT)** — smallest, most gaps: no bushfire overlay, no SLR layer, coarse crime/projections, school zones PDF-only, bus-only transit. But standout unique hazards (storm surge, UXO, mineral titles). Do last; lean on national fallbacks (NAFI, DEA, GA facilities).
+- **Canberra (ACT, `8ACTE`)** — *strong open data; do before Darwin (Codex).* Everything via **ACTmapi** (ArcGIS REST) + **data.act.gov.au**: planning/hazard overlays, **open cadastre** (block/section), bushfire-prone + flood, **school Priority Enrolment Areas (spatial)**, Transport Canberra GTFS (bus + light rail), suburb-level **ACT crime**. One jurisdiction (no councils) simplifies LGA joins. Gap: no open building heights → sun = sun-path + shademap link.
+- **Hobart (TAS, `6GHOB`)** — viable but smaller. Everything funnels through **theLIST / LISTmap**: **open cadastre**, Tasmanian Planning Scheme overlays, and unusually strong hazards (**bushfire-prone**, **coastal inundation**, and **landslip** — Hobart's slopes). **DECYP** in-area school maps; **Metro Tasmania** GTFS (bus-only). Tas Police crime is coarse (LGA/region). Gap: no open 3D heights → sun limited.
 
 ---
 
@@ -114,6 +116,8 @@ Datasets Melbourne doesn't need but that matter locally — strong differentiato
 - **Adelaide** — **Groundwater Prohibition Areas** (TCE/PCE plumes under whole suburbs — can't sink a bore), **Acid Sulfate Soils**, **Tree Canopy + Urban Heat** (one of the hottest capitals), **Mt Lofty Ranges Watershed priority areas**, **Hills Face Zone** (can render a block unbuildable), **Adelaide Airport ANEF**.
 - **Perth** — **Acid Sulfate Soils (Swan Coastal Plain)**, **Contaminated Sites Database**, **Coastline Movements / erosion hotspots**, **Kwinana atmospheric buffer zones** (industrial), **Perth Groundwater Map / depth-to-watertable** (garden bores + foundation risk), **Aboriginal Cultural Heritage Register**.
 - **Darwin** — **Storm Surge Mapping** (cyclone, drives the planning overlay), **Acid Sulfate Soils of the Darwin Region**, **NT Floodplain (Q100/PMF)**, **DEA Coastlines** (macro-tidal mobile shores), **NT Mineral Titles (STRIKE)** (tenements over rural-res blocks), **National UXO Affected Areas** (WWII — dense around Darwin).
+- **Canberra** — **Mr Fluffy (loose-fill asbestos) affected blocks** (a published, address-level ACT buyer red flag — a standout differentiator), **Bushfire Prone Area + 2003-firestorm legacy**, **contaminated sites register**, tree-canopy / urban-heat, light-rail corridor land-use change.
+- **Hobart** — **Landslip / landslide hazard bands** (the standout — built on steep slopes), **Bushfire-Prone Areas** (kunanyi/Mt Wellington interface, very high), **coastal inundation / SLR**, colonial **heritage** (sandstone stock + demolition controls), acid sulfate soils (Derwent estuary).
 
 Cross-cutting themes worth a shared layer: **acid sulfate soils** (every coastal capital), **tree canopy / urban heat** (Syd/Adl/Per), **ANEF aircraft noise** (most capitals), **contaminated land** (Syd/Per/Adl).
 
@@ -127,7 +131,11 @@ By data readiness + market size:
 2. **Brisbane** — open cadastre + parcel flood; accept crime-granularity gap.
 3. **Adelaide** — sun works (open 3D); accept paid-cadastre gap (hide lot-size or buy).
 4. **Perth** — strong hazards; resolve school-zones (digitise/buy) + cadastre.
-5. **Darwin** — most gaps; national fallbacks + unique hazards. Smallest payoff.
+5. **Canberra** — strong open data (ACTmapi + open cadastre + spatial PEAs); the cleanest mid-size add. Sun limited.
+6. **Hobart** — clean single-portal data (theLIST: open cadastre + overlays + landslip/bushfire hazards); small market but low build cost. Sun limited.
+7. **Darwin** — most gaps; national fallbacks + unique hazards. Smallest payoff.
+
+(Codex: add **Canberra before Darwin**; **Hobart** is viable but smaller. Both are ordered ahead of Darwin here on data-readiness, not market size.)
 
 Each city ≈ the same shape of work: 12 ABS pulls (free), OSM bbox, ACARA/ACECQA/GA national, + ~14 per-state modules. The national tier + architecture refactor is the shared up-front cost; then it's one state-module set per city.
 
