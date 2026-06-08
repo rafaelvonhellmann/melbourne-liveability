@@ -27,7 +27,10 @@ export type GeocodeResult = {
 
 // Greater Melbourne bounding box: west,north,east,south (lng/lat). Used to both
 // bias and (bounded=1) restrict results so a bare "High St" lands locally.
-const MELB_VIEWBOX = "144.30,-37.40,145.65,-38.55";
+// Sized to cover the whole Greater Melbourne GCCSA - the old box clipped outer
+// addresses (Yarra Ranges in the east, Wallan/Whittlesea in the north, Melton in
+// the west). The caller still hard-bounds every result via inMelbourneBBox.
+const MELB_VIEWBOX = "144.20,-37.25,146.05,-38.55";
 
 const ENDPOINT = "https://nominatim.openstreetmap.org/search";
 

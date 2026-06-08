@@ -726,11 +726,15 @@ function FindingCard({ f, compact = false }: { f: BuyerFinding; compact?: boolea
               {f.caveat}
             </p>
           )}
-          {/* Provenance (confidence / geography / source) is PDF detail, not part
-              of the on-screen scan. Founder: the screen must be digestible for
-              someone checking 10-20 properties a day; full sourcing lives in the
-              printable report + the "Sources and confidence" section below. */}
-          <div className="mt-1.5 hidden flex-wrap gap-x-3 gap-y-0.5 text-[10px] tracking-wide text-ink-muted print:flex">
+          {/* Compact provenance per finding (confidence / geography / source) so
+              every claim is visibly sourced on screen, not only in the PDF - the
+              trust layer a due-diligence tool needs. Kept to one tiny muted line,
+              and hidden in the compact live-hint panel to keep that scan light. */}
+          <div
+            className={`mt-1.5 flex-wrap gap-x-3 gap-y-0.5 text-[10px] tracking-wide text-ink-muted print:flex ${
+              compact ? "hidden" : "flex"
+            }`}
+          >
             <span>Confidence: {f.confidence}</span>
             <span>Geography: {GEO_LABEL[f.geography]}</span>
             {f.sourceRefs && f.sourceRefs.length > 0 && (
