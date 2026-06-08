@@ -10,6 +10,7 @@ import { SunPathDiagram } from "./SunPathDiagram";
 import { UrbanHeatCard } from "./UrbanHeatCard";
 import { TreeCanopyCard } from "./TreeCanopyCard";
 import { AircraftNoiseCard } from "./AircraftNoiseCard";
+import { WaterwayHealthCard } from "./WaterwayHealthCard";
 // 3D building/sun view is heavy (MapLibre) - load it only when the user opens it.
 const SunShadowView = dynamic(
   () => import("./SunShadowView").then((m) => m.SunShadowView),
@@ -404,6 +405,12 @@ export function BuyerReportPanel({
         )}
         {hasPin && variant !== "embedded" && (
           <AircraftNoiseCard
+            lng={report.location.lng as number}
+            lat={report.location.lat as number}
+          />
+        )}
+        {hasPin && variant !== "embedded" && (
+          <WaterwayHealthCard
             lng={report.location.lng as number}
             lat={report.location.lat as number}
           />

@@ -426,5 +426,15 @@
     "fetchedAt": "2026-06-08",
     "derived": true,
     "sha256": ""
+  },
+  {
+    "id": "mw-hws-macros",
+    "name": "Melbourne Water Healthy Waterways Strategy 2018 - macroinvertebrate habitat-suitability (waterway condition CURRENT_1) - runtime pin lookup",
+    "url": "https://data-melbournewater.opendata.arcgis.com/datasets/hws2018-habitat-suitability-modelling-results-for-macroinvertebrates",
+    "licence": "CC BY 3.0 AU (Melbourne Water)",
+    "period": "2018",
+    "fetchedAt": "2026-06-08",
+    "derived": true,
+    "sha256": ""
   }
 ]
