@@ -15,14 +15,14 @@ test.describe("content routes", () => {
     await page.goto("/account");
     await expect(page.getByRole("heading", { name: "Your data", level: 1 })).toBeVisible();
     await expect(page.getByRole("button", { name: /Export my data/ })).toBeVisible();
-    await expect(page.getByText(/coming soon/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /Clear on-device data/ })).toBeVisible();
   });
 
   test("privacy + terms are marked draft", async ({ page }) => {
     await page.goto("/privacy");
-    await expect(page.getByText(/Draft — not yet legal advice/)).toBeVisible();
+    await expect(page.getByText(/Draft - not yet legal advice/)).toBeVisible();
     await page.goto("/terms");
-    await expect(page.getByText(/Draft — not yet legal advice/)).toBeVisible();
+    await expect(page.getByText(/Draft - not yet legal advice/)).toBeVisible();
   });
 
   test("methodology renders the source manifest", async ({ page }) => {
@@ -52,14 +52,15 @@ test.describe("content routes", () => {
 });
 
 test.describe("profile", () => {
-  test("loads, switches to the Safety tab, shows the LGA crime note", async ({ page }) => {
+  test("loads, switches to the Safety tab, shows the council-level crime note", async ({ page }) => {
     await page.goto(PROFILE);
     await expect(page.getByRole("heading", { name: "Brunswick East", level: 1 })).toBeVisible();
     // population trend (Overview)
     await expect(page.getByText(/Population trend/i)).toBeVisible();
-    // tab switch — both crime sparklines carry the LGA note, so take the first.
+    // tab switch — the crime sparklines carry a council-level geography note
+    // (crime is recorded at council level, not SA2), so take the first.
     await page.getByRole("tab", { name: /Crime|Safety/ }).click();
-    await expect(page.getByText(/Native LGA geography \(not SA2\)/).first()).toBeVisible();
+    await expect(page.getByText(/Council-level/i).first()).toBeVisible();
   });
 
   test("feedback modal opens and validates", async ({ page }) => {
