@@ -456,5 +456,15 @@
     "fetchedAt": "2026-06-08",
     "derived": true,
     "sha256": ""
+  },
+  {
+    "id": "epa-beach-report",
+    "name": "EPA Victoria Beach Report - enterococci sampling (bay beach swim quality), graded on median of recent samples",
+    "url": "https://discover.data.vic.gov.au/dataset/beach-report-enterococci-data",
+    "licence": "CC BY 4.0",
+    "period": "to 2025",
+    "fetchedAt": "2026-06-08",
+    "derived": true,
+    "sha256": ""
   }
 ]
