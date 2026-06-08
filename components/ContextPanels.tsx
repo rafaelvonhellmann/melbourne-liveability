@@ -215,7 +215,12 @@ export function ContextPanels({
             )}
             {overlays.length > 0 && (
               <div
-                className={context.planning.heritageOverlayPct != null ? "mt-3" : ""}
+                className={
+                  context.planning.heritageOverlayPct != null &&
+                  Math.round(context.planning.heritageOverlayPct) >= 1
+                    ? "mt-3"
+                    : ""
+                }
               >
                 {overlays.map((o) => (
                   <Row

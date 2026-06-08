@@ -558,10 +558,9 @@ export function MelbourneMap({
           { layers: ["poi-circles"] }
         );
         const hit = near[0];
-        if (hit?.properties) {
+        if (hit?.properties && hit.geometry?.type === "Point") {
           const pinType = String(hit.properties.pinType ?? "");
-          const coords = (hit.geometry as { type: "Point"; coordinates: [number, number] })
-            .coordinates;
+          const coords = hit.geometry.coordinates as [number, number];
           showPoiPopup(coords, {
             pinType,
             name: String(hit.properties.name ?? pinType),

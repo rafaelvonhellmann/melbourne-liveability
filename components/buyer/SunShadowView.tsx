@@ -65,7 +65,7 @@ async function overpassQuery(query: string, signal: AbortSignal): Promise<Overpa
     const ctrl = new AbortController();
     const onAbort = () => ctrl.abort();
     signal.addEventListener("abort", onAbort, { once: true });
-    const timer = setTimeout(() => ctrl.abort(), 7000);
+    const timer = setTimeout(() => ctrl.abort(), 9000);
     try {
       const res = await fetch(url, {
         method: "POST",

@@ -120,10 +120,11 @@ async function fetchWalkIsochroneOnce(
 ): Promise<IsochroneResult> {
   const key = orsApiKey();
   const seconds = Math.max(1, Math.round(minutes * 60));
-  // A pedestrian isochrone is a heavier compute than a point-to-point route, so
-  // give it a more generous budget than the old 9s, which timed out too often
-  // on the public endpoint (the main reason precise walk "didn't work well").
-  const t = timeoutSignal(14000, signal);
+  // Per-attempt budget. The whole call retries once (see fetchWalkIsochrone), so
+  // keep each attempt modest to bound the total wait (<=2x this) while still
+  // tolerating the public endpoint's variable latency - the old single 9s timed
+  // out too often, which is why precise walk "didn't work well".
+  const t = timeoutSignal(10000, signal);
   try {
     const res = key
       ? await fetch(isochroneUrl(), {
@@ -181,7 +182,11 @@ export async function fetchWalkIsochrone(
   for (let attempt = 0; attempt < 2; attempt++) {
     if (opts.signal?.aborted) return { ok: false, reason: "aborted" };
     last = await fetchWalkIsochroneOnce(pin, minutes, opts.signal);
-    if (last.ok || last.reason === "aborted") return last;
+    if (last.ok) return last;
+    // Only the CALLER aborting is terminal. An internal *timeout* also surfaces
+    // as reason "aborted" (same controller), but that is the transient this retry
+    // exists for - so retry unless the caller's own signal was aborted.
+    if (opts.signal?.aborted) return last;
   }
   return last;
 }
