@@ -8,6 +8,7 @@ import type { BuyerReport, BuyerFinding, BuyerConfidence, BuyerGeography } from 
 import { anchorKindLabel, bandLabel } from "@/lib/anchors";
 import { SunPathDiagram } from "./SunPathDiagram";
 import { UrbanHeatCard } from "./UrbanHeatCard";
+import { TreeCanopyCard } from "./TreeCanopyCard";
 // 3D building/sun view is heavy (MapLibre) - load it only when the user opens it.
 const SunShadowView = dynamic(
   () => import("./SunShadowView").then((m) => m.SunShadowView),
@@ -390,6 +391,12 @@ export function BuyerReportPanel({
             omits itself outside the metro Cooling & Greening heat layer). */}
         {hasPin && variant !== "embedded" && (
           <UrbanHeatCard
+            lng={report.location.lng as number}
+            lat={report.location.lat as number}
+          />
+        )}
+        {hasPin && variant !== "embedded" && (
+          <TreeCanopyCard
             lng={report.location.lng as number}
             lat={report.location.lat as number}
           />

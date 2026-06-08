@@ -406,5 +406,15 @@
     "fetchedAt": "2026-06-08",
     "derived": true,
     "sha256": ""
+  },
+  {
+    "id": "vic-tree-canopy",
+    "name": "Vegetation Cover for Metropolitan Melbourne 2018 - tree canopy % (PERANYTREE) - runtime ArcGIS pin lookup",
+    "url": "https://discover.data.vic.gov.au/dataset/vegetation-cover-for-metropolitan-melbourne-2018",
+    "licence": "CC BY 4.0 (Victoria)",
+    "period": "2018",
+    "fetchedAt": "2026-06-08",
+    "derived": true,
+    "sha256": ""
   }
 ]
