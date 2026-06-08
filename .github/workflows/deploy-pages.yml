@@ -15,7 +15,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  # Quality gates THEN build. Nothing is published unless typecheck, lint, unit
+  # tests and the data-source manifest all pass first (previously deploy ran
+  # `npm run build` only, with no gates).
+  verify-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -24,6 +27,14 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - name: Typecheck (tsc --noEmit)
+        run: node node_modules/typescript/bin/tsc --noEmit
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests (vitest)
+        run: npm run test
+      - name: Verify data-source manifest
+        run: npm run data:verify -- --no-network
       - name: Build static export (sub-path aware)
         env:
           # Project site is served from https://<user>.github.io/melbourne-liveability/
@@ -36,8 +47,24 @@ jobs:
         with:
           path: out
 
+  # End-to-end smoke tests (Playwright runs against `next dev`). A separate job so
+  # it runs in parallel with the build; deploy waits on it too.
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+      - name: E2E smoke tests
+        run: npm run test:e2e
+
   deploy:
-    needs: build
+    needs: [verify-build, e2e]
     runs-on: ubuntu-latest
     environment:
       name: github-pages

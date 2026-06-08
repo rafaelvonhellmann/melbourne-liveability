@@ -4,10 +4,10 @@ import { test, expect } from "@playwright/test";
 const PROFILE = "/places/brunswick-east-206011106";
 
 test.describe("content routes", () => {
-  test("pricing shows the three tiers", async ({ page }) => {
+  test("pricing page says it's free", async ({ page }) => {
     await page.goto("/pricing");
-    await expect(page.getByRole("heading", { name: "Pricing", level: 1 })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Area Reports" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /It's free/i, level: 1 })).toBeVisible();
+    await expect(page.getByText(/free to use/i).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /Open the map/ })).toBeVisible();
   });
 
