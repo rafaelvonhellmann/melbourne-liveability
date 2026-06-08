@@ -416,5 +416,15 @@
     "fetchedAt": "2026-06-08",
     "derived": true,
     "sha256": ""
+  },
+  {
+    "id": "vic-anef",
+    "name": "ANEF aircraft-noise contours - Melbourne Airport 2022 Master Plan + Avalon (Vicmap/VicPlan) - runtime pin lookup",
+    "url": "https://plan-gis.mapshare.vic.gov.au/arcgis/rest/services/Planning/Melbourne_Airport_Master_Plan_2022_VicPlan/MapServer",
+    "licence": "CC BY 4.0 (Victoria)",
+    "period": "2022",
+    "fetchedAt": "2026-06-08",
+    "derived": true,
+    "sha256": ""
   }
 ]
