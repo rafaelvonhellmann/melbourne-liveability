@@ -436,5 +436,25 @@
     "fetchedAt": "2026-06-08",
     "derived": true,
     "sha256": ""
+  },
+  {
+    "id": "aec-federal-2022",
+    "name": "AEC 2022 federal election - members elected + two-party-preferred by division; current divisions via AEC Federal Electoral Boundaries 2025 (pin lookup)",
+    "url": "https://results.aec.gov.au/27966/Website/HouseDownloadsMenu-27966-Csv.htm",
+    "licence": "CC BY 4.0 (AEC)",
+    "period": "2022 result / 2025 boundaries",
+    "fetchedAt": "2026-06-08",
+    "derived": true,
+    "sha256": ""
+  },
+  {
+    "id": "vic-state-districts",
+    "name": "Victorian state Legislative Assembly districts (Vicmap Admin STATE_ASSEMBLY_2022) - runtime pin lookup",
+    "url": "https://discover.data.vic.gov.au/dataset/vicmap-admin",
+    "licence": "CC BY 4.0 (Victoria)",
+    "period": "2022",
+    "fetchedAt": "2026-06-08",
+    "derived": true,
+    "sha256": ""
   }
 ]
