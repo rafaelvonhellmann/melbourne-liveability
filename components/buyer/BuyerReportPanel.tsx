@@ -7,6 +7,7 @@ import { X, ShieldAlert, CheckCircle2, HelpCircle, Info, Bookmark, BookmarkCheck
 import type { BuyerReport, BuyerFinding, BuyerConfidence, BuyerGeography } from "@/lib/buyer-report";
 import { anchorKindLabel, bandLabel } from "@/lib/anchors";
 import { SunPathDiagram } from "./SunPathDiagram";
+import { UrbanHeatCard } from "./UrbanHeatCard";
 // 3D building/sun view is heavy (MapLibre) - load it only when the user opens it.
 const SunShadowView = dynamic(
   () => import("./SunShadowView").then((m) => m.SunShadowView),
@@ -383,6 +384,15 @@ export function BuyerReportPanel({
               </div>
             )}
           </Section>
+        )}
+
+        {/* Urban heat at the pin - v2 Environment lens (auto-fetched; the card
+            omits itself outside the metro Cooling & Greening heat layer). */}
+        {hasPin && variant !== "embedded" && (
+          <UrbanHeatCard
+            lng={report.location.lng as number}
+            lat={report.location.lat as number}
+          />
         )}
 
         {/* 3c. How far you can get - reachability isochrone (opt-in; fires routing). */}
