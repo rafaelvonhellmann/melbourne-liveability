@@ -55,7 +55,33 @@ data is never folded into the score; every figure is sourced + caveated.
 - **First visit redirects to `/welcome`** (onboarding scroll-story), remembered in
   localStorage, skipped on deep-links (`app/(map)/page.tsx`).
 
-## Shipped this session (recent → older)
+## Session 2026-06-09 — UX + Codex overhaul (shipped + DEPLOYED to master)
+Worked the user's product-review list + the Codex review + expansion plan. 14 commits,
+all gates green, deployed. Highlights:
+- **Clarity:** hide 0% overlay shares; "LGA" → "council area"; planning-overlay codes
+  spelled out on every mention (PAO/SLO…); removed ALL-CAPS (`uppercase` token) from 35
+  eyebrow labels across 16 components.
+- **Bugs:** sun works outside the CBD now (rotate Overpass **mirrors** w/ per-mirror
+  timeout, `SunShadowView.tsx`); POI pins clickable in a selected area (10px buffered
+  hit-test + skip the fly-to when the pin is already framed, `MelbourneMap.tsx`); precise
+  walk reliable (retry + budget, `walk-isochrone.ts` — note: retry must re-fire on the
+  internal *timeout*, which surfaces as `reason:"aborted"`; see the guard).
+- **UX:** compass rose on the 3D sun view (`SunShadowView`); Population trend chart
+  enlarged to fill its card; context numbers framed **relative to Greater Melbourne**
+  (`gmRel`, `ContextPanels.tsx`); new **"In brief" area summary** (`lib/area-summary.ts`,
+  honest/deterministic); **onboarding = straight to map** (retired the `/welcome`
+  scroll-story → redirect; new dismissible `MapTip`; lens-picker kept).
+- **Codex P0/P1:** **deploy is now gated** — `deploy-pages.yml` runs typecheck/lint/
+  vitest/data:verify + a Playwright **e2e** job before publish; fixed 4 stale smoke tests;
+  widened the geocode bbox to the full GCCSA; per-finding **confidence/geography/source**
+  now shown on screen (`BuyerReportPanel`). EXPANSION-PLAN.md gained **Canberra + Hobart**.
+- **Post-deploy review** (3 finder agents) caught + fixed: the walk-retry-on-timeout bug,
+  a too-tight sun mirror timeout, an unguarded POI geometry cast, stale spacing, dead code.
+- **Still open (the strategic calls):** the **paid-launch gates** Codex listed (accounts,
+  Stripe, report snapshots, backend/proxy, legal review, WCAG 2.2 AA + mobile rebuild,
+  support/trust pages) — none of that is built; it's the gate before charging money.
+
+## Shipped (v2 build session, earlier)
 **v2 data lenses (8, all live; runtime/keyless; honest caveats; context-only):**
 - Environment: **urban heat** (`lib/urban-heat.ts`, CoolingGreening UHI18_M),
   **tree canopy** (`lib/tree-canopy.ts`, PERANYTREE), **rooftop solar**
@@ -91,9 +117,12 @@ data is never folded into the score; every figure is sourced + caveated.
    launch scope/order (Sydney first recommended), ship Brisbane crime LGA-only?
 3. **v2 skipped** (you accepted): **NBN** (only an unofficial unlicensed NBN Co API),
    **mobile coverage** (metro is ~uniformly covered → no signal).
-4. **Sun in-app 3D** — verify on a normal focused tab once. The code/freeze-fix/CORS
-   are sound; an automated browser tab runs `hidden`, which throttles timers so the
-   load stalls only in those checks (a real visible user gets shadows in <1s).
+4. **Sun in-app 3D** — ✅ VERIFIED (2026-06-08). Rendered full 3D massing + real
+   cast shadows + "in shade" verdict at a CBD pin (`/?buyer=1&lat=-37.8136&lng=144.9631`,
+   source = City of Melbourne surveyed heights) on a genuinely visible GPU tab via
+   the **Claude Preview MCP** (`visibilityState=visible` + hardware WebGL, so rAF
+   runs). The earlier stalls were the hidden Chrome-MCP tab throttling timers, not
+   a code bug. Use the Preview MCP (not Chrome MCP) to re-check WebGL/rAF features.
 
 ## Gotchas / memory (also in ~/.claude memory files)
 - **planning.vic WAF**: blocks Node/undici by TLS fingerprint; `scripts/lib/gov-fetch.ts`
