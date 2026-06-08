@@ -32,7 +32,7 @@ export function MetricCard({ def, value, benchmark, series, mapHref }: MetricCar
           <h3 className="font-display text-base font-medium leading-tight text-ink">
             {def.label}
           </h3>
-          <span className="mt-1 inline-flex items-center gap-1 rounded-full border border-surface-border bg-surface-sunken px-2 py-0.5 text-[10px] uppercase tracking-wide text-ink-muted">
+          <span className="mt-1 inline-flex items-center gap-1 rounded-full border border-surface-border bg-surface-sunken px-2 py-0.5 text-[10px] tracking-wide text-ink-muted">
             <span aria-hidden>{def.higherIsBetter ? "▲" : "▼"}</span>
             {directionLabel}
           </span>

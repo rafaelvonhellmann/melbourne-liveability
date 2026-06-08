@@ -19,7 +19,7 @@ export function SavedChecks({ checks, onOpen, onRemove }: SavedChecksProps) {
   if (checks.length === 0) return null;
   return (
     <div className="rounded-lg border border-surface-border bg-surface p-3">
-      <h3 className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
+      <h3 className="text-[11px] font-semibold tracking-wide text-ink-muted">
         Your saved checks
       </h3>
       <p className="mt-0.5 text-[11px] leading-snug text-ink-muted">

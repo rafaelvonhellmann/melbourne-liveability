@@ -33,7 +33,7 @@ export function ScoreBreakdownPanel({ place, weights }: ScoreBreakdownPanelProps
       </div>
 
       <div className="mt-4">
-        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+        <h3 className="mb-2 text-xs font-semibold tracking-wide text-ink-muted">
           Score breakdown
         </h3>
         {breakdown.components.map((c) => {

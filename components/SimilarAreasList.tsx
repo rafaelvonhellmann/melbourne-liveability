@@ -80,7 +80,7 @@ export function SimilarAreasList({
                   <span className="num block text-sm font-semibold text-ink">
                     {it.similarity}%
                   </span>
-                  <span className="block text-[10px] uppercase tracking-wide text-ink-muted">
+                  <span className="block text-[10px] tracking-wide text-ink-muted">
                     alike
                   </span>
                 </span>

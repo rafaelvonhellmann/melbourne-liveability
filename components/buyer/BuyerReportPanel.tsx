@@ -291,7 +291,7 @@ export function BuyerReportPanel({
                 >
                   <span className="min-w-0">
                     <span className="block truncate text-sm text-ink">{d.anchor.label}</span>
-                    <span className="block text-[11px] uppercase tracking-wide text-ink-muted">
+                    <span className="block text-[11px] tracking-wide text-ink-muted">
                       {anchorKindLabel(d.anchor.kind)}
                     </span>
                   </span>
@@ -730,7 +730,7 @@ function FindingCard({ f, compact = false }: { f: BuyerFinding; compact?: boolea
               of the on-screen scan. Founder: the screen must be digestible for
               someone checking 10-20 properties a day; full sourcing lives in the
               printable report + the "Sources and confidence" section below. */}
-          <div className="mt-1.5 hidden flex-wrap gap-x-3 gap-y-0.5 text-[10px] uppercase tracking-wide text-ink-muted print:flex">
+          <div className="mt-1.5 hidden flex-wrap gap-x-3 gap-y-0.5 text-[10px] tracking-wide text-ink-muted print:flex">
             <span>Confidence: {f.confidence}</span>
             <span>Geography: {GEO_LABEL[f.geography]}</span>
             {f.sourceRefs && f.sourceRefs.length > 0 && (
@@ -761,7 +761,7 @@ function Section({
         {count != null && <span className="num text-xs text-ink-muted">{count}</span>}
       </div>
       {precision && (
-        <p className="mt-0.5 text-[10px] uppercase tracking-wide text-ink-muted">{precision}</p>
+        <p className="mt-0.5 text-[10px] tracking-wide text-ink-muted">{precision}</p>
       )}
       <div className="mt-2.5">{children}</div>
     </section>

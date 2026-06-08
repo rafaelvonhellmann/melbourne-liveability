@@ -23,7 +23,7 @@ export function ScoreBadge({ value, size = 70, caption = "score" }: ScoreBadgePr
       <span style={{ fontSize: size * 0.42, lineHeight: 1 }}>{display}</span>
       {caption && (
         <span
-          className="mt-0.5 uppercase tracking-wide opacity-85"
+          className="mt-0.5 tracking-wide opacity-85"
           style={{ fontSize: Math.max(7, size * 0.12) }}
         >
           {caption}

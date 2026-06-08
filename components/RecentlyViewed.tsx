@@ -8,7 +8,7 @@ export function RecentlyViewed({ recent }: { recent: RecentPlace[] }) {
 
   return (
     <div className="rounded-lg border border-surface-border bg-surface p-3 shadow-card">
-      <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+      <p className="text-xs font-semibold tracking-wide text-ink-muted">
         Recently viewed
       </p>
       <ul className="mt-2 space-y-1 text-sm">

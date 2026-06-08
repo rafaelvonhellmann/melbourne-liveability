@@ -51,7 +51,7 @@ export function AirQualityCard({ centroid }: { centroid: [number, number] }) {
   return (
     <div className="rounded-lg border border-surface-border bg-surface p-4 shadow-card">
       <div className="mb-2 flex flex-wrap items-center gap-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+        <h3 className="text-xs font-semibold tracking-wide text-ink-muted">
           Air quality
         </h3>
       </div>

@@ -210,7 +210,7 @@ export function BuyerProfilePanel({ initial, onSave, onClear, onClose }: Props) 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
+      <div className="mb-1 text-[11px] font-semibold tracking-wide text-ink-muted">
         {label}
       </div>
       {children}
@@ -285,7 +285,7 @@ function AnchorEditor({
               <MapPin className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[13px] text-ink">{a.label}</span>
-                <span className="block text-[10px] uppercase tracking-wide text-ink-muted">
+                <span className="block text-[10px] tracking-wide text-ink-muted">
                   {anchorKindLabel(a.kind)}
                 </span>
               </span>

@@ -19,7 +19,7 @@ export function DomainSliders({ weights, onChange, onReset }: DomainSlidersProps
   return (
     <div className="rounded-lg border border-surface-border bg-surface p-3 shadow-card">
       <div className="mb-1 flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+        <span className="text-xs font-semibold tracking-wide text-ink-muted">
           Your priorities
         </span>
         <button

@@ -911,8 +911,10 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
   const negligibleHazard = (bushfire ?? 0) < 1 && (flood ?? 0) < 1;
   const elevatedHazard = (bushfire != null && bushfire >= 50) || (flood != null && flood >= 10);
   const hazardBits: string[] = [];
-  if (bushfire != null) hazardBits.push(`about ${Math.round(bushfire)}% mapped as bushfire-prone overlay`);
-  if (flood != null) hazardBits.push(`about ${Math.round(flood)}% under a flood planning overlay`);
+  // Only mention an overlay it actually has - a "0%" bit (e.g. no bushfire but
+  // some flood) reads as noise, so suppress any share that rounds to zero.
+  if (bushfire != null && Math.round(bushfire) >= 1) hazardBits.push(`about ${Math.round(bushfire)}% mapped as bushfire-prone overlay`);
+  if (flood != null && Math.round(flood) >= 1) hazardBits.push(`about ${Math.round(flood)}% under a flood planning overlay`);
   if (haveHazardData && negligibleHazard) {
     findings.push({
       id: "hazard-overlays",
@@ -994,7 +996,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     const hasHigh = presentOverlayList.some((o) => o.materiality === "high");
     const lead = presentOverlayList[0];
     const shareList = presentOverlayList
-      .map((o) => `${o.code} ~${Math.round(overlayShares?.[o.code] ?? 0)}%`)
+      .map((o) => `${o.name} (${o.code}) ~${Math.round(overlayShares?.[o.code] ?? 0)}%`)
       .join(", ");
     findings.push({
       id: "conservation-overlays",
@@ -1346,10 +1348,10 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     severity: "low",
     title: "Review local safety context",
     summary: !place
-      ? "This point is outside our Greater Melbourne coverage, so no local crime context is available here. Recorded offences are published at suburb/LGA level - check the VCSA data for the actual area."
+      ? "This point is outside our Greater Melbourne coverage, so no local crime context is available here. Recorded offences are published at suburb or council-area level - check the VCSA data for the actual area."
       : crimeBits.length
-        ? `Recorded ${crimeBits.join(" and ")} across Greater Melbourne, measured at suburb/LGA level - not the specific street.`
-        : "We do not hold recorded-offence figures for this specific area - check VCSA crime data for the wider council/LGA.",
+        ? `Recorded ${crimeBits.join(" and ")} across Greater Melbourne, measured at suburb or council-area level - not the specific street.`
+        : "We do not hold recorded-offence figures for this specific area - check VCSA crime data for the wider council area.",
     verifyAction: "Walk the immediate street at different times and check recent local reports.",
     caveat:
       "Recorded offences reflect reporting and policing, not true crime levels; percentiles rank areas and do not predict a specific street.",

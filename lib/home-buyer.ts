@@ -52,7 +52,7 @@ export const HOME_BUYER_FACTORS: HomeBuyerFactorConfig[] = [
     id: "safety",
     label: "Safety",
     weight: 0.18,
-    note: "Recorded crime (suburb/LGA → SA2).",
+    note: "Recorded crime (suburb or council area → SA2).",
   },
   {
     id: "education",

@@ -379,7 +379,7 @@ function OverviewPanel({
     <div className="space-y-6">
     <div className="grid gap-5 lg:grid-cols-[1fr_300px]">
       <div>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+        <h2 className="mb-3 text-xs font-semibold tracking-wide text-ink-muted">
           Score breakdown · default weights
         </h2>
         {breakdown.components.map((c) => {
@@ -402,7 +402,7 @@ function OverviewPanel({
           metrics. Outer-growth areas always rank low on transport.
         </Caveat>
 
-        <h3 className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+        <h3 className="mb-2 mt-5 text-xs font-semibold tracking-wide text-ink-muted">
           Explore context (never in the score)
         </h3>
         <div className="grid gap-2 sm:grid-cols-2">
@@ -423,7 +423,7 @@ function OverviewPanel({
       <div className="space-y-4">
         <MiniMapCard slug={place.slug} />
         <div className="rounded-lg border border-surface-border bg-surface p-4 shadow-card">
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          <h3 className="mb-2 text-xs font-semibold tracking-wide text-ink-muted">
             Key facts
           </h3>
           <Fact k="Council" v={place.lga} />
@@ -438,7 +438,7 @@ function OverviewPanel({
 
     {hasAnyTrend && (
       <section>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+        <h2 className="mb-3 text-xs font-semibold tracking-wide text-ink-muted">
           Trends over time{" "}
           <span className="font-normal normal-case">- context only, never in the score</span>
         </h2>
@@ -483,7 +483,7 @@ function PersonaPanel({ place, persona }: { place: Place; persona: PersonaId }) 
         read the data, not a definitive ranking.
       </Caveat>
 
-      <h3 className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+      <h3 className="mb-2 mt-5 text-xs font-semibold tracking-wide text-ink-muted">
         Factor breakdown (percentile · weight)
       </h3>
       {weighted.map((c) => {
@@ -705,7 +705,7 @@ function MiniMapCard({ slug }: { slug: string }) {
           background: "linear-gradient(135deg, #eef1ee, #e7eae6 55%, #dfe3df)",
         }}
       >
-        <span className="rounded-md bg-surface/80 px-2 py-1 text-[10px] uppercase tracking-wide text-ink-muted backdrop-blur">
+        <span className="rounded-md bg-surface/80 px-2 py-1 text-[10px] tracking-wide text-ink-muted backdrop-blur">
           Show this area on the map &rarr;
         </span>
       </div>
@@ -727,7 +727,7 @@ function PopulationTrendCard({ series }: { series?: PlaceSeries }) {
   const fmt = (v: number) => Math.round(v).toLocaleString("en-AU");
   return (
     <div className="rounded-lg border border-surface-border bg-surface p-4 shadow-card">
-      <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+      <h3 className="mb-1 text-xs font-semibold tracking-wide text-ink-muted">
         Population trend
       </h3>
       <div className="flex flex-wrap items-baseline gap-x-1.5">
@@ -772,7 +772,7 @@ function AffordabilityTrendCard({ rent, mortgage }: { rent?: PlaceSeries; mortga
   const fmt = (v: number) => `${Math.round(v)}%`;
   return (
     <div className="rounded-lg border border-surface-border bg-surface p-4 shadow-card">
-      <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+      <h3 className="mb-1 text-xs font-semibold tracking-wide text-ink-muted">
         Affordability trend (medians)
       </h3>
       {lines.map((s) => {

@@ -20,7 +20,7 @@ export function InterestViews({ active, onSelect }: InterestViewsProps) {
   const activeCfg = INTEREST_VIEWS[active];
   return (
     <div className="rounded-lg border border-surface-border bg-surface p-3 shadow-card">
-      <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+      <p className="text-xs font-semibold tracking-wide text-ink-muted">
         Lens
       </p>
       <p className="mt-1 text-xs text-ink-muted">

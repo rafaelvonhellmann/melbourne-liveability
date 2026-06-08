@@ -27,7 +27,7 @@ export const DOMAIN_GRANULARITY: Record<DomainId, string> = {
   transport:
     "PT stops within 800 m and AM-peak frequency, computed at the SA2 centroid (PTV GTFS).",
   safety:
-    "Crime recorded at suburb/LGA level and allocated to this SA2 via crosswalk (VCSA) - not resident point-level.",
+    "Crime recorded at suburb or council-area level and allocated to this SA2 via crosswalk (VCSA) - not resident point-level.",
   health:
     "Distance to the nearest public hospital and GP/clinic count within 2 km, by proximity (Vic MapShare + OSM).",
   education:

@@ -180,7 +180,7 @@ export function SearchBox({ index, onSelect, onGeocode }: SearchBoxProps) {
                     )}
                   </span>
                   <span
-                    className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${
+                    className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium tracking-wide ${
                       isAlias
                         ? "bg-surface-sunken text-ink-muted"
                         : "bg-accent/10 text-accent"
@@ -205,7 +205,7 @@ export function SearchBox({ index, onSelect, onGeocode }: SearchBoxProps) {
                   <span className="min-w-0 flex-1 truncate">
                     Search “{trimmed}” as a full address
                   </span>
-                  <span className="shrink-0 rounded-full bg-surface-sunken px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-ink-muted">
+                  <span className="shrink-0 rounded-full bg-surface-sunken px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-ink-muted">
                     Address
                   </span>
                 </button>
@@ -247,7 +247,7 @@ export function SearchBox({ index, onSelect, onGeocode }: SearchBoxProps) {
                           {r.shortLabel}
                         </span>
                       </span>
-                      <span className="shrink-0 rounded-full bg-accent/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent">
+                      <span className="shrink-0 rounded-full bg-accent/10 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-accent">
                         Address
                       </span>
                     </button>

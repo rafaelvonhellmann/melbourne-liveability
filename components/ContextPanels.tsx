@@ -194,9 +194,12 @@ export function ContextPanels({
         )}
 
       {context.planning &&
-        (context.planning.heritageOverlayPct != null || overlays.length > 0) && (
+        ((context.planning.heritageOverlayPct != null &&
+          Math.round(context.planning.heritageOverlayPct) >= 1) ||
+          overlays.length > 0) && (
           <Panel title="Planning overlays">
-            {context.planning.heritageOverlayPct != null && (
+            {context.planning.heritageOverlayPct != null &&
+              Math.round(context.planning.heritageOverlayPct) >= 1 && (
               <>
                 <Row
                   label="Area within a Heritage Overlay"
@@ -267,7 +270,7 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
   return (
     <div className="rounded-lg border border-surface-border bg-surface p-4 shadow-card">
       <div className="mb-2 flex flex-wrap items-center gap-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+        <h3 className="text-xs font-semibold tracking-wide text-ink-muted">
           {title}
         </h3>
       </div>

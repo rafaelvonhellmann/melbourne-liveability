@@ -78,7 +78,7 @@ export function LayerToggle({
       role="group"
       aria-label="Map layer (what is painted on the map)"
     >
-      <div className="mb-0.5 flex items-center gap-2 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+      <div className="mb-0.5 flex items-center gap-2 px-1 text-xs font-semibold tracking-wide text-ink-muted">
         <Layers className="h-3.5 w-3.5" aria-hidden />
         Showing on map
       </div>
@@ -98,7 +98,7 @@ export function LayerToggle({
           >
             <span>No layer</span>
             {noLayer && (
-              <span className="text-[10px] font-medium uppercase tracking-wide text-accent-ink">
+              <span className="text-[10px] font-medium tracking-wide text-accent-ink">
                 On map
               </span>
             )}
@@ -123,7 +123,7 @@ export function LayerToggle({
             >
               <span>{d.label}</span>
               {!activeContext && !noLayer && activeDomain === d.id && (
-                <span className="text-[10px] font-medium uppercase tracking-wide text-accent-ink">
+                <span className="text-[10px] font-medium tracking-wide text-accent-ink">
                   On map
                 </span>
               )}
@@ -155,7 +155,7 @@ export function LayerToggle({
           category (a categorical palette, separate from the YlGnBu data ramp). */}
       <div className="mt-2.5 border-t border-surface-border pt-2.5">
         <div className="mb-1.5 flex items-center justify-between gap-2 px-1">
-          <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          <span className="flex items-center gap-2 text-xs font-semibold tracking-wide text-ink-muted">
             <MapPin className="h-3.5 w-3.5" aria-hidden />
             Pins
           </span>
@@ -177,7 +177,7 @@ export function LayerToggle({
         <div className="space-y-1.5">
           {POI_GROUPS.map((group) => (
             <div key={group.label}>
-              <div className="px-1 text-[10px] font-semibold uppercase tracking-wide text-ink-muted">
+              <div className="px-1 text-[10px] font-semibold tracking-wide text-ink-muted">
                 {group.label}
               </div>
               <ul className="space-y-0.5">
@@ -216,7 +216,7 @@ export function LayerToggle({
         onSocialHousingToggle ||
         onHazardSelect) && (
         <div className="mt-2.5 space-y-1.5 border-t border-surface-border pt-2.5">
-          <div className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          <div className="mb-1 px-1 text-xs font-semibold tracking-wide text-ink-muted">
             Context layers
           </div>
           {onWalkAccessToggle && (
@@ -296,7 +296,7 @@ export function LayerToggle({
 
       {onColorblindToggle && (
         <div className="mt-2.5 space-y-1.5 border-t border-surface-border pt-2.5">
-          <div className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          <div className="mb-1 px-1 text-xs font-semibold tracking-wide text-ink-muted">
             Display
           </div>
           <label className="flex cursor-pointer items-center gap-2 px-1 text-sm text-ink">
