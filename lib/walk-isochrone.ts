@@ -111,19 +111,19 @@ export function parseOrsIsochrone(
 }
 
 /**
- * Fetch a street-network walk isochrone for `pin` (a [lng, lat]) covering
- * `minutes` of walking. Never throws to the caller: returns `{ ok: false }`
- * when the feature is not configured, the request fails, or no polygon comes
- * back - callers then fall back to the free straight-line `amenitiesNear`.
+ * One isochrone request. Returns `{ ok: false }` (never throws) on any failure.
  */
-export async function fetchWalkIsochrone(
+async function fetchWalkIsochroneOnce(
   pin: LngLat,
-  minutes: number = WALK_MINUTES,
-  opts: { signal?: AbortSignal } = {}
+  minutes: number,
+  signal?: AbortSignal
 ): Promise<IsochroneResult> {
   const key = orsApiKey();
   const seconds = Math.max(1, Math.round(minutes * 60));
-  const t = timeoutSignal(9000, opts.signal);
+  // A pedestrian isochrone is a heavier compute than a point-to-point route, so
+  // give it a more generous budget than the old 9s, which timed out too often
+  // on the public endpoint (the main reason precise walk "didn't work well").
+  const t = timeoutSignal(14000, signal);
   try {
     const res = key
       ? await fetch(isochroneUrl(), {
@@ -145,6 +145,10 @@ export async function fetchWalkIsochrone(
             costing: "pedestrian",
             contours: [{ time: Math.max(1, Math.round(minutes)) }],
             polygons: true,
+            // Simplify + de-speckle: a smaller, faster response and a cleaner
+            // reachability outline (less jagged than the raw network polygon).
+            generalize: 40,
+            denoise: 0.5,
           }),
         });
     if (!res.ok) return { ok: false, reason: `HTTP ${res.status}` };
@@ -157,4 +161,27 @@ export async function fetchWalkIsochrone(
   } finally {
     t.clear();
   }
+}
+
+/**
+ * Fetch a street-network walk isochrone for `pin` (a [lng, lat]) covering
+ * `minutes` of walking. Never throws to the caller: returns `{ ok: false }`
+ * when the feature is not configured, the request fails, or no polygon comes
+ * back - callers then fall back to the free straight-line `amenitiesNear`.
+ *
+ * Retries once on a transient failure (the public endpoint occasionally
+ * rate-limits or times out under load), but never retries a user/caller abort.
+ */
+export async function fetchWalkIsochrone(
+  pin: LngLat,
+  minutes: number = WALK_MINUTES,
+  opts: { signal?: AbortSignal } = {}
+): Promise<IsochroneResult> {
+  let last: IsochroneResult = { ok: false, reason: "network" };
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (opts.signal?.aborted) return { ok: false, reason: "aborted" };
+    last = await fetchWalkIsochroneOnce(pin, minutes, opts.signal);
+    if (last.ok || last.reason === "aborted") return last;
+  }
+  return last;
 }
