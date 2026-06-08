@@ -6,6 +6,7 @@ import type { DomainId, Place } from "@/lib/types";
 import { computeWeightedScore } from "@/lib/scoring";
 import { getDefaultWeights } from "@/lib/weights";
 import { V1_SCORED_DOMAINS, getDomain } from "@/lib/domains";
+import { buildAreaSummary } from "@/lib/area-summary";
 import { PERSONA_PRESETS, personaWeights, type PersonaId } from "@/lib/personas";
 import { sourcesForIndicatorIds, getSource, shortSourceName } from "@/lib/sources";
 import { percentileToColor } from "@/lib/colors";
@@ -374,9 +375,16 @@ function OverviewPanel({
     (s) => !!s && s.points.length >= MIN_TREND_POINTS
   );
   const hasAnyTrend = hasPopTrend || hasAffTrend;
+  const areaSummary = buildAreaSummary(place);
 
   return (
     <div className="space-y-6">
+      {areaSummary && (
+        <div className="rounded-lg border border-surface-border bg-surface-sunken p-4">
+          <h2 className="mb-1 text-xs font-semibold tracking-wide text-ink-muted">In brief</h2>
+          <p className="text-sm leading-relaxed text-ink">{areaSummary}</p>
+        </div>
+      )}
     <div className="grid gap-5 lg:grid-cols-[1fr_300px]">
       <div>
         <h2 className="mb-3 text-xs font-semibold tracking-wide text-ink-muted">
