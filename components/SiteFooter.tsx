@@ -3,7 +3,6 @@ import { PRODUCT_NAME } from "@/lib/brand";
 
 const LINKS: { href: string; label: string }[] = [
   { href: "/", label: "Map" },
-  { href: "/welcome", label: "How it works" },
   { href: "/buyer", label: "Buyer check" },
   { href: "/find", label: "Find areas" },
   { href: "/about", label: "About & trust" },

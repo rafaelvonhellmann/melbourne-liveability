@@ -32,6 +32,7 @@ import { Attribution } from "@/components/Attribution";
 import { SelectedSummaryCard } from "@/components/SelectedSummaryCard";
 import { FeedbackButton } from "@/components/FeedbackButton";
 import { OnboardingModal } from "@/components/OnboardingModal";
+import { MapTip } from "@/components/MapTip";
 import { BuyerReportPanel } from "@/components/buyer/BuyerReportPanel";
 import { SavedChecks } from "@/components/buyer/SavedChecks";
 import { BuyerProfilePanel } from "@/components/buyer/BuyerProfilePanel";
@@ -187,31 +188,9 @@ export default function MapPage() {
   // ---- Buyer "Location Check" mode ------------------------------------
   const router = useRouter();
 
-  // First-time visitors land on the onboarding story (/welcome) - unless they
-  // arrived via a deep link (shared pin / area / weights), which we respect.
-  // Remembered in localStorage so returning visitors go straight to the map.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const hasDeepLink = /[?&](buyer|select|lat|lng|list|layer|persona|view|w)=/.test(
-      window.location.search
-    );
-    if (hasDeepLink) return;
-    let seen = false;
-    try {
-      seen = localStorage.getItem("nl_seen_welcome") === "1";
-    } catch {
-      /* storage blocked - just show the map */
-    }
-    if (!seen) {
-      try {
-        localStorage.setItem("nl_seen_welcome", "1");
-      } catch {
-        /* ignore */
-      }
-      router.replace("/welcome");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
-  }, []);
+  // Onboarding is the lightweight lens-picker modal (OnboardingModal) plus a
+  // dismissible map tip - no forced /welcome scroll-story. First-time visitors
+  // land straight on the map.
   const searchParams = useSearchParams();
   const [buyerMode, setBuyerMode] = useState(false);
   const [buyerPin, setBuyerPin] = useState<[number, number] | null>(null);
@@ -1116,6 +1095,8 @@ export default function MapPage() {
               </p>
             )}
           </div>
+
+          {!buyerMode && !selected && <MapTip />}
 
           {/* Data-load failure - visible, recoverable (never a silent empty map). */}
           {loadError && (
