@@ -31,7 +31,11 @@ export function ContextPanels({
           <Row
             label="Socio-economic ranking (1-10)"
             value={context.equity.irsadDecile}
-            gm={gmContext?.irsadDecile != null ? String(Math.round(gmContext.irsadDecile)) : null}
+            gm={
+              gmContext?.irsadDecile != null
+                ? `Greater Melbourne median: ${Math.round(gmContext.irsadDecile)}`
+                : null
+            }
           />
           <p className="mt-2 text-xs text-ink-muted">
             Where this area sits on the ABS socio-economic scale: <b className="text-ink">1</b> =
@@ -55,11 +59,7 @@ export function ContextPanels({
                 ? context.population.densityPerKm2.toLocaleString()
                 : null
             }
-            gm={
-              gmContext?.densityPerKm2 != null
-                ? Math.round(gmContext.densityPerKm2).toLocaleString()
-                : null
-            }
+            gm={gmRel(context.population.densityPerKm2, gmContext?.densityPerKm2)}
           />
           {context.population.areaKm2 != null && (
             <Row label="Land area (km²)" value={context.population.areaKm2.toLocaleString()} />
@@ -77,7 +77,7 @@ export function ContextPanels({
           <Row
             label="Renter households"
             value={fmtPct(context.community.renterPct)}
-            gm={fmtPct(gmContext?.renterPct ?? null)}
+            gm={gmRel(context.community.renterPct, gmContext?.renterPct)}
           />
           <Row
             label="Owner-occupied (approx)"
@@ -86,39 +86,39 @@ export function ContextPanels({
           <Row
             label="Apartment dwellings %"
             value={fmtPct(context.community.apartmentPct)}
-            gm={fmtPct(gmContext?.apartmentPct ?? null)}
+            gm={gmRel(context.community.apartmentPct, gmContext?.apartmentPct)}
           />
           <Row
             label="First Nations %"
             value={fmtPct(context.community.firstNationsPct)}
-            gm={fmtPct(gmContext?.firstNationsPct ?? null)}
+            gm={gmRel(context.community.firstNationsPct, gmContext?.firstNationsPct)}
           />
           {context.community.year12Pct != null && (
             <Row
               label="Completed Year 12 %"
               value={fmtPct(context.community.year12Pct)}
-              gm={fmtPct(gmContext?.year12Pct ?? null)}
+              gm={gmRel(context.community.year12Pct, gmContext?.year12Pct)}
             />
           )}
           {context.community.bachelorPlusPct != null && (
             <Row
               label="Bachelor degree or higher"
               value={fmtPct(context.community.bachelorPlusPct)}
-              gm={fmtPct(gmContext?.bachelorPlusPct ?? null)}
+              gm={gmRel(context.community.bachelorPlusPct, gmContext?.bachelorPlusPct)}
             />
           )}
           {context.community.postgradPct != null && (
             <Row
               label="Postgraduate degree"
               value={fmtPct(context.community.postgradPct)}
-              gm={fmtPct(gmContext?.postgradPct ?? null)}
+              gm={gmRel(context.community.postgradPct, gmContext?.postgradPct)}
             />
           )}
           {context.community.volunteerPct != null && (
             <Row
               label="Volunteers (did voluntary work)"
               value={fmtPct(context.community.volunteerPct)}
-              gm={fmtPct(gmContext?.volunteerPct ?? null)}
+              gm={gmRel(context.community.volunteerPct, gmContext?.volunteerPct)}
             />
           )}
           <p className="mt-2 text-xs text-ink-muted">
@@ -295,8 +295,8 @@ function Row({
       <span className="text-right">
         <span className="num font-medium text-ink">{value ?? "—"}</span>
         {gm != null && (
-          <span className="num mt-0.5 block text-[10px] font-normal text-ink-muted">
-            Greater Melbourne median {gm}
+          <span className="mt-0.5 block text-[10px] font-normal text-ink-muted">
+            {gm}
           </span>
         )}
       </span>
@@ -307,6 +307,20 @@ function Row({
 function fmtPct(v: number | null): string | null {
   if (v == null || !Number.isFinite(v)) return null;
   return `${v.toFixed(1)}%`;
+}
+
+/**
+ * Frame a value against the Greater-Melbourne median as a plain-English relative
+ * phrase ("~12% below the Greater Melbourne median") rather than two raw numbers
+ * the reader has to compare themselves.
+ */
+function gmRel(value: number | null | undefined, gm: number | null | undefined): string | null {
+  if (value == null || gm == null || !Number.isFinite(value) || !Number.isFinite(gm) || gm === 0) {
+    return null;
+  }
+  const pct = Math.round(((value - gm) / Math.abs(gm)) * 100);
+  if (Math.abs(pct) < 2) return "about the Greater Melbourne median";
+  return `~${Math.abs(pct)}% ${pct > 0 ? "above" : "below"} the Greater Melbourne median`;
 }
 
 function ownerApprox(renterPct: number | null): string | null {
