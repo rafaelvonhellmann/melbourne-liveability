@@ -1,0 +1,50 @@
+name: Bake building tiles (sun view)
+
+# One-off / occasional data build. Run manually from the Actions tab (or
+# `gh workflow run bake-buildings.yml`). It downloads the Victoria OSM extract,
+# clips it to Greater Melbourne, filters buildings, bakes static z14 tiles, and
+# commits them - so the sun view runs off OUR OWN static assets, not the flaky
+# live City-of-Melbourne API / public Overpass. ubuntu has `osmium` via apt, so
+# the heavy bulk-OSM processing happens here, not on a dev machine.
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bake-buildings
+  cancel-in-progress: false
+
+jobs:
+  bake:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Install osmium-tool
+        run: sudo apt-get update && sudo apt-get install -y osmium-tool
+      - name: Download Victoria OSM extract (Geofabrik)
+        run: curl -sSL -o victoria.osm.pbf https://download.geofabrik.de/australia-oceania/australia/victoria-latest.osm.pbf
+      - name: Clip to Greater Melbourne, filter buildings, export
+        run: |
+          osmium extract -b 144.3,-38.55,145.9,-37.2 victoria.osm.pbf -o metro.osm.pbf --overwrite
+          osmium tags-filter metro.osm.pbf w/building -o metro-buildings.osm.pbf --overwrite
+          osmium export metro-buildings.osm.pbf -f geojsonseq -o metro-buildings.geojsonseq --overwrite
+      - name: Bake z14 tiles
+        run: npx tsx scripts/build-building-tiles.ts metro-buildings.geojsonseq
+      - name: Commit baked tiles
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/data/buildings
+          if git diff --cached --quiet; then
+            echo "No tile changes to commit."
+          else
+            git commit -m "data: bake OSM building tiles for the sun view"
+            git push
+          fi
