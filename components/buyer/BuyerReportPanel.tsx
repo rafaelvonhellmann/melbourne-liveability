@@ -12,7 +12,6 @@ import { TreeCanopyCard } from "./TreeCanopyCard";
 import { AircraftNoiseCard } from "./AircraftNoiseCard";
 import { WaterwayHealthCard } from "./WaterwayHealthCard";
 import { BeachQualityCard } from "./BeachQualityCard";
-import { ElectorateCard } from "./ElectorateCard";
 // 3D building/sun view is heavy (MapLibre) - load it only when the user opens it.
 const SunShadowView = dynamic(
   () => import("./SunShadowView").then((m) => m.SunShadowView),
@@ -423,13 +422,6 @@ export function BuyerReportPanel({
             lat={report.location.lat as number}
           />
         )}
-        {hasPin && variant !== "embedded" && (
-          <ElectorateCard
-            lng={report.location.lng as number}
-            lat={report.location.lat as number}
-          />
-        )}
-
         {/* 3c. How far you can get - reachability isochrone (opt-in; fires routing). */}
         {hasPin && isLive && isReachabilityConfigured() && (
           <Section title="How far you can get">

@@ -68,7 +68,7 @@ export const METRIC_CATALOG: MetricDef[] = [
     unit: "modes",
     format: "count",
     higherIsBetter: true,
-    description: "Number of distinct modes (train / tram / bus) reachable.",
+    description: "How many of train / tram / bus have a stop within 800 m (about a 10-minute walk) of the area centre.",
   },
   {
     domain: "safety",
