@@ -21,6 +21,9 @@ const STORAGE_KEY = "lm.householdIncomeAnnual";
 export function IncomeAffordabilityCard({ place }: { place: Place }) {
   const medianIncomeWeekly = place.domains?.income?.subIndicators?.medianDhi?.raw ?? null;
   const rentRatio = place.domains?.affordability?.subIndicators?.rentToIncome?.raw ?? null;
+  // Area wealth (SEIFA) disambiguates the rent-burden score: a high rent share can
+  // mean high local incomes, not cheap housing. Surfaced as context, never scored.
+  const irsad = place.context?.equity?.irsadDecile ?? null;
   const medianRentWeekly =
     rentRatio != null && medianIncomeWeekly != null
       ? Math.round(rentRatio * medianIncomeWeekly)
@@ -150,6 +153,13 @@ export function IncomeAffordabilityCard({ place }: { place: Place }) {
         </div>
       )}
 
+      {irsad != null && (
+        <p className="mt-3 text-xs leading-relaxed text-ink-muted">
+          This area ranks <b className="text-ink">{irsad}/10</b> on the ABS socio-economic scale
+          (10 = most advantaged). A high rent share here often reflects high local incomes, not
+          cheap housing - read the rent-burden score alongside this.
+        </p>
+      )}
       <p className="mt-3 text-[11px] leading-relaxed text-ink-muted">
         <b className="text-ink">Caveat:</b> general information only, not financial advice. Rent
         is derived from ABS medians (no sale-price or loan data); your real costs depend on the

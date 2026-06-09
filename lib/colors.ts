@@ -175,7 +175,7 @@ export function domainProperty(domain: DomainId): string {
 }
 
 export const DOMAIN_LABELS: Record<DomainId, string> = {
-  affordability: "Rent vs income",
+  affordability: "Rent burden",
   transport: "Transport",
   safety: "Crime / Safety",
   health: "Health",

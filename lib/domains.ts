@@ -24,12 +24,15 @@ export const V1_SCORED_DOMAINS: DomainId[] = [
 export const DOMAIN_REGISTRY: DomainConfig[] = [
   {
     id: "affordability",
-    label: "Rent vs income",
+    // The id stays "affordability" (a key in Place.domains / ScoreWeights / saved
+    // share-URLs); only the user-facing label changes. It measures rent BURDEN -
+    // local rents vs local incomes - NOT how well-off an area is (that's SEIFA).
+    label: "Rent burden",
     scored: true,
     defaultWeight: 30,
     layer: "choropleth",
     description:
-      "Median rent relative to LOCAL median income - a cost-pressure measure for residents, not a sale price. High-income suburbs can score well even with high rents, so it is not a guide to how cheap an area is to move into.",
+      "How heavy local rents are relative to LOCAL median income - a rent-BURDEN measure, not a sale price and not how cheap an area is to move into. High-income suburbs can score well even with high rents, so read it alongside the area's socio-economic rank (SEIFA).",
   },
   {
     id: "transport",

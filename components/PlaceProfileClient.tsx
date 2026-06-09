@@ -745,6 +745,10 @@ function PopulationTrendCard({ series }: { series?: PlaceSeries }) {
         <span className="text-[11px] text-ink-muted">people · {latest.period}</span>
       </div>
       <Sparkline series={series} format={fmt} fluid width={360} height={130} />
+      <div className="mt-0.5 flex justify-between text-[10px] text-ink-muted">
+        <span className="num">{series.points[0].period}</span>
+        <span className="num">{latest.period}</span>
+      </div>
       <p className="mt-2 border-t border-surface-border pt-2 text-[11px] text-ink-muted">
         <span>Source: </span>
         {source ? (
