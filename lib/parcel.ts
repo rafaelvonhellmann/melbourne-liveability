@@ -10,6 +10,7 @@
  */
 import * as turf from "@turf/turf";
 import type { FeatureCollection, Feature, Polygon, MultiPolygon } from "geojson";
+import { timeoutSignal } from "./fetch-timeout";
 
 export type ParcelInfo = { areaM2: number; lot?: string; plan?: string };
 
@@ -65,12 +66,18 @@ export async function fetchParcelAreaAt(
     `${WFS}?service=WFS&version=2.0.0&request=GetFeature&typeNames=${encodeURIComponent(TYPE)}` +
     `&outputFormat=application/json&srsName=EPSG:4326&count=30` +
     `&cql_filter=${encodeURIComponent(`BBOX(geom,${s},${w},${n},${e})`)}`;
+  // The Vicmap WFS is a government GeoServer that can stall for a long time under
+  // load. Always cap the request (combined with any caller signal) so it can
+  // never hang the buyer report - lot size is optional context, not worth a wait.
+  const t = timeoutSignal(8000, signal);
   try {
-    const res = await fetch(url, { signal });
+    const res = await fetch(url, { signal: t.signal });
     if (!res.ok) return null;
     const fc = (await res.json()) as FeatureCollection;
     return pickParcelArea([lng, lat], fc);
   } catch {
     return null;
+  } finally {
+    t.clear();
   }
 }

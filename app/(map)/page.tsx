@@ -52,7 +52,7 @@ import type { SchoolZonesData } from "@/lib/school-zones";
 import type { TrafficSegment } from "@/lib/traffic";
 import type { EpaAirSite } from "@/lib/epa-air";
 import type { ActivityCentreFeature } from "@/lib/activity-centres";
-import { fetchParcelAreaAt } from "@/lib/parcel";
+import { fetchParcelAreaAt, type ParcelInfo } from "@/lib/parcel";
 import type { Station, BusStop } from "@/lib/transit";
 import { findSa2ForPoint } from "@/lib/buyer-location";
 import { MAJOR_PROJECTS } from "@/lib/major-projects";
@@ -446,38 +446,49 @@ export default function MapPage() {
       ensureBusStops().catch(() => [] as BusStop[]),
       ensureFutureTransport().catch(() => [] as FutureStationLite[]),
     ]);
-    // Parcel is an exact-address concept: never query it for a suburb centroid.
-    const parcel = mode === "pin" ? await fetchParcelAreaAt(lngLat[0], lngLat[1]).catch(() => null) : null;
     const place = sa2
       ? places.find((p) => p.slug === sa2.slug || p.sa2Code === sa2.sa2Code) ?? null
       : null;
-    // A newer pin (moved/searched) may have superseded this build while the
-    // parcel/POI fetches were in flight - don't overwrite the current report.
+    // A newer pin (moved/searched) may have superseded this build while the POI
+    // fetches were in flight - don't overwrite the current report.
     if (buyerPinRef.current !== lngLat) return;
-    const builtReport = buildBuyerReport({
-        mode,
-        lat: lngLat[1],
-        lng: lngLat[0],
-        place,
-        pois: feats,
-        noiseLines,
-        nuisancePoints,
-        stations,
-        futureStations,
-        schoolZones: schoolZones ?? undefined,
-        traffic,
-        epaAir,
-        activityCentres,
-        parcel,
-        busStops,
-        nearbyAreas: areaCentroids,
-        majorProjects: MAJOR_PROJECTS,
-        profile: profileRef.current,
-      });
+    // `parcel` (lot size) is the only slow, external input - a government WFS that
+    // can stall for ~a minute. So render the report WITHOUT it immediately, then
+    // fetch + patch the lot size in (time-bounded) so "Computing what's nearby"
+    // no longer hangs on that one gov endpoint.
+    const buildArgs = (parcel: ParcelInfo | null) => ({
+      mode,
+      lat: lngLat[1],
+      lng: lngLat[0],
+      place,
+      pois: feats,
+      noiseLines,
+      nuisancePoints,
+      stations,
+      futureStations,
+      schoolZones: schoolZones ?? undefined,
+      traffic,
+      epaAir,
+      activityCentres,
+      parcel,
+      busStops,
+      nearbyAreas: areaCentroids,
+      majorProjects: MAJOR_PROJECTS,
+      profile: profileRef.current,
+    });
+    const builtReport = buildBuyerReport(buildArgs(null));
     const seq = ++buildSeqRef.current;
     setBuyerReport(builtReport);
     track("buyer_report", { coverage: place ? "in" : "off" });
     void enrichAnchorsWithDrive(builtReport, lngLat, seq);
+    // Parcel is an exact-address concept: never query it for a suburb centroid.
+    if (mode === "pin") {
+      void (async () => {
+        const parcel = await fetchParcelAreaAt(lngLat[0], lngLat[1]).catch(() => null);
+        if (!parcel || buyerPinRef.current !== lngLat || seq !== buildSeqRef.current) return;
+        setBuyerReport(buildBuyerReport(buildArgs(parcel)));
+      })();
+    }
   };
 
   // Paid-tier opt-in: recompute "nearby on foot" against a real street-network
