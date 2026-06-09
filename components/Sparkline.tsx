@@ -91,7 +91,7 @@ export function Sparkline({ series, format, width = 132, height = 34, fluid = fa
             d={linePath}
             fill="none"
             stroke={color}
-            strokeWidth={1.5}
+            strokeWidth={2.5}
             strokeLinecap="round"
             strokeLinejoin="round"
             vectorEffect="non-scaling-stroke"
@@ -99,7 +99,7 @@ export function Sparkline({ series, format, width = 132, height = 34, fluid = fa
           <circle
             cx={x(pts.length - 1)}
             cy={y(last.value)}
-            r={2.6}
+            r={3.4}
             fill={color}
             stroke="#FAF9F5"
             strokeWidth={1.2}

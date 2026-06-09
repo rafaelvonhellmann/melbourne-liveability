@@ -52,13 +52,10 @@ export function TreeCanopyCard({ lng, lat }: { lng: number; lat: number }) {
       {status === "loading" && <p className="mt-2 text-xs text-ink-muted">Checking tree canopy...</p>}
       {status === "done" && canopy && (
         <p className="mt-2 text-xs leading-relaxed text-ink-muted">
-          About <b className="text-ink">{canopy.canopyPct.toFixed(1)}%</b> of the area right around
-          this spot sits under tree canopy (trees 3 m+). Greater Melbourne averages roughly 15%.
-          Leafier streets are cooler in summer, shadier and generally more sought-after; sparse,
-          paved areas run hotter. Snapshot: aerial-derived, 2018.{" "}
-          <span className="text-ink-muted">
-            &copy; State of Victoria (DTP), Vegetation Cover for Metropolitan Melbourne (CC BY 4.0).
-          </span>
+          About <b className="text-ink">{canopy.canopyPct.toFixed(1)}%</b> of the area around this
+          spot sits under tree canopy (trees 3 m+); Greater Melbourne averages ~15%. Leafier streets
+          run cooler in summer.{" "}
+          <span className="text-ink-muted">&copy; State of Victoria (DTP), 2018 (CC BY 4.0).</span>
         </p>
       )}
     </div>

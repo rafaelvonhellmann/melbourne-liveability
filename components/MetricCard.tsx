@@ -128,10 +128,16 @@ function BenchmarkBand({
   benchmark: BenchmarkStats;
 }) {
   const { min, p25, median, p75, max } = benchmark;
-  const valuePos = pos(raw, min, max);
-  const p25Pos = pos(p25, min, max);
-  const medPos = pos(median, min, max);
-  const p75Pos = pos(p75, min, max);
+  // Trim long outlier tails (Tukey fence) before scaling, so a few extreme areas
+  // (e.g. very high-crime SA2s) don't squash the whole distribution into the far
+  // left of the bar - most areas then spread across it instead of bunching low.
+  const iqr = Math.max(0, p75 - p25);
+  const lo = Math.max(min, p25 - 1.5 * iqr);
+  const hi = Math.min(max, p75 + 1.5 * iqr);
+  const valuePos = pos(raw, lo, hi);
+  const p25Pos = pos(p25, lo, hi);
+  const medPos = pos(median, lo, hi);
+  const p75Pos = pos(p75, lo, hi);
   // "This area" marker is a single uniform colour everywhere - it marks WHERE the
   // area sits, not whether that is good or bad (the bar position + the percentile
   // already convey that). Colouring it by value made the same marker green on one
@@ -144,7 +150,7 @@ function BenchmarkBand({
         <p className="mb-1.5 text-xs font-medium text-ink">{percentileVerdict(percentile)}</p>
       )}
       <div className="mb-1 flex items-baseline justify-between text-[11px] text-ink-muted">
-        <span>Greater Melbourne</span>
+        <span>GM</span>
         {percentile != null && (
           <span className="num font-medium text-ink">{Math.round(percentile)}th pct</span>
         )}
@@ -164,9 +170,9 @@ function BenchmarkBand({
           style={{ left: `${p25Pos}%`, width: `${Math.max(0, p75Pos - p25Pos)}%` }}
         />
         <div
-          className="absolute top-[-2px] h-[calc(100%+4px)] w-px bg-ink-muted"
-          style={{ left: `${medPos}%` }}
-          title={`Greater Melbourne median: ${formatMetricValue(median, def.format)}`}
+          className="absolute top-[-2px] h-[calc(100%+4px)] w-[3px] rounded bg-ink"
+          style={{ left: `${medPos}%`, marginLeft: -1.5 }}
+          title={`GM median: ${formatMetricValue(median, def.format)}`}
         />
         <div
           className="absolute top-[-3px] h-[calc(100%+6px)] w-1.5 rounded-full border border-white shadow-sm"
@@ -189,7 +195,7 @@ function BenchmarkBand({
           this area
         </span>
         <span className="inline-flex items-center gap-1">
-          <span className="inline-block h-3 w-px bg-ink-muted" aria-hidden /> Greater Melbourne median
+          <span className="inline-block h-3 w-[3px] rounded bg-ink" aria-hidden /> GM median
         </span>
         <span className="inline-flex items-center gap-1">
           <span className="inline-block h-2 w-3 rounded-sm bg-ink-muted/25" aria-hidden />{" "}

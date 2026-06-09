@@ -31,7 +31,9 @@ export function BeachQualityCard({ lng, lat }: { lng: number; lat: number }) {
     };
   }, [lng, lat]);
 
-  if (status !== "done" || !beach) return null;
+  // Only relevant near the water: omit if the nearest monitored beach is more
+  // than ~2 km away (an inland pin doesn't need a beach card).
+  if (status !== "done" || !beach || beach.distanceKm > 2) return null;
 
   return (
     <div className="rounded-lg border border-surface-border bg-surface p-4 shadow-card">
