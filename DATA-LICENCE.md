@@ -16,6 +16,12 @@ OpenStreetMap data, licensed under the Open Database License (ODbL) 1.0:
   the sun/shadow view, extracted from the Geofabrik `australia/victoria`
   extract with osmium (see `.github/workflows/bake-buildings.yml` and
   `scripts/build-building-tiles.ts`).
+- `public/data/report-tiles/**`, the `pois` and `noise` kinds only - baked z14
+  report tiles (`scripts/bake-report-tiles.ts`) whose inputs are OSM-derived
+  (Overpass-derived POI and rail/tram/freeway corridor data), so ODbL 1.0.
+  The other kinds in the same directory are NOT ODbL: `traffic` is CC BY 4.0
+  (DTP traffic volumes) and `bus` is CC BY 4.0 (PTV GTFS) - see section 2.
+  Per-kind attribution lives in `public/data/report-tiles/manifest.json`.
 - POI layers (`pois.geojson` and the OSM-sourced point sets behind it:
   schools, GP/clinics, post offices, pathology/NDIS, aged care, everyday
   amenities, train stations, future PT stations).

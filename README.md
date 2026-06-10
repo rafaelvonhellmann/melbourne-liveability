@@ -1,6 +1,6 @@
-# Melbourne Liveability
+# Festra
 
-An open-data **access and compilation** site for Greater Melbourne (ABS GCCSA `2GMEL`). It pulls scattered Australian government open data into one map-first interface so anyone can explore their neighbourhood across affordability, transport, safety, health, education, hazards, and more — down to the ABS **SA2** level (361 areas).
+Festra (festra.au once the hosting cutover lands; currently served from GitHub Pages) is an open-data **access and compilation** site for Greater Melbourne (ABS GCCSA `2GMEL`). It pulls scattered Australian government open data into one map-first interface so anyone can explore their neighbourhood across affordability, transport, safety, health, education, hazards, and more - down to the ABS **SA2** level (361 areas).
 
 > **This is a data-access tool, not a ranking authority.** A composite "liveability score" exists as an optional, user-weighted lens, but many indicators are presented as **context only** (never folded into any score). See [`ULTRAPLAN.md`](./ULTRAPLAN.md) and the in-app **Methodology** page for the full framing and caveats.
 
