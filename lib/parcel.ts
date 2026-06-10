@@ -14,6 +14,13 @@ import { timeoutSignal } from "./fetch-timeout";
 
 export type ParcelInfo = { areaM2: number; lot?: string; plan?: string };
 
+/**
+ * ParcelInfo plus the outer boundary ring (lng,lat) of the polygon part that
+ * contains the point - enough to draw the tiny static lot outline on the
+ * parcel-confirmation card without a second map instance.
+ */
+export type ParcelShape = ParcelInfo & { ring: [number, number][] };
+
 const WFS = "https://opendata.maps.vic.gov.au/geoserver/wfs";
 const TYPE = "open-data-platform:v_parcel_mp";
 
@@ -28,11 +35,17 @@ export function bboxAround(
   return [lat - dLat, lng - dLng, lat + dLat, lng + dLng];
 }
 
-/** The parcel containing the point + its turf-derived area (m2), or null. */
-export function pickParcelArea(
+/**
+ * The parcel containing the point: turf-derived area (m2), lot/plan, and the
+ * outer ring of the polygon part under the point (for the confirm-card
+ * outline). Area stays the FULL feature area (all MultiPolygon parts), exactly
+ * as before; the ring is display-only. Returns null when nothing contains the
+ * point.
+ */
+export function pickParcelShape(
   point: [number, number],
   fc: FeatureCollection | null | undefined
-): ParcelInfo | null {
+): ParcelShape | null {
   if (!fc?.features?.length) return null;
   const pt = turf.point(point);
   for (const f of fc.features as Feature[]) {
@@ -42,11 +55,29 @@ export function pickParcelArea(
       if (!turf.booleanPointInPolygon(pt, g as Polygon | MultiPolygon)) continue;
       const areaM2 = turf.area(f);
       if (!Number.isFinite(areaM2) || areaM2 <= 0) continue;
+      // Outer ring of the part under the point (MultiPolygon: find that part).
+      let rawRing: number[][] | undefined;
+      if (g.type === "Polygon") {
+        rawRing = g.coordinates[0] as number[][];
+      } else {
+        for (const part of g.coordinates) {
+          const poly: Polygon = { type: "Polygon", coordinates: part as Polygon["coordinates"] };
+          if (turf.booleanPointInPolygon(pt, poly)) {
+            rawRing = part[0] as number[][];
+            break;
+          }
+        }
+        rawRing = rawRing ?? (g.coordinates[0]?.[0] as number[][] | undefined);
+      }
+      const ring: [number, number][] = (rawRing ?? [])
+        .filter((c) => Array.isArray(c) && c.length >= 2)
+        .map((c) => [c[0], c[1]] as [number, number]);
       const props = (f.properties ?? {}) as Record<string, unknown>;
       return {
         areaM2,
         lot: props.parcel_lot_number ? String(props.parcel_lot_number) : undefined,
         plan: props.parcel_plan_number ? String(props.parcel_plan_number) : undefined,
+        ring,
       };
     } catch {
       /* skip malformed geometry */
@@ -55,12 +86,24 @@ export function pickParcelArea(
   return null;
 }
 
-/** Browser-only: query the Vicmap parcel WFS for the parcel at (lng, lat). */
-export async function fetchParcelAreaAt(
+/** The parcel containing the point + its turf-derived area (m2), or null. */
+export function pickParcelArea(
+  point: [number, number],
+  fc: FeatureCollection | null | undefined
+): ParcelInfo | null {
+  const s = pickParcelShape(point, fc);
+  return s ? { areaM2: s.areaM2, lot: s.lot, plan: s.plan } : null;
+}
+
+/**
+ * Browser-only: query the Vicmap parcel WFS for the parcel polygon at
+ * (lng, lat) - area + lot/plan + the outer ring for the confirm-card outline.
+ */
+export async function fetchParcelShapeAt(
   lng: number,
   lat: number,
   signal?: AbortSignal
-): Promise<ParcelInfo | null> {
+): Promise<ParcelShape | null> {
   const [s, w, n, e] = bboxAround(lng, lat);
   const url =
     `${WFS}?service=WFS&version=2.0.0&request=GetFeature&typeNames=${encodeURIComponent(TYPE)}` +
@@ -74,10 +117,19 @@ export async function fetchParcelAreaAt(
     const res = await fetch(url, { signal: t.signal });
     if (!res.ok) return null;
     const fc = (await res.json()) as FeatureCollection;
-    return pickParcelArea([lng, lat], fc);
+    return pickParcelShape([lng, lat], fc);
   } catch {
     return null;
   } finally {
     t.clear();
   }
+}
+
+/** Browser-only: query the Vicmap parcel WFS for the parcel at (lng, lat). */
+export async function fetchParcelAreaAt(
+  lng: number,
+  lat: number,
+  signal?: AbortSignal
+): Promise<ParcelInfo | null> {
+  return fetchParcelShapeAt(lng, lat, signal);
 }

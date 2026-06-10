@@ -326,6 +326,15 @@
     "sha256": ""
   },
   {
+    "id": "vicplan-live",
+    "name": "VicPlan / Vicmap Planning - planning zone + overlays at a point (runtime WFS query, live endpoint)",
+    "url": "https://opendata.maps.vic.gov.au/geoserver/wfs",
+    "licence": "CC BY 4.0 (Victoria)",
+    "period": "current",
+    "derived": true,
+    "sha256": ""
+  },
+  {
     "id": "epa-air",
     "name": "EPA Victoria Air Monitoring (AirWatch) - nearest fixed site + latest health-advice band",
     "url": "https://www.epa.vic.gov.au/for-community/airwatch",

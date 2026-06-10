@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { bboxAround, pickParcelArea } from "../lib/parcel";
+import { bboxAround, pickParcelArea, pickParcelShape } from "../lib/parcel";
 import type { FeatureCollection } from "geojson";
 
 describe("bboxAround", () => {
@@ -38,5 +38,33 @@ describe("pickParcelArea", () => {
   it("returns null for an empty collection", () => {
     expect(pickParcelArea([144.96, -37.81], { type: "FeatureCollection", features: [] })).toBeNull();
     expect(pickParcelArea([144.96, -37.81], null)).toBeNull();
+  });
+});
+
+describe("pickParcelShape (confirm-card outline)", () => {
+  const block = [[[144.9595, -37.8105], [144.9605, -37.8105], [144.9605, -37.8095], [144.9595, -37.8095], [144.9595, -37.8105]]];
+
+  it("returns the outer ring alongside the same area/lot/plan", () => {
+    const r = pickParcelShape([144.96, -37.81], fc(block, { parcel_lot_number: "1", parcel_plan_number: "TP12345" }));
+    expect(r).not.toBeNull();
+    expect(r!.areaM2).toBeGreaterThan(5000);
+    expect(r!.lot).toBe("1");
+    expect(r!.ring).toHaveLength(5);
+    expect(r!.ring[0]).toEqual([144.9595, -37.8105]);
+  });
+
+  it("for a MultiPolygon, returns the ring of the part containing the point", () => {
+    const farBlock = [[[145.1, -37.9], [145.101, -37.9], [145.101, -37.899], [145.1, -37.899], [145.1, -37.9]]];
+    const multi: FeatureCollection = {
+      type: "FeatureCollection",
+      features: [{
+        type: "Feature",
+        properties: {},
+        geometry: { type: "MultiPolygon", coordinates: [farBlock, block] },
+      }],
+    };
+    const r = pickParcelShape([144.96, -37.81], multi);
+    expect(r).not.toBeNull();
+    expect(r!.ring[0]).toEqual([144.9595, -37.8105]); // the containing part, not the first
   });
 });
