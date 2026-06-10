@@ -32,8 +32,10 @@ export function MapTip() {
     setShow(false);
   };
 
+  // Mobile: sits above the bottom sheet's peek header (safe-area aware) so
+  // first-time phone users get the same one-line orientation as desktop.
   return (
-    <div className="pointer-events-auto absolute bottom-4 left-1/2 z-10 hidden -translate-x-1/2 items-center gap-2 rounded-full border border-surface-border bg-surface/95 px-3.5 py-1.5 text-xs text-ink shadow-card backdrop-blur md:flex">
+    <div className="pointer-events-auto absolute bottom-[calc(7rem+env(safe-area-inset-bottom))] left-1/2 z-10 flex w-max max-w-[calc(100%-1.5rem)] -translate-x-1/2 items-center gap-2 rounded-2xl border border-surface-border bg-surface/95 px-3.5 py-1.5 text-xs text-ink shadow-card backdrop-blur md:bottom-4 md:rounded-full">
       <span>
         <b className="font-medium">Tip:</b> click anywhere on the map to check a location, or
         search a suburb above.
@@ -42,7 +44,7 @@ export function MapTip() {
         type="button"
         onClick={dismiss}
         aria-label="Dismiss tip"
-        className="shrink-0 rounded-full p-0.5 text-ink-muted transition-colors hover:text-accent"
+        className="-my-3 -mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-muted transition-colors hover:text-accent"
       >
         <X className="h-3.5 w-3.5" aria-hidden />
       </button>

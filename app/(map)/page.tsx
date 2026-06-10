@@ -841,7 +841,7 @@ export default function MapPage() {
                 });
               }}
               aria-pressed={WALK_PIN_CATEGORIES.every((c) => visiblePins[c.id])}
-              className="rounded-full border border-accent bg-accent px-2.5 py-0.5 text-[11px] font-medium text-accent-ink transition-colors hover:bg-accent-focus"
+              className="inline-flex min-h-11 items-center rounded-full border border-accent bg-accent px-2.5 py-0.5 text-[11px] font-medium text-accent-ink transition-colors hover:bg-accent-focus md:min-h-0"
             >
               {WALK_PIN_CATEGORIES.every((c) => visiblePins[c.id])
                 ? "Hide 15-min walk"
@@ -856,7 +856,7 @@ export default function MapPage() {
                   type="button"
                   aria-pressed={on}
                   onClick={() => setVisiblePins((v) => ({ ...v, [c.id]: !v[c.id] }))}
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] transition-colors ${
+                  className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] transition-colors md:min-h-0 ${
                     on
                       ? "border-accent bg-accent text-accent-ink"
                       : "border-surface-border text-ink-muted hover:border-accent hover:text-accent"
@@ -881,7 +881,7 @@ export default function MapPage() {
               type="button"
               onClick={() => setShowCycleRadius((v) => !v)}
               aria-pressed={showCycleRadius}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors ${
+              className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors md:min-h-0 ${
                 showCycleRadius
                   ? "border-[#0E7C86] bg-[#0E7C86] text-white"
                   : "border-surface-border text-ink-muted hover:border-[#0E7C86] hover:text-[#0E7C86]"
@@ -1089,7 +1089,7 @@ export default function MapPage() {
               type="button"
               onClick={toggleBuyerMode}
               aria-pressed={buyerMode}
-              className={`pointer-events-auto inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium shadow-card transition-colors ${
+              className={`pointer-events-auto inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium shadow-card transition-colors md:min-h-0 ${
                 buyerMode
                   ? "border-accent bg-accent text-accent-ink"
                   : "border-surface-border bg-surface text-ink hover:border-accent hover:text-accent"
@@ -1274,6 +1274,9 @@ export default function MapPage() {
 
       <MobileSheet
         buyerMode={buyerMode}
+        // Half-open when there is something to show (area selection or a buyer
+        // pin/report); otherwise the sheet peeks so the map stays unobscured.
+        hasSelection={!!selected || (buyerMode && !!buyerPin)}
         explore={
           buyerMode ? (
             buyerPanel
