@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import type { Feature, FeatureCollection, Point } from "geojson";
@@ -15,10 +15,13 @@ import {
 import { findSa2ForPoint, type LngLat } from "@/lib/buyer-location";
 import { loadPlaces } from "@/lib/places-data";
 import { loadBuyerProfile } from "@/lib/user-prefs";
-import { fetchParcelAreaAt, type ParcelInfo } from "@/lib/parcel";
+import { fetchParcelShapeAt, type ParcelInfo, type ParcelShape } from "@/lib/parcel";
+import { fetchPlanningAt, type PlanningAt } from "@/lib/planning-at";
+import { ParcelConfirmCard } from "@/components/buyer/ParcelConfirmCard";
 import { MAJOR_PROJECTS } from "@/lib/major-projects";
 import { parseMapUrlState, buildMapUrl } from "@/lib/share-url";
 import { withBase } from "@/lib/asset-path";
+import { loadPoisNear, loadReportTilesNear } from "@/lib/report-tiles";
 import { track } from "@/lib/analytics";
 import type { NoiseLine } from "@/lib/noise";
 import type { NuisancePoint } from "@/lib/nuisance";
@@ -41,17 +44,6 @@ async function fetchJson<T>(path: string): Promise<T> {
   const res = await fetch(withBase(path));
   if (!res.ok) throw new Error(`${path}: HTTP ${res.status}`);
   return (await res.json()) as T;
-}
-
-async function loadNoiseLines(): Promise<NoiseLine[]> {
-  const g = await fetchJson<Record<NoiseLine["kind"], [number, number][][]>>(
-    "/data/noise-lines.json"
-  );
-  const lines: NoiseLine[] = [];
-  (["rail", "tram", "freeway"] as const).forEach((k) =>
-    (g[k] ?? []).forEach((coords) => lines.push({ kind: k, coords }))
-  );
-  return lines;
 }
 
 async function loadNuisancePoints(): Promise<NuisancePoint[]> {
@@ -80,11 +72,16 @@ type ReportInputs = {
   busStops: BusStop[];
 };
 
-async function loadReportInputs(): Promise<ReportInputs> {
+// POIs / noise / traffic / bus stops come from the baked z14 report tiles
+// around the pin (3x3 block + the supermarket widening, see lib/report-tiles)
+// instead of their multi-MB whole-of-Melbourne files - same decode shapes the
+// map page's report build uses, so both paths feed buildBuyerReport the same
+// inputs. The tile loaders never throw (missing tiles resolve empty).
+async function loadReportInputs(pin: LngLat): Promise<ReportInputs> {
   const [
     places,
     sa2Geo,
-    poisFc,
+    pois,
     noiseLines,
     nuisancePoints,
     stations,
@@ -97,31 +94,27 @@ async function loadReportInputs(): Promise<ReportInputs> {
   ] = await Promise.all([
     loadPlaces().catch(() => [] as Place[]),
     fetchJson<FeatureCollection>("/data/places.geojson").catch(() => null),
-    fetchJson<{ features?: Feature<Point>[] }>("/data/pois.geojson").catch(
-      () => ({}) as { features?: Feature<Point>[] }
-    ),
-    loadNoiseLines().catch(() => [] as NoiseLine[]),
+    loadPoisNear(pin[0], pin[1]).catch(() => [] as Feature<Point>[]),
+    loadReportTilesNear(pin[0], pin[1], "noise").catch(() => [] as NoiseLine[]),
     loadNuisancePoints().catch(() => [] as NuisancePoint[]),
     fetchJson<Station[]>("/data/train-stations.json").catch(() => [] as Station[]),
     fetchJson<FutureStationLite[]>("/data/future-transport.json").catch(
       () => [] as FutureStationLite[]
     ),
     fetchJson<SchoolZonesData>("/data/school-zones.json").catch(() => null),
-    fetchJson<TrafficSegment[]>("/data/traffic-aadt.json").catch(
-      () => [] as TrafficSegment[]
-    ),
+    loadReportTilesNear(pin[0], pin[1], "traffic").catch(() => [] as TrafficSegment[]),
     fetchJson<{ sites?: EpaAirSite[] }>("/data/epa-air-sites.json").catch(
       () => ({}) as { sites?: EpaAirSite[] }
     ),
     fetchJson<{ features?: ActivityCentreFeature[] }>("/data/activity-centres.json").catch(
       () => ({}) as { features?: ActivityCentreFeature[] }
     ),
-    fetchJson<BusStop[]>("/data/bus-stops.json").catch(() => [] as BusStop[]),
+    loadReportTilesNear(pin[0], pin[1], "bus").catch(() => [] as BusStop[]),
   ]);
   return {
     places,
     sa2Geo,
-    pois: poisFc.features ?? [],
+    pois,
     noiseLines,
     nuisancePoints,
     stations,
@@ -152,19 +145,37 @@ export function PinReportClient() {
 
   const [report, setReport] = useState<BuyerReport | null>(null);
   const [place, setPlace] = useState<Place | null>(null);
+  // The Vicmap parcel shape under the pin - fetched ONCE per pin below and
+  // shared between the report build (ParcelInfo) and the ParcelConfirmCard
+  // outline. undefined = not resolved yet; null = the lookup failed.
+  const [parcelShape, setParcelShape] = useState<ParcelShape | null | undefined>(undefined);
+  // "Yes, this is the property" (ParcelConfirmCard) - a ref so the async patch
+  // below re-threads it into rebuilt reports without re-running the effect.
+  const confirmedParcelRef = useRef<{ areaM2: number; confirmedAt: string } | null>(null);
 
   useEffect(() => {
     if (!pin) return;
     let cancelled = false;
+    // A moved pin must not leave the previous pin's findings (or parcel shape)
+    // on screen under the new header while the rebuild is in flight.
+    setReport(null);
+    setParcelShape(undefined);
+    confirmedParcelRef.current = null; // a new pin needs a fresh confirmation
+    // Parcel-level planning (zone + overlays at the pin) is a slow external gov
+    // endpoint - start it now, in parallel with the lens loads; patched in below.
+    const planningPromise = fetchPlanningAt(pin[0], pin[1]).catch(() => null);
     void (async () => {
-      const inputs = await loadReportInputs();
+      const inputs = await loadReportInputs(pin);
       if (cancelled) return;
       const sa2 = inputs.sa2Geo ? findSa2ForPoint(pin, inputs.sa2Geo) : null;
       const pl = sa2
         ? inputs.places.find((p) => p.slug === sa2.slug || p.sa2Code === sa2.sa2Code) ?? null
         : null;
       const profile = loadBuyerProfile();
-      const buildArgs = (parcel: ParcelInfo | null): BuildBuyerReportInput => ({
+      const buildArgs = (
+        parcel: ParcelInfo | null,
+        planning: PlanningAt | null
+      ): BuildBuyerReportInput => ({
         mode: "pin",
         lat: pin[1],
         lng: pin[0],
@@ -180,6 +191,8 @@ export function PinReportClient() {
         epaAir: inputs.epaAir,
         activityCentres: inputs.activityCentres,
         parcel,
+        planning,
+        confirmedParcel: confirmedParcelRef.current ?? undefined,
         busStops: inputs.busStops,
         nearbyAreas: inputs.places.map((p) => ({
           sa2Code: p.sa2Code,
@@ -191,17 +204,34 @@ export function PinReportClient() {
         profile,
       });
       setPlace(pl);
-      setReport(buildBuyerReport(buildArgs(null)));
+      setReport(buildBuyerReport(buildArgs(null, null)));
       track("buyer_full_report", { coverage: pl ? "in" : "off" });
-      // Lot size is the one slow external input (government WFS) - render the
-      // report immediately, then patch the parcel in when/if it arrives.
-      const parcel = await fetchParcelAreaAt(pin[0], pin[1]).catch(() => null);
-      if (!cancelled && parcel) setReport(buildBuyerReport(buildArgs(parcel)));
+      // Lot size + parcel-level planning are the slow external inputs
+      // (government endpoints) - render the report immediately, then patch
+      // them in when/if they arrive.
+      // One WFS fetch per pin: the shape feeds the ParcelConfirmCard outline
+      // AND (as its ParcelInfo superset) the report's lot-size patch.
+      const [parcel, planning] = await Promise.all([
+        fetchParcelShapeAt(pin[0], pin[1]).catch(() => null),
+        planningPromise,
+      ]);
+      if (cancelled) return;
+      setParcelShape(parcel); // null = lookup failed -> explicit card state
+      if (parcel || planning) {
+        setReport(buildBuyerReport(buildArgs(parcel, planning)));
+      }
     })();
     return () => {
       cancelled = true;
     };
   }, [pin, nameParam]);
+
+  const onConfirmParcel = (c: { areaM2: number; confirmedAt: string }) => {
+    confirmedParcelRef.current = c;
+    setReport((prev) =>
+      prev ? { ...prev, location: { ...prev.location, confirmedParcel: c } } : prev
+    );
+  };
 
   if (!pin) {
     return (
@@ -253,7 +283,22 @@ export function PinReportClient() {
           Everything we can source for this exact pin: findings with dataset dates, what to
           verify, caveats and sources. Use Print / save as PDF to keep a dated copy.
         </p>
-        <div className="mt-6">
+        <div className="mt-6 space-y-4">
+          {/* Wrong-lot trust guard: confirm the parcel under the pin is the
+              property being checked. Hidden while the lookup is unresolved; an
+              explicit "could not identify the lot" state when it fails. The
+              shape comes from this page's single per-pin parcel fetch; the key
+              drops any previous pin's confirmed tick instantly. */}
+          {parcelShape !== undefined && (
+            <ParcelConfirmCard
+              key={`${pin[0]},${pin[1]}`}
+              pin={pin}
+              shape={parcelShape}
+              confirmed={report?.location.confirmedParcel ?? null}
+              onConfirm={onConfirmParcel}
+              adjustHint="Is this the property? If not, go back to the map and move the pin."
+            />
+          )}
           {!report ? (
             <p className="text-sm text-ink-muted">Computing the full report…</p>
           ) : (

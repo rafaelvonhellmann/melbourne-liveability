@@ -26,6 +26,7 @@ const ReachabilityCard = dynamic(
 import { AMENITY_GROUPS } from "@/lib/buyer-report";
 import { isReachabilityConfigured } from "@/lib/reachability";
 import { formatSourceDate, sourceAsAt } from "@/lib/source-manifest";
+import { PRODUCT_NAME } from "@/lib/brand";
 import { PriceContextCard } from "./PriceContextCard";
 import { withBase } from "@/lib/asset-path";
 import { track } from "@/lib/analytics";
@@ -46,7 +47,11 @@ type BuyerReportPanelProps = {
    * route for a REAL pin - everything the sample shows, no sample wording.
    */
   variant?: "live" | "sample" | "embedded" | "full";
-  /** Path+query (incl. base path) for the "Copy share link" action; omit to hide. */
+  /**
+   * ROOT-RELATIVE path+query for the "Copy share link" action; omit to hide.
+   * Do NOT bake the deploy base path in - ShareViewButton's shareHref prepends
+   * origin + base path exactly once when copying.
+   */
   shareUrl?: string;
   /** Clear-pin handler (live map only); omit to hide. */
   onClear?: () => void;
@@ -63,6 +68,7 @@ const fmtPct = (v: number | null | undefined) =>
 
 const GEO_LABEL: Record<BuyerGeography, string> = {
   pin: "this point",
+  parcel: "this exact location",
   "poi-radius": "within ~1.2 km",
   sa2: "suburb / area",
   lga: "council area",
@@ -353,7 +359,7 @@ export function BuyerReportPanel({
         {/* 2. What to weigh up - measured downsides + red flags */}
         {negatives.length > 0 && (
           <Section title="What to weigh up" count={negatives.length}>
-            <div className="space-y-2.5">
+            <div className="divide-y divide-surface-border">
               {negatives.map((f) => (
                 <FindingCard key={f.id} f={f} compact={isLive} />
               ))}
@@ -364,7 +370,7 @@ export function BuyerReportPanel({
         {/* 3. Things to verify - neutral due-diligence prompts */}
         {checks.length > 0 && (
           <Section title="Things to verify" count={checks.length}>
-            <div className="space-y-2.5">
+            <div className="divide-y divide-surface-border">
               {checks.map((f) => (
                 <FindingCard key={f.id} f={f} compact={isLive} />
               ))}
@@ -375,7 +381,7 @@ export function BuyerReportPanel({
         {/* 4. What looks positive */}
         {positives.length > 0 && (
           <Section title="What looks positive" count={positives.length}>
-            <div className="space-y-2.5">
+            <div className="divide-y divide-surface-border">
               {positives.map((f) => (
                 <FindingCard key={f.id} f={f} compact={isLive} />
               ))}
@@ -596,7 +602,7 @@ export function BuyerReportPanel({
               Full area profile →
             </Link>
             <p className="mt-1 text-[11px] leading-snug text-ink-muted">
-              Percentile ranks within Greater Melbourne - one optional lens, never an authority.
+              Percentile ranks within Greater Melbourne.
             </p>
           </Section>
         )}
@@ -614,10 +620,6 @@ export function BuyerReportPanel({
               SEIFA decile: 1 = most disadvantaged, 10 = most advantaged, ranked against all of
               Australia (ABS) - area context, not a judgement of residents.
             </p>
-            <p className="mt-1.5 text-[11px] leading-snug text-ink-muted">
-              This describes area-level demographic and tenure context. It is not a judgement about
-              residents or future price performance.
-            </p>
           </Section>
         )}
 
@@ -625,7 +627,7 @@ export function BuyerReportPanel({
             full report / methodology, not the live hint panel. */}
         {neutral.length > 0 && !isLive && (
           <Section title="Data notes">
-            <div className="space-y-2.5">
+            <div className="divide-y divide-surface-border">
               {neutral.map((f) => (
                 <FindingCard key={f.id} f={f} compact={isLive} />
               ))}
@@ -682,7 +684,7 @@ export function BuyerReportPanel({
 
         {/* Print-only footer: brand + provenance reminder on every PDF page set. */}
         <div className="mt-4 hidden border-t border-surface-border pt-2 text-[10px] leading-snug text-ink-muted print:block">
-          <span className="font-display font-semibold text-ink">liveable.melbourne</span>
+          <span className="font-display font-semibold text-ink">{PRODUCT_NAME}</span>
           {" - Buyer Location Check. Generated "}
           {generated}. Information only, not advice - every figure is sourced above and on the
           methodology page. Verify anything material before you offer.
@@ -726,8 +728,11 @@ function FindingCard({ f, compact = false }: { f: BuyerFinding; compact?: boolea
         : f.severity === "medium"
           ? "border-l-accent"
           : "border-l-surface-border";
+  // Flattened: findings render as divider-separated ROWS inside the Section
+  // card (one border level, no card-in-card) - the severity accent survives as
+  // the left bar on each row.
   return (
-    <div className={`rounded-md border border-surface-border border-l-[3px] ${accent} bg-surface px-3 py-2`}>
+    <div className={`border-l-[3px] ${accent} py-2.5 pl-3 first:pt-0 last:pb-0`}>
       <div className="flex items-start gap-2">
         <Icon className="mt-0.5 h-4 w-4 shrink-0 text-ink-muted" aria-hidden />
         <div className="min-w-0 flex-1">

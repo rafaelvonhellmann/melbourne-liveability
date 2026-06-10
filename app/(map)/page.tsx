@@ -52,13 +52,17 @@ import type { SchoolZonesData } from "@/lib/school-zones";
 import type { TrafficSegment } from "@/lib/traffic";
 import type { EpaAirSite } from "@/lib/epa-air";
 import type { ActivityCentreFeature } from "@/lib/activity-centres";
-import { fetchParcelAreaAt, type ParcelInfo } from "@/lib/parcel";
+import { fetchParcelAreaAt, fetchParcelShapeAt, type ParcelInfo, type ParcelShape } from "@/lib/parcel";
+import { fetchPlanningAt, type PlanningAt } from "@/lib/planning-at";
+import { ParcelConfirmCard } from "@/components/buyer/ParcelConfirmCard";
 import type { Station, BusStop } from "@/lib/transit";
 import { findSa2ForPoint } from "@/lib/buyer-location";
 import { MAJOR_PROJECTS } from "@/lib/major-projects";
 import type { GeocodeResult } from "@/lib/geocode";
 import { fetchWalkIsochrone, isPreciseWalkConfigured, WALK_MINUTES } from "@/lib/walk-isochrone";
 import { withBase } from "@/lib/asset-path";
+import { PRODUCT_NAME } from "@/lib/brand";
+import { loadPoisNear, loadReportTilesNear } from "@/lib/report-tiles";
 import { parseMapUrlState, buildMapUrl, inMelbourneBBox } from "@/lib/share-url";
 import { track } from "@/lib/analytics";
 import type { Feature, FeatureCollection, Point } from "geojson";
@@ -235,13 +239,29 @@ export default function MapPage() {
   useEffect(() => {
     buyerPinRef.current = buyerPin;
   }, [buyerPin]);
+  // "Yes, this is the property" (ParcelConfirmCard), keyed to the exact pin it
+  // was confirmed for - a moved pin invalidates it automatically, and report
+  // rebuilds for the SAME pin (parcel/planning patch, precise recompute)
+  // re-thread it instead of losing it.
+  const confirmedParcelRef = useRef<{
+    pin: [number, number];
+    value: { areaM2: number; confirmedAt: string };
+  } | null>(null);
+  // The Vicmap parcel shape under the current pin - fetched ONCE per pin in
+  // buildReportFor and shared between the report build (lot-size ParcelInfo)
+  // and the ParcelConfirmCard outline (no second WFS round-trip).
+  // undefined = not resolved yet; null = the lookup failed.
+  const [buyerParcelShape, setBuyerParcelShape] = useState<ParcelShape | null | undefined>(
+    undefined
+  );
 
-  // Lazy-load rail/tram lines once buyer mode opens, to draw the local network
-  // around the pin. Reuses the noise-line loader (same OSM source).
+  // Lazy-load rail/tram lines around the pin, to draw the local network.
+  // Reuses the noise-line loader (same OSM source, now z14 tiles keyed by the
+  // pin - the per-tile cache makes a nearby pin move a cheap re-merge).
   useEffect(() => {
-    if (!buyerMode || transitLines.length > 0) return;
+    if (!buyerMode || !buyerPin) return;
     let cancelled = false;
-    void ensureNoiseLines()
+    void ensureNoiseLines(buyerPin)
       .then((lines) => {
         if (!cancelled) {
           setTransitLines(lines.filter((l) => l.kind === "rail" || l.kind === "tram"));
@@ -251,21 +271,19 @@ export default function MapPage() {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- ensureNoiseLines is stable
-  }, [buyerMode]);
+  }, [buyerMode, buyerPin]);
   const precisionAbortRef = useRef<AbortController | null>(null);
 
-  // POIs + SA2 polygons live in the MapLibre sources; for the report maths we
-  // also need them as JS. Lazy-load each once (kept out of the initial bundle).
-  const poiFeaturesRef = useRef<Feature<Point>[] | null>(null);
+  // SA2 polygons live in the MapLibre sources; for the report maths we also
+  // need them as JS. Lazy-load once (kept out of the initial bundle).
   const sa2GeoRef = useRef<FeatureCollection | null>(null);
 
-  async function ensurePois(): Promise<Feature<Point>[]> {
-    if (poiFeaturesRef.current) return poiFeaturesRef.current;
-    const res = await fetch(withBase("/data/pois.geojson"));
-    const fc = (await res.json()) as { features?: Feature<Point>[] };
-    poiFeaturesRef.current = fc.features ?? [];
-    return poiFeaturesRef.current;
+  // POIs for the report maths come from the baked z14 report tiles near the
+  // pin (3x3 block, ~KBs) instead of the whole 7.8 MB pois.geojson - the map's
+  // own POI layer still streams the full file into MapLibre separately.
+  // Caching is per tileKey inside lib/report-tiles, not per session.
+  async function ensurePois(lngLat: [number, number]): Promise<Feature<Point>[]> {
+    return loadPoisNear(lngLat[0], lngLat[1]);
   }
   async function ensureSa2Geo(): Promise<FeatureCollection> {
     if (sa2GeoRef.current) return sa2GeoRef.current;
@@ -274,18 +292,10 @@ export default function MapPage() {
     return sa2GeoRef.current;
   }
   // Transport-noise source lines (rail/tram/freeway) for the buyer report's
-  // proximity proxy. Lazy-loaded once on first pin (kept out of the map bundle).
-  const noiseLinesRef = useRef<NoiseLine[] | null>(null);
-  async function ensureNoiseLines(): Promise<NoiseLine[]> {
-    if (noiseLinesRef.current) return noiseLinesRef.current;
-    const res = await fetch(withBase("/data/noise-lines.json"));
-    const g = (await res.json()) as Record<NoiseLine["kind"], [number, number][][]>;
-    const lines: NoiseLine[] = [];
-    (["rail", "tram", "freeway"] as const).forEach((k) =>
-      (g[k] ?? []).forEach((coords) => lines.push({ kind: k, coords }))
-    );
-    noiseLinesRef.current = lines;
-    return lines;
+  // proximity proxy. Baked z14 tiles near the pin (the report scans <=150 m;
+  // a 3x3 block guarantees ~1.9 km) instead of the 1.0 MB noise-lines.json.
+  async function ensureNoiseLines(lngLat: [number, number]): Promise<NoiseLine[]> {
+    return loadReportTilesNear(lngLat[0], lngLat[1], "noise");
   }
   // Nuisance source points (industrial/waste/sewage/quarry) for the buyer
   // report's disamenity proximity proxy. Lazy-loaded once on first pin.
@@ -327,13 +337,10 @@ export default function MapPage() {
     return schoolZonesRef.current;
   }
   // DTP traffic-volume (AADT) segments for the buyer report's "busy road nearby"
-  // proximity finding. Lazy-loaded once on first pin (kept out of the map bundle).
-  const trafficRef = useRef<TrafficSegment[] | null>(null);
-  async function ensureTraffic(): Promise<TrafficSegment[]> {
-    if (trafficRef.current) return trafficRef.current;
-    const res = await fetch(withBase("/data/traffic-aadt.json"));
-    trafficRef.current = (await res.json()) as TrafficSegment[];
-    return trafficRef.current;
+  // proximity finding (scans <=250 m). Baked z14 tiles near the pin instead of
+  // the 1.1 MB traffic-aadt.json.
+  async function ensureTraffic(lngLat: [number, number]): Promise<TrafficSegment[]> {
+    return loadReportTilesNear(lngLat[0], lngLat[1], "traffic");
   }
   // EPA air-monitoring sites for the "air quality nearby" finding. Lazy-loaded.
   const epaAirRef = useRef<EpaAirSite[] | null>(null);
@@ -353,13 +360,10 @@ export default function MapPage() {
     activityCentresRef.current = fc.features ?? [];
     return activityCentresRef.current;
   }
-  // GTFS bus stops for the "bus access" finding. Lazy-loaded.
-  const busStopsRef = useRef<BusStop[] | null>(null);
-  async function ensureBusStops(): Promise<BusStop[]> {
-    if (busStopsRef.current) return busStopsRef.current;
-    const res = await fetch(withBase("/data/bus-stops.json"));
-    busStopsRef.current = (await res.json()) as BusStop[];
-    return busStopsRef.current;
+  // GTFS bus stops for the "bus access" finding (surfaces <=1.2 km). Baked z14
+  // tiles near the pin instead of the 0.44 MB bus-stops.json.
+  async function ensureBusStops(lngLat: [number, number]): Promise<BusStop[]> {
+    return loadReportTilesNear(lngLat[0], lngLat[1], "bus");
   }
 
   const buyerPlace = useMemo(
@@ -434,16 +438,27 @@ export default function MapPage() {
     // any in-flight precise fetch so its (now stale) result can't land late.
     precisionAbortRef.current?.abort();
     setPreciseStatus("idle");
+    // The parcel shape belongs to the previous pin until this pin's fetch
+    // resolves below - back to "not resolved yet" so the confirm card hides.
+    setBuyerParcelShape(undefined);
+    // Parcel-level planning (zone + overlays) is an exact-address concept and a
+    // slow external gov endpoint: kick it off NOW so it runs in parallel with
+    // the lens loads, but never block the first render on it (patched in below
+    // with the parcel, like the lot size).
+    const planningPromise: Promise<PlanningAt | null> =
+      mode === "pin"
+        ? fetchPlanningAt(lngLat[0], lngLat[1]).catch(() => null)
+        : Promise.resolve(null);
     const [feats, noiseLines, nuisancePoints, stations, schoolZones, traffic, epaAir, activityCentres, busStops, futureStations] = await Promise.all([
-      ensurePois().catch(() => [] as Feature<Point>[]),
-      ensureNoiseLines().catch(() => [] as NoiseLine[]),
+      ensurePois(lngLat).catch(() => [] as Feature<Point>[]),
+      ensureNoiseLines(lngLat).catch(() => [] as NoiseLine[]),
       ensureNuisancePoints().catch(() => [] as NuisancePoint[]),
       ensureStations().catch(() => [] as Station[]),
       ensureSchoolZones().catch(() => null),
-      ensureTraffic().catch(() => [] as TrafficSegment[]),
+      ensureTraffic(lngLat).catch(() => [] as TrafficSegment[]),
       ensureEpaAir().catch(() => [] as EpaAirSite[]),
       ensureActivityCentres().catch(() => [] as ActivityCentreFeature[]),
-      ensureBusStops().catch(() => [] as BusStop[]),
+      ensureBusStops(lngLat).catch(() => [] as BusStop[]),
       ensureFutureTransport().catch(() => [] as FutureStationLite[]),
     ]);
     const place = sa2
@@ -456,7 +471,7 @@ export default function MapPage() {
     // can stall for ~a minute. So render the report WITHOUT it immediately, then
     // fetch + patch the lot size in (time-bounded) so "Computing what's nearby"
     // no longer hangs on that one gov endpoint.
-    const buildArgs = (parcel: ParcelInfo | null) => ({
+    const buildArgs = (parcel: ParcelInfo | null, planning: PlanningAt | null) => ({
       mode,
       lat: lngLat[1],
       lng: lngLat[0],
@@ -471,22 +486,37 @@ export default function MapPage() {
       epaAir,
       activityCentres,
       parcel,
+      planning,
+      confirmedParcel:
+        confirmedParcelRef.current && confirmedParcelRef.current.pin === lngLat
+          ? confirmedParcelRef.current.value
+          : undefined,
       busStops,
       nearbyAreas: areaCentroids,
       majorProjects: MAJOR_PROJECTS,
       profile: profileRef.current,
     });
-    const builtReport = buildBuyerReport(buildArgs(null));
+    const builtReport = buildBuyerReport(buildArgs(null, null));
     const seq = ++buildSeqRef.current;
     setBuyerReport(builtReport);
     track("buyer_report", { coverage: place ? "in" : "off" });
     void enrichAnchorsWithDrive(builtReport, lngLat, seq);
-    // Parcel is an exact-address concept: never query it for a suburb centroid.
+    // Parcel + planning are exact-address concepts: never query them for a
+    // suburb centroid. Both are slow gov endpoints, so the report rendered
+    // immediately above and they patch in here when/if they arrive.
     if (mode === "pin") {
       void (async () => {
-        const parcel = await fetchParcelAreaAt(lngLat[0], lngLat[1]).catch(() => null);
-        if (!parcel || buyerPinRef.current !== lngLat || seq !== buildSeqRef.current) return;
-        setBuyerReport(buildBuyerReport(buildArgs(parcel)));
+        // One WFS fetch per pin: the shape feeds the ParcelConfirmCard outline
+        // AND (as its ParcelInfo superset) the report's lot-size patch below.
+        const [parcel, planning] = await Promise.all([
+          fetchParcelShapeAt(lngLat[0], lngLat[1]).catch(() => null),
+          planningPromise,
+        ]);
+        if (buyerPinRef.current !== lngLat) return;
+        setBuyerParcelShape(parcel); // null = lookup failed -> explicit card state
+        if (!parcel && !planning) return;
+        if (seq !== buildSeqRef.current) return;
+        setBuyerReport(buildBuyerReport(buildArgs(parcel, planning)));
       })();
     }
   };
@@ -513,18 +543,21 @@ export default function MapPage() {
       return;
     }
     const [feats, noiseLines, nuisancePoints, stations, schoolZones, traffic, epaAir, activityCentres, busStops, futureStations] = await Promise.all([
-      ensurePois().catch(() => [] as Feature<Point>[]),
-      ensureNoiseLines().catch(() => [] as NoiseLine[]),
+      ensurePois(pin).catch(() => [] as Feature<Point>[]),
+      ensureNoiseLines(pin).catch(() => [] as NoiseLine[]),
       ensureNuisancePoints().catch(() => [] as NuisancePoint[]),
       ensureStations().catch(() => [] as Station[]),
       ensureSchoolZones().catch(() => null),
-      ensureTraffic().catch(() => [] as TrafficSegment[]),
+      ensureTraffic(pin).catch(() => [] as TrafficSegment[]),
       ensureEpaAir().catch(() => [] as EpaAirSite[]),
       ensureActivityCentres().catch(() => [] as ActivityCentreFeature[]),
-      ensureBusStops().catch(() => [] as BusStop[]),
+      ensureBusStops(pin).catch(() => [] as BusStop[]),
       ensureFutureTransport().catch(() => [] as FutureStationLite[]),
     ]);
-    const parcel = await fetchParcelAreaAt(pin[0], pin[1], ctrl.signal).catch(() => null);
+    const [parcel, planning] = await Promise.all([
+      fetchParcelAreaAt(pin[0], pin[1], ctrl.signal).catch(() => null),
+      fetchPlanningAt(pin[0], pin[1], { signal: ctrl.signal }).catch(() => null),
+    ]);
     if (ctrl.signal.aborted || buyerPinRef.current !== pin) return;
     const builtPreciseReport = buildBuyerReport({
         lat: pin[1],
@@ -541,6 +574,11 @@ export default function MapPage() {
         epaAir,
         activityCentres,
         parcel,
+        planning,
+        confirmedParcel:
+          confirmedParcelRef.current && confirmedParcelRef.current.pin === pin
+            ? confirmedParcelRef.current.value
+            : undefined,
         busStops,
         nearbyAreas: areaCentroids,
         majorProjects: MAJOR_PROJECTS,
@@ -624,6 +662,18 @@ export default function MapPage() {
     setBuyerSa2(null);
     setBuyerReport(null);
     syncBuyerUrl(true, null);
+  };
+
+  // "Yes, this is the property" - record the confirmation for the current pin
+  // and patch it straight onto the on-screen report (no rebuild needed; later
+  // rebuilds for the same pin re-thread it via confirmedParcelRef).
+  const onConfirmParcel = (c: { areaM2: number; confirmedAt: string }) => {
+    const pin = buyerPinRef.current;
+    if (!pin) return;
+    confirmedParcelRef.current = { pin, value: c };
+    setBuyerReport((prev) =>
+      prev ? { ...prev, location: { ...prev.location, confirmedParcel: c } } : prev
+    );
   };
 
   // Saved checks (device-local retention): bookmark the current pin, or reopen a
@@ -710,10 +760,13 @@ export default function MapPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [places]);
 
+  // Root-relative on purpose: ShareViewButton's shareHref prepends origin +
+  // the deploy base path exactly once - baking withBase() in here would double
+  // the base path on GitHub Pages (404).
   const buyerShareUrl = useMemo(
     () =>
       buyerPin
-        ? buildMapUrl(withBase("/"), {
+        ? buildMapUrl("/", {
             weights,
             shortlist,
             view: interestView,
@@ -938,6 +991,20 @@ export default function MapPage() {
               )}
             </div>
           )}
+          {/* Wrong-lot trust guard: the parcel outline under the pin + one-tap
+              confirmation. Exact pins only (a suburb-centroid pin is not a
+              property); hidden while the lookup is unresolved, and an explicit
+              "could not identify the lot" state when it fails. The shape comes
+              from buildReportFor's single per-pin parcel fetch. */}
+          {buyerReport.mode === "pin" && buyerParcelShape !== undefined && (
+            <ParcelConfirmCard
+              key={`${buyerPin[0]},${buyerPin[1]}`}
+              pin={buyerPin}
+              shape={buyerParcelShape}
+              confirmed={buyerReport.location.confirmedParcel ?? null}
+              onConfirm={onConfirmParcel}
+            />
+          )}
           <BuyerReportPanel
             report={buyerReport}
             place={buyerPlace}
@@ -1010,7 +1077,7 @@ export default function MapPage() {
   return (
     <main className="flex h-screen w-screen flex-col overflow-hidden bg-bg text-ink">
       <h1 className="sr-only">
-        liveable.melbourne - Greater Melbourne liveability map and pin-level Buyer Check
+        {PRODUCT_NAME} - Greater Melbourne liveability map and pin-level Buyer Check
       </h1>
       <TopBar
         searchIndex={searchIndex}
@@ -1374,7 +1441,7 @@ function TopBar({
   return (
     <header className="z-20 flex shrink-0 items-center gap-3 border-b border-surface-border bg-surface px-4 py-3">
       <Link href="/" className="font-display text-lg font-medium tracking-tight text-ink">
-        liveable<span className="text-accent">.</span>melbourne
+        {PRODUCT_NAME}
       </Link>
       <div className="hidden w-full max-w-sm flex-1 sm:block">
         <SearchBox

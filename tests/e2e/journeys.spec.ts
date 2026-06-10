@@ -33,6 +33,11 @@ test.describe("journey: pin-drop report via URL", () => {
     });
     await expect(visible(page, "heading", "Sun & light")).toBeVisible();
     await expect(visible(page, "heading", "Nearby amenities")).toBeVisible();
+    // P1-2 acceptance: findings/provenance lines carry an inline "as at <date>"
+    // dataset-vintage stamp.
+    await expect(
+      page.getByText(/as at \d{4}/).filter({ visible: true }).first()
+    ).toBeVisible();
     // The pin's coordinates are echoed in the header (toFixed(5)).
     await expect(
       page.getByText("-37.81360, 144.96310").filter({ visible: true }).first()

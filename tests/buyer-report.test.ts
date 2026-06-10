@@ -6,7 +6,9 @@ import {
   getNearbyAmenities,
   dedupeParkAmenities,
   BUYER_DISCLAIMER,
+  UNCONFIRMED_PARCEL_CAVEAT,
 } from "../lib/buyer-report";
+import type { PlanningAt, PlanningOverlayAt } from "../lib/planning-at";
 import type { Place } from "../lib/types";
 
 const PIN = { lat: -37.8, lng: 144.97 };
@@ -687,5 +689,200 @@ describe("buildBuyerReport major-project nudge", () => {
   it("omits the finding when no projects are supplied", () => {
     const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: samplePlace(), pois: POIS, generatedAt: "t" });
     expect(r.findings.find((x) => x.id === "major-project-nearby")).toBeFalsy();
+  });
+});
+
+describe("parcel-level planning lens (P1-5)", () => {
+  const hoOverlay: PlanningOverlayAt = {
+    code: "HO123",
+    parent: "HO",
+    description: "Heritage Overlay (HO123)",
+    asAt: "2020-02-06",
+  };
+  const planningAt = (overlays: PlanningOverlayAt[] = []): PlanningAt => ({
+    zone: {
+      code: "GRZ1",
+      parent: "GRZ",
+      description: "General Residential Zone - Schedule 1",
+      lga: "Test LGA",
+      gazetted: true,
+      asAt: "2014-06-13",
+    },
+    overlays,
+    checkedAt: "2026-06-10",
+    source: "wfs",
+  });
+  /** SA2 place with material heritage + conservation area shares. */
+  const placeWithShares = (): Place => {
+    const base = samplePlace();
+    return {
+      ...base,
+      context: {
+        ...base.context,
+        planning: {
+          heritageOverlayPct: 30,
+          sourceId: "vic-planning-overlays",
+          period: "current",
+          overlays: { PAO: 4, VPO: 12 },
+        },
+      },
+    };
+  };
+
+  it("emits a neutral parcel-geography zone finding with the group meaning + as-at", () => {
+    const r = buildBuyerReport({
+      lat: PIN.lat, lng: PIN.lng, place: samplePlace(), pois: POIS,
+      planning: planningAt([hoOverlay]), generatedAt: "t",
+    });
+    const z = r.findings.find((f) => f.id === "planning-zone");
+    expect(z).toBeTruthy();
+    expect(z?.kind).toBe("neutral");
+    expect(z?.geography).toBe("parcel");
+    expect(z?.title).toMatch(/^Zoned GRZ1 - General Residential Zone/);
+    expect(z?.summary).toMatch(/residential/i);
+    expect(z?.summary).toMatch(/As at 2014-06-13/);
+    expect(z?.sourceRefs?.length ?? 0).toBeGreaterThan(0);
+  });
+
+  it("a parcel HO answer REPLACES the SA2 heritage area-share finding", () => {
+    const r = buildBuyerReport({
+      lat: PIN.lat, lng: PIN.lng, place: placeWithShares(), pois: POIS,
+      planning: planningAt([hoOverlay]), generatedAt: "t",
+    });
+    const ho = r.findings.find((f) => f.id === "parcel-overlay-HO123");
+    expect(ho).toBeTruthy();
+    expect(ho?.kind).toBe("verify");
+    expect(ho?.geography).toBe("parcel");
+    expect(ho?.title).toMatch(/Heritage Overlay HO123 applies at this exact location/);
+    expect(ho?.summary).toMatch(/as at 2020-02-06/);
+    // The SA2 area-share findings for the same overlay families are suppressed.
+    expect(r.findings.find((f) => f.id === "heritage-overlay")).toBeFalsy();
+    expect(r.findings.find((f) => f.id === "conservation-overlays")).toBeFalsy();
+  });
+
+  it("a parcel-clear answer suppresses the SA2 share findings and emits a dated all-clear", () => {
+    const r = buildBuyerReport({
+      lat: PIN.lat, lng: PIN.lng, place: placeWithShares(), pois: POIS,
+      planning: planningAt([]), generatedAt: "t",
+    });
+    expect(r.findings.find((f) => f.id === "conservation-overlays")).toBeFalsy();
+    expect(r.findings.find((f) => f.id === "heritage-overlay")).toBeFalsy();
+    const clear = r.findings.find((f) => f.id === "parcel-overlays-clear");
+    expect(clear).toBeTruthy();
+    expect(clear?.kind).toBe("neutral");
+    // P1-2 negative-finding convention: inline as-at + absence-not-a-guarantee.
+    expect(clear?.summary).toMatch(/as at 2026-06-10/);
+    expect(clear?.caveat).toMatch(/not a guarantee/i);
+  });
+
+  it("falls back to the SA2 area-share findings when the lens is null", () => {
+    const r = buildBuyerReport({
+      lat: PIN.lat, lng: PIN.lng, place: placeWithShares(), pois: POIS,
+      planning: null, generatedAt: "t",
+    });
+    expect(r.findings.find((f) => f.id === "heritage-overlay")).toBeTruthy();
+    expect(r.findings.find((f) => f.id === "conservation-overlays")).toBeTruthy();
+    expect(r.findings.some((f) => f.id.startsWith("parcel-overlay") || f.id === "planning-zone")).toBe(false);
+  });
+
+  it("ignores planning input in sa2 mode (a centroid is not a property)", () => {
+    const r = buildBuyerReport({
+      mode: "sa2",
+      lat: PIN.lat, lng: PIN.lng, place: placeWithShares(), pois: POIS,
+      planning: planningAt([hoOverlay]), generatedAt: "t",
+    });
+    expect(r.findings.find((f) => f.id === "planning-zone")).toBeFalsy();
+    expect(r.findings.find((f) => f.id === "parcel-overlay-HO123")).toBeFalsy();
+    // SA2 fallbacks stay.
+    expect(r.findings.find((f) => f.id === "conservation-overlays")).toBeTruthy();
+  });
+
+  it("a zone-less lookup success never suppresses the SA2 fallback", () => {
+    const offScheme: PlanningAt = { zone: null, overlays: [], checkedAt: "2026-06-10", source: "wfs" };
+    const r = buildBuyerReport({
+      lat: PIN.lat, lng: PIN.lng, place: placeWithShares(), pois: POIS,
+      planning: offScheme, generatedAt: "t",
+    });
+    expect(r.findings.find((f) => f.id === "conservation-overlays")).toBeTruthy();
+    expect(r.findings.find((f) => f.id === "parcel-overlays-clear")).toBeFalsy();
+  });
+
+  it("buckets non-whitelisted overlays into one neutral line, still reporting the all-clear", () => {
+    const po: PlanningOverlayAt = {
+      code: "PO12", parent: "PO", description: "Parking Overlay - Precinct 12", asAt: "2013-04-19",
+    };
+    const r = buildBuyerReport({
+      lat: PIN.lat, lng: PIN.lng, place: samplePlace(), pois: POIS,
+      planning: planningAt([po]), generatedAt: "t",
+    });
+    expect(r.findings.find((f) => f.id === "parcel-overlay-PO12")).toBeFalsy(); // never a verify
+    const other = r.findings.find((f) => f.id === "parcel-overlay-other");
+    expect(other?.kind).toBe("neutral");
+    expect(other?.summary).toContain("PO12");
+    const clear = r.findings.find((f) => f.id === "parcel-overlays-clear");
+    expect(clear).toBeTruthy();
+    expect(clear?.summary).toMatch(/Less critical controls do apply/);
+  });
+
+  it("a PAO at the exact point is high severity and tops the priority checks", () => {
+    const pao: PlanningOverlayAt = {
+      code: "PAO1", parent: "PAO", description: "Public Acquisition Overlay - Schedule 1", asAt: "2010-01-01",
+    };
+    const r = buildBuyerReport({
+      lat: PIN.lat, lng: PIN.lng, place: samplePlace(), pois: POIS,
+      planning: planningAt([pao]), generatedAt: "t",
+    });
+    const f = r.findings.find((x) => x.id === "parcel-overlay-PAO1");
+    expect(f?.severity).toBe("high");
+    expect(r.priorityChecks.some((x) => x.id === "parcel-overlay-PAO1")).toBe(true);
+  });
+
+  it("threads the user's parcel confirmation onto report.location verbatim", () => {
+    const confirmedParcel = { areaM2: 652.4, confirmedAt: "2026-06-10T01:02:03.000Z" };
+    const r = buildBuyerReport({
+      lat: PIN.lat, lng: PIN.lng, place: samplePlace(), pois: POIS,
+      confirmedParcel, generatedAt: "t",
+    });
+    expect(r.location.confirmedParcel).toEqual(confirmedParcel);
+    const none = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: samplePlace(), pois: POIS, generatedAt: "t" });
+    expect(none.location.confirmedParcel).toBeUndefined();
+  });
+
+  it("parcel-geography findings carry the wrong-lot caveat while the lot is unconfirmed", () => {
+    const r = buildBuyerReport({
+      lat: PIN.lat, lng: PIN.lng, place: samplePlace(), pois: POIS,
+      planning: planningAt([hoOverlay]), generatedAt: "t",
+    });
+    for (const id of ["planning-zone", "parcel-overlay-HO123"]) {
+      const f = r.findings.find((x) => x.id === id);
+      expect(f?.caveat, id).toContain(UNCONFIRMED_PARCEL_CAVEAT);
+    }
+    const clearReport = buildBuyerReport({
+      lat: PIN.lat, lng: PIN.lng, place: samplePlace(), pois: POIS,
+      planning: planningAt([]), generatedAt: "t",
+    });
+    expect(
+      clearReport.findings.find((x) => x.id === "parcel-overlays-clear")?.caveat
+    ).toContain(UNCONFIRMED_PARCEL_CAVEAT);
+  });
+
+  it("the wrong-lot caveat disappears once the parcel is confirmed (base caveat stays)", () => {
+    const confirmedParcel = { areaM2: 652.4, confirmedAt: "2026-06-10T01:02:03.000Z" };
+    const r = buildBuyerReport({
+      lat: PIN.lat, lng: PIN.lng, place: samplePlace(), pois: POIS,
+      planning: planningAt([hoOverlay]), confirmedParcel, generatedAt: "t",
+    });
+    for (const id of ["planning-zone", "parcel-overlay-HO123"]) {
+      const f = r.findings.find((x) => x.id === id);
+      expect(f?.caveat, id).toBeTruthy();
+      expect(f?.caveat, id).not.toContain(UNCONFIRMED_PARCEL_CAVEAT);
+    }
+    const clearReport = buildBuyerReport({
+      lat: PIN.lat, lng: PIN.lng, place: samplePlace(), pois: POIS,
+      planning: planningAt([]), confirmedParcel, generatedAt: "t",
+    });
+    expect(
+      clearReport.findings.find((x) => x.id === "parcel-overlays-clear")?.caveat
+    ).not.toContain(UNCONFIRMED_PARCEL_CAVEAT);
   });
 });
