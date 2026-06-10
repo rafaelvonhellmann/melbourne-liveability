@@ -75,6 +75,63 @@ describe("saved checks", () => {
   });
 });
 
+describe("schema version migration", () => {
+  it("loads a v1 payload with retired persona/agent fields intact", () => {
+    localStorage.setItem(
+      "mlv-user-prefs-v1",
+      JSON.stringify({
+        version: 1,
+        personaId: "families",
+        shortlist: ["carlton", "fitzroy"],
+        recent: [{ slug: "carlton", name: "Carlton", viewedAt: "t" }],
+        savedChecks: [{ id: "ok", lat: -37.8, lng: 144.97, savedAt: "t" }],
+        buyerProfile: { mode: "agent", intent: "buy", schools: "high" },
+      })
+    );
+    const prefs = loadUserPrefs();
+    expect(prefs.version).toBe(1);
+    expect(prefs.shortlist).toEqual(["carlton", "fitzroy"]);
+    expect(prefs.recent).toHaveLength(1);
+    expect(prefs.savedChecks).toHaveLength(1);
+    expect(loadBuyerProfile()?.mode).toBe("buyer");
+  });
+
+  it("treats a missing version as v1", () => {
+    localStorage.setItem(
+      "mlv-user-prefs-v1",
+      JSON.stringify({ shortlist: ["carlton"], recent: [], savedChecks: [] })
+    );
+    const prefs = loadUserPrefs();
+    expect(prefs.version).toBe(1);
+    expect(prefs.shortlist).toEqual(["carlton"]);
+  });
+
+  it("treats a non-numeric version as v1", () => {
+    localStorage.setItem(
+      "mlv-user-prefs-v1",
+      JSON.stringify({ version: "later", shortlist: ["carlton"] })
+    );
+    const prefs = loadUserPrefs();
+    expect(prefs.version).toBe(1);
+    expect(prefs.shortlist).toEqual(["carlton"]);
+  });
+
+  it("falls back to defaults on a future-version payload without crashing", () => {
+    localStorage.setItem(
+      "mlv-user-prefs-v1",
+      JSON.stringify({ version: 99, shortlist: { not: "an array" }, extra: true })
+    );
+    const prefs = loadUserPrefs();
+    expect(prefs).toEqual({ version: 1, shortlist: [], recent: [], savedChecks: [] });
+  });
+
+  it("falls back to defaults on corrupt JSON", () => {
+    localStorage.setItem("mlv-user-prefs-v1", "{not json!!");
+    const prefs = loadUserPrefs();
+    expect(prefs).toEqual({ version: 1, shortlist: [], recent: [], savedChecks: [] });
+  });
+});
+
 describe("buyer profile back-compat", () => {
   it("returns null when no profile is saved", () => {
     expect(loadBuyerProfile()).toBeNull();

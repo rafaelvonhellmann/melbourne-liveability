@@ -3,6 +3,7 @@ import type { InterestViewId } from "./interest-views";
 import type { BuyerProfile } from "./buyer-fit";
 
 const STORAGE_KEY = "mlv-user-prefs-v1";
+const CURRENT_PREFS_VERSION = 1;
 const MAX_SHORTLIST = 12;
 const MAX_RECENT = 8;
 const MAX_SAVED_CHECKS = 20;
@@ -69,33 +70,57 @@ function isBrowser(): boolean {
   return typeof window !== "undefined" && typeof localStorage !== "undefined";
 }
 
+type StoredPrefs = Partial<Omit<UserPrefs, "version">> & { version?: unknown };
+
+/**
+ * Reads a v1 payload into the current shape: spread over defaults, then clamp
+ * the list fields and drop malformed entries. Identity migration today.
+ */
+function migrateFromV1(parsed: StoredPrefs): UserPrefs {
+  return {
+    ...DEFAULT_PREFS,
+    ...parsed,
+    version: CURRENT_PREFS_VERSION,
+    shortlist: Array.isArray(parsed.shortlist)
+      ? parsed.shortlist.filter((s) => typeof s === "string").slice(0, MAX_SHORTLIST)
+      : [],
+    recent: Array.isArray(parsed.recent)
+      ? parsed.recent.slice(0, MAX_RECENT)
+      : [],
+    savedChecks: Array.isArray(parsed.savedChecks)
+      ? parsed.savedChecks
+          .filter(
+            (c): c is SavedCheck =>
+              !!c &&
+              typeof c === "object" &&
+              Number.isFinite((c as SavedCheck).lat) &&
+              Number.isFinite((c as SavedCheck).lng)
+          )
+          .slice(0, MAX_SAVED_CHECKS)
+      : [],
+  };
+}
+
+/**
+ * Per-version readers into the current shape. Missing or non-numeric versions
+ * read as v1 (every payload ever written had version 1 or none). A version
+ * with no entry here (e.g. from a future build) falls back to defaults rather
+ * than silently merging an unknown schema.
+ */
+const MIGRATIONS: Record<number, (parsed: StoredPrefs) => UserPrefs> = {
+  1: migrateFromV1,
+};
+
 export function loadUserPrefs(): UserPrefs {
   if (!isBrowser()) return { ...DEFAULT_PREFS };
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...DEFAULT_PREFS };
-    const parsed = JSON.parse(raw) as Partial<UserPrefs>;
-    return {
-      ...DEFAULT_PREFS,
-      ...parsed,
-      shortlist: Array.isArray(parsed.shortlist)
-        ? parsed.shortlist.filter((s) => typeof s === "string").slice(0, MAX_SHORTLIST)
-        : [],
-      recent: Array.isArray(parsed.recent)
-        ? parsed.recent.slice(0, MAX_RECENT)
-        : [],
-      savedChecks: Array.isArray(parsed.savedChecks)
-        ? parsed.savedChecks
-            .filter(
-              (c): c is SavedCheck =>
-                !!c &&
-                typeof c === "object" &&
-                Number.isFinite((c as SavedCheck).lat) &&
-                Number.isFinite((c as SavedCheck).lng)
-            )
-            .slice(0, MAX_SAVED_CHECKS)
-        : [],
-    };
+    const parsed = JSON.parse(raw) as StoredPrefs;
+    const version = typeof parsed.version === "number" ? parsed.version : 1;
+    const migrate = MIGRATIONS[version];
+    if (!migrate) return { ...DEFAULT_PREFS };
+    return migrate(parsed);
   } catch {
     return { ...DEFAULT_PREFS };
   }
@@ -111,7 +136,7 @@ export function saveUserPrefs(prefs: UserPrefs): void {
       STORAGE_KEY,
       JSON.stringify({
         ...prefs,
-        version: 1,
+        version: CURRENT_PREFS_VERSION,
         shortlist: prefs.shortlist.slice(0, MAX_SHORTLIST),
         recent: prefs.recent.slice(0, MAX_RECENT),
         savedChecks: (prefs.savedChecks ?? []).slice(0, MAX_SAVED_CHECKS),
