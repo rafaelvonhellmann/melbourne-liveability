@@ -5,16 +5,17 @@ import { defineConfig, devices } from "@playwright/test";
  * already-running one). Unit tests stay on vitest (*.test.ts); Playwright owns
  * *.spec.ts under tests/e2e so the two never collide.
  *
- * STATIC_E2E=1 flips to static-artifact mode (used by deploy-pages.yml): only
- * static-artifact.spec.ts runs, against a prebuilt out/ served under the
- * GitHub Pages sub-path. CI starts that server itself, so no webServer here.
+ * STATIC_E2E=1 flips to static-artifact mode (used by deploy-pages.yml):
+ * static-artifact.spec.ts plus the static-compatible journey specs run against
+ * a prebuilt out/ served under the GitHub Pages sub-path. CI starts that
+ * server itself, so no webServer here.
  */
 const staticMode = !!process.env.STATIC_E2E;
 
 export default defineConfig({
   testDir: "./tests/e2e",
   ...(staticMode
-    ? { testMatch: /static-artifact\.spec\.ts/ }
+    ? { testMatch: [/static-artifact\.spec\.ts/, /journeys\.spec\.ts/] }
     : { testIgnore: /static-artifact\.spec\.ts/ }),
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
