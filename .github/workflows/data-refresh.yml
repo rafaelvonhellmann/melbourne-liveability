@@ -1,8 +1,9 @@
 name: Data refresh
 
 # Automatically re-fetch upstream open data, rebuild the scored artifacts, and
-# commit them. The commit triggers the static redeploy (e.g. Vercel git hook),
-# so the map refreshes itself instead of relying on a manual run.
+# commit them. Pushes made with GITHUB_TOKEN do NOT fire other workflows'
+# on:push triggers, so after a successful push this workflow dispatches
+# deploy-pages.yml explicitly - otherwise the refreshed data never redeploys.
 #
 # Cadence: 2nd of each month (covers quarterly crime + annual ABS editions;
 # census-cadence sources simply no-op when upstream is unchanged because the
@@ -15,6 +16,8 @@ on:
 
 permissions:
   contents: write
+  issues: write # failure notification opens an issue
+  actions: write # dispatch deploy-pages.yml after the auto-commit
 
 concurrency:
   group: data-refresh
@@ -44,7 +47,8 @@ jobs:
       # vic-ho.geojson for heritage; build-poi reads the community/EV/police/
       # childcare extracts). They are NOT part of scripts/fetch.ts, so without
       # this step a clean-env refresh silently drops those layers (see the
-      # 2026-06 regression). Keep this list in sync with the fetch scripts.
+      # 2026-06 regression). Keep this list in sync with the fetch scripts
+      # AND with DATA-PIPELINE-AUDIT.md (apply step -> fetch -> workflow map).
       - name: Fetch heritage + POI + proxy layers
         run: |
           npm run data:heritage
@@ -53,6 +57,8 @@ jobs:
           npm run data:fire-history
           npm run data:vif
           npm run data:abs-approvals
+          npm run data:abs-qualifications
+          npm run data:schools
           npm run data:water-corp
           EPA_API_KEY=${{ secrets.EPA_API_KEY }} npm run data:epa-air
           npm run data:community-poi
@@ -72,6 +78,12 @@ jobs:
       - name: Rebuild scored + derived artifacts
         run: npm run data:build
 
+      # Refuse to commit an artifact that silently lost a field: fails when any
+      # populated-field count in places.json drops >2% vs git HEAD or a field
+      # disappears entirely. See DATA-PIPELINE-AUDIT.md.
+      - name: Coverage gate (no silent field loss)
+        run: npx tsx scripts/verify-coverage-diff.ts
+
       - name: Test
         run: npm test
 
@@ -82,13 +94,41 @@ jobs:
         run: npm run build
 
       - name: Commit refreshed data
+        id: commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/generated/*.json public/data/*
           if git diff --staged --quiet; then
-            echo "No data changes — upstream unchanged."
+            echo "No data changes - upstream unchanged."
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
           else
             git commit -m "chore(data): automated refresh $(date -u +%Y-%m-%d)"
             git push
+            echo "pushed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # GITHUB_TOKEN pushes do not fire on:push workflows, so kick the Pages
+      # deploy explicitly (deploy-pages.yml has workflow_dispatch).
+      - name: Trigger Pages redeploy
+        if: steps.commit.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy-pages.yml --ref master
+
+      - name: Open or update the failure issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          body="The scheduled data refresh failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} - if the coverage gate tripped, an upstream fetch likely broke silently (see DATA-PIPELINE-AUDIT.md)."
+          gh label create data-refresh --description "Automated data refresh failures" --color D93F0B || true
+          existing=$(gh issue list --label data-refresh --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create \
+              --title "Data refresh failed ($(date -u +%Y-%m-%d))" \
+              --label data-refresh \
+              --body "$body"
           fi

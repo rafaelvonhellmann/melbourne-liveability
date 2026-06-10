@@ -8,6 +8,12 @@
  * volunteerPct = p_tot_volunteer / p_tot_tot * 100. Denominator is the table's
  * total (excludes "not stated"), so the rate is a slight underestimate - fine
  * for a context comparison. CC BY 4.0 (ABS).
+ *
+ * Failure mode: standalone runs are fatal (exit 1) so a manual invocation
+ * never half-succeeds silently. In the build chain (APPLY_CIVIC_SOFT=1, set by
+ * scripts/build.ts) a failed ABS fetch only warns and exits 0 - the
+ * preserve-context carry-forward keeps the previous volunteerPct, and the
+ * carried-fields gate makes a SECOND consecutive miss fail the refresh.
  */
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -48,6 +54,20 @@ async function fetchVolunteering(): Promise<Map<string, number>> {
   return out;
 }
 
+/** fetchVolunteering with one retry - transient ArcGIS hiccups are common. */
+async function fetchVolunteeringWithRetry(): Promise<Map<string, number>> {
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      return await fetchVolunteering();
+    } catch (e) {
+      lastErr = e;
+      console.warn(`apply-civic: ABS G23 fetch attempt ${attempt}/2 failed: ${String(e)}`);
+    }
+  }
+  throw lastErr;
+}
+
 async function main() {
   const placesPath = path.join(GENERATED, "places.json");
   const { generatedAt, places } = JSON.parse(await readFile(placesPath, "utf8")) as {
@@ -55,7 +75,19 @@ async function main() {
     places: Place[];
   };
 
-  const vol = await fetchVolunteering();
+  let vol: Map<string, number>;
+  try {
+    vol = await fetchVolunteeringWithRetry();
+  } catch (e) {
+    if (process.env.APPLY_CIVIC_SOFT === "1") {
+      console.warn(
+        `apply-civic: ABS G23 fetch failed (${String(e)}) - skipping; ` +
+          "volunteerPct kept from carry-forward (preserve-context merge)."
+      );
+      return;
+    }
+    throw e;
+  }
   console.log(`ABS G23 volunteering: ${vol.size} VIC SA2s`);
 
   let enriched = 0;
