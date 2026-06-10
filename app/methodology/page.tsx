@@ -420,15 +420,60 @@ export default function MethodologyPage() {
       {/* ---------------------------------------------------------------- */}
       <Section id="attribution" title="10. Attribution & licences">
         <p>
-          ABS, PTV GTFS, VCSA, Victoria planning &amp; MapShare data are CC BY 4.0 (some
-          marked CC BY 4.0 Victoria) - see the per-dataset licences in the{" "}
+          This is the canonical attribution page - per-dataset licences are in the{" "}
           <a href="#manifest" className="text-accent hover:underline">
             manifest
           </a>{" "}
-          above. Schools, GP/clinics, transport fallback, everyday amenities, cycle
-          infrastructure, post offices and pathology/NDIS points are © OpenStreetMap
-          contributors, licensed ODbL. This product charges for tooling and presentation,
-          never for reselling the underlying open data, and retains attribution.
+          above. By licensor:
+        </p>
+        <ul className="list-disc space-y-1.5 pl-5">
+          <li>
+            <strong className="text-ink">Commonwealth of Australia</strong> - ABS
+            (Census, Data by Region, SEIFA, ERP, Building Approvals; CC BY 4.0); AEC
+            (2022 election results CSVs; CC BY 4.0); Bureau of Meteorology
+            (solar-exposure climatology; BoM copyright - no CC notice verified on the
+            product page).
+          </li>
+          <li>
+            <strong className="text-ink">© State of Victoria</strong> - Department of
+            Transport and Planning (Vicmap, VicPlan overlays, PTV GTFS, VIF2023,
+            traffic volumes, activity centres), DEECA (fire history, coastal
+            inundation, urban heat / tree canopy), Department of Education (school
+            locations and zones) - CC BY 4.0; Crime Statistics Agency (recorded
+            offences) - CC BY 3.0 AU.
+          </li>
+          <li>
+            <strong className="text-ink">© EPA Victoria</strong> - AirWatch air
+            quality and Beach Report (CC BY 4.0).
+          </li>
+          <li>
+            <strong className="text-ink">© Melbourne Water</strong> - Healthy
+            Waterways Strategy 2018 habitat-suitability (CC BY-SA 4.0).
+          </li>
+          <li>
+            <strong className="text-ink">© OpenStreetMap contributors</strong> (ODbL)
+            - building tiles for the sun view, schools, GP/clinics, transport
+            fallback, everyday amenities, cycle infrastructure, post offices,
+            pathology/NDIS points, noise/nuisance proxies.
+          </li>
+          <li>
+            <strong className="text-ink">© CARTO</strong> - the Positron basemap
+            tiles (with © OpenStreetMap contributors).
+          </li>
+        </ul>
+        <p>
+          This product charges for tooling and presentation, never for reselling the
+          underlying open data, and retains attribution. The OSM-derived files are
+          derivative databases under ODbL and are available from the{" "}
+          <a
+            href="https://github.com/rafaelvonhellmann/melbourne-liveability/blob/master/DATA-LICENCE.md"
+            target="_blank"
+            rel="noreferrer"
+            className="text-accent hover:underline"
+          >
+            public repository (DATA-LICENCE.md)
+          </a>
+          .
         </p>
         <p className="mt-3 text-sm text-ink-muted">
           Spotted a data problem or want a dataset added? Use the{" "}

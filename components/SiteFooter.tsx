@@ -9,6 +9,7 @@ const LINKS: { href: string; label: string }[] = [
   { href: "/compare", label: "Compare" },
   { href: "/account", label: "Your data" },
   { href: "/methodology", label: "Methodology" },
+  { href: "/methodology#attribution", label: "Data licences & attribution" },
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },
   { href: "/disclaimer", label: "Disclaimer" },
@@ -32,9 +33,10 @@ export function SiteFooter() {
         </nav>
         <p className="mt-4 text-xs leading-relaxed">
           <span className="font-medium text-ink">{PRODUCT_NAME}</span> compiles
-          Australian government / official open data (ABS, PTV, VCSA, Victorian planning
-          &amp; MapShare - CC BY 4.0) with © OpenStreetMap contributors (ODbL) as an
-          attributed fallback. Scores are one optional lens over open data —{" "}
+          Australian government / official open data (ABS, PTV, Victorian planning
+          &amp; MapShare - CC BY 4.0; VCSA - CC BY 3.0 AU) with © OpenStreetMap
+          contributors (ODbL) as an attributed fallback. Scores are one optional lens
+          over open data -{" "}
           <span className="font-medium text-ink">not relocation, financial, or legal advice</span>.
         </p>
       </div>

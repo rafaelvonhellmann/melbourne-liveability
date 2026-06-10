@@ -19,6 +19,10 @@ export function Attribution({ className }: { className?: string }) {
         OpenStreetMap
       </a>{" "}
       contributors (ODbL).{" "}
+      <Link href="/methodology#attribution" className="underline hover:text-ink">
+        Licences
+      </Link>{" "}
+      ·{" "}
       <Link href="/disclaimer" className="underline hover:text-ink">
         Disclaimer
       </Link>
