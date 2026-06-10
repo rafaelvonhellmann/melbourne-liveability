@@ -26,7 +26,9 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    # The apply/overlay geometry steps run in-chain since P0-1 (2026-06-10)
+    # and legitimately take >90 min with large overlay layers (EMO ~36k polygons).
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v6
 
@@ -81,6 +83,12 @@ jobs:
       - name: Rebuild scored + derived artifacts
         run: npm run data:build
 
+      # Rebake the pin-radius report tiles AFTER data:build - the build
+      # regenerates the bake's inputs (pois.geojson via data:poi, bus-stops.json
+      # via data:gtfs), so baking first would tile last month's data.
+      - name: Rebake report tiles
+        run: npm run data:report-tiles
+
       # Refuse to commit an artifact that silently lost a field: fails when any
       # populated-field count in places.json drops >2% vs git HEAD or a field
       # disappears entirely. See DATA-PIPELINE-AUDIT.md.
@@ -120,7 +128,7 @@ jobs:
         run: gh workflow run deploy-pages.yml --ref master
 
       - name: Open or update the failure issue
-        if: failure()
+        if: failure() || cancelled()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
