@@ -12,7 +12,7 @@
  * Refresh: annual (zones are set per school year). Bump SCHOOL_ZONES_URL to the
  * latest DataVic release. Run `npm run data:school-zones`.
  */
-import AdmZip from "adm-zip";
+import unzipper from "unzipper";
 import { writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import * as turf from "@turf/turf";
@@ -63,10 +63,10 @@ function slim(fc: FeatureCollection): { feats: SchoolZoneFeature[]; year: number
   return { feats: out, year };
 }
 
-function readEntry(zip: AdmZip, contains: string): FeatureCollection {
-  const entry = zip.getEntries().find((e) => e.entryName.includes(contains) && e.entryName.endsWith(".geojson"));
+async function readEntry(zip: unzipper.CentralDirectory, contains: string): Promise<FeatureCollection> {
+  const entry = zip.files.find((f) => f.path.includes(contains) && f.path.endsWith(".geojson"));
   if (!entry) throw new Error(`School zones: no .geojson entry matching "${contains}" in the zip`);
-  return JSON.parse(entry.getData().toString("utf8")) as FeatureCollection;
+  return JSON.parse((await entry.buffer()).toString("utf8")) as FeatureCollection;
 }
 
 async function main() {
@@ -75,9 +75,9 @@ async function main() {
   const zipPath = path.join(RAW, "school-zones.zip");
   await downloadToFile(SCHOOL_ZONES_URL, zipPath);
 
-  const zip = new AdmZip(zipPath);
-  const primary = slim(readEntry(zip, PRIMARY_ENTRY));
-  const secondary = slim(readEntry(zip, SECONDARY_ENTRY));
+  const zip = await unzipper.Open.file(zipPath);
+  const primary = slim(await readEntry(zip, PRIMARY_ENTRY));
+  const secondary = slim(await readEntry(zip, SECONDARY_ENTRY));
   const year = primary.year ?? secondary.year;
   if (primary.feats.length === 0 || secondary.feats.length === 0) {
     throw new Error("School zones: 0 metro zones after clip - check bbox / entry names");
