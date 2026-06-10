@@ -25,7 +25,8 @@ const ReachabilityCard = dynamic(
 );
 import { AMENITY_GROUPS } from "@/lib/buyer-report";
 import { isReachabilityConfigured } from "@/lib/reachability";
-import { formatSourceDate } from "@/lib/source-manifest";
+import { formatSourceDate, sourceAsAt } from "@/lib/source-manifest";
+import { PriceContextCard } from "./PriceContextCard";
 import { withBase } from "@/lib/asset-path";
 import { track } from "@/lib/analytics";
 import { POI_CATEGORY_BY_ID, type PoiCategoryId } from "@/lib/poi-categories";
@@ -38,7 +39,13 @@ type BuyerReportPanelProps = {
   report: BuyerReport;
   /** SA2 record for the snapshot + community sections (null if pin is off-coverage). */
   place?: Place | null;
-  variant?: "live" | "sample" | "embedded";
+  /**
+   * "live" = compact map hint panel; "sample" = static sample report (full +
+   * sample disclaimer); "embedded" = full report inside a /places profile (no
+   * auto-fetch cards - the profile carries its own); "full" = the /buyer/report
+   * route for a REAL pin - everything the sample shows, no sample wording.
+   */
+  variant?: "live" | "sample" | "embedded" | "full";
   /** Path+query (incl. base path) for the "Copy share link" action; omit to hide. */
   shareUrl?: string;
   /** Clear-pin handler (live map only); omit to hide. */
@@ -137,6 +144,20 @@ export function BuyerReportPanel({
             <dd className="num inline">{generated}</dd>
           </div>
         </dl>
+        {/* P1-1: the live hint panel links to the FULL buyer report for this
+            exact pin (/buyer/report) - verify-actions, provenance, sources and
+            caveats on screen. Distinct from the AREA report link below (which
+            goes to the /places suburb profile). Next <Link> handles basePath. */}
+        {isLive && hasPin && (
+          <Link
+            href={`/buyer/report?lat=${(report.location.lat as number).toFixed(6)}&lng=${(report.location.lng as number).toFixed(6)}`}
+            onClick={() => track("buyer_open_full_report")}
+            className="no-print mt-1 flex items-center justify-between gap-2 rounded-lg bg-accent px-3.5 py-2.5 text-sm font-semibold text-white shadow-card transition hover:bg-accent/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            <span>Open the full report</span>
+            <span aria-hidden className="text-base leading-none">&rarr;</span>
+          </Link>
+        )}
         {place && !place.nonResidential && variant !== "embedded" && (
           <Link
             href={`/places/${place.slug}`}
@@ -398,6 +419,16 @@ export function BuyerReportPanel({
           </Section>
         )}
 
+        {/* Price/rent context at the pin - P1-6 (auto-fetched from the baked
+            VGV/DFFH medians; omits itself when no suburb resolves). Context
+            only - NOT a valuation, never scored. */}
+        {hasPin && variant !== "embedded" && (
+          <PriceContextCard
+            lng={report.location.lng as number}
+            lat={report.location.lat as number}
+            areaName={report.location.sa2Name}
+          />
+        )}
         {/* Urban heat at the pin - v2 Environment lens (auto-fetched; the card
             omits itself outside the metro Cooling & Greening heat layer). */}
         {hasPin && variant !== "embedded" && (
@@ -734,7 +765,18 @@ function FindingCard({ f, compact = false }: { f: BuyerFinding; compact?: boolea
             <span>Confidence: {f.confidence}</span>
             <span>Geography: {GEO_LABEL[f.geography]}</span>
             {f.sourceRefs && f.sourceRefs.length > 0 && (
-              <span className="normal-case">Source: {f.sourceRefs.map((s) => s.label.split(" - ")[0]).join("; ")}</span>
+              <span className="normal-case">
+                {/* P1-2: every on-screen source carries its dataset vintage
+                    ("as at <period or fetch date>") so no claim outlives its
+                    data silently. Omitted when the manifest has no date. */}
+                Source:{" "}
+                {f.sourceRefs
+                  .map((s) => {
+                    const asAt = sourceAsAt(s);
+                    return `${s.label.split(" - ")[0]}${asAt ? ` (as at ${asAt})` : ""}`;
+                  })
+                  .join("; ")}
+              </span>
             )}
           </div>
         </div>

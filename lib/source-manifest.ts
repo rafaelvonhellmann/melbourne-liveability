@@ -92,3 +92,17 @@ export function formatSourceDate(source: BuyerSourceRef): string {
   if (source.fetchedAt) parts.push(`updated ${source.fetchedAt}`);
   return parts.length ? parts.join(" · ") : "date not recorded";
 }
+
+/**
+ * Dataset vintage for inline "as at <date>" copy (s18 mitigation): the data
+ * period when the manifest records a real one, else the fetch date. A period of
+ * "current" is a liveness claim, not a vintage, so it falls through to
+ * `fetchedAt`. Returns null when no date is recorded - callers must omit the
+ * phrase rather than fake a date.
+ */
+export function sourceAsAt(source: BuyerSourceRef): string | null {
+  const period = source.period?.trim();
+  if (period && period.toLowerCase() !== "current") return period;
+  const fetched = source.fetchedAt?.trim();
+  return fetched || null;
+}

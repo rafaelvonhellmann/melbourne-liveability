@@ -44,7 +44,7 @@ export type FutureStationLite = {
 };
 import { computeWeightedScore } from "./scoring";
 import { getDefaultWeights } from "./weights";
-import { getSourcesByIds } from "./source-manifest";
+import { getSourcesByIds, sourceAsAt } from "./source-manifest";
 import { sunAspect } from "./sun";
 import { presentOverlays } from "./planning-overlays";
 import { worstCoastalScenario } from "./coastal";
@@ -389,6 +389,20 @@ function rawOf(place: Place | null | undefined, domain: keyof Place["domains"], 
 function pctOf(place: Place | null | undefined, domain: keyof Place["domains"]): number | null {
   const v = place?.domains?.[domain]?.percentile;
   return typeof v === "number" && Number.isFinite(v) ? v : null;
+}
+
+/**
+ * First known dataset vintage among `refs` as an inline " as at <date>" phrase
+ * (leading space so it splices into a sentence), or "" when no date is recorded.
+ * Used by NEGATIVE findings ("no X overlay here") - an undated "all clear" is
+ * the s18 exposure this defuses.
+ */
+function asAtPhrase(refs: BuyerSourceRef[]): string {
+  for (const r of refs) {
+    const d = sourceAsAt(r);
+    if (d) return ` as at ${d}`;
+  }
+  return "";
 }
 
 function safeOverallScore(place: Place | null | undefined, override?: number | null): number | null {
@@ -907,6 +921,10 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
   //    warning in the CBD is noise). Material overlay share keeps the verify/red-flag.
   const bushfire = rawOf(place, "hazards", "bushfirePct");
   const flood = rawOf(place, "hazards", "floodPct");
+  const hazardRefs = getSourcesByIds(["vic-planning-bpa", "vic-planning-flood"]);
+  // Negative ("no overlay") statements must carry the dataset vintage inline -
+  // an undated all-clear is the claim a buyer could rely on past its shelf life.
+  const hazardAsAt = asAtPhrase(hazardRefs);
   const haveHazardData = bushfire != null || flood != null;
   const negligibleHazard = (bushfire ?? 0) < 1 && (flood ?? 0) < 1;
   const elevatedHazard = (bushfire != null && bushfire >= 50) || (flood != null && flood >= 10);
@@ -921,13 +939,12 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       kind: "neutral",
       severity: "info",
       title: "Little bushfire or flood overlay here",
-      summary:
-        "Almost none of this area is under a bushfire or flood planning overlay. Overlays still apply parcel by parcel - confirm the exact property.",
+      summary: `No bushfire or flood overlay in the Vicmap Planning data${hazardAsAt} for almost all of this area. Overlays still apply parcel by parcel - confirm the exact property.`,
       confidence: "medium",
       geography: "sa2",
       caveat:
         "Absence of a mapped planning overlay is not a guarantee - flood or fire risk can exist without one.",
-      sourceRefs: getSourcesByIds(["vic-planning-bpa", "vic-planning-flood"]),
+      sourceRefs: hazardRefs,
     });
   } else if (hazardBits.length) {
     findings.push({
@@ -941,7 +958,7 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         "Check the council planning certificate, VicPlan and an insurance quote before buying.",
       confidence: "medium",
       geography: "sa2",
-      sourceRefs: getSourcesByIds(["vic-planning-bpa", "vic-planning-flood"]),
+      sourceRefs: hazardRefs,
     });
   } else {
     // No overlay data matched (e.g. off-coverage). A known gap, not a prominent
@@ -951,12 +968,12 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       kind: "unavailable",
       severity: "info",
       title: "Bushfire / flood overlays not matched here",
-      summary: "We could not match bushfire or flood overlays to this point.",
+      summary: `No bushfire or flood overlay could be matched to this point in the Vicmap Planning data${hazardAsAt}.`,
       verifyAction: "Check the council planning certificate and VicPlan for the exact address.",
       confidence: "unknown",
       geography: "unknown",
       caveat: "Absence of a mapped overlay is not a guarantee - risk can exist without one.",
-      sourceRefs: getSourcesByIds(["vic-planning-bpa", "vic-planning-flood"]),
+      sourceRefs: hazardRefs,
     });
   }
 

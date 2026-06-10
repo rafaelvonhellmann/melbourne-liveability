@@ -524,6 +524,24 @@ describe("buildBuyerReport hazard conditionality", () => {
     const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: placeWithHazards(0, 20), pois: POIS, generatedAt: "t" });
     expect(r.findings.find((f) => f.id === "hazard-overlays")?.kind).toBe("red_flag");
   });
+
+  // P1-2 (s18 mitigation): a NEGATIVE hazard statement must carry the dataset
+  // vintage inline - "No <X> overlay in <dataset> as at <date>" - so an
+  // all-clear can never be read as current forever.
+  it("dates the negative ('no overlay') hazard finding inline with 'as at'", () => {
+    const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: placeWithHazards(0, 0), pois: POIS, generatedAt: "t" });
+    const hz = r.findings.find((f) => f.id === "hazard-overlays");
+    expect(hz?.kind).toBe("neutral");
+    expect(hz?.summary).toMatch(/No bushfire or flood overlay in the Vicmap Planning data/);
+    expect(hz?.summary).toMatch(/as at \d{4}/);
+  });
+
+  it("dates the unmatched-overlay fallback the same way", () => {
+    const r = buildBuyerReport({ lat: PIN.lat, lng: PIN.lng, place: null, pois: POIS, generatedAt: "t" });
+    const hz = r.findings.find((f) => f.id === "hazard-overlays");
+    expect(hz?.kind).toBe("unavailable");
+    expect(hz?.summary).toMatch(/as at \d{4}/);
+  });
 });
 
 describe("buildBuyerReport adjacency nudge", () => {

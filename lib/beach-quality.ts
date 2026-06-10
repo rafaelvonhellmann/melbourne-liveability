@@ -52,7 +52,10 @@ async function loadBeaches(): Promise<Beach[]> {
   if (cache) return cache;
   try {
     const res = await fetch(withBase("/data/beach-quality.json"));
-    cache = res.ok ? ((await res.json()) as Beach[]) : [];
+    // Guard the shape, not just the status: a non-array body (error page, junk
+    // JSON) must degrade to "no beaches", never throw downstream (never-throw).
+    const body: unknown = res.ok ? await res.json() : null;
+    cache = Array.isArray(body) ? (body as Beach[]) : [];
   } catch {
     cache = [];
   }
