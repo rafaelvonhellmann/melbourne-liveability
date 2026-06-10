@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import { Search, MapPin } from "lucide-react";
 import Fuse from "fuse.js";
 import type { SearchIndexEntry } from "@/lib/search";
@@ -44,6 +44,12 @@ function isAddressLike(q: string): boolean {
 export function SearchBox({ index, onSelect, onGeocode }: SearchBoxProps) {
   const [q, setQ] = useState("");
   const [geo, setGeo] = useState<GeoState>(GEO_IDLE);
+  // Combobox state: the popup opens when the user types (or submits a geocode)
+  // and closes on Escape / selection. activeIdx is the keyboard-highlighted
+  // option, surfaced to AT via aria-activedescendant on the input.
+  const [open, setOpen] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(-1);
+  const listboxId = useId();
   const abortRef = useRef<AbortController | null>(null);
 
   const fuse = useMemo(
@@ -86,6 +92,8 @@ export function SearchBox({ index, onSelect, onGeocode }: SearchBoxProps) {
     abortRef.current?.abort();
     const ctrl = new AbortController();
     abortRef.current = ctrl;
+    setOpen(true);
+    setActiveIdx(-1);
     setGeo({ status: "loading", results: [], forQuery: trimmed });
     try {
       const found = await geocodeAddress(trimmed, ctrl.signal);
@@ -104,18 +112,91 @@ export function SearchBox({ index, onSelect, onGeocode }: SearchBoxProps) {
 
   const onQueryChange = (value: string) => {
     setQ(value);
+    setOpen(true);
+    setActiveIdx(-1);
     if (geo.status !== "idle") resetGeo();
+  };
+
+  const closePopup = () => {
+    setOpen(false);
+    setActiveIdx(-1);
+  };
+
+  const pickArea = (item: SearchIndexEntry) => {
+    // Always show the canonical data-area name once selected.
+    onSelect(item);
+    setQ(item.areaName);
+    resetGeo();
+    closePopup();
   };
 
   const pickGeo = (r: GeocodeResult) => {
     onGeocode?.(r);
     setQ(r.shortLabel);
     resetGeo();
+    closePopup();
   };
 
   const showAddressSection =
     canGeocode && (geo.status === "idle" || geoForCurrent);
-  const showDropdown = areaResults.length > 0 || showAddressSection;
+  const showDropdown = open && (areaResults.length > 0 || showAddressSection);
+
+  // Flat option order matching the rendered rows: area matches, then the
+  // "search as address" action (idle), then geocoded address results (done).
+  const addressActionVisible = showDropdown && geo.status === "idle" && canGeocode;
+  const geoOptions =
+    showDropdown && showAddressSection && geo.status === "done" ? geo.results : [];
+  const optionCount =
+    (showDropdown ? areaResults.length : 0) +
+    (addressActionVisible ? 1 : 0) +
+    geoOptions.length;
+  // Clamp: results can shrink under the highlight (e.g. while typing).
+  const active = activeIdx >= 0 && activeIdx < optionCount ? activeIdx : -1;
+  const optId = (i: number) => `${listboxId}-option-${i}`;
+  const geoOptionIdx = (i: number) =>
+    areaResults.length + (addressActionVisible ? 1 : 0) + i;
+
+  const runOption = (i: number) => {
+    if (i < areaResults.length) {
+      pickArea(areaResults[i]);
+      return;
+    }
+    if (addressActionVisible && i === areaResults.length) {
+      void runGeocode();
+      return;
+    }
+    const r = geoOptions[i - areaResults.length - (addressActionVisible ? 1 : 0)];
+    if (r) pickGeo(r);
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      if (optionCount === 0) return;
+      e.preventDefault();
+      const delta = e.key === "ArrowDown" ? 1 : -1;
+      setActiveIdx(
+        active === -1
+          ? delta === 1
+            ? 0
+            : optionCount - 1
+          : (active + delta + optionCount) % optionCount
+      );
+    } else if (e.key === "Enter") {
+      // A keyboard-highlighted option wins; otherwise Enter falls through to
+      // the form submit, which runs the explicit geocode (submit-only policy).
+      if (showDropdown && active >= 0) {
+        e.preventDefault();
+        runOption(active);
+      }
+    } else if (e.key === "Escape") {
+      if (showDropdown) {
+        // First Escape closes the popup (and keeps type="search" from clearing
+        // the text); a second Escape clears the field natively.
+        e.preventDefault();
+        closePopup();
+      }
+    }
+  };
 
   return (
     <div className="relative">
@@ -138,116 +219,135 @@ export function SearchBox({ index, onSelect, onGeocode }: SearchBoxProps) {
           type="search"
           value={q}
           onChange={(e) => onQueryChange(e.target.value)}
+          onKeyDown={onKeyDown}
           placeholder="Search a suburb, data area or full address…"
           className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-muted"
           aria-label="Search by suburb, data area (SA2) or full street address"
+          role="combobox"
+          aria-expanded={showDropdown}
+          aria-controls={listboxId}
+          aria-activedescendant={
+            showDropdown && active >= 0 ? optId(active) : undefined
+          }
+          aria-autocomplete="list"
+          autoComplete="off"
         />
       </form>
       {showDropdown && (
         <ul
           className="absolute left-0 right-0 top-full z-30 mt-1 max-h-72 overflow-auto rounded-lg border border-surface-border bg-surface shadow-card"
           role="listbox"
+          id={listboxId}
+          aria-label="Search results"
         >
-          {areaResults.map((item) => {
+          {areaResults.map((item, i) => {
             const isAlias = item.kind === "alias";
             return (
-              <li key={item.key}>
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-ink hover:bg-surface-sunken"
-                  onClick={() => {
-                    // Always show the canonical data-area name once selected.
-                    onSelect(item);
-                    setQ(item.areaName);
-                    resetGeo();
-                  }}
+              <li
+                key={item.key}
+                id={optId(i)}
+                role="option"
+                aria-selected={active === i}
+                onClick={() => pickArea(item)}
+                className={`flex w-full cursor-pointer items-center justify-between gap-2 px-3 py-2 text-left text-sm text-ink hover:bg-surface-sunken ${
+                  active === i ? "bg-surface-sunken" : ""
+                }`}
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate">{item.label}</span>
+                  {isAlias && (
+                    <span className="block truncate text-xs text-ink-muted">
+                      suburb → {item.areaName}
+                    </span>
+                  )}
+                </span>
+                <span
+                  className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium tracking-wide ${
+                    isAlias
+                      ? "bg-surface-sunken text-ink-muted"
+                      : "bg-accent/10 text-accent"
+                  }`}
                 >
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate">{item.label}</span>
-                    {isAlias && (
-                      <span className="block truncate text-xs text-ink-muted">
-                        suburb → {item.areaName}
-                      </span>
-                    )}
-                  </span>
-                  <span
-                    className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium tracking-wide ${
-                      isAlias
-                        ? "bg-surface-sunken text-ink-muted"
-                        : "bg-accent/10 text-accent"
-                    }`}
-                  >
-                    {isAlias ? "Suburb" : "Data area"}
-                  </span>
-                </button>
+                  {isAlias ? "Suburb" : "Data area"}
+                </span>
               </li>
             );
           })}
 
-          {showAddressSection && (
-            <li className="border-t border-surface-border">
-              {geo.status === "idle" && (
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-ink hover:bg-surface-sunken"
-                  onClick={() => void runGeocode()}
-                >
-                  <Search className="h-4 w-4 shrink-0 text-ink-muted" aria-hidden />
-                  <span className="min-w-0 flex-1 truncate">
-                    Search “{trimmed}” as a full address
-                  </span>
-                  <span className="shrink-0 rounded-full bg-surface-sunken px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-ink-muted">
-                    Address
-                  </span>
-                </button>
-              )}
+          {addressActionVisible && (
+            <li
+              id={optId(areaResults.length)}
+              role="option"
+              aria-selected={active === areaResults.length}
+              onClick={() => void runGeocode()}
+              className={`flex w-full cursor-pointer items-center gap-2 border-t border-surface-border px-3 py-2 text-left text-sm text-ink hover:bg-surface-sunken ${
+                active === areaResults.length ? "bg-surface-sunken" : ""
+              }`}
+            >
+              <Search className="h-4 w-4 shrink-0 text-ink-muted" aria-hidden />
+              <span className="min-w-0 flex-1 truncate">
+                Search “{trimmed}” as a full address
+              </span>
+              <span className="shrink-0 rounded-full bg-surface-sunken px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-ink-muted">
+                Address
+              </span>
+            </li>
+          )}
 
-              {geo.status === "loading" && (
-                <p className="px-3 py-2 text-sm text-ink-muted">
-                  Searching addresses…
-                </p>
-              )}
+          {showAddressSection && geo.status === "loading" && (
+            <li role="presentation" className="border-t border-surface-border">
+              <p className="px-3 py-2 text-sm text-ink-muted">
+                Searching addresses…
+              </p>
+            </li>
+          )}
 
-              {geo.status === "error" && (
-                <p className="px-3 py-2 text-xs leading-snug text-ink-muted">
-                  Couldn’t reach address search. Try a suburb or data area, or
-                  click the map.
-                </p>
-              )}
+          {showAddressSection && geo.status === "error" && (
+            <li role="presentation" className="border-t border-surface-border">
+              <p className="px-3 py-2 text-xs leading-snug text-ink-muted">
+                Couldn’t reach address search. Try a suburb or data area, or
+                click the map.
+              </p>
+            </li>
+          )}
 
-              {geo.status === "done" && geo.results.length === 0 && (
-                <p className="px-3 py-2 text-xs leading-snug text-ink-muted">
-                  No Melbourne address matched “{trimmed}”. Try a suburb or click
-                  the map.
-                </p>
-              )}
+          {showAddressSection && geo.status === "done" && geo.results.length === 0 && (
+            <li role="presentation" className="border-t border-surface-border">
+              <p className="px-3 py-2 text-xs leading-snug text-ink-muted">
+                No Melbourne address matched “{trimmed}”. Try a suburb or click
+                the map.
+              </p>
+            </li>
+          )}
 
-              {geo.status === "done" && geo.results.length > 0 && (
-                <>
-                  {geo.results.map((r, i) => (
-                    <button
-                      key={`${r.lat},${r.lng},${i}`}
-                      type="button"
-                      title={r.label}
-                      className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-ink hover:bg-surface-sunken"
-                      onClick={() => pickGeo(r)}
-                    >
-                      <span className="flex min-w-0 flex-1 items-center gap-2">
-                        <MapPin className="h-4 w-4 shrink-0 text-accent" aria-hidden />
-                        <span className="min-w-0 flex-1 truncate">
-                          {r.shortLabel}
-                        </span>
-                      </span>
-                      <span className="shrink-0 rounded-full bg-accent/10 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-accent">
-                        Address
-                      </span>
-                    </button>
-                  ))}
-                  <p className="px-3 py-1.5 text-[10px] leading-snug text-ink-muted">
-                    {NOMINATIM_ATTRIBUTION}
-                  </p>
-                </>
-              )}
+          {geoOptions.map((r, i) => (
+            <li
+              key={`${r.lat},${r.lng},${i}`}
+              id={optId(geoOptionIdx(i))}
+              role="option"
+              aria-selected={active === geoOptionIdx(i)}
+              title={r.label}
+              onClick={() => pickGeo(r)}
+              className={`flex w-full cursor-pointer items-center justify-between gap-2 px-3 py-2 text-left text-sm text-ink hover:bg-surface-sunken ${
+                i === 0 ? "border-t border-surface-border" : ""
+              } ${active === geoOptionIdx(i) ? "bg-surface-sunken" : ""}`}
+            >
+              <span className="flex min-w-0 flex-1 items-center gap-2">
+                <MapPin className="h-4 w-4 shrink-0 text-accent" aria-hidden />
+                <span className="min-w-0 flex-1 truncate">
+                  {r.shortLabel}
+                </span>
+              </span>
+              <span className="shrink-0 rounded-full bg-accent/10 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-accent">
+                Address
+              </span>
+            </li>
+          ))}
+          {geoOptions.length > 0 && (
+            <li role="presentation">
+              <p className="px-3 py-1.5 text-[10px] leading-snug text-ink-muted">
+                {NOMINATIM_ATTRIBUTION}
+              </p>
             </li>
           )}
         </ul>

@@ -90,7 +90,7 @@ export function FeedbackButton({ context, className }: FeedbackButtonProps) {
       message: message.trim(),
       email: email.trim() || "(not provided)",
       context: ctx,
-      _subject: `Melbourne Liveability feedback - ${kind}`,
+      _subject: `Festra feedback - ${kind}`,
     };
 
     if (FORMSPREE_ID) {
@@ -121,7 +121,7 @@ export function FeedbackButton({ context, className }: FeedbackButtonProps) {
         }`
       );
       window.location.href = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(
-        "Melbourne Liveability feedback"
+        "Festra feedback"
       )}&body=${body}`;
       setStatus("mailto");
       return;

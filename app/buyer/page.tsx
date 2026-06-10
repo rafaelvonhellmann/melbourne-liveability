@@ -1,47 +1,53 @@
 import Link from "next/link";
-import { MapPin, ShieldAlert, Footprints, BarChart3 } from "lucide-react";
+import { MapPin, ShieldAlert, CheckCircle2 } from "lucide-react";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata = {
-  title: "Buyer location check - a second opinion before you offer · Melbourne",
+  title: "Festra - buyer location check: a second opinion before you offer",
   description:
     "Drop a pin on any Melbourne property and see the hidden liveability, hazard and planning context: nearby amenities on foot, risk indicators, community context, and what to verify before you inspect or bid. Built from open government data. Not advice.",
 };
 
-type CardItem = { label: string; soon?: boolean; note?: boolean };
-const CARDS: { icon: typeof ShieldAlert; title: string; items: CardItem[] }[] = [
+/**
+ * Hardcoded excerpt rows - show, don't tell. Styled to match the flattened
+ * finding rows in BuyerReportPanel (divider-separated, severity accent bar,
+ * per-finding provenance line) so the landing previews the real product.
+ */
+type ExcerptRow = {
+  icon: typeof ShieldAlert;
+  accent: string;
+  title: string;
+  summary: string;
+  verify?: string;
+  meta: string;
+};
+
+const EXCERPT_ROWS: ExcerptRow[] = [
   {
     icon: ShieldAlert,
-    title: "Red flags to verify",
-    items: [
-      { label: "Flood & bushfire planning-overlay exposure (where mapped)" },
-      { label: "Heritage Overlay area share (where mapped)" },
-      { label: "Crime & safety context (where available)" },
-      { label: "Data-confidence caveats on every finding" },
-      { label: "Zoning & permit/parcel-level overlays", soon: true },
-    ],
+    accent: "border-l-[#E31A1C]",
+    title: "Flood overlay covers part of this area",
+    summary:
+      "About 18% of this area sits in a Land Subject to Inundation Overlay (LSIO).",
+    verify:
+      "Ask council for a property-specific planning certificate before you offer.",
+    meta: "Confidence: medium · Geography: suburb / area · Source: Vicplan planning overlays (as at May 2026)",
   },
   {
-    icon: Footprints,
-    title: "What is actually nearby",
-    items: [
-      { label: "Public transport" },
-      { label: "Schools / education" },
-      { label: "Parks / open space" },
-      { label: "Health services" },
-      { label: "Shops / amenities" },
-      { label: "15-minute access caveat", note: true },
-    ],
+    icon: ShieldAlert,
+    accent: "border-l-accent",
+    title: "Busy road within 200 m",
+    summary:
+      "The nearest measured segment of Hoddle Street carries roughly 50,000 vehicles a day.",
+    verify: "Visit at peak hour and check bedroom-side glazing.",
+    meta: "Confidence: high · Geography: this point · Source: DTP traffic volumes (as at 2024)",
   },
   {
-    icon: BarChart3,
-    title: "Area context",
-    items: [
-      { label: "Liveability score and domains" },
-      { label: "Demographic / community context" },
-      { label: "Affordability / rental context where already available" },
-      { label: "School catchments, building approvals, zoning overlays", soon: true },
-    ],
+    icon: CheckCircle2,
+    accent: "border-l-[#117733]",
+    title: "Train station within a 10-minute walk",
+    summary: "Victoria Park Station is about 650 m from the pin (straight line).",
+    meta: "Confidence: high · Geography: this point · Source: OpenStreetMap (as at Jun 2026)",
   },
 ];
 
@@ -63,7 +69,7 @@ export default function BuyerLandingPage() {
           </h1>
           <p className="mt-4 max-w-2xl text-lg leading-relaxed text-ink-muted">
             Found a place on Domain or realestate.com.au? Before you inspect, bid, or make an
-            offer, <b className="text-ink">drop a pin</b> and get a sourced screening report —
+            offer, <b className="text-ink">drop a pin</b> and get a sourced screening report -
             nearby amenities, liveability trade-offs, hazard indicators, community context, and
             what to verify before you commit.
           </p>
@@ -93,60 +99,63 @@ export default function BuyerLandingPage() {
           </div>
         </section>
 
-        {/* What you get - three cards */}
+        {/* Report excerpt - real finding rows instead of feature-card marketing */}
         <section className="mt-12">
-          <h2 className="font-display text-xl font-medium text-ink">What you get</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-3">
-            {CARDS.map((c) => {
-              const Icon = c.icon;
-              return (
-                <div
-                  key={c.title}
-                  className="rounded-lg border border-surface-border bg-surface p-4 shadow-card"
-                >
-                  <Icon className="h-5 w-5 text-accent" aria-hidden />
-                  <h3 className="mt-2 font-display text-base font-medium text-ink">{c.title}</h3>
-                  <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-ink-muted">
-                    {c.items.map((it) => (
-                      <li key={it.label} className="flex items-start gap-1.5">
-                        <span className="mt-1.5 inline-block h-1 w-1 shrink-0 rounded-full bg-accent" aria-hidden />
-                        <span>
-                          {it.label}
-                          {it.soon && (
-                            <span className="ml-1.5 rounded border border-surface-border bg-surface-sunken px-1 py-0.5 text-[10px] font-medium uppercase tracking-wide text-ink-muted">
-                              Coming soon
-                            </span>
-                          )}
-                          {it.note && <span className="text-ink-muted"> (straight-line, not routing)</span>}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              );
-            })}
+          <h2 className="font-display text-xl font-medium text-ink">
+            What a report looks like
+          </h2>
+          <p className="mt-1 max-w-2xl text-sm text-ink-muted">
+            An excerpt from a Buyer Location Check. Every finding names its source, its
+            geographic precision and how confident we are - so you know exactly what to
+            verify and with whom.
+          </p>
+          <div className="mt-4 rounded-lg border border-surface-border bg-surface p-4 shadow-card">
+            <div className="flex items-baseline justify-between gap-2">
+              <h3 className="font-display text-sm font-semibold text-ink">
+                Findings - excerpt
+              </h3>
+              <span className="text-[10px] tracking-wide text-ink-muted">
+                example pin · Abbotsford
+              </span>
+            </div>
+            <div className="mt-2.5 divide-y divide-surface-border">
+              {EXCERPT_ROWS.map((row) => {
+                const Icon = row.icon;
+                return (
+                  <div
+                    key={row.title}
+                    className={`border-l-[3px] ${row.accent} py-2.5 pl-3 first:pt-0 last:pb-0`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-ink-muted" aria-hidden />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-ink">{row.title}</p>
+                        <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">
+                          {row.summary}
+                        </p>
+                        {row.verify && (
+                          <p className="mt-1 text-[11px] leading-snug text-ink-muted">
+                            <span className="font-medium text-ink">Verify:</span> {row.verify}
+                          </p>
+                        )}
+                        <p className="mt-1.5 text-[10px] tracking-wide text-ink-muted">
+                          {row.meta}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </section>
-
-        {/* How it works */}
-        <section className="mt-12">
-          <h2 className="font-display text-xl font-medium text-ink">How it works</h2>
-          <ol className="mt-4 grid gap-4 sm:grid-cols-4">
-            {[
-              ["1", "Drop a pin", "Click the exact property location on the map."],
-              ["2", "Review risks & trade-offs", "Amenities, risk indicators and context for that spot."],
-              ["3", "Print / share the report", "Save it as a PDF or send the link."],
-              ["4", "Verify before you offer", "Use the checklist with council, conveyancer and insurer."],
-            ].map(([n, t, b]) => (
-              <li key={n} className="rounded-lg border border-surface-border bg-surface p-4">
-                <span className="num inline-flex h-7 w-7 items-center justify-center rounded-full bg-accent text-sm font-semibold text-accent-ink">
-                  {n}
-                </span>
-                <h3 className="mt-2 text-sm font-medium text-ink">{t}</h3>
-                <p className="mt-0.5 text-sm text-ink-muted">{b}</p>
-              </li>
-            ))}
-          </ol>
+          <div className="mt-5">
+            <Link
+              href="/?buyer=1"
+              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-focus"
+            >
+              <MapPin className="h-4 w-4" aria-hidden /> Drop a pin to check a property →
+            </Link>
+          </div>
         </section>
 
         {/* What this is NOT */}

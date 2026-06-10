@@ -66,13 +66,12 @@ export function HomeBuyerCard({
       </ul>
 
       <p className="mt-3 text-[11px] leading-relaxed text-ink-muted">
-        <b className="text-ink">Caveat:</b> a context lens, not part of the locked
-        7-domain liveability score or its weights. It uses{" "}
+        <b className="text-ink">Caveat:</b> this blend uses{" "}
         <b className="text-ink">no dwelling sale-price data</b> - &ldquo;affordability&rdquo;
         here is the existing rent-to-income cost-pressure proxy, so this is not a
         price, value-for-money, or capital-growth estimate.
         {idx.measured < idx.total
-          ? ` Based on ${idx.measured}/${idx.total} factors held for this SA2.`
+          ? ` Based on ${idx.measured}/${idx.total} factors held for this area.`
           : ""}
       </p>
     </section>

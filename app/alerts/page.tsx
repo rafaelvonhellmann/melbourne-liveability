@@ -2,9 +2,9 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata = {
-  title: "Update alerts",
+  title: "Festra - update alerts",
   description:
-    "Email alerts are not available yet. The open data behind liveable.melbourne refreshes monthly; alerts will arrive together with accounts.",
+    "Email alerts are not available yet. The open data behind Festra refreshes monthly; alerts will arrive together with accounts.",
 };
 
 export default function AlertsPage() {

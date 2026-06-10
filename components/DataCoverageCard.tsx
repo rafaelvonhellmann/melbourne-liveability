@@ -42,9 +42,9 @@ export function DataCoverageCard({ place }: { place: Place }) {
 
       {c.nonResidential && (
         <p className="mt-2 rounded-lg border border-[#E9C8B4] bg-[#FBEEE6] px-3 py-2 text-xs leading-relaxed text-[#9A552F]">
-          Low / no resident data - this SA2 is below the population threshold and
-          is excluded from rankings and percentile baselines. Treat any values
-          here as indicative only.
+          Low / no resident data - this area is below the population threshold
+          and is excluded from rankings and percentile baselines. Treat any
+          values here as indicative only.
         </p>
       )}
 
@@ -77,9 +77,8 @@ export function DataCoverageCard({ place }: { place: Place }) {
       </ul>
 
       <p className="mt-3 text-[11px] leading-relaxed text-ink-muted">
-        &ldquo;Measured&rdquo; counts sub-indicators we hold for this SA2; the
-        note states the real aggregation level behind each domain. This describes
-        our data, not the place, and never changes the liveability rank.
+        &ldquo;Measured&rdquo; counts sub-indicators we hold for this area; the
+        note states the real aggregation level behind each domain.
       </p>
     </section>
   );

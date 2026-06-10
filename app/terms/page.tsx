@@ -2,9 +2,9 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata = {
-  title: "Terms of Use · Melbourne Liveability",
+  title: "Festra - terms of use",
   description:
-    "The terms under which you may use liveable.melbourne, including data accuracy, acceptable use, intellectual property, and liability.",
+    "The terms under which you may use Festra, including data accuracy, acceptable use, intellectual property, and liability.",
 };
 
 const UPDATED = "2026-06-01";
@@ -27,7 +27,7 @@ export default function TermsPage() {
 
         <Section title="1. Acceptance">
           <p>
-            By using liveable.melbourne (the &ldquo;Service&rdquo;) you agree to these Terms.
+            By using Festra (the &ldquo;Service&rdquo;) you agree to these Terms.
             If you do not agree, please do not use the Service.
           </p>
         </Section>

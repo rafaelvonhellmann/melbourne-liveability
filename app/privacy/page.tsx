@@ -2,9 +2,9 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata = {
-  title: "Privacy Policy · Melbourne Liveability",
+  title: "Festra - privacy policy",
   description:
-    "What data liveable.melbourne collects, how it is used, third parties involved, and your rights under the Australian Privacy Act.",
+    "What data Festra collects, how it is used, third parties involved, and your rights under the Australian Privacy Act.",
 };
 
 const UPDATED = "2026-06-10";
@@ -23,7 +23,7 @@ export default function PrivacyPage() {
 
         <Section title="1. Who we are">
           <p>
-            liveable.melbourne (&ldquo;we&rdquo;, &ldquo;us&rdquo;) is a free tool that
+            Festra (&ldquo;we&rdquo;, &ldquo;us&rdquo;) is a free tool that
             compiles Australian government open data into a liveability map of Greater
             Melbourne. This policy explains what personal information we handle and how,
             consistent with the <strong className="text-ink">Australian Privacy Act 1988

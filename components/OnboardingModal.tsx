@@ -100,10 +100,10 @@ export function OnboardingModal({ onPick }: Props) {
         className="w-full max-w-lg rounded-t-2xl border border-surface-border bg-surface p-6 shadow-card sm:rounded-2xl"
       >
         <h2 id="onboarding-title" className="font-display text-xl font-semibold text-ink">
-          Welcome to liveable<span className="text-accent">.</span>melbourne
+          Welcome to Festra
         </h2>
         <p className="mt-2 text-sm text-ink-muted">
-          A free map of Greater Melbourne built only from Australian government open data —
+          A free map of Greater Melbourne built only from Australian government open data -
           safety, affordability, transport, health, hazards, schools and more, suburb by
           suburb. Pick a starting lens (you can change it any time), or just explore.
         </p>

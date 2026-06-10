@@ -79,7 +79,7 @@ test.describe("profile", () => {
 test.describe("map", () => {
   test("map route loads and MapLibre paints a canvas", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("link", { name: /liveable/i }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /festra|liveable/i }).first()).toBeVisible();
     // The hydration question, settled empirically: does the MapLibre canvas appear?
     await expect(page.locator("canvas.maplibregl-canvas")).toBeVisible({ timeout: 25_000 });
   });

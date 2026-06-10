@@ -18,8 +18,7 @@ export function CyclabilityPanel({ cyclability }: { cyclability?: Cyclability })
         </span>
       </div>
       <p className="mt-1 text-xs text-ink-muted">
-        Mapped cycling infrastructure density in this SA2. Context only - never
-        part of the liveability score.
+        Mapped cycling infrastructure density in this area.
       </p>
 
       <dl className="num mt-3 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
@@ -44,7 +43,7 @@ export function CyclabilityPanel({ cyclability }: { cyclability?: Cyclability })
       <p className="mt-3 text-xs text-ink-muted">
         Method: total length of OpenStreetMap cycleways, on-road bike lanes
         (<code>cycleway=*</code>) and bicycle-designated paths whose midpoint
-        falls in this SA2 ({segments} segments), divided by SA2 land area. It is
+        falls in this area ({segments} segments), divided by land area. It is
         an <em>infrastructure-density</em> measure, not a safety, comfort or
         connectivity rating - separated paths and painted lanes are both counted.
         OSM cycle tagging is community-maintained and uneven. © OpenStreetMap

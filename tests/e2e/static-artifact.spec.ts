@@ -13,7 +13,7 @@ const BASE = "/melbourne-liveability";
 
 test("app shell renders under the base path", async ({ page, isMobile }) => {
   await page.goto(`${BASE}/`);
-  await expect(page.getByRole("link", { name: /liveable/i }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /festra|liveable/i }).first()).toBeVisible();
   if (isMobile) {
     // Below the sm breakpoint the header SearchBox is hidden; search lives
     // behind the bottom sheet's Search tab, so assert the tab instead.

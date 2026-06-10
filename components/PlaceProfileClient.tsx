@@ -119,7 +119,7 @@ export function PlaceProfileClient({
             href="/"
             className="font-display text-base font-medium tracking-tight text-ink"
           >
-            liveable<span className="text-accent">.</span>melbourne
+            Festra
           </Link>
         </div>
       </header>
@@ -508,7 +508,7 @@ function PersonaPanel({ place, persona }: { place: Place; persona: PersonaId }) 
 
       {present < weighted.length && (
         <p className="mt-2 text-xs text-ink-muted">
-          {weighted.length - present} weighted domain(s) have no data for this SA2
+          {weighted.length - present} weighted domain(s) have no data for this area
           and are excluded from the lens score (present weights are renormalised).
         </p>
       )}

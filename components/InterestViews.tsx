@@ -12,9 +12,8 @@ type InterestViewsProps = {
 };
 
 /**
- * The "Lens" picker - one unified set of one-tap starting points (formerly split
- * across Interest views + Persona presets). Each lens sets the default map layer
- * and the priority weights for how you're exploring.
+ * The "Lens" picker - one unified set of one-tap starting points. Each lens
+ * sets the default map layer and the priority weights for how you're exploring.
  */
 export function InterestViews({ active, onSelect }: InterestViewsProps) {
   const activeCfg = INTEREST_VIEWS[active];

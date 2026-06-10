@@ -150,9 +150,14 @@ function BenchmarkBand({
         <p className="mb-1.5 text-xs font-medium text-ink">{percentileVerdict(percentile)}</p>
       )}
       <div className="mb-1 flex items-baseline justify-between text-[11px] text-ink-muted">
-        <span>GM</span>
+        {/* Axis label stays compact; the title spells the abbreviation out. */}
+        <abbr title="Greater Melbourne" className="no-underline">
+          GM
+        </abbr>
         {percentile != null && (
-          <span className="num font-medium text-ink">{Math.round(percentile)}th pct</span>
+          <span className="num font-medium text-ink">
+            {Math.round(percentile)}th percentile
+          </span>
         )}
       </div>
       <div
@@ -172,7 +177,7 @@ function BenchmarkBand({
         <div
           className="absolute top-[-2px] h-[calc(100%+4px)] w-[3px] rounded bg-ink"
           style={{ left: `${medPos}%`, marginLeft: -1.5 }}
-          title={`GM median: ${formatMetricValue(median, def.format)}`}
+          title={`Greater Melbourne median: ${formatMetricValue(median, def.format)}`}
         />
         <div
           className="absolute top-[-3px] h-[calc(100%+6px)] w-1.5 rounded-full border border-white shadow-sm"
@@ -195,7 +200,8 @@ function BenchmarkBand({
           this area
         </span>
         <span className="inline-flex items-center gap-1">
-          <span className="inline-block h-3 w-[3px] rounded bg-ink" aria-hidden /> GM median
+          <span className="inline-block h-3 w-[3px] rounded bg-ink" aria-hidden /> Greater
+          Melbourne median
         </span>
         <span className="inline-flex items-center gap-1">
           <span className="inline-block h-2 w-3 rounded-sm bg-ink-muted/25" aria-hidden />{" "}

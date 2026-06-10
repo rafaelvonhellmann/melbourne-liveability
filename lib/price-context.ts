@@ -6,9 +6,10 @@
  * load-once cache, never throws. Context only - NOT a valuation, never scored.
  *
  * Resolution at the pin: try the area/suburb name first (SA2 names are usually
- * suburb names; compound "A - B" SA2 names are tried part by part, and
- * directional names are flipped: "East St Kilda" <-> "St Kilda East"), then
- * fall back to the nearest suburb centroid within a few km.
+ * suburb names; compound "A - B" SA2 names resolve every matching part and
+ * keep the one whose baked centroid is nearest the pin, and directional names
+ * are flipped: "East St Kilda" <-> "St Kilda East"), then fall back to the
+ * nearest suburb centroid within a few km.
  */
 import { withBase } from "./asset-path";
 import { normalizeSuburbName } from "./suburb-normalize";
@@ -50,23 +51,48 @@ export function directionalFlip(norm: string): string | null {
   return null;
 }
 
-/** Direct name lookup incl. compound "A - B" names + directional flips. */
+/**
+ * Direct name lookup incl. compound "A - B" names + directional flips.
+ * Compound SA2 names span two suburbs, so when a `pin` is supplied EVERY
+ * matching part is resolved and the entry whose baked centroid is nearest the
+ * pin wins - otherwise a pin in suburb B could get A's prices just because A
+ * is listed first. Single-part names are unchanged.
+ */
 export function lookupSuburb(
   file: PriceContextFile,
-  name: string
+  name: string,
+  pin?: LngLat
 ): SuburbPriceContext | null {
   if (!name) return null;
-  // Compound SA2 names ("Carlton North - Princes Hill"): try each part in order.
-  const parts = name.includes(" - ") ? [name, ...name.split(" - ")] : [name];
-  for (const part of parts) {
+  const resolvePart = (part: string): SuburbPriceContext | null => {
     const n = normalizeSuburbName(part);
-    if (!n) continue;
+    if (!n) return null;
     const direct = file.suburbs[n];
     if (direct) return direct;
     const flip = directionalFlip(n);
-    if (flip && file.suburbs[flip]) return file.suburbs[flip];
+    return flip ? (file.suburbs[flip] ?? null) : null;
+  };
+  // The whole (possibly compound) name first - an exact entry beats its parts.
+  const whole = resolvePart(name);
+  if (whole) return whole;
+  if (!name.includes(" - ")) return null;
+  const matches = name
+    .split(" - ")
+    .map(resolvePart)
+    .filter((e): e is SuburbPriceContext => e != null);
+  if (matches.length === 0) return null;
+  if (matches.length === 1 || !pin) return matches[0];
+  let best = matches[0];
+  let bestKm = Infinity;
+  for (const entry of matches) {
+    if (typeof entry.lng !== "number" || typeof entry.lat !== "number") continue;
+    const d = haversineKm(pin, [entry.lng, entry.lat]);
+    if (d < bestKm) {
+      bestKm = d;
+      best = entry;
+    }
   }
-  return null;
+  return best;
 }
 
 /** Nearest suburb (by baked centroid) within `maxKm` of the pin. */
@@ -118,7 +144,7 @@ export async function resolvePriceContext(
   const file = await loadPriceContext();
   if (!file) return null;
   if (areaName) {
-    const entry = lookupSuburb(file, areaName);
+    const entry = lookupSuburb(file, areaName, pin);
     if (entry) return { entry, matchedBy: "name", file };
   }
   const near = nearestSuburb(file, pin);

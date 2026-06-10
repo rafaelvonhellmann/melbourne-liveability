@@ -2,9 +2,9 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata = {
-  title: "It's free",
+  title: "Festra - it's free",
   description:
-    "liveable.melbourne is free to use - the full liveability map, every area profile, and the Buyer Location Check. No paid tiers, no ads, no behavioural profiling, no reselling of open data.",
+    "Festra is free to use - the full liveability map, every area profile, and the Buyer Location Check. No paid tiers, no ads, no behavioural profiling, no reselling of open data.",
 };
 
 export default function PricingPage() {

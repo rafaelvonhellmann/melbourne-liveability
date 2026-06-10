@@ -48,6 +48,19 @@ const FIXTURE: PriceContextFile = {
       lat: -37.87,
       houseMedianByYear: { "2023": 1500000 },
     },
+    // A compound "A - B" SA2 pair: both parts baked with centroids (F-H).
+    carlton: {
+      suburb: "Carlton",
+      lng: 144.967,
+      lat: -37.8,
+      houseMedianByYear: { "2023": 1100000 },
+    },
+    parkville: {
+      suburb: "Parkville",
+      lng: 144.951,
+      lat: -37.79,
+      houseMedianByYear: { "2023": 1400000 },
+    },
   },
 };
 
@@ -79,6 +92,29 @@ describe("lookupSuburb", () => {
   it("returns null for unknown or empty names", () => {
     expect(lookupSuburb(FIXTURE, "Atlantis")).toBeNull();
     expect(lookupSuburb(FIXTURE, "")).toBeNull();
+  });
+
+  it("compound names with a pin pick the part whose centroid is nearest", () => {
+    // Pin at Parkville's centroid: Carlton is listed first but must not win.
+    expect(lookupSuburb(FIXTURE, "Carlton - Parkville", [144.951, -37.79])?.suburb).toBe(
+      "Parkville"
+    );
+    // Pin at Carlton's centroid: order-independent, the near part wins again.
+    expect(lookupSuburb(FIXTURE, "Parkville - Carlton", [144.967, -37.8])?.suburb).toBe(
+      "Carlton"
+    );
+  });
+
+  it("compound names without a pin keep the first matching part", () => {
+    expect(lookupSuburb(FIXTURE, "Carlton - Parkville")?.suburb).toBe("Carlton");
+    // Only one part matches: the pin cannot redirect to a non-entry.
+    expect(lookupSuburb(FIXTURE, "Carlton - Atlantis", [144.951, -37.79])?.suburb).toBe(
+      "Carlton"
+    );
+  });
+
+  it("single-part names are unchanged by the pin", () => {
+    expect(lookupSuburb(FIXTURE, "Parkville", [144.967, -37.8])?.suburb).toBe("Parkville");
   });
 });
 
@@ -122,6 +158,19 @@ describe("loadPriceContext / resolvePriceContext", () => {
     expect(nearest?.matchedBy).toBe("nearest");
     expect(nearest?.entry.suburb).toBe("St Kilda East");
     expect(nearest?.distanceKm).toBeDefined();
+  });
+
+  it("threads the pin through compound-name resolution (matchedBy stays 'name')", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => FIXTURE,
+      } as unknown as Response)
+    );
+    const r = await resolvePriceContext([144.951, -37.79], "Carlton - Parkville");
+    expect(r?.matchedBy).toBe("name");
+    expect(r?.entry.suburb).toBe("Parkville");
   });
 });
 

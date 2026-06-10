@@ -10,7 +10,7 @@ import {
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata = {
-  title: "Methodology & data reference · Melbourne Liveability",
+  title: "Festra - methodology & data reference",
   description:
     "Every dataset we use, where it comes from, its licence and vintage, and exactly how it is joined to an SA2 - plus scoring, crosswalk, and caveats.",
 };
@@ -262,7 +262,7 @@ export default function MethodologyPage() {
         <p>
           Missing data is never imputed: a missing indicator gets a null percentile, is
           excluded from the weighted total, and its weight is re-distributed across the
-          present scored domains. The composite and persona scores are{" "}
+          present scored domains. The composite and lens-weighted scores are{" "}
           <strong className="text-ink">optional lenses</strong>, never a definitive ranking.
         </p>
       </Section>

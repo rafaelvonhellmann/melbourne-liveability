@@ -2,9 +2,9 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const metadata = {
-  title: "Disclaimer · Melbourne Liveability",
+  title: "Festra - disclaimer",
   description:
-    "liveable.melbourne is for general information only - not relocation, financial, or legal advice. Data is approximate and lagged.",
+    "Festra is for general information only - not relocation, financial, or legal advice. Data is approximate and lagged.",
 };
 
 export default function DisclaimerPage() {
@@ -33,7 +33,7 @@ export default function DisclaimerPage() {
 
         <h2 className="mt-6 font-display text-lg font-medium text-ink">Privacy</h2>
         <p className="mt-2 text-sm leading-relaxed">
-          Your persona, weights, shortlist, and recently viewed areas are stored in your
+          Your lens, weights, shortlist, and recently viewed areas are stored in your
           browser only (localStorage) unless you share a link - manage or clear them on the{" "}
           <Link href="/account" className="text-accent hover:underline">
             Your data

@@ -11,7 +11,7 @@ const SITE =
   "https://rafaelvonhellmann.github.io/melbourne-liveability";
 
 export const metadata = {
-  title: "Sample buyer location check (moved) · Melbourne Liveability",
+  title: "Festra - sample buyer location check (moved)",
   robots: { index: false },
   alternates: { canonical: `${SITE}/buyer/sample-report` },
 };

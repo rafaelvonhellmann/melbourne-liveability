@@ -4,9 +4,9 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { FeedbackButton } from "@/components/FeedbackButton";
 
 export const metadata = {
-  title: "About & trust - who built liveable.melbourne, and how it stays independent",
+  title: "Festra - about & trust: who builds it, and how it stays independent",
   description:
-    "Who builds liveable.melbourne, why it exists, how it stays independent, how it will (and won't) make money, what open data it uses, how confidence is calculated, and how to report a data issue.",
+    "Who builds Festra, why it exists, how it stays independent, how it will (and won't) make money, what open data it uses, how confidence is calculated, and how to report a data issue.",
 };
 
 const PILLARS = [
@@ -41,7 +41,7 @@ export default function AboutPage() {
         </Link>
 
         <h1 className="mt-6 font-display text-3xl font-semibold leading-tight tracking-tight text-ink">
-          About liveable.melbourne
+          About Festra
         </h1>
         <p className="mt-3 text-lg leading-relaxed text-ink-muted">
           Independent, open-data location intelligence for Greater Melbourne - built so that
@@ -78,7 +78,7 @@ export default function AboutPage() {
         <section className="mt-8">
           <h2 className="font-display text-xl font-medium text-ink">How it stays free</h2>
           <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-            liveable.melbourne is <b className="text-ink">free</b> - the map, every area profile,
+            Festra is <b className="text-ink">free</b> - the map, every area profile,
             and the Buyer Location Check. No ads, no behavioural profiling, no agent payments, and
             we never resell the open data. If a paid convenience is ever added later, the map and
             all the underlying facts will stay free.
