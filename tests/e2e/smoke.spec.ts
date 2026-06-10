@@ -84,12 +84,19 @@ test.describe("map", () => {
     await expect(page.locator("canvas.maplibregl-canvas")).toBeVisible({ timeout: 25_000 });
   });
 
-  test("suburb search returns results", async ({ page }) => {
+  test("suburb search returns results", async ({ page, isMobile }) => {
     await page.goto("/");
-    const search = page.getByPlaceholder(/search/i).first();
+    // Below the sm breakpoint the top-bar search is hidden; search lives in
+    // the bottom sheet's Search tab instead.
+    if (isMobile) {
+      await page.getByRole("tab", { name: "Search" }).click();
+    }
+    const search = page.getByPlaceholder(/search/i).filter({ visible: true }).first();
     await search.fill("Carlton");
     // search results render as a listbox / options
-    await expect(page.getByText(/Carlton/i).first()).toBeVisible({ timeout: 10_000 });
+    await expect(
+      page.getByText(/Carlton/i).filter({ visible: true }).first()
+    ).toBeVisible({ timeout: 10_000 });
   });
 
   test("buyer report restores from a shared pin URL", async ({ page }) => {
@@ -97,8 +104,10 @@ test.describe("map", () => {
     // exercises the buyer report panel (DOM) rather than the rAF-throttled GL
     // canvas. A CBD pin always yields positives + things-to-verify.
     await page.goto("/?buyer=1&lat=-37.8136&lng=144.9631");
+    // The buyer panel renders twice (desktop sidebar + mobile sheet); one copy
+    // is display:none per viewport, so filter to the visible one.
     await expect(
-      page.getByText(/positive signal|to verify/i).first()
+      page.getByText(/positive signal|to verify/i).filter({ visible: true }).first()
     ).toBeVisible({ timeout: 20_000 });
   });
 

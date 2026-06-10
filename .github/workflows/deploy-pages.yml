@@ -40,9 +40,33 @@ jobs:
           # Project site is served from https://<user>.github.io/melbourne-liveability/
           # so runtime asset URLs (/data/*.json) must be prefixed with the repo name.
           NEXT_PUBLIC_BASE_PATH: /melbourne-liveability
+          # Public-by-design NEXT_PUBLIC values - set them as repository
+          # Variables (Settings -> Secrets and variables -> Actions -> Variables),
+          # not secrets. While unset they stay empty, which keeps current
+          # behaviour: no analytics script, mailto feedback fallback.
+          NEXT_PUBLIC_ANALYTICS_DOMAIN: ${{ vars.NEXT_PUBLIC_ANALYTICS_DOMAIN }}
+          NEXT_PUBLIC_FORMSPREE_FEEDBACK_ID: ${{ vars.NEXT_PUBLIC_FORMSPREE_FEEDBACK_ID }}
+          NEXT_PUBLIC_FEEDBACK_EMAIL: ${{ vars.NEXT_PUBLIC_FEEDBACK_EMAIL }}
         run: npm run build
       - name: Disable Jekyll (serve _next/* verbatim)
         run: touch out/.nojekyll
+      # Smoke-test the BUILT artifact under the GitHub Pages sub-path before it
+      # is uploaded, so a basePath regression (assets, data fetches, links)
+      # fails CI instead of shipping. Nesting out/ inside _site/ reproduces the
+      # /melbourne-liveability/ prefix; naive `serve out` would 404 every URL.
+      - name: Install Playwright browser (static smoke)
+        run: npx playwright install --with-deps chromium
+      - name: Serve artifact under the sub-path
+        run: |
+          mkdir _site
+          cp -r out _site/melbourne-liveability
+          npx --yes serve@14 _site -l 4173 &
+          curl -fsS --retry 30 --retry-delay 2 --retry-connrefused \
+            http://localhost:4173/melbourne-liveability/ > /dev/null
+      - name: Static-artifact e2e (Playwright)
+        env:
+          STATIC_E2E: "1"
+        run: npx playwright test
       - uses: actions/upload-pages-artifact@v5
         with:
           path: out
