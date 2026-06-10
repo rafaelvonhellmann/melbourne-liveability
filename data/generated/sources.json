@@ -480,5 +480,32 @@
     "fetchedAt": "2026-06-08",
     "derived": true,
     "sha256": ""
+  },
+  {
+    "id": "vgv-median-house-suburb",
+    "name": "Valuer-General Victoria - Property Sales Report, median house price by suburb (annual time series)",
+    "url": "https://discover.data.vic.gov.au/dataset/victorian-property-sales-report-median-house-by-suburb-time-series",
+    "licence": "CC BY 4.0",
+    "period": "2014-2023",
+    "fetchedAt": "2026-06-10",
+    "sha256": "af6210f55fb3150f311edf28490ad6fb54fa0935bcee3727320e83eb7317d52e"
+  },
+  {
+    "id": "vgv-median-unit-suburb",
+    "name": "Valuer-General Victoria - Property Sales Report, median unit price by suburb (annual time series)",
+    "url": "https://discover.data.vic.gov.au/dataset/victorian-property-sales-report-median-unit-by-suburb-time-series",
+    "licence": "CC BY 4.0",
+    "period": "2015-2024",
+    "fetchedAt": "2026-06-10",
+    "sha256": "6e5dcb87b625ccba3aeef7782bb8e34832b53ab948ee076b629fe41906c39cf2"
+  },
+  {
+    "id": "dffh-rental-report-suburb",
+    "name": "Homes Victoria / DFFH - Rental Report, moving annual median rent by suburb (quarterly)",
+    "url": "https://discover.data.vic.gov.au/dataset/rental-report-quarterly-moving-annual-rents-by-suburb",
+    "licence": "CC BY 4.0",
+    "period": "year to Sep 2025",
+    "fetchedAt": "2026-06-10",
+    "sha256": "817c5b8ea7985651af84519149276ef0281f8b6cfa4bcada39ea8aa87ed2952e"
   }
 ]
