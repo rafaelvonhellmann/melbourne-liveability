@@ -8,6 +8,32 @@ type ArcGisQueryParams = {
   outFields?: string;
 };
 
+// geo.abs.gov.au rate-scores datacenter IPs: a burst of requests (e.g. two CI
+// runs in close succession) draws transient 403s that clear within minutes.
+// Retry those patiently before failing loud (the refresh has a 90-min budget).
+const RETRYABLE = new Set([403, 429, 500, 502, 503, 504]);
+const BACKOFF_MS = [30_000, 90_000, 180_000];
+
+async function fetchWithBackoff(
+  url: string,
+  layerPath: string,
+  offset: number
+): Promise<Response> {
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url);
+    if (res.ok) return res;
+    await res.body?.cancel().catch(() => {});
+    if (attempt >= BACKOFF_MS.length || !RETRYABLE.has(res.status)) {
+      throw new Error(`ABS API ${res.status}: ${layerPath} offset=${offset}`);
+    }
+    const wait = BACKOFF_MS[attempt];
+    console.warn(
+      `ABS API ${res.status} on ${layerPath} offset=${offset} - retrying in ${wait / 1000}s (attempt ${attempt + 1}/${BACKOFF_MS.length})`
+    );
+    await new Promise((r) => setTimeout(r, wait));
+  }
+}
+
 /** Paginated GeoJSON fetch from ABS ArcGIS FeatureServer (max 2000 per page). */
 export async function fetchAbsGeoJson(
   params: ArcGisQueryParams
@@ -27,10 +53,7 @@ export async function fetchAbsGeoJson(
     url.searchParams.set("resultOffset", String(offset));
     url.searchParams.set("resultRecordCount", String(pageSize));
 
-    const res = await fetch(url.toString());
-    if (!res.ok) {
-      throw new Error(`ABS API ${res.status}: ${layerPath} offset=${offset}`);
-    }
+    const res = await fetchWithBackoff(url.toString(), layerPath, offset);
     const data = (await res.json()) as FeatureCollection & {
       properties?: { exceededTransferLimit?: boolean };
     };
