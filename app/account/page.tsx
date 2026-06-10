@@ -10,7 +10,6 @@ import {
   DEFAULT_PREFS,
   type UserPrefs,
 } from "@/lib/user-prefs";
-import { PERSONA_PRESETS } from "@/lib/personas";
 import { INTEREST_VIEWS } from "@/lib/interest-views";
 import { V1_SCORED_DOMAINS, getDomain } from "@/lib/domains";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -29,9 +28,6 @@ export default function AccountPage() {
 
   const lensLabel = prefs.interestView
     ? INTEREST_VIEWS[prefs.interestView]?.label
-    : null;
-  const personaLabel = prefs.personaId
-    ? PERSONA_PRESETS[prefs.personaId]?.label
     : null;
 
   function exportData() {
@@ -54,10 +50,8 @@ export default function AccountPage() {
 
   const hasAny =
     !!lensLabel ||
-    !!personaLabel ||
     prefs.shortlist.length > 0 ||
     prefs.recent.length > 0 ||
-    !!prefs.alertEmail ||
     !!prefs.weights;
 
   return (
@@ -105,9 +99,8 @@ export default function AccountPage() {
           </p>
         ) : (
           <div className="mt-6 space-y-4">
-            <Card title="Lens & persona">
+            <Card title="Lens">
               <Row k="Interest lens" v={lensLabel ?? "Not set (Balanced)"} />
-              <Row k="Persona" v={personaLabel ?? "Not set"} />
             </Card>
 
             <Card title="Priority weights">
@@ -161,20 +154,6 @@ export default function AccountPage() {
               ) : (
                 <p className="text-sm text-ink-muted">Nothing viewed yet.</p>
               )}
-            </Card>
-
-            <Card title="Alerts">
-              <Row
-                k="Alert email"
-                v={prefs.alertEmail ?? "Not registered"}
-              />
-              <p className="mt-1 text-xs text-ink-muted">
-                Manage on the{" "}
-                <Link href="/alerts" className="text-accent hover:underline">
-                  alerts
-                </Link>{" "}
-                page.
-              </p>
             </Card>
           </div>
         )}

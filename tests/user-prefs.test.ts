@@ -5,6 +5,7 @@ import {
   isCheckSaved,
   savedCheckId,
   loadUserPrefs,
+  loadBuyerProfile,
 } from "../lib/user-prefs";
 
 function mockStorage() {
@@ -71,5 +72,42 @@ describe("saved checks", () => {
     const { savedChecks } = loadUserPrefs();
     expect(savedChecks).toHaveLength(1);
     expect(savedChecks[0].id).toBe("ok");
+  });
+});
+
+describe("buyer profile back-compat", () => {
+  it("returns null when no profile is saved", () => {
+    expect(loadBuyerProfile()).toBeNull();
+  });
+
+  it("coerces a legacy agent profile to buyer and strips removed keys", () => {
+    localStorage.setItem(
+      "mlv-user-prefs-v1",
+      JSON.stringify({
+        version: 1,
+        shortlist: [],
+        recent: [],
+        savedChecks: [],
+        buyerProfile: {
+          mode: "agent",
+          intent: "buy",
+          car: "no_car",
+          quiet: "high",
+          schools: "high",
+          safety: "medium",
+          walkability: "low",
+          dealBreakers: ["flood"],
+        },
+      })
+    );
+    const p = loadBuyerProfile();
+    expect(p?.mode).toBe("buyer");
+    expect(p?.intent).toBe("buy");
+    expect(p?.car).toBe("no_car");
+    expect(p?.quiet).toBe("high");
+    expect(p?.dealBreakers).toEqual(["flood"]);
+    expect(p && "schools" in p).toBe(false);
+    expect(p && "safety" in p).toBe(false);
+    expect(p && "walkability" in p).toBe(false);
   });
 });

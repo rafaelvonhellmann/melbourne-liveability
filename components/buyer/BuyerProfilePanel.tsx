@@ -5,7 +5,6 @@ import { MapPin, Plus, Search, Trash2, X } from "lucide-react";
 import {
   DEAL_BREAKERS,
   type BuyerProfile,
-  type ProfileMode,
   type BuyerIntent,
   type HouseholdType,
   type CarAccess,
@@ -35,9 +34,6 @@ const CARS: { id: CarAccess; label: string }[] = [
 const PRIORITIES: { key: keyof BuyerProfile; label: string }[] = [
   { key: "transport", label: "Public transport" },
   { key: "quiet", label: "Quiet" },
-  { key: "schools", label: "Schools" },
-  { key: "safety", label: "Safety" },
-  { key: "walkability", label: "Walkability" },
 ];
 const IMPORTANCE: Importance[] = ["low", "medium", "high"];
 
@@ -49,12 +45,15 @@ type Props = {
 };
 
 /**
- * Lightweight personal-preference form (buyer or agent). Local-only - feeds the
- * report's "Fit for your life" + deal-breaker flags via lib/buyer-fit. Never
+ * Lightweight personal-preference form. Local-only - feeds the report's
+ * "Fit for your life" + deal-breaker flags via lib/buyer-fit. Never
  * changes the score.
  */
 export function BuyerProfilePanel({ initial, onSave, onClear, onClose }: Props) {
-  const [p, setP] = useState<BuyerProfile>(initial ?? { mode: "buyer" });
+  // Legacy saved profiles may carry the retired "agent" mode - coerce to buyer.
+  const [p, setP] = useState<BuyerProfile>(
+    initial ? { ...initial, mode: "buyer" } : { mode: "buyer" }
+  );
   const set = (patch: Partial<BuyerProfile>) => setP((prev) => ({ ...prev, ...patch }));
   const toggleDB = (id: DealBreakerId) =>
     setP((prev) => {
@@ -76,11 +75,11 @@ export function BuyerProfilePanel({ initial, onSave, onClear, onClose }: Props) 
       <div className="flex items-start justify-between gap-2">
         <div>
           <h3 className="font-display text-base font-medium text-ink">
-            {p.mode === "agent" ? "Client preferences" : "Your preferences"}
+            Your preferences
           </h3>
           <p className="mt-0.5 text-[11px] text-ink-muted">
-            Re-frames the report for {p.mode === "agent" ? "your client" : "you"} - never changes
-            the score. Saved only in this browser.
+            Re-frames the report for you - never changes the score. Saved only
+            in this browser.
           </p>
         </div>
         <button
@@ -94,16 +93,6 @@ export function BuyerProfilePanel({ initial, onSave, onClear, onClose }: Props) 
       </div>
 
       <div className="mt-3 space-y-3 text-sm">
-        <Field label="I'm using this as">
-          <div className="flex gap-1.5">
-            {(["buyer", "agent"] as ProfileMode[]).map((m) => (
-              <button key={m} type="button" className={seg(p.mode === m)} onClick={() => set({ mode: m })}>
-                {m === "buyer" ? "A buyer / renter" : "An agent (for a client)"}
-              </button>
-            ))}
-          </div>
-        </Field>
-
         <Field label="Looking to">
           <div className="flex gap-1.5">
             {(["buy", "rent"] as BuyerIntent[]).map((i) => (

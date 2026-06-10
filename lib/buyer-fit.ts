@@ -1,8 +1,8 @@
 /**
  * Personal "fit for your life" + deal-breaker evaluation (context only, never
- * scored). A buyer (or an agent acting for a client) records lightweight, local
- * preferences; we re-FRAME the sourced facts against them - we never change the
- * locked composite score, and a deal-breaker is a prompt to VERIFY, not a verdict.
+ * scored). A buyer records lightweight, local preferences; we re-FRAME the
+ * sourced facts against them - we never change the locked composite score,
+ * and a deal-breaker is a prompt to VERIFY, not a verdict.
  *
  * Pure + deterministic: callers extract `FitSignals` from a place + its buyer
  * report and pass them in, so this module stays testable and free of data wiring.
@@ -10,6 +10,7 @@
 
 import type { BuyerAnchor } from "./anchors";
 
+/** "agent" is retired; kept in the union so old saved profiles still type-check. Loaders coerce to "buyer". */
 export type ProfileMode = "buyer" | "agent";
 export type BuyerIntent = "buy" | "rent";
 export type HouseholdType = "solo" | "couple" | "family" | "share" | "retiree";
@@ -26,7 +27,7 @@ export type DealBreakerId =
   | "poor_transport";
 
 export type BuyerProfile = {
-  /** "buyer" (default) or the agent-acting-for-a-client variant (reframes copy). */
+  /** Always "buyer" in the UI; legacy saved "agent" profiles are coerced on load. */
   mode: ProfileMode;
   intent?: BuyerIntent;
   household?: HouseholdType;
@@ -35,11 +36,8 @@ export type BuyerProfile = {
   commuteLabel?: string;
   /** Real-life anchors (work / school / family) to measure each property against. */
   anchors?: BuyerAnchor[];
-  schools?: Importance;
   quiet?: Importance;
-  safety?: Importance;
   transport?: Importance;
-  walkability?: Importance;
   dealBreakers?: DealBreakerId[];
   updatedAt?: string;
 };
@@ -85,8 +83,6 @@ export type FitResult = {
   hits: DealBreakerHit[];
   /** Plain-language "fit" notes for the preferences the user marked as mattering. */
   notes: string[];
-  /** Which profile produced this (drives buyer vs client-facing copy). */
-  mode?: ProfileMode;
 };
 
 function pct(n: number | null | undefined): string {
@@ -105,7 +101,6 @@ export function evaluateFit(
   const hits: DealBreakerHit[] = [];
   const notes: string[] = [];
   if (!profile) return { hits, notes };
-  const mode = profile.mode;
 
   const wants = new Set(profile.dealBreakers ?? []);
   const material = (v: number | null | undefined, threshold: number) =>
@@ -177,5 +172,5 @@ export function evaluateFit(
     );
   }
 
-  return { hits, notes, mode };
+  return { hits, notes };
 }

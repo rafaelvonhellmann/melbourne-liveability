@@ -1,16 +1,32 @@
-// Legacy route - the canonical sample lives at /buyer/sample-report. Both render
-// the same static sample report (shared implementation) so existing links keep
-// working without a runtime redirect (not available under static export).
-export { default } from "@/components/buyer/SampleReportPage";
+import Link from "next/link";
+import { RedirectClient } from "./redirect-client";
+
+// Legacy duplicate of /buyer/sample-report, retired in favour of the one
+// canonical URL. A server shell keeps the static export crawlable (metadata +
+// a visible link instead of a blank page) while the client child redirects
+// old links / bookmarks instantly, like the retired /welcome route.
 
 const SITE =
   process.env.NEXT_PUBLIC_SITE_URL ??
   "https://rafaelvonhellmann.github.io/melbourne-liveability";
 
 export const metadata = {
-  title: "Sample buyer location check · Melbourne Liveability",
-  description:
-    "A sample second-opinion location report for a Melbourne suburb: amenities on foot, liveability, hazard and crime risk indicators, community context, sources and what to verify before you offer. Sample only - not a report for a specific property.",
-  // Legacy duplicate of /buyer/sample-report - point search engines at the one canonical URL.
+  title: "Sample buyer location check (moved) · Melbourne Liveability",
+  robots: { index: false },
   alternates: { canonical: `${SITE}/buyer/sample-report` },
 };
+
+export default function BuyerSamplePage() {
+  return (
+    <main className="mx-auto w-full max-w-3xl px-4 py-12 text-sm text-ink">
+      <p>
+        This page moved to{" "}
+        <Link href="/buyer/sample-report" className="text-accent hover:underline">
+          /buyer/sample-report
+        </Link>
+        .
+      </p>
+      <RedirectClient />
+    </main>
+  );
+}

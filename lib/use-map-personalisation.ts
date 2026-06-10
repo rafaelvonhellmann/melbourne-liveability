@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { DomainId, ScoreWeights } from "./types";
 import { INTEREST_VIEWS, type InterestViewId } from "./interest-views";
-import { personaWeights, type PersonaId } from "./personas";
 import {
   getDefaultWeights,
   mergeWeights,
@@ -67,11 +66,10 @@ export function useMapPersonalisation() {
       : prefs.weights
         ? mergeWeights(prefs.weights)
         : getDefaultWeights();
-    if (url.persona) w = personaWeights(url.persona);
 
     const viewId = url.view ?? prefs.interestView ?? "general";
     const view = INTEREST_VIEWS[viewId];
-    if (view.weights && !url.weights && !url.persona) w = view.weights;
+    if (view.weights && !url.weights) w = view.weights;
 
     setWeights(w);
     setShortlist(url.shortlist.length > 0 ? url.shortlist : prefs.shortlist);
@@ -178,7 +176,6 @@ export function useMapPersonalisation() {
       weights: ScoreWeights;
       shortlist: string[];
       interestView: InterestViewId;
-      persona?: PersonaId | null;
     }) => {
       const merged = mergeWeights(next.weights);
       router.replace(
@@ -186,7 +183,6 @@ export function useMapPersonalisation() {
           weights: merged,
           shortlist: next.shortlist,
           view: next.interestView,
-          persona: next.persona ?? null,
         }),
         { scroll: false }
       );
@@ -194,26 +190,16 @@ export function useMapPersonalisation() {
         weights: merged,
         shortlist: next.shortlist,
         interestView: next.interestView,
-        personaId: next.persona ?? null,
       });
     },
     [router]
   );
 
   const setWeightsAndSync = useCallback(
-    (w: ScoreWeights, persona?: PersonaId | null) => {
+    (w: ScoreWeights) => {
       const merged = mergeWeights(w);
       setWeights(merged);
-      replaceUrl({ weights: merged, shortlist, interestView, persona });
-    },
-    [replaceUrl, shortlist, interestView]
-  );
-
-  const selectPersona = useCallback(
-    (id: PersonaId) => {
-      const w = personaWeights(id);
-      setWeights(w);
-      replaceUrl({ weights: w, shortlist, interestView, persona: id });
+      replaceUrl({ weights: merged, shortlist, interestView });
     },
     [replaceUrl, shortlist, interestView]
   );
@@ -226,7 +212,7 @@ export function useMapPersonalisation() {
       setActiveDomain(view.defaultDomain);
       setConfidenceMode(view.confidenceMode);
       setWeights(w);
-      replaceUrl({ weights: w, shortlist, interestView: id, persona: null });
+      replaceUrl({ weights: w, shortlist, interestView: id });
     },
     [replaceUrl, shortlist, weights]
   );
@@ -234,14 +220,8 @@ export function useMapPersonalisation() {
   const updateShortlist = useCallback((slugs: string[]) => {
     setShortlist(slugs);
     persistPrefs({ shortlist: slugs });
-    const url = parseMapUrlState(searchParams.toString());
-    replaceUrl({
-      weights,
-      shortlist: slugs,
-      interestView,
-      persona: url.persona,
-    });
-  }, [replaceUrl, searchParams, weights, interestView]);
+    replaceUrl({ weights, shortlist: slugs, interestView });
+  }, [replaceUrl, weights, interestView]);
 
   const getShareUrl = useCallback(
     () =>
@@ -292,11 +272,10 @@ export function useMapPersonalisation() {
     saveCheck,
     removeCheck,
     setWeightsAndSync,
-    selectPersona,
     selectInterestView,
     updateShortlist,
     getShareUrl,
     noteRecentView,
-    resetWeights: () => setWeightsAndSync(getDefaultWeights(), null),
+    resetWeights: () => setWeightsAndSync(getDefaultWeights()),
   };
 }

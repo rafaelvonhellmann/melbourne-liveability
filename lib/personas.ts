@@ -1,3 +1,8 @@
+// LEGACY: the persona-preset surface (map URL ?persona=, account page) is
+// retired - old ?persona= links now resolve via legacyPersonaToView in
+// lib/interest-views.ts. Sole remaining consumer is the place-profile persona
+// tabs (components/PlaceProfileClient.tsx); delete this file when those fold
+// into the lens set.
 import type { ScoreWeights } from "./types";
 import { normalizeWeights } from "./weights";
 

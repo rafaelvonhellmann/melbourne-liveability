@@ -1,5 +1,4 @@
 import type { ScoreWeights } from "./types";
-import type { PersonaId } from "./personas";
 import type { InterestViewId } from "./interest-views";
 import type { BuyerProfile } from "./buyer-fit";
 
@@ -41,7 +40,8 @@ export type SavedCheck = {
 export type UserPrefs = {
   version: 1;
   weights?: ScoreWeights;
-  personaId?: PersonaId | null;
+  /** @deprecated Retired persona-preset id; kept so old stored prefs still parse. */
+  personaId?: string | null;
   interestView?: InterestViewId;
   shortlist: string[];
   recent: RecentPlace[];
@@ -49,7 +49,7 @@ export type UserPrefs = {
   alertEmail?: string;
   /** Use the colourblind-safe (RdYlBu) score ramp on the map. Display-only. */
   colorblindRamp?: boolean;
-  /** Lightweight personal "fit for your life" profile (buyer or agent). Local-only. */
+  /** Lightweight personal "fit for your life" profile. Local-only. */
   buyerProfile?: BuyerProfile;
 };
 
@@ -204,7 +204,23 @@ export function isCheckSaved(lat: number, lng: number): boolean {
 
 /** The saved personal "fit" profile, or null if none set. Device-local. */
 export function loadBuyerProfile(): BuyerProfile | null {
-  return loadUserPrefs().buyerProfile ?? null;
+  const saved = loadUserPrefs().buyerProfile;
+  if (!saved) return null;
+  // Back-compat: old saved profiles may carry the retired "agent" mode or the
+  // removed schools/safety/walkability importance keys - coerce/strip, never crash.
+  const p = saved as BuyerProfile & Record<string, unknown>;
+  return {
+    mode: "buyer",
+    intent: p.intent,
+    household: p.household,
+    car: p.car,
+    commuteLabel: p.commuteLabel,
+    anchors: p.anchors,
+    quiet: p.quiet,
+    transport: p.transport,
+    dealBreakers: p.dealBreakers,
+    updatedAt: p.updatedAt,
+  };
 }
 
 /** Save (replace) the personal profile, stamping updatedAt. */

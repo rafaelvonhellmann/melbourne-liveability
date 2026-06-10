@@ -1,14 +1,16 @@
 import type { DomainId, ScoreWeights } from "./types";
-import type { PersonaId } from "./personas";
 import { V1_SCORED_DOMAINS } from "./domains";
 import { parseWeightsFromSearchParams, serializeWeights } from "./weights";
-import { parseInterestView, type InterestViewId } from "./interest-views";
+import {
+  parseInterestView,
+  legacyPersonaToView,
+  type InterestViewId,
+} from "./interest-views";
 import { BASE_PATH } from "./asset-path";
 
 export type MapUrlState = {
   weights: ScoreWeights | null;
   shortlist: string[];
-  persona: PersonaId | null;
   view: InterestViewId | null;
   /** Optional one-shot deep-link to activate a specific choropleth domain. */
   layer: DomainId | null;
@@ -80,16 +82,13 @@ export function serializeList(slugs: string[]): string {
 
 export function parseMapUrlState(search: string): MapUrlState {
   const params = new URLSearchParams(search);
-  const persona = params.get("persona");
-  const validPersonas = ["family", "youngPro", "retiree", "student"] as const;
   return {
     weights: parseWeightsFromSearchParams(search),
     shortlist: parseListParam(params.get("list")),
-    persona:
-      persona && (validPersonas as readonly string[]).includes(persona)
-        ? (persona as PersonaId)
-        : null,
-    view: parseInterestView(params.get("view")),
+    // Legacy ?persona= links resolve to the lens each retired preset folded into.
+    view:
+      parseInterestView(params.get("view")) ??
+      legacyPersonaToView(params.get("persona")),
     layer: parseLayer(params.get("layer")),
     select: parseSelect(params.get("select")),
     buyer: params.get("buyer") === "1",
@@ -108,7 +107,6 @@ export function buildMapUrl(
   if (state.shortlist && state.shortlist.length > 0) {
     params.set("list", serializeList(state.shortlist));
   }
-  if (state.persona) params.set("persona", state.persona);
   if (state.view && state.view !== "general") params.set("view", state.view);
   if (state.layer) params.set("layer", state.layer);
   if (state.select) params.set("select", state.select);

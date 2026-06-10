@@ -32,12 +32,21 @@ describe("share-url", () => {
 
   it("parses map state from query", () => {
     const state = parseMapUrlState(
-      "w=affordability:30,transport:18,safety:14,health:14,hazards:8,education:8,income:8&list=a,b&view=rental&persona=family"
+      "w=affordability:30,transport:18,safety:14,health:14,hazards:8,education:8,income:8&list=a,b&view=rental"
     );
     expect(state.shortlist).toEqual(["a", "b"]);
     expect(state.view).toBe("rental");
-    expect(state.persona).toBe("family");
     expect(state.weights?.affordability).toBe(30);
+  });
+
+  it("resolves legacy ?persona= links to the lens each preset folded into", () => {
+    expect(parseMapUrlState("persona=family").view).toBe("family");
+    expect(parseMapUrlState("persona=retiree").view).toBe("retiree");
+    expect(parseMapUrlState("persona=youngPro").view).toBe("rental");
+    expect(parseMapUrlState("persona=student").view).toBe("rental");
+    expect(parseMapUrlState("persona=bogus").view).toBeNull();
+    // An explicit view always wins over the legacy param.
+    expect(parseMapUrlState("view=homeBuyer&persona=family").view).toBe("homeBuyer");
   });
 
   it("builds map url with view", () => {

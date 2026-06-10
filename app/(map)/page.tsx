@@ -203,7 +203,7 @@ export default function MapPage() {
   const [showCycleRadius, setShowCycleRadius] = useState(false);
   // Rail/tram lines near the pin (loaded lazily when buyer mode opens).
   const [transitLines, setTransitLines] = useState<NoiseLine[]>([]);
-  // Personal "fit" profile (buyer/agent), local-only. `profileRef` mirrors it so
+  // Personal "fit" profile, local-only. `profileRef` mirrors it so
   // a rebuild triggered right after save reads the latest profile (not stale state).
   const [profile, setProfile] = useState<BuyerProfile | null>(null);
   const [showProfile, setShowProfile] = useState(false);
@@ -809,7 +809,7 @@ export default function MapPage() {
             </p>
           )}
           {/* Personalise: a local-only profile that adds "Fit for your life" +
-              deal-breaker flags to the report (buyer or agent). */}
+              deal-breaker flags to the report. */}
           {showProfile ? (
             <BuyerProfilePanel
               initial={profile}
@@ -823,9 +823,7 @@ export default function MapPage() {
               onClick={() => setShowProfile(true)}
               className="w-full rounded-md border border-surface-border px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent"
             >
-              {profile
-                ? `Edit ${profile.mode === "agent" ? "client" : "your"} preferences`
-                : "Personalise this report"}
+              {profile ? "Edit your preferences" : "Personalise this report"}
             </button>
           )}
           {/* 15-min walk: the radius is drawn on the map; this drops every

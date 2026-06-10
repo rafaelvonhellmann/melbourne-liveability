@@ -143,3 +143,19 @@ export function parseInterestView(raw: string | null): InterestViewId | null {
   if (!raw) return null;
   return raw in INTEREST_VIEWS ? (raw as InterestViewId) : null;
 }
+
+/**
+ * Legacy `?persona=` preset ids (the retired PERSONA_PRESETS surface) map to
+ * the lens each one folded into, so old shared links still resolve.
+ */
+const LEGACY_PERSONA_VIEWS: Record<string, InterestViewId> = {
+  family: "family",
+  retiree: "retiree",
+  youngPro: "rental",
+  student: "rental",
+};
+
+export function legacyPersonaToView(raw: string | null): InterestViewId | null {
+  if (!raw) return null;
+  return LEGACY_PERSONA_VIEWS[raw] ?? null;
+}
