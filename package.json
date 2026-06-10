@@ -89,6 +89,7 @@
     "data:water-corp": "tsx scripts/fetch-water-corp.ts",
     "data:epa-air": "tsx scripts/fetch-epa-air.ts",
     "data:activity-centres": "tsx scripts/fetch-activity-centres.ts",
+    "data:report-tiles": "tsx scripts/bake-report-tiles.ts",
     "data:timeseries": "tsx scripts/build-timeseries.ts",
     "data:walkaccess": "tsx scripts/apply-walk-access.ts",
     "data:cyclability": "tsx scripts/apply-cyclability.ts",
