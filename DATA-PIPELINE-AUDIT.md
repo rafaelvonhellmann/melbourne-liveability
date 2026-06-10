@@ -45,7 +45,7 @@ tolerates <=2% drift and carry-forward fills the gap).
 | apply-overlays.ts (`context.overlays`) | data/raw/vic-conservation-overlays.geojson | fetch-overlays.ts (`data:overlays`) | yes | re-run (normalize mirrors) |
 | apply-sea-level.ts (`context.seaLevel`) | data/raw/vic-sea-level.geojson | fetch-sea-level.ts (`data:sea-level`) | yes | re-run (normalize mirrors) |
 | apply-fire-history.ts (`context.fireHistory`) | data/raw/vic-fire-history.geojson | fetch-fire-history.ts (`data:fire-history`) | yes | re-run (normalize mirrors) |
-| apply-vif.ts (`context.projections`) | data/raw/vif2023-sa2.xlsx | fetch-vif.ts (`data:vif`; planning.vic WAF -> gov-fetch curl shim, works in CI) | yes | re-run (normalize mirrors) |
+| apply-vif.ts (`context.projections`) | data/raw/vif2023-sa2.xlsx (COMMITTED to git 2026-06-10 - static 2023 release) | fetch-vif.ts (`data:vif`; manual-only: planning.vic WAF now 403s CI runners even via the curl shim) | no - input committed | re-run from committed raw |
 | apply-abs-approvals.ts (`context.developmentPipeline`) | data/raw/abs-sa2-approvals.json | fetch-abs-approvals.ts (`data:abs-approvals`) | yes | re-run (normalize mirrors) |
 | apply-abs-qualifications.ts (`context.community.bachelorPlusPct/postgradPct`) | data/raw/abs-sa2-qualifications.json | fetch-abs-qualifications.ts (`data:abs-qualifications`; ABS Data API, undici + curl fallback) | yes - ADDED 2026-06-10 | fetch-added; carry-forward as net |
 | apply-schools.ts (`context.schools`) | data/raw/vic-schools-by-sa2.json (+ sa2-melbourne.geojson) | fetch-schools.ts (`data:schools`; education.vic.gov.au CSV, undici + curl fallback; needs `data:fetch` first) | yes - ADDED 2026-06-10 | fetch-added; carry-forward as net |

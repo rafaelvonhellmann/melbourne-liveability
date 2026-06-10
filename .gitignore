@@ -1,7 +1,12 @@
 node_modules/
 .next/
 out/
-data/raw/
+# Ignore raw contents (not the dir itself) so the negation below can work.
+data/raw/*
+# VIF2023 is a static 2023 release behind a WAF that blocks CI runners -
+# committed once so the refresh never depends on re-fetching it. Replace
+# manually when VIF2026 ships (npm run data:vif from a residential network).
+!data/raw/vif2023-sa2.xlsx
 *.log
 .env
 .env.local

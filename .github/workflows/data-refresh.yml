@@ -55,7 +55,10 @@ jobs:
           npm run data:overlays
           npm run data:sea-level
           npm run data:fire-history
-          npm run data:vif
+          # data:vif removed 2026-06-10: VIF2023 is a static release and
+          # planning.vic WAF now 403s CI runners even via the curl shim.
+          # The raw XLSX is committed at data/raw/vif2023-sa2.xlsx; re-fetch
+          # manually when VIF2026 ships.
           npm run data:abs-approvals
           npm run data:abs-qualifications
           npm run data:schools
