@@ -13,7 +13,7 @@ const PILLARS = [
   {
     icon: ShieldCheck,
     title: "Independent",
-    body: "Not funded by, affiliated with, or paid by any real-estate agent, listing portal, developer, lender, insurer or government body. No ads. No behavioural tracking. We do not sell your data.",
+    body: "Not funded by, affiliated with, or paid by any real-estate agent, listing portal, developer, lender, insurer or government body. No ads. No behavioural profiling. We do not sell your data - at most privacy-friendly, cookieless page counts.",
   },
   {
     icon: Database,
@@ -79,7 +79,7 @@ export default function AboutPage() {
           <h2 className="font-display text-xl font-medium text-ink">How it stays free</h2>
           <p className="mt-2 text-sm leading-relaxed text-ink-muted">
             liveable.melbourne is <b className="text-ink">free</b> - the map, every area profile,
-            and the Buyer Location Check. No ads, no behavioural tracking, no agent payments, and
+            and the Buyer Location Check. No ads, no behavioural profiling, no agent payments, and
             we never resell the open data. If a paid convenience is ever added later, the map and
             all the underlying facts will stay free.
           </p>
@@ -96,7 +96,8 @@ export default function AboutPage() {
           </p>
           <p className="mt-2 text-sm leading-relaxed text-ink-muted">
             <b className="text-ink">We do not use:</b> sale prices, valuations or yield estimates
-            (not open data we can licence); your personal data; or any ad / behavioural tracking
+            (not open data we can licence); your personal data; or any ads or behavioural
+            profiling - at most privacy-friendly, cookieless page counts
             (see <Link href="/privacy" className="text-accent hover:underline">privacy</Link>).
             Each area also carries a data-completeness measure, and every finding shows its source,
             geographic precision, confidence and caveats.

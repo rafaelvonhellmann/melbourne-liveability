@@ -113,7 +113,7 @@ export function FeedbackButton({ context, className }: FeedbackButtonProps) {
     }
 
     // No Formspree configured - fall back to a prefilled mailto if a contact
-    // address is set, otherwise tell the deployer how to enable delivery.
+    // address is set, otherwise show a plain temporarily-unavailable message.
     if (FEEDBACK_EMAIL && typeof window !== "undefined") {
       const body = encodeURIComponent(
         `Type: ${kind}\nPage: ${ctx}\n\n${message.trim()}\n\nReply-to: ${
@@ -266,13 +266,20 @@ export function FeedbackButton({ context, className }: FeedbackButtonProps) {
                     Could not send. Please try again in a moment.
                   </p>
                 )}
-                {status === "unconfigured" && (
-                  <p className="text-sm text-[#9A552F]">
-                    Feedback delivery is not configured for this deployment. Set{" "}
-                    <code className="text-xs">NEXT_PUBLIC_FORMSPREE_FEEDBACK_ID</code> (or{" "}
-                    <code className="text-xs">NEXT_PUBLIC_FEEDBACK_EMAIL</code>) to enable it.
-                  </p>
-                )}
+                {status === "unconfigured" &&
+                  (FEEDBACK_EMAIL ? (
+                    <p className="text-sm text-[#9A552F]">
+                      Feedback is temporarily unavailable - email us at{" "}
+                      <a href={`mailto:${FEEDBACK_EMAIL}`} className="underline">
+                        {FEEDBACK_EMAIL}
+                      </a>{" "}
+                      instead.
+                    </p>
+                  ) : (
+                    <p className="text-sm text-[#9A552F]">
+                      Feedback is temporarily unavailable. Please try again later.
+                    </p>
+                  ))}
 
                 <button
                   type="submit"

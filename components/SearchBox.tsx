@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Search, MapPin } from "lucide-react";
 import Fuse from "fuse.js";
 import type { SearchIndexEntry } from "@/lib/search";
@@ -32,8 +32,10 @@ const GEO_IDLE: GeoState = { status: "idle", results: [], forQuery: "" };
 /**
  * Heuristic: a full STREET ADDRESS (has a number, and either starts with it or
  * has a comma) rather than a suburb / area name. These should resolve to an
- * exact geocoded pin - not a fuzzy SA2 match - so we auto-geocode them and hide
- * the fuzzy area results (which were luring users into the wrong nearby area).
+ * exact geocoded pin - not a fuzzy SA2 match - so we hide the fuzzy area
+ * results (which were luring users into the wrong nearby area) and offer the
+ * explicit address-search action instead. The network geocode itself only runs
+ * on an explicit submit (Enter, the search button, or the address row).
  */
 function isAddressLike(q: string): boolean {
   return /\d/.test(q) && (/^\s*\d/.test(q) || q.includes(","));
@@ -94,17 +96,6 @@ export function SearchBox({ index, onSelect, onGeocode }: SearchBoxProps) {
       setGeo({ status: "error", results: [], forQuery: trimmed });
     }
   };
-
-  // Auto-run the geocode for address-like queries (debounced for Nominatim's
-  // ~1 req/s policy) so the exact address surfaces without a click.
-  useEffect(() => {
-    if (!addressLike || !canGeocode || geoForCurrent || geo.status === "loading") return;
-    const t = setTimeout(() => void runGeocode(), 1200);
-    return () => clearTimeout(t);
-    // runGeocode is a stable closure; keying on it would loop. Key on the query
-    // + geocode state instead.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [addressLike, canGeocode, geoForCurrent, geo.status, trimmed]);
 
   const resetGeo = () => {
     abortRef.current?.abort();

@@ -7,7 +7,7 @@ export const metadata = {
     "What data liveable.melbourne collects, how it is used, third parties involved, and your rights under the Australian Privacy Act.",
 };
 
-const UPDATED = "2026-06-01";
+const UPDATED = "2026-06-10";
 
 export default function PrivacyPage() {
   return (
@@ -46,10 +46,11 @@ export default function PrivacyPage() {
             </li>
             <li>
               <strong className="text-ink">Email address - only if you provide it.</strong>{" "}
-              If you sign up for update alerts or send feedback, we collect the email
-              address you enter (and, for alerts, your shortlisted suburb identifiers; for
-              feedback, your message and the page you were on). We use it solely to respond
-              or to send the notices you asked for.
+              If you send feedback, we collect the email address you enter (it is
+              optional), along with your message and the page you were on. We use it
+              solely to respond. Email update alerts are not yet available - they will
+              arrive with optional accounts, and we will update this policy before
+              launching them.
             </li>
             <li>
               <strong className="text-ink">Standard server logs.</strong> Our static host
@@ -68,9 +69,12 @@ export default function PrivacyPage() {
         <Section title="3. Third parties (data processors)">
           <ul className="list-disc space-y-2 pl-5">
             <li>
-              <strong className="text-ink">Form handling.</strong> Alert sign-ups and
-              feedback are delivered via a third-party form processor (e.g. Formspree),
-              which receives the email and message you submit in order to forward it to us.
+              <strong className="text-ink">Form handling.</strong> When configured,
+              feedback is delivered via Formspree, a third-party form processor based in
+              the United States, which receives the email and message you submit in
+              order to forward it to us. When no form processor is configured, the
+              feedback button may instead open your own email app (a local mailto link),
+              in which case nothing passes through a third party.
             </li>
             <li>
               <strong className="text-ink">Hosting &amp; map tiles.</strong> The site is
@@ -85,7 +89,18 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
-        <Section title="4. How we use it">
+        <Section title="4. Analytics">
+          <p>
+            We may run <strong className="text-ink">privacy-friendly, cookieless
+            analytics</strong> (Plausible-style) to count page views in aggregate. If
+            enabled: no cookies, no personal data stored, no cross-site tracking, no
+            behavioural profiles - just anonymous, aggregate counts (e.g. how many people
+            viewed a page), which cannot identify you. If it is not enabled, no analytics
+            run at all.
+          </p>
+        </Section>
+
+        <Section title="5. How we use it">
           <p>
             To send the update alerts or feedback responses you request, to operate and
             secure the site, and to improve the data and features (for example, acting on a
@@ -94,7 +109,7 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
-        <Section title="5. Retention">
+        <Section title="6. Retention">
           <p>
             On-device preferences persist until you clear them. Email addresses provided for
             alerts are kept until you unsubscribe or ask us to delete them; feedback
@@ -102,7 +117,7 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
-        <Section title="6. Your rights">
+        <Section title="7. Your rights">
           <p>
             Under the APPs you may request access to, correction of, or deletion of personal
             information we hold about you, and you can unsubscribe from alerts at any time.
@@ -116,14 +131,14 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
-        <Section title="7. Children">
+        <Section title="8. Children">
           <p>
             The service is intended for a general adult audience (movers / renters) and is
             not directed at children.
           </p>
         </Section>
 
-        <Section title="8. Changes & contact">
+        <Section title="9. Changes & contact">
           <p>
             We may update this policy; the “last updated” date above will change. Questions
             or privacy requests: use the in-app{" "}

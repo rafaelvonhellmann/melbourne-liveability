@@ -4,7 +4,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const metadata = {
   title: "It's free",
   description:
-    "liveable.melbourne is free to use - the full liveability map, every area profile, and the Buyer Location Check. No paid tiers, no ads, no tracking, no reselling of open data.",
+    "liveable.melbourne is free to use - the full liveability map, every area profile, and the Buyer Location Check. No paid tiers, no ads, no behavioural profiling, no reselling of open data.",
 };
 
 export default function PricingPage() {
@@ -22,7 +22,8 @@ export default function PricingPage() {
           interactive liveability map, every area (SA2) profile with its sources and
           data-confidence, and the <strong className="text-ink">Buyer Location Check</strong>{" "}
           (drop a pin, read a sourced second-opinion report on screen). No paid tiers, no
-          subscription, no ads, no behavioural tracking, and we never resell the open data.
+          subscription, no ads, no selling of your data, no behavioural profiling - at most
+          privacy-friendly, cookieless page counts - and we never resell the open data.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-ink-muted">
           If a paid option is ever added, it will only be convenience on top - saving,

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { X, ShieldAlert, CheckCircle2, HelpCircle, Info, Bookmark, BookmarkCheck } from "lucide-react";
+import { X, ShieldAlert, CheckCircle2, HelpCircle, Info, Bookmark, BookmarkCheck, Printer } from "lucide-react";
 import type { BuyerReport, BuyerFinding, BuyerConfidence, BuyerGeography } from "@/lib/buyer-report";
 import { anchorKindLabel, bandLabel } from "@/lib/anchors";
 import { SunPathDiagram } from "./SunPathDiagram";
@@ -147,45 +147,55 @@ export function BuyerReportPanel({
             <span aria-hidden className="text-base leading-none">&rarr;</span>
           </Link>
         )}
-        {(variant !== "embedded") && (
-          <div className="no-print flex flex-wrap gap-2">
-            {shareUrl && (
-              <ShareViewButton
-                getUrl={() => shareUrl}
-                label="Copy shareable link"
-                className="inline-flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-accent-ink transition-colors hover:bg-accent-focus"
-              />
-            )}
-            {onSaveCheck && hasPin && (
-              <button
-                type="button"
-                onClick={onSaveCheck}
-                aria-pressed={isSaved}
-                className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-colors ${
-                  isSaved
-                    ? "border-accent bg-accent/10 text-accent"
-                    : "border-surface-border text-ink hover:border-accent hover:text-accent"
-                }`}
-              >
-                {isSaved ? (
-                  <BookmarkCheck className="h-3.5 w-3.5" aria-hidden />
-                ) : (
-                  <Bookmark className="h-3.5 w-3.5" aria-hidden />
-                )}{" "}
-                {isSaved ? "Saved" : "Save this check"}
-              </button>
-            )}
-            {onClear && (
-              <button
-                type="button"
-                onClick={onClear}
-                className="inline-flex items-center gap-1.5 rounded-md border border-surface-border px-2.5 py-1 text-xs text-ink-muted transition-colors hover:border-accent hover:text-accent"
-              >
-                <X className="h-3.5 w-3.5" aria-hidden /> Clear pin
-              </button>
-            )}
-          </div>
-        )}
+        {/* Actions row - all variants. The print button is the "Save it as a PDF"
+            promise on /buyer; .no-print keeps the row itself out of the PDF. */}
+        <div className="no-print flex flex-wrap gap-2">
+          {shareUrl && (
+            <ShareViewButton
+              getUrl={() => shareUrl}
+              label="Copy shareable link"
+              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-accent-ink transition-colors hover:bg-accent-focus"
+            />
+          )}
+          {onSaveCheck && hasPin && (
+            <button
+              type="button"
+              onClick={onSaveCheck}
+              aria-pressed={isSaved}
+              className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-colors ${
+                isSaved
+                  ? "border-accent bg-accent/10 text-accent"
+                  : "border-surface-border text-ink hover:border-accent hover:text-accent"
+              }`}
+            >
+              {isSaved ? (
+                <BookmarkCheck className="h-3.5 w-3.5" aria-hidden />
+              ) : (
+                <Bookmark className="h-3.5 w-3.5" aria-hidden />
+              )}{" "}
+              {isSaved ? "Saved" : "Save this check"}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              track("buyer_print");
+              window.print();
+            }}
+            className="inline-flex items-center gap-1.5 rounded-md border border-surface-border px-2.5 py-1 text-xs text-ink transition-colors hover:border-accent hover:text-accent"
+          >
+            <Printer className="h-3.5 w-3.5" aria-hidden /> Print / save as PDF
+          </button>
+          {onClear && (
+            <button
+              type="button"
+              onClick={onClear}
+              className="inline-flex items-center gap-1.5 rounded-md border border-surface-border px-2.5 py-1 text-xs text-ink-muted transition-colors hover:border-accent hover:text-accent"
+            >
+              <X className="h-3.5 w-3.5" aria-hidden /> Clear pin
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Printable region begins */}
@@ -237,13 +247,11 @@ export function BuyerReportPanel({
 
         {/* 1b. Personal fit (only when a profile is set) */}
         {report.fit && (report.fit.hits.length > 0 || report.fit.notes.length > 0) && (
-          <Section title={report.fit.mode === "agent" ? "For your client" : "Fit for your life"}>
+          <Section title="Fit for your life">
             {report.fit.hits.length > 0 && (
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold text-ink">
-                  {report.fit.mode === "agent"
-                    ? "Client-specific checks to verify here:"
-                    : "Your deal-breakers to verify here:"}
+                  Your deal-breakers to verify here:
                 </p>
                 <ul className="space-y-1.5">
                   {report.fit.hits.map((h) => (
