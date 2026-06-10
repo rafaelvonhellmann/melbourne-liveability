@@ -4,6 +4,72 @@ Pick-up doc for a fresh session. Pairs with `EXPANSION-PLAN.md` (multi-city) and
 the user's memory notes (`~/.claude/.../memory/`). Supersedes the old
 2026-05-31 handover.
 
+---
+
+## ⭐ START HERE — state at end of 2026-06-09 (everything below is LIVE on master)
+
+A very large session. The whole original UX/bug list + the full Codex review + a
+perf fix + the affordability reframe + a **self-hosted sun/shadow data pipeline**
+are all shipped, gated, and deployed. Deploy is now **gated** (push to master →
+`deploy-pages.yml`: tsc + lint + vitest + data:verify + build, plus a Playwright
+**e2e** job, then deploy). 348 vitest + 12 E2E green.
+
+### Shipped this session (highlights)
+- **Perf:** the ~1-minute "Computing what's nearby" hang - the buyer report awaited
+  the Vicmap parcel WFS (gov GeoServer, no timeout) inline. Now non-blocking + 8s
+  cap (`lib/parcel.ts`, `app/(map)/page.tsx` buildReportFor). Renders in ~1-3s.
+- **Sun = "build our own shademap" (DONE + live):** replaced the flaky live CoM API +
+  public Overpass with **our own baked OSM building tiles**. `.github/workflows/
+  bake-buildings.yml` (manual dispatch, osmium, ~3 min) → 2454 z14 tiles in
+  `public/data/buildings/`; `SunShadowView` loads them via `lib/buildings.ts`
+  `loadBuildingsNear`. Complete metro coverage, no live dependency. **Re-run the
+  workflow to refresh OSM.** (Vicmap building_polygon was probed UNUSABLE - 32
+  buildings/km2; OSM is the only complete source. See [[routing-and-sun]].)
+- **Affordability reframe:** "Rent vs income" → **"Rent burden"** (label measures
+  rent burden, not wealth) + a SEIFA "ranks X/10" disambiguation line in the income
+  card. Score/weights untouched (`lib/domains.ts`, `lib/colors.ts`,
+  `IncomeAffordabilityCard.tsx`).
+- **Lots of UX:** hide-0%, LGA→"council area", PAO/SLO spelled out, **removed ALL-CAPS**
+  (35 labels), pin-click POI vs pin-drop fix, precise-walk retry, compass rose on the
+  sun view, bigger population trend chart + year axis, GM-relative context numbers,
+  "In brief" area summaries, **straight-to-map onboarding** (retired `/welcome`),
+  removed **rooftop solar** + **electorate** (stale 2022 data), beach ≤2km, tree-canopy
+  trim, **/places MetricCard**: "GM" labels + bold median tick + IQR-trimmed scale.
+- **Codex P0/P1:** the gated deploy above + 4 stale E2E fixed; geocode bbox widened;
+  per-finding confidence/geography/source shown on screen; Canberra+Hobart added to
+  EXPANSION-PLAN.md.
+
+### NEXT STEPS (pending - in priority order)
+1. **Finish "own our data" Phase 1** (same CI-bake pattern as the sun, proven): bake the
+   per-pin gov-ArcGIS lenses so they become local lookups -
+   **ANEF aircraft-noise** (`lib/aircraft-noise.ts`, static polygons = easiest), then
+   **tree canopy / urban heat / waterway** (sample per-SA2 at build). Kills ~5 live deps.
+   The runtime-dependency audit + roadmap is in this session's transcript + [[routing-and-sun]].
+2. **Sun polish (optional):** tile payload is heavy (dense tile ~450KB; a pin loads 9) -
+   radius-filter the load to ~300m or use smaller tiles. Suburban houses fall back to
+   flat 6m (untagged) - needs more OSM `building:levels`.
+3. **Codex review** is set up but **blocked on auth**: run `codex login`, AND fix
+   `C:\Users\rafae\.codex\config.toml` line 4 `service_tier = "priority"` →
+   `"fast"` or `"flex"` (invalid value breaks the config). Then `/code-review ultra` or
+   a Codex pass over the diff.
+4. **Live SERVICES** (routing/geocoding/basemap/air-quality) can't be baked → the thin
+   **backend/proxy** on the paid-launch roadmap.
+
+### REVIEW / VERIFY (eyeball on a normal browser tab)
+- The **sun** across a few suburbs (Brunswick/Footscray/Dandenong) - should now show
+  building massing + shadows reliably. Use the **Preview MCP** to verify WebGL, NOT
+  Chrome MCP (it runs hidden + throttles) - see [[routing-and-sun]].
+- **/places MetricCard** new scale/labels; the **"In brief"** summaries; **pin-click**
+  on POI markers in a selected area (needs a real tap-test); the de-capped UI.
+
+### Strategic / still open (your calls, unchanged)
+Paid-launch trust layer (accounts, Stripe, report snapshots, backend, legal review,
+WCAG 2.2 AA, mobile rebuild, support/trust pages) - none built; the gate before charging.
+The **Northlight** name flip (on hold). **Sydney-first** multi-city per EXPANSION-PLAN.md
+(Geoscape / cadastre / scope decisions parked).
+
+---
+
 ## What this is
 A Next.js 14 **static-export** MapLibre app: a choropleth of Greater Melbourne's
 **361 ABS SA2 areas** across 7 scored "liveability" domains, plus a pin-level
