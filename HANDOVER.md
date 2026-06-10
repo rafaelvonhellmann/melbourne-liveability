@@ -4,6 +4,11 @@ Pick-up doc for a fresh session. Pairs with `EXPANSION-PLAN.md` (multi-city) and
 the user's memory notes (`~/.claude/.../memory/`). Supersedes the old
 2026-05-31 handover.
 
+> **ACTIVE PLAN (2026-06-10): `FABLE-ULTRAPLAN.md`** is now the canonical
+> build plan + handover companion (Phase 0 -> paid launch -> multi-city).
+> Read it FIRST; this file stays the architecture/state reference. Pipeline
+> safety map: `DATA-PIPELINE-AUDIT.md`.
+
 ---
 
 ## ⭐ START HERE — state at end of 2026-06-09 (everything below is LIVE on master)
@@ -20,8 +25,8 @@ are all shipped, gated, and deployed. Deploy is now **gated** (push to master �
   cap (`lib/parcel.ts`, `app/(map)/page.tsx` buildReportFor). Renders in ~1-3s.
 - **Sun = "build our own shademap" (DONE + live):** replaced the flaky live CoM API +
   public Overpass with **our own baked OSM building tiles**. `.github/workflows/
-  bake-buildings.yml` (manual dispatch, osmium, ~3 min) → 2454 z14 tiles in
-  `public/data/buildings/`; `SunShadowView` loads them via `lib/buildings.ts`
+  bake-buildings.yml` (manual dispatch, osmium, ~3 min) → 2454 z14 tiles
+  (~164MiB committed) in `public/data/buildings/`; `SunShadowView` loads them via `lib/buildings.ts`
   `loadBuildingsNear`. Complete metro coverage, no live dependency. **Re-run the
   workflow to refresh OSM.** (Vicmap building_polygon was probed UNUSABLE - 32
   buildings/km2; OSM is the only complete source. See [[routing-and-sun]].)
@@ -45,9 +50,11 @@ are all shipped, gated, and deployed. Deploy is now **gated** (push to master �
    **ANEF aircraft-noise** (`lib/aircraft-noise.ts`, static polygons = easiest), then
    **tree canopy / urban heat / waterway** (sample per-SA2 at build). Kills ~5 live deps.
    The runtime-dependency audit + roadmap is in this session's transcript + [[routing-and-sun]].
-2. **Sun polish (optional):** tile payload is heavy (dense tile ~450KB; a pin loads 9) -
-   radius-filter the load to ~300m or use smaller tiles. Suburban houses fall back to
-   flat 6m (untagged) - needs more OSM `building:levels`.
+2. **Sun payload (pre-paid-launch PRIORITY, = FABLE-ULTRAPLAN P1-7a):** tile payload
+   is heavy - measured 2026-06-10: dense tile up to **1.57MB** (not ~450KB as earlier
+   noted), worst-case 9-tile pin load **7.1MiB raw**; 2454 tiles / ~164MiB committed.
+   Radius-filter the load to ~300m + drop ring precision to 6dp. Suburban houses fall
+   back to flat 6m (untagged) - needs more OSM `building:levels`.
 3. **Codex review** is set up but **blocked on auth**: run `codex login`, AND fix
    `C:\Users\rafae\.codex\config.toml` line 4 `service_tier = "priority"` →
    `"fast"` or `"flex"` (invalid value breaks the config). Then `/code-review ultra` or

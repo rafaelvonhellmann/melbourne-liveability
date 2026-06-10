@@ -14,7 +14,7 @@ at build time** — portals move and licence terms vary.
 - **~60% of the data is national and scales for free** — all ABS (demographics), all OSM (amenities/transport), plus better-than-Melbourne national layers for schools (ACARA), childcare (ACECQA) and hospitals/police (Geoscape Foundation Facilities). Just loop the GCCSA codes + bounding boxes.
 - **~40% is state-specific** and exists in every state but in different agencies/formats — a per-state fetch module each. Most are `have-equivalent`.
 - **Three hard gaps** decide scope + cost:
-  1. **Building heights for the sun feature** — open only in **Melbourne + Adelaide**. Sydney/Brisbane/Perth/Darwin need commercial Geoscape or a coarse OSM-levels fallback.
+  1. **Building data for the sun feature** - resolved in architecture (2026-06-09): the sun view runs on OUR OWN baked OSM building tiles, which port to any city. The real variable is per-tile OSM footprint density, so per-tile density gating is needed everywhere (incl. Melbourne); Geoscape is an optional paid quality upgrade, not a gate. See Tier C #1.
   2. **Cadastre / lot-size-at-a-point** — open in **NSW + QLD**; **paid** in SA ($250+) and WA (subscription); bulk-only in NT. The "lot size" feature can't run on free data in Adelaide/Perth.
   3. **Crime granularity** — suburb-level in NSW/SA/WA; **Brisbane is a single LGA** so open crime has no intra-city variation; NT is town-level.
 
@@ -37,8 +37,8 @@ The pipeline is already GCCSA-scoped, so the refactor is contained:
    - region switcher (and/or `/<region>/...` routes);
    - generalize `MEL_BBOX` in `lib/share-url.ts` to a per-region bbox for pin validation (derive each from the GCCSA polygon extent);
    - per-region map center/zoom; per-region SEO (sitemap/robots/metadata).
-6. **Sun feature** — per-region `buildingHeightSource` (see Tier C).
-7. **Routing/Valhalla** — global already; no change. Reachability + drive-time + precise-walk work in every city out of the box.
+6. **Sun feature** - per-region building-tile bake (swap the Geofabrik extract + bbox in `bake-buildings.yml`) + per-tile density gating (see Tier C #1).
+7. **Routing/Valhalla** - the public FOSSGIS Valhalla server is global, BUT its terms of use bar substantial / commercial use: self-host Valhalla (or pay for a hosted routing product) before any paid launch. Once that is in place, reachability + drive-time + precise-walk work in every city out of the box.
 
 ---
 
@@ -87,8 +87,10 @@ Legend: ✓ have-equivalent · ~ partial · ✗ missing · **N** national-covers
 
 ### Tier C — The three hard gaps
 
-1. **Building heights / sun (the Northlight differentiator).** No open national heights layer. Open council 3D with heights exists only in **Melbourne (CityGML)** and **Adelaide (FBX/Multipatch)**. Sydney/Brisbane/Perth/Darwin: commercial **Geoscape Buildings** (national, has heights; free to NSW gov only) or coarse **OSM `building:levels` × ~3 m**, else flat assumed height.
-   → **Decision:** licence Geoscape (paid, unlocks heights everywhere incl. retrofit) **or** accept "true cast shadows in Melbourne + Adelaide; sun-path + shademap link elsewhere."
+1. **Building data / sun (the Northlight differentiator).** ARCHITECTURE RESOLVED (2026-06-09): the sun view pivoted to our own **baked OSM building tiles** (Geofabrik extract -> osmium -> static z14 JSON tiles in CI), so it ports to ANY city by swapping the extract/bbox. The variable is no longer "which council publishes a 3D model" - it is **per-tile OSM footprint density**. Measured: **Canberra sun WORKS today** (~622 buildings/km2; the ACT OSM import is near-complete). The old "convert Adelaide's FBX/Multipatch model" work item is **obsolete** - the baked-OSM path covers Adelaide too. What is actually needed:
+   - **Per-tile density gating in EVERY city, including Melbourne**: when a tile is sparse, show "low 3D coverage here" instead of misleadingly empty ground.
+   - **Optional infill** from **Microsoft AustraliaBuildingFootprints** (ODbL, ~2018 vintage, footprints only -> flat assumed heights; label the vintage and the flat-height assumption).
+   - **Geoscape Buildings** = an optional paid **quality upgrade** (real heights everywhere), NOT a launch gate.
 2. **Cadastre / lot size.** Open + WFS in **NSW (SIX Maps)** and **QLD (DCDB)**. **Paid** in SA (Land Services SA) and WA (Landgate) — the lot-size feature can't run on free data there. NT open but bulk-only.
    → **Decision:** pay for SA/WA parcels, or hide lot-size in those cities (fall back to ABS mesh-block / OSM footprint proxy).
 3. **Planning-overlay concept mismatch.** No state replicates Victoria's named overlays (ESO/SLO/VPO/EMO/EAO/PAO). Each has functional equivalents (NSW EPI layers, QLD MSES + council City Plan, SA combined Code overlays, WA Region Scheme, NT Part-3 overlays). → maintain a **per-state overlay crosswalk** mapping local instruments to our finding categories rather than 1:1 codes.
@@ -97,13 +99,13 @@ Legend: ✓ have-equivalent · ~ partial · ✗ missing · **N** national-covers
 
 ## 4. Per-city snapshot
 
-- **Sydney (NSW)** — *richest open data, do first.* BOCSAR crime, SEED hazards (bushfire/flood/fire/coastal all open), **open cadastre (SIX Maps)**, TfNSW GTFS + traffic + air API, SA2 projections. Gap: no open building heights (sun limited). Biggest market.
-- **Brisbane (QLD)** — strong council open data + **open DCDB cadastre**, council flood (parcel-level!), storm-tide, MSES. Gaps: crime LGA-only (no intra-Brisbane), bushfire needs endpoint work, sun (Virtual Brisbane not open).
-- **Adelaide (SA)** — clean combined PlanSA overlays, fresh traffic, **open City 3D model → the sun feature works here.** Gaps: **paid cadastre** (no open lot-size), coastal SLR viewer-only, no open police layer (OSM).
-- **Perth (WA)** — excellent SLIP ArcGIS REST (bushfire/activity-centres/traffic all keyless), WA Tomorrow SA2 projections. Gaps: **school zones missing (PDF only)**, **paid cadastre**, air needs keyed feed, sun (no open heights).
+- **Sydney (NSW)** - *richest open data, do first.* BOCSAR crime (note: BOCSAR's edge over Melbourne is **monthly granularity** - Melbourne headline crime is already suburb-level via VCSA Table 03), SEED hazards (bushfire/flood/fire/coastal all open), **open cadastre (SIX Maps)**, TfNSW GTFS + traffic + air API, SA2 projections. Sun: baked OSM tiles + per-tile density gating (Geoscape = optional upgrade). Biggest market.
+- **Brisbane (QLD)** - strong council open data + **open DCDB cadastre**, council flood (parcel-level!), storm-tide, MSES. Gaps: crime LGA-only (no intra-Brisbane), bushfire needs endpoint work. Sun: baked OSM tiles, density-gated (Virtual Brisbane not open - and no longer needed).
+- **Adelaide (SA)** - clean combined PlanSA overlays, fresh traffic. Sun: works via baked OSM tiles (the open-City-3D FBX/Multipatch conversion item is **obsolete**). Gaps: **paid cadastre** (no open lot-size), coastal SLR viewer-only, no open police layer (OSM).
+- **Perth (WA)** - excellent SLIP ArcGIS REST (bushfire/activity-centres/traffic all keyless), WA Tomorrow SA2 projections. Gaps: **school zones missing (PDF only)**, **paid cadastre**, air needs keyed feed. Sun: baked OSM tiles, density-gated.
 - **Darwin (NT)** — smallest, most gaps: no bushfire overlay, no SLR layer, coarse crime/projections, school zones PDF-only, bus-only transit. But standout unique hazards (storm surge, UXO, mineral titles). Do last; lean on national fallbacks (NAFI, DEA, GA facilities).
-- **Canberra (ACT, `8ACTE`)** — *strong open data; do before Darwin (Codex).* Everything via **ACTmapi** (ArcGIS REST) + **data.act.gov.au**: planning/hazard overlays, **open cadastre** (block/section), bushfire-prone + flood, **school Priority Enrolment Areas (spatial)**, Transport Canberra GTFS (bus + light rail), suburb-level **ACT crime**. One jurisdiction (no councils) simplifies LGA joins. Gap: no open building heights → sun = sun-path + shademap link.
-- **Hobart (TAS, `6GHOB`)** — viable but smaller. Everything funnels through **theLIST / LISTmap**: **open cadastre**, Tasmanian Planning Scheme overlays, and unusually strong hazards (**bushfire-prone**, **coastal inundation**, and **landslip** — Hobart's slopes). **DECYP** in-area school maps; **Metro Tasmania** GTFS (bus-only). Tas Police crime is coarse (LGA/region). Gap: no open 3D heights → sun limited.
+- **Canberra (ACT, `8ACTE`)** - *strong open data; do before Darwin (Codex).* Everything via **ACTmapi** (ArcGIS REST) + **data.act.gov.au**: planning/hazard overlays, **open cadastre** (block/section), bushfire-prone + flood, **school Priority Enrolment Areas (spatial)**, Transport Canberra GTFS (bus + light rail), suburb-level **ACT crime**. One jurisdiction (no councils) simplifies LGA joins. Sun: **WORKS today** via baked OSM tiles (~622 buildings/km2 - the ACT OSM import is near-complete).
+- **Hobart (TAS, `6GHOB`)** - viable but smaller. Everything funnels through **theLIST / LISTmap**: **open cadastre**, Tasmanian Planning Scheme overlays, and unusually strong hazards (**bushfire-prone**, **coastal inundation**, and **landslip** - Hobart's slopes). **DECYP** in-area school maps; **Metro Tasmania** GTFS (bus-only). Tas Police crime is coarse (LGA/region). Sun: baked OSM tiles, density-gated (coverage unmeasured).
 
 ---
 
@@ -127,12 +129,12 @@ Cross-cutting themes worth a shared layer: **acid sulfate soils** (every coastal
 
 By data readiness + market size:
 
-1. **Sydney** — richest open data, biggest market, open cadastre. (Sun limited.)
+1. **Sydney** - richest open data, biggest market, open cadastre. (Sun: baked OSM tiles, density-gated.)
 2. **Brisbane** — open cadastre + parcel flood; accept crime-granularity gap.
-3. **Adelaide** — sun works (open 3D); accept paid-cadastre gap (hide lot-size or buy).
+3. **Adelaide** - sun works (baked OSM tiles); accept paid-cadastre gap (hide lot-size or buy).
 4. **Perth** — strong hazards; resolve school-zones (digitise/buy) + cadastre.
-5. **Canberra** — strong open data (ACTmapi + open cadastre + spatial PEAs); the cleanest mid-size add. Sun limited.
-6. **Hobart** — clean single-portal data (theLIST: open cadastre + overlays + landslip/bushfire hazards); small market but low build cost. Sun limited.
+5. **Canberra** - strong open data (ACTmapi + open cadastre + spatial PEAs); the cleanest mid-size add. Sun works (~622 bldg/km2 OSM).
+6. **Hobart** - clean single-portal data (theLIST: open cadastre + overlays + landslip/bushfire hazards); small market but low build cost. Sun density-gated.
 7. **Darwin** — most gaps; national fallbacks + unique hazards. Smallest payoff.
 
 (Codex: add **Canberra before Darwin**; **Hobart** is viable but smaller. Both are ordered ahead of Darwin here on data-readiness, not market size.)
@@ -143,7 +145,7 @@ Each city ≈ the same shape of work: 12 ABS pulls (free), OSM bbox, ACARA/ACECQ
 
 ## 7. Decisions needed from you
 
-1. **Geoscape Buildings licence?** Paid, but the only way to get cast-shadow sun in Sydney/Brisbane/Perth/Darwin. Otherwise sun = Melbourne + Adelaide only (others get sun-path + shademap link).
+1. **Geoscape Buildings licence?** Now an optional QUALITY upgrade, not a gate: cast-shadow sun ships in every city from our baked OSM tiles + per-tile density gating; Geoscape buys verified heights and uniform coverage.
 2. **SA + WA cadastre** — pay for parcels (lot-size feature), or hide lot-size in Adelaide/Perth?
 3. **Launch scope** — all five at once, or phase per the order above?
 4. **Crime in Brisbane** — ship LGA-only (honest caveat) or omit until finer data?
