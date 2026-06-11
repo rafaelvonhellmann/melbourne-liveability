@@ -7,6 +7,7 @@ import {
   type InterestViewId,
 } from "./interest-views";
 import { BASE_PATH } from "./asset-path";
+import REGIONS from "./regions";
 
 export type MapUrlState = {
   weights: ScoreWeights | null;
@@ -23,8 +24,15 @@ export type MapUrlState = {
 };
 
 // Generous Greater-Melbourne bounding box - rejects junk / out-of-region coords
-// so a crafted URL cannot drop a pin in the ocean or interstate.
-const MEL_BBOX = { minLng: 143.0, maxLng: 147.0, minLat: -39.5, maxLat: -36.5 };
+// so a crafted URL cannot drop a pin in the ocean or interstate. Derived from
+// the region registry's melbourne pinBbox (lib/regions.ts); values unchanged.
+const PIN_BBOX = REGIONS.melbourne.pinBbox;
+const MEL_BBOX = {
+  minLng: PIN_BBOX.west,
+  maxLng: PIN_BBOX.east,
+  minLat: PIN_BBOX.south,
+  maxLat: PIN_BBOX.north,
+};
 
 /**
  * Whether a coordinate falls inside the Greater-Melbourne bounding box. Exported

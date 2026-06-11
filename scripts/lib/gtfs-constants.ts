@@ -1,13 +1,20 @@
-/** Official PTV / DTP GTFS Schedule (CC BY 4.0). */
-export const PTV_GTFS_URL =
-  "https://opendata.transport.vic.gov.au/dataset/3f4e292e-7f8a-4ffe-831f-1953be0fe448/resource/fb152201-859f-4882-9206-b768060b50ad/download/gtfs.zip";
+import REGIONS from "../../lib/regions.js";
 
-/** Greater Melbourne bbox (same as Overpass queries). */
+/** Official PTV / DTP GTFS Schedule (CC BY 4.0). Sourced from the region
+ * registry's melbourne entry (lib/regions.ts); export name kept. */
+const gtfsUrl = REGIONS.melbourne.stateSources?.gtfsUrl;
+if (!gtfsUrl) {
+  throw new Error("region registry: melbourne entry missing stateSources.gtfsUrl");
+}
+export const PTV_GTFS_URL = gtfsUrl;
+
+/** Greater Melbourne bbox (same as Overpass queries). Derived from the region
+ * registry's melbourne data bbox; values unchanged. */
 export const MEL_BBOX = {
-  south: -38.35,
-  west: 144.45,
-  north: -37.45,
-  east: 145.65,
+  south: REGIONS.melbourne.bbox.south,
+  west: REGIONS.melbourne.bbox.west,
+  north: REGIONS.melbourne.bbox.north,
+  east: REGIONS.melbourne.bbox.east,
 };
 
 /** Weekday AM peak window (local time). */

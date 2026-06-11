@@ -19,9 +19,14 @@ import {
   type CrosswalkFile,
   type Sa2CrosswalkEntry,
   type SuburbOverlap,
-  GREATER_MELBOURNE_GCCSA,
 } from "../lib/crosswalk-types.js";
 import { getProp, featureGeometry } from "./lib/abs-geo.js";
+import {
+  PIPELINE_REGION,
+  sa2RawName,
+  salRawName,
+  lgaRawName,
+} from "./lib/pipeline-region.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const RAW_DIR = path.join(__dirname, "..", "data", "raw");
@@ -111,12 +116,12 @@ function lgaForPoint(
 
 async function main() {
   const [sa2Fc, salFc, lgaFc] = await Promise.all([
-    loadGeo("sa2-melbourne.geojson"),
-    loadGeo("sal-vic.geojson"),
-    loadGeo("lga-vic.geojson"),
+    loadGeo(sa2RawName()),
+    loadGeo(salRawName()),
+    loadGeo(lgaRawName()),
   ]);
 
-  const melbourneBbox = turf.bbox(sa2Fc);
+  const regionBbox = turf.bbox(sa2Fc);
 
   const salTree = new RBush<SalIndexItem>();
   const salItems: SalIndexItem[] = [];
@@ -130,10 +135,10 @@ async function main() {
     const c = turf.centroid(toFeature(g, {}));
     const [lng, lat] = c.geometry.coordinates;
     if (
-      lng < melbourneBbox[0] ||
-      lng > melbourneBbox[2] ||
-      lat < melbourneBbox[1] ||
-      lat > melbourneBbox[3]
+      lng < regionBbox[0] ||
+      lng > regionBbox[2] ||
+      lat < regionBbox[1] ||
+      lat > regionBbox[3]
     ) {
       continue;
     }
@@ -146,7 +151,9 @@ async function main() {
     });
   }
   salTree.load(salItems);
-  console.log(`SAL index: ${salItems.length} suburbs in Melbourne envelope`);
+  console.log(
+    `SAL index: ${salItems.length} suburbs in ${PIPELINE_REGION.label} envelope`
+  );
 
   const lgaTree = new RBush<LgaItem>();
   const lgaItems: LgaItem[] = [];
@@ -218,8 +225,10 @@ async function main() {
   }
 
   await mkdir(OUT_DIR, { recursive: true });
+  // The crosswalk's region field stays the GCCSA code (e.g. "2GMEL") - the
+  // registry is the source of truth; the value is unchanged for Melbourne.
   const out: CrosswalkFile = {
-    region: GREATER_MELBOURNE_GCCSA,
+    region: PIPELINE_REGION.gccsa,
     generatedAt: new Date().toISOString(),
     sa2ToSuburb,
     suburbToSa2,

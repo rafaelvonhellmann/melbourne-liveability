@@ -19,8 +19,10 @@
  */
 import { readFile } from "node:fs/promises";
 
-/** Victorian SA2 codes are 9 digits beginning with 2 (state code 2). */
-const VIC_SA2 = /^2\d{8}$/;
+/** SA2 codes are 9 digits beginning with the ABS state code (VIC = 2). */
+function sa2Pattern(stateCode: string): RegExp {
+  return new RegExp(`^${stateCode}\\d{8}$`);
+}
 
 export type QualPlace = {
   name: string;
@@ -46,12 +48,13 @@ type SdmxJson = {
 const round1 = (n: number): number => Math.round(n * 10) / 10;
 
 /**
- * Decode SDMX-JSON into per-SA2 qualification shares, filtered to Victorian
- * SA2s. Pure (no I/O); throws if the response carries no dataset so a silent
- * empty build fails loudly. `qallpLabels` is returned for one-off verification
- * that the QALLP codes still mean what the formula assumes.
+ * Decode SDMX-JSON into per-SA2 qualification shares, filtered to the given
+ * state's SA2s (default VIC, code "2"). Pure (no I/O); throws if the response
+ * carries no dataset so a silent empty build fails loudly. `qallpLabels` is
+ * returned for one-off verification that the QALLP codes still mean what the
+ * formula assumes.
  */
-export function decodeQualificationsSdmx(json: SdmxJson): {
+export function decodeQualificationsSdmx(json: SdmxJson, stateCode = "2"): {
   places: Record<string, QualPlace>;
   qallpLabels: Record<string, string>;
 } {
@@ -74,12 +77,13 @@ export function decodeQualificationsSdmx(json: SdmxJson): {
   const qVals = dims[qi].values;
   const regVals = dims[ri].values;
 
+  const stateSa2 = sa2Pattern(stateCode);
   const acc: Record<string, Record<string, number>> = {};
   const names: Record<string, string> = {};
   for (const [key, arr] of Object.entries(obs)) {
     const pos = key.split(":").map(Number);
     const reg = regVals[pos[ri]];
-    if (!reg || !VIC_SA2.test(reg.id)) continue;
+    if (!reg || !stateSa2.test(reg.id)) continue;
     const val = Number(arr?.[0]);
     if (!Number.isFinite(val)) continue;
     const q = qVals[pos[qi]]?.id;

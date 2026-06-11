@@ -7,8 +7,7 @@ import { writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { RAW } from "./lib/paths.js";
 import { overpassMelbourne } from "./lib/arcgis-fetch.js";
-
-const BBOX = "(-38.35,144.45,-37.45,145.65)";
+import { OVERPASS_BBOX as BBOX } from "./lib/pipeline-region.js";
 
 async function main() {
   await mkdir(RAW, { recursive: true });

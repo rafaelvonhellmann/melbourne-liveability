@@ -4,7 +4,8 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { RAW } from "./lib/paths.js";
-import { loadMelbourneSa2Codes } from "./lib/melbourne-sa2-codes.js";
+import { loadSa2Codes } from "./lib/melbourne-sa2-codes.js";
+import { PIPELINE_REGION, OVERPASS_BBOX } from "./lib/pipeline-region.js";
 import { fetchArcGisTable, overpassMelbourne } from "./lib/arcgis-fetch.js";
 import { downloadToFile } from "./lib/gov-fetch.js";
 import {
@@ -23,13 +24,13 @@ const UA = "MelbourneLiveability/1.0";
 
 async function main() {
   await mkdir(RAW, { recursive: true });
-  const codes = await loadMelbourneSa2Codes();
-  console.log(`Melbourne SA2 count: ${codes.length}`);
+  const codes = await loadSa2Codes();
+  console.log(`${PIPELINE_REGION.label} SA2 count: ${codes.length}`);
 
   console.log("ABS income (equiv weekly)...");
   const income = await fetchArcGisTable("SA2_income_DbR_Nov25", 0, {
     codes,
-    where: "gccsa_code_2021='2GMEL'",
+    where: `gccsa_code_2021='${PIPELINE_REGION.gccsa}'`,
     outFields: "sa2_code_2021,equiv_22021",
   });
   await writeFile(
@@ -96,6 +97,15 @@ async function main() {
   });
   await writeFile(path.join(RAW, "abs-sa2-indigenous.json"), JSON.stringify(g01));
 
+  // VIC-only Tier-B sources below: per-state equivalents are separate modules
+  // (EXPANSION-PLAN section 3) - skip rather than fetch wrong-state data.
+  if (PIPELINE_REGION.id !== "melbourne") {
+    console.log(
+      `Skipping VIC-only sources (hospitals, VCSA crime) for ${PIPELINE_REGION.id} - Tier-B state module pending.`
+    );
+  }
+
+  if (PIPELINE_REGION.id === "melbourne") {
   console.log("Vic MapShare hospitals...");
   try {
     const hospitals = await fetchVicHospitalPoints();
@@ -136,33 +146,34 @@ async function main() {
   } catch (e) {
     console.warn("  Crime:", (e as Error).message);
   }
+  } // end melbourne-only (VIC Tier-B) sources
 
   console.log("Overpass PT stops...");
   const pt = await overpassMelbourne(`
-    node["public_transport"~"platform|stop_position"](-38.35,144.45,-37.45,145.65);
-    node["railway"="tram_stop"](-38.35,144.45,-37.45,145.65);
-    node["highway"="bus_stop"](-38.35,144.45,-37.45,145.65);
+    node["public_transport"~"platform|stop_position"]${OVERPASS_BBOX};
+    node["railway"="tram_stop"]${OVERPASS_BBOX};
+    node["highway"="bus_stop"]${OVERPASS_BBOX};
   `);
   await writeFile(path.join(RAW, "osm-pt.json"), JSON.stringify(pt));
 
   console.log("Overpass hospitals + GP + police...");
   const health = await overpassMelbourne(`
-    node["amenity"="hospital"](-38.35,144.45,-37.45,145.65);
-    node["amenity"~"doctors|clinic|health_centre"](-38.35,144.45,-37.45,145.65);
-    way["amenity"~"doctors|clinic|health_centre"](-38.35,144.45,-37.45,145.65);
-    node["healthcare"~"doctor|clinic|centre"](-38.35,144.45,-37.45,145.65);
-    node["amenity"="police"](-38.35,144.45,-37.45,145.65);
-    way["amenity"="police"](-38.35,144.45,-37.45,145.65);
-    node["office"="police"](-38.35,144.45,-37.45,145.65);
+    node["amenity"="hospital"]${OVERPASS_BBOX};
+    node["amenity"~"doctors|clinic|health_centre"]${OVERPASS_BBOX};
+    way["amenity"~"doctors|clinic|health_centre"]${OVERPASS_BBOX};
+    node["healthcare"~"doctor|clinic|centre"]${OVERPASS_BBOX};
+    node["amenity"="police"]${OVERPASS_BBOX};
+    way["amenity"="police"]${OVERPASS_BBOX};
+    node["office"="police"]${OVERPASS_BBOX};
   `);
   await writeFile(path.join(RAW, "osm-health.json"), JSON.stringify(health));
 
   console.log("Overpass post offices (Australia Post / LPO)...");
   const post = await overpassMelbourne(`
-    node["amenity"="post_office"](-38.35,144.45,-37.45,145.65);
-    way["amenity"="post_office"](-38.35,144.45,-37.45,145.65);
-    node["shop"="post_office"](-38.35,144.45,-37.45,145.65);
-    node["post_office"="post_partner"](-38.35,144.45,-37.45,145.65);
+    node["amenity"="post_office"]${OVERPASS_BBOX};
+    way["amenity"="post_office"]${OVERPASS_BBOX};
+    node["shop"="post_office"]${OVERPASS_BBOX};
+    node["post_office"="post_partner"]${OVERPASS_BBOX};
   `);
   await writeFile(path.join(RAW, "osm-post.json"), JSON.stringify(post));
 
@@ -171,12 +182,12 @@ async function main() {
   // pins are context-only and never scored. Classified in build-poi.ts.
   console.log("Overpass pathology labs + NDIS-related providers...");
   const clinical = await overpassMelbourne(`
-    node["healthcare"~"laboratory|sample_collection"](-38.35,144.45,-37.45,145.65);
-    way["healthcare"~"laboratory|sample_collection"](-38.35,144.45,-37.45,145.65);
-    node["amenity"="clinic"]["healthcare:speciality"~"pathology|diagnostic"](-38.35,144.45,-37.45,145.65);
-    node["social_facility"](-38.35,144.45,-37.45,145.65);
-    node["office"~"association|ngo"](-38.35,144.45,-37.45,145.65);
-    node["healthcare"="counselling"](-38.35,144.45,-37.45,145.65);
+    node["healthcare"~"laboratory|sample_collection"]${OVERPASS_BBOX};
+    way["healthcare"~"laboratory|sample_collection"]${OVERPASS_BBOX};
+    node["amenity"="clinic"]["healthcare:speciality"~"pathology|diagnostic"]${OVERPASS_BBOX};
+    node["social_facility"]${OVERPASS_BBOX};
+    node["office"~"association|ngo"]${OVERPASS_BBOX};
+    node["healthcare"="counselling"]${OVERPASS_BBOX};
   `);
   await writeFile(
     path.join(RAW, "osm-clinical-social.json"),
@@ -189,8 +200,8 @@ async function main() {
   // node+way were fetched - see AMENITY-AUDIT.md). The helper's default
   // `out center` yields a representative point for ways and relations alike.
   const schools = await overpassMelbourne(`
-    nwr["amenity"="school"](-38.35,144.45,-37.45,145.65);
-    nwr["amenity"~"kindergarten|childcare|preschool"](-38.35,144.45,-37.45,145.65);
+    nwr["amenity"="school"]${OVERPASS_BBOX};
+    nwr["amenity"~"kindergarten|childcare|preschool"]${OVERPASS_BBOX};
   `);
   await writeFile(path.join(RAW, "osm-schools.json"), JSON.stringify(schools));
 
@@ -206,10 +217,10 @@ async function main() {
   // representative point that the consumers already decode via `el.center`.
   console.log("Overpass everyday amenities (15-min access)...");
   const amenities = await overpassMelbourne(`
-    nwr["shop"~"supermarket|convenience|greengrocer"](-38.35,144.45,-37.45,145.65);
-    nwr["amenity"~"pharmacy|cafe|restaurant|fast_food|gym"](-38.35,144.45,-37.45,145.65);
-    nwr["shop"="chemist"](-38.35,144.45,-37.45,145.65);
-    nwr["leisure"~"park|garden|fitness_centre|sports_centre"](-38.35,144.45,-37.45,145.65);
+    nwr["shop"~"supermarket|convenience|greengrocer"]${OVERPASS_BBOX};
+    nwr["amenity"~"pharmacy|cafe|restaurant|fast_food|gym"]${OVERPASS_BBOX};
+    nwr["shop"="chemist"]${OVERPASS_BBOX};
+    nwr["leisure"~"park|garden|fitness_centre|sports_centre"]${OVERPASS_BBOX};
   `);
   await writeFile(path.join(RAW, "osm-amenities.json"), JSON.stringify(amenities));
 
@@ -223,12 +234,12 @@ async function main() {
   console.log("Overpass cycling infrastructure (cyclability)...");
   const cycleways = await overpassMelbourne(
     `
-    way["highway"="cycleway"](-38.35,144.45,-37.45,145.65);
-    way["cycleway"~"lane|track|opposite_lane|opposite_track|shared_lane|share_busway"](-38.35,144.45,-37.45,145.65);
-    way["cycleway:left"~"lane|track|shared_lane"](-38.35,144.45,-37.45,145.65);
-    way["cycleway:right"~"lane|track|shared_lane"](-38.35,144.45,-37.45,145.65);
-    way["cycleway:both"~"lane|track|shared_lane"](-38.35,144.45,-37.45,145.65);
-    way["highway"~"path|footway"]["bicycle"="designated"](-38.35,144.45,-37.45,145.65);
+    way["highway"="cycleway"]${OVERPASS_BBOX};
+    way["cycleway"~"lane|track|opposite_lane|opposite_track|shared_lane|share_busway"]${OVERPASS_BBOX};
+    way["cycleway:left"~"lane|track|shared_lane"]${OVERPASS_BBOX};
+    way["cycleway:right"~"lane|track|shared_lane"]${OVERPASS_BBOX};
+    way["cycleway:both"~"lane|track|shared_lane"]${OVERPASS_BBOX};
+    way["highway"~"path|footway"]["bicycle"="designated"]${OVERPASS_BBOX};
   `,
     { out: "geom" }
   );

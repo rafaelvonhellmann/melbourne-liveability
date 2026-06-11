@@ -1,5 +1,7 @@
 /** Crosswalk record: SA2 ↔ suburb/LGA with overlap weights (population- or area-weighted). */
 
+import REGIONS from "./regions";
+
 export type CrosswalkMethod = "population-weighted" | "area-weighted";
 
 export type SuburbOverlap = {
@@ -27,5 +29,7 @@ export type CrosswalkFile = {
   suburbAliases: Record<string, string[]>;
 };
 
-export const GREATER_MELBOURNE_GCCSA = "2GMEL";
+/** Alias kept for existing consumers - the registry (lib/regions.ts) is now
+ * the source of truth; value is unchanged ("2GMEL"). */
+export const GREATER_MELBOURNE_GCCSA = REGIONS.melbourne.gccsa;
 export const WEIGHT_SUM_TOLERANCE = 0.01;

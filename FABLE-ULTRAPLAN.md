@@ -537,6 +537,57 @@ template. ADD: a report-level shortlist view - side-by-side comparison of
 saved pin checks (reuses the compare engine) - this is the 3-pack's reason
 to exist beyond a discount.
 
+## 19. LAUNCH DIRECTIVE 2026-06-20 (owner, 2026-06-11) - supersedes prior sequencing
+
+**Hard date: launch 2026-06-20 covering ALL greater capital regions** (Sydney,
+Brisbane, Adelaide, Perth, Hobart, Darwin, Canberra + Melbourne). Then regional
+cities (Geelong, Bendigo, Ballarat, Gold Coast, Townsville, Alice Springs and
+similar booming markets), then all of Australia. Work runs continuously with
+parallel adversarial review until delivered.
+
+**9-day scope reality (cutline):** every capital launches with the national-
+data tier (SA2 choropleth, profiles, compare, scores from ABS/OSM/ACARA/
+ACECQA/GA national layers) + honest "not yet available in CITY" pin lenses;
+Melbourne keeps full pin-report depth; per-state Tier-B lenses land per city
+in priority order as agent-hours allow (Sydney first). REGION-ROLLOUT.md
+(being generated) carries the per-city work table.
+
+**Workstreams:**
+1. Region registry + national bake loop (RUNNING - critical path).
+2. Onboarding rebuild: tailored buyer vs AGENT experience - agent mode
+   RETURNS with a real workflow (owner reversal of the earlier removal):
+   agents hold sub-profiles per client, tracked locally until accounts.
+   Tagline on onboarding: "Festra - a window towards your new home" (offer
+   the owner "a window onto your new home" as a grammar alternative).
+   Onboarding animation concept: click the map -> camera glides to the pin
+   -> data layers fade in translucently behind the copy.
+3. Mobile launch gate: iPhone-class pass (iPhone 17 as reference device;
+   test with the closest Playwright descriptor + 393pt viewport).
+4. Floating pin panel (desktop): detach the right sidebar into a shorter
+   floating panel anchored near the pin - MOCK FIRST, owner approves, then
+   build (mobile keeps the sheet).
+5. Design variant D for owner approval BEFORE any token flip: cream/off-white
+   surfaces + stronger/deeper blue accent, "It Takes a Village" illustrated
+   warmth as reference, logo concept "F formed from clustered map pins".
+   HONESTY NOTE recorded: cream was banned by the owner's own anti-slop
+   research (AI-default surface + Landchecker-adjacent); the owner may
+   override with eyes open - the variant mockup is how they decide.
+6. Admin/owner page: interim = Stripe Dashboard (payments) + analytics
+   dashboard (traffic) once D5 lands; a custom owner console (subscribers,
+   revenue, usage) ships with the P2-4 Worker backend - speccing it there.
+7. Social + distribution (OWNER creates accounts; agent preps): handle
+   availability checklist, bios, banner/logo assets, first-week content
+   calendar (Twitter/X + Instagram); distribution experiment: one-week free
+   trial outreach to property managers/buyer agents - outreach list +
+   email template prepped as docs; trial mechanics need P2-4 payments.
+8. New data candidate: properties owned per household / investor ownership
+   share - ATO individuals' rental-property statistics (postcode level,
+   crosswalk to SA2) is the open path; verify licence + vintage.
+9. Festra for Gov (council/city/state benchmarking) - FUTURE, parked;
+   the monthly discovery machinery (P3-7) is the foundation when ready.
+
+---
+
 **Demoted:** terrain-aware sun + solstice share card (section 14) drops
 below all Phase 1-2 work - sun is commodity (review 3.7); density gating +
 honest low-coverage copy suffices at launch. The buyer-lens verdict: terrain

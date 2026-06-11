@@ -9,9 +9,8 @@ import { writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { PUBLIC_DATA } from "./lib/paths.js";
 import { overpassMelbourne } from "./lib/arcgis-fetch.js";
+import { OVERPASS_BBOX as BBOX } from "./lib/pipeline-region.js";
 import type { NuisanceKind } from "../lib/nuisance.js";
-
-const BBOX = "(-38.35,144.45,-37.45,145.65)";
 
 type OsmEl = {
   lat?: number;
