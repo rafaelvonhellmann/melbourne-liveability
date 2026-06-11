@@ -112,6 +112,12 @@ export interface BuyerFinding {
   geography: BuyerGeography;
   sourceRefs?: BuyerSourceRef[];
   caveat?: string;
+  /**
+   * Dataset/check vintage for this finding (e.g. the planning-map "as at"
+   * date). Rendered ONLY in full-report variants - the live glimpse panel
+   * never shows dates, sources or caveats.
+   */
+  asAt?: string;
 }
 
 export interface NearbyAmenity {
@@ -1045,11 +1051,14 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         kind: "neutral",
         severity: "info",
         title: `Zoned ${zone.code} - ${zone.description}`,
+        // Body text stays code-free plain English (the title carries the code);
+        // the vintage rides on `asAt`, rendered only in full-report variants.
         summary: `${zoneGroupMeaning(zone.parent)}${
           zone.gazetted
             ? ""
             : " This zoning is a proposed amendment, not yet gazetted - check its current status."
-        } As at ${zone.asAt}.`,
+        }`,
+        asAt: zone.asAt,
         whyItMatters:
           "The zone decides what can be built or run on this land and around it - by you and by your neighbours.",
         verifyAction:
@@ -1073,7 +1082,10 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
         kind: "verify",
         severity: meta.severity,
         title: `${meta.name} ${o.code} applies at this exact location`,
-        summary: `${meta.name} (${o.code}) is mapped over this exact point - as at ${o.asAt}. ${meta.buyerMeaning}`,
+        // The title carries the overlay code; the body stays code-free plain
+        // English, and the "as at" vintage rides on `asAt` (full report only).
+        summary: `${meta.name} is mapped over this exact point. ${meta.buyerMeaning}`,
+        asAt: o.asAt,
         whyItMatters:
           "Planning overlays control what you can build, change or remove - they affect cost, insurability and the feasibility of your plans.",
         verifyAction:
@@ -1087,7 +1099,9 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       });
     }
     if (otherOverlays.length > 0) {
-      const list = otherOverlays.map((o) => `${o.code} (${o.description})`).join(", ");
+      // Plain-English descriptions only - the planning certificate carries the
+      // exact codes, and the description names the control well enough here.
+      const list = otherOverlays.map((o) => o.description).join(", ");
       findings.push({
         id: "parcel-overlay-other",
         kind: "neutral",
@@ -1101,16 +1115,18 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
       });
     }
     // P1-2 negative-finding convention: an all-clear must carry its as-at date
-    // inline, plus the absence-is-not-a-guarantee caveat.
+    // (on `asAt`, rendered in full-report variants - never in the live glimpse),
+    // plus the absence-is-not-a-guarantee caveat.
     if (zone && materialOverlays.length === 0) {
       findings.push({
         id: "parcel-overlays-clear",
         kind: "neutral",
         severity: "info",
         title: "No major planning overlay mapped at this point",
-        summary: `None of the buyer-critical planning overlays we track (heritage, flood, bushfire, erosion, contamination audit, public acquisition, landscape/vegetation, airport noise, design) is mapped at this exact point as at ${planningAt.checkedAt}.${
+        summary: `None of the buyer-critical planning overlays we track (heritage, flood, bushfire, erosion, contamination audit, public acquisition, landscape/vegetation, airport noise, design) is mapped at this exact point.${
           otherOverlays.length > 0 ? " Less critical controls do apply - see above." : ""
         }`,
+        asAt: planningAt.checkedAt,
         verifyAction:
           "Confirm on the property's planning certificate (Section 32) before you offer.",
         confidence: "high",
@@ -1161,8 +1177,10 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
   if (presentOverlayList.length > 0 && !parcelPlanningDefinitive) {
     const hasHigh = presentOverlayList.some((o) => o.materiality === "high");
     const lead = presentOverlayList[0];
+    // Body stays code-free plain English - the lead overlay's code already
+    // sits in the title where present.
     const shareList = presentOverlayList
-      .map((o) => `${o.name} (${o.code}) ~${Math.round(overlayShares?.[o.code] ?? 0)}%`)
+      .map((o) => `${o.name} ~${Math.round(overlayShares?.[o.code] ?? 0)}%`)
       .join(", ");
     findings.push({
       id: "conservation-overlays",

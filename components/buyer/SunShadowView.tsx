@@ -5,7 +5,6 @@ import maplibregl from "maplibre-gl";
 import type { Feature, FeatureCollection, Polygon, MultiPolygon } from "geojson";
 import { sunPosition } from "@/lib/sun";
 import { pointInPolygon } from "@/lib/buyer-location";
-import { timeoutSignal } from "@/lib/fetch-timeout";
 import { loadBuildingsNear } from "@/lib/buildings";
 
 /**
@@ -22,13 +21,9 @@ import { loadBuildingsNear } from "@/lib/buildings";
  * -> public/data/buildings, baked from OSM by the bake-buildings CI workflow) -
  * no live third-party endpoint, so it loads reliably across Greater Melbourne.
  * Heights are from OSM height / building:levels (estimated where untagged).
- * shademap.app deep-link for the exact simulation. Loaded on demand (dynamic
- * import) so MapLibre stays out of the report's initial bundle.
+ * Loaded on demand (dynamic import) so MapLibre stays out of the report's
+ * initial bundle. No external simulator links (owner call - liability).
  */
-function shademapUrl(lng: number, lat: number): string {
-  return `https://shademap.app/@${lat.toFixed(5)},${lng.toFixed(5)},17z`;
-}
-
 const RAD = Math.PI / 180;
 const EMPTY_FC: FeatureCollection = { type: "FeatureCollection", features: [] };
 
@@ -164,6 +159,8 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
   const mapRef = useRef<maplibregl.Map | null>(null);
   const buildingsRef = useRef<FeatureCollection | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "no-buildings" | "error">("loading");
+  // Bumped by the Retry button; re-runs the setup effect (map + buildings load).
+  const [attempt, setAttempt] = useState(0);
   const [hour, setHour] = useState(13);
   const [season, setSeason] = useState<Season>("summer");
   const [pinShaded, setPinShaded] = useState<boolean | null>(null);
@@ -233,20 +230,26 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
       });
     };
     // Fetch buildings immediately (not gated on the flaky "load" event); apply
-    // once the style is parsed. Time-bounded + unmount-guarded.
+    // once the style is parsed. Unmount-guarded; time-bounding is PER TILE
+    // inside loadBuildingsNear (a single shared deadline across all tile
+    // fetches made total bytes the budget and aborted dense-area loads on
+    // healthy connections - the original "still not working" root cause).
     let cancelled = false;
+    const ctrl = new AbortController();
     (async () => {
-      // Our own baked static building tiles (on Pages) - fast + reliable, no live
-      // third-party endpoint. A short budget is fine; they are cacheable assets.
-      const t = timeoutSignal(8000);
       try {
-        const fc = await loadBuildingsNear(lng, lat, t.signal);
+        const result = await loadBuildingsNear(lng, lat, ctrl.signal);
         if (cancelled) return;
-        if (!fc.features.length) {
+        if (result.status === "failed") {
+          // Connectivity problem - NEVER masked as "no buildings here".
+          setStatus("error");
+          return;
+        }
+        if (result.status === "empty") {
           setStatus("no-buildings");
           return;
         }
-        const ready = fc;
+        const ready = result.buildings;
         let tries = 0;
         const tryApply = () => {
           if (cancelled || !mapRef.current) return;
@@ -268,18 +271,17 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
         tryApply();
       } catch {
         if (!cancelled) setStatus("error");
-      } finally {
-        t.clear();
       }
     })();
     map.on("error", (e) => console.warn("SunShadowView map:", e?.error?.message ?? e));
 
     return () => {
       cancelled = true;
+      ctrl.abort();
       map.remove();
       mapRef.current = null;
     };
-  }, [lng, lat]);
+  }, [lng, lat, attempt]);
 
   // Recompute cast shadows + the map light whenever the chosen time changes.
   // Debounced so dragging the slider stays smooth across ~hundreds of buildings.
@@ -335,14 +337,26 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
         )}
         {status === "no-buildings" && (
           <p className="text-xs text-ink-muted">
-            No mapped buildings here to cast shadows. Use the shadow simulator below for this
-            address.
+            No mapped buildings here to cast shadows - the orientation note above still
+            applies.
           </p>
         )}
         {status === "error" && (
-          <p className="text-xs text-ink-muted">
-            Couldn&apos;t load the buildings just now. The shadow simulator below still works.
-          </p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs text-ink-muted">
+              Couldn&apos;t load building data - check your connection and retry.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setStatus("loading");
+                setAttempt((a) => a + 1);
+              }}
+              className="shrink-0 rounded-full border border-surface-border px-2.5 py-0.5 text-[11px] font-medium text-ink hover:border-accent"
+            >
+              Retry
+            </button>
+          </div>
         )}
         {status === "ready" && (
           <>
@@ -404,15 +418,7 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
           Cast shadows from OpenStreetMap building outlines, with heights from tagged storeys
           (or ~2 storeys where untagged) - approximate. &copy; OpenStreetMap (ODbL).{" "}
           Shadows fall on flat ground - terrain + the building&apos;s own floors aren&apos;t
-          modelled, so treat it as a guide.{" "}
-          <a
-            href={shademapUrl(lng, lat)}
-            target="_blank"
-            rel="noreferrer"
-            className="font-medium text-accent underline decoration-dotted underline-offset-2"
-          >
-            Open the full shadow simulator &rarr;
-          </a>
+          modelled, so treat it as a guide.
         </p>
       </div>
     </div>

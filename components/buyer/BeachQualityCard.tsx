@@ -15,7 +15,16 @@ const GRADE_STYLE: Record<NearestBeach["grade"], { cls: string }> = {
   Poor: { cls: "border-[#d73027]/40 bg-[#FBE3E0] text-[#9a241c]" },
 };
 
-export function BeachQualityCard({ lng, lat }: { lng: number; lat: number }) {
+export function BeachQualityCard({
+  lng,
+  lat,
+  compact = false,
+}: {
+  lng: number;
+  lat: number;
+  /** Live glimpse panel: name + grade only, no sampling detail or attribution. */
+  compact?: boolean;
+}) {
   const [beach, setBeach] = useState<NearestBeach | null>(null);
   const [status, setStatus] = useState<"loading" | "done" | "none">("loading");
 
@@ -43,14 +52,21 @@ export function BeachQualityCard({ lng, lat }: { lng: number; lat: number }) {
           {beach.grade}
         </span>
       </div>
-      <p className="mt-2 text-xs leading-relaxed text-ink-muted">
-        Nearest monitored bay beach: <b className="text-ink">{beach.name}</b> (~{beach.distanceKm} km).
-        Typical recent swim quality is <b className="text-ink">{beach.grade}</b> (median{" "}
-        {beach.value} enterococci/100 mL over the last {beach.n} samples; latest {beach.date}). Good
-        ≤40, Fair 41-200, Poor &gt;200 (NHMRC). This is measured sampling, not EPA&apos;s live
-        rain-driven daily forecast - check the EPA Beach Report before swimming.{" "}
-        <span className="text-ink-muted">&copy; EPA Victoria / DataVic (CC BY 4.0).</span>
-      </p>
+      {compact ? (
+        <p className="mt-2 text-xs leading-relaxed text-ink-muted">
+          Nearest monitored bay beach: <b className="text-ink">{beach.name}</b> (~{beach.distanceKm}{" "}
+          km). Typical recent swim quality is <b className="text-ink">{beach.grade}</b>.
+        </p>
+      ) : (
+        <p className="mt-2 text-xs leading-relaxed text-ink-muted">
+          Nearest monitored bay beach: <b className="text-ink">{beach.name}</b> (~{beach.distanceKm} km).
+          Typical recent swim quality is <b className="text-ink">{beach.grade}</b> (median{" "}
+          {beach.value} enterococci/100 mL over the last {beach.n} samples; latest {beach.date}). Good
+          ≤40, Fair 41-200, Poor &gt;200 (NHMRC). This is measured sampling, not EPA&apos;s live
+          rain-driven daily forecast - check the EPA Beach Report before swimming.{" "}
+          <span className="text-ink-muted">&copy; EPA Victoria / DataVic (CC BY 4.0).</span>
+        </p>
+      )}
     </div>
   );
 }

@@ -15,7 +15,16 @@ function tone(anef: number): string {
   return "border-[#E6AB02]/40 bg-[#FBF3D8] text-[#7a5a00]";
 }
 
-export function AircraftNoiseCard({ lng, lat }: { lng: number; lat: number }) {
+export function AircraftNoiseCard({
+  lng,
+  lat,
+  compact = false,
+}: {
+  lng: number;
+  lat: number;
+  /** Live glimpse panel: keep the buyer meaning, drop the attribution. */
+  compact?: boolean;
+}) {
   const [noise, setNoise] = useState<AircraftNoise | null>(null);
   const [status, setStatus] = useState<"loading" | "done" | "none">("loading");
 
@@ -50,10 +59,15 @@ export function AircraftNoiseCard({ lng, lat }: { lng: number; lat: number }) {
         This spot is inside the <b className="text-ink">ANEF {noise.anef}</b> aircraft-noise contour
         for <b className="text-ink">{noise.airport}</b>. ANEF 20-25 means noticeable aircraft noise
         through the day; ANEF 25+ areas face acoustic-insulation requirements and limits on new homes
-        under state planning policy. Most of Melbourne sits outside these contours.{" "}
-        <span className="text-ink-muted">
-          &copy; State of Victoria (DTP) / airport master plans - ANEF contours (CC BY 4.0).
-        </span>
+        under state planning policy. Most of Melbourne sits outside these contours.
+        {!compact && (
+          <>
+            {" "}
+            <span className="text-ink-muted">
+              &copy; State of Victoria (DTP) / airport master plans - ANEF contours (CC BY 4.0).
+            </span>
+          </>
+        )}
       </p>
     </div>
   );

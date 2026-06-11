@@ -17,7 +17,16 @@ const BAND_STYLE: Record<UrbanHeat["band"], { label: string; cls: string }> = {
   "very hot": { label: "Very hot", cls: "border-[#d73027]/40 bg-[#FBE3E0] text-[#9a241c]" },
 };
 
-export function UrbanHeatCard({ lng, lat }: { lng: number; lat: number }) {
+export function UrbanHeatCard({
+  lng,
+  lat,
+  compact = false,
+}: {
+  lng: number;
+  lat: number;
+  /** Live glimpse panel: drop attribution, snapshot vintage + methodology caveat. */
+  compact?: boolean;
+}) {
   const [heat, setHeat] = useState<UrbanHeat | null>(null);
   const [status, setStatus] = useState<"loading" | "done" | "none">("loading");
 
@@ -56,12 +65,19 @@ export function UrbanHeatCard({ lng, lat }: { lng: number; lat: number }) {
         <p className="mt-2 text-xs leading-relaxed text-ink-muted">
           On a hot summer day, surfaces around this spot run about{" "}
           <b className="text-ink">+{heat.uhiC.toFixed(1)}°C</b> hotter than leafy, vegetated land
-          (land-<i>surface</i> temperature, not air temperature). Leafier streets and tree canopy
-          keep a street cooler; bare roofs, roads and car parks run hotter - it shapes summer
-          comfort and cooling costs. Snapshot: Landsat-derived, 2018.{" "}
-          <span className="text-ink-muted">
-            &copy; State of Victoria (DTP), Cooling &amp; Greening Melbourne (CC BY 4.0).
-          </span>
+          {compact ? (
+            "."
+          ) : (
+            <>
+              {" "}
+              (land-<i>surface</i> temperature, not air temperature). Leafier streets and tree
+              canopy keep a street cooler; bare roofs, roads and car parks run hotter - it shapes
+              summer comfort and cooling costs. Snapshot: Landsat-derived, 2018.{" "}
+              <span className="text-ink-muted">
+                &copy; State of Victoria (DTP), Cooling &amp; Greening Melbourne (CC BY 4.0).
+              </span>
+            </>
+          )}
         </p>
       )}
     </div>

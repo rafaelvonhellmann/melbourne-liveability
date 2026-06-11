@@ -165,6 +165,9 @@ describe("BuyerReportPanel - sample (full) variant", () => {
     expect(screen.getByText(/updated 2026-06-01/)).toBeInTheDocument();
     // P1-2: the per-finding provenance line carries the dataset vintage inline
     expect(screen.getAllByText(/as at 2026-05-29/).length).toBeGreaterThan(0);
+    // Amenity precision/source line + measurement-method note (full only)
+    expect(screen.getByText(/src: OpenStreetMap \(ODbL\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Straight-line, not street-network walking time/)).toBeInTheDocument();
   });
 
   it("groups findings into weigh-up / verify / positive sections with counts", () => {
@@ -183,6 +186,15 @@ describe("BuyerReportPanel - sample (full) variant", () => {
   it("always offers print / save as PDF", () => {
     render(<BuyerReportPanel report={makeReport()} place={PLACE} variant="sample" />);
     expect(screen.getByRole("button", { name: /Print \/ save as PDF/ })).toBeInTheDocument();
+  });
+
+  it("renders the sun orientation text without the static sun-path diagram (owner feedback)", () => {
+    render(<BuyerReportPanel report={makeReport()} place={PLACE} variant="sample" />);
+    expect(screen.getByRole("heading", { name: "Sun & light" })).toBeInTheDocument();
+    // The ideal-orientation text stays...
+    expect(screen.getByText(/Best light comes from the north/)).toBeInTheDocument();
+    // ...but the decorative side-on sun-path SVG above the 3D simulator is gone.
+    expect(screen.queryByRole("img", { name: /Side-on sun path/i })).not.toBeInTheDocument();
   });
 });
 
@@ -203,22 +215,48 @@ describe("BuyerReportPanel - live (compact) variant", () => {
     expect(screen.getByText("Very busy road within 200 m")).toBeInTheDocument();
   });
 
-  it("links out to the full area report and keeps the print button", () => {
+  it("is a glimpse: no source/licence lines, no method caveats, one not-advice line", () => {
     render(<BuyerReportPanel report={makeReport()} place={PLACE} variant="live" />);
-    expect(screen.getByRole("link", { name: /See the full area report/ })).toBeInTheDocument();
+    // No source attributions or licence strings anywhere on screen
+    expect(screen.queryByText(/src: OpenStreetMap/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/ODbL/)).not.toBeInTheDocument();
+    // No measurement-method caveat under the amenity list
+    expect(
+      screen.queryByText(/Straight-line, not street-network walking time/)
+    ).not.toBeInTheDocument();
+    // The foot disclaimer block is gone - the header keeps the single compact
+    // not-advice line instead.
+    expect(screen.queryByText("Information only - not advice.")).not.toBeInTheDocument();
+    expect(
+      screen.getAllByText(/Information only, not advice - verify before you buy/).length
+    ).toBe(1);
+  });
+
+  it("links out to the area profile and keeps the print button", () => {
+    render(<BuyerReportPanel report={makeReport()} place={PLACE} variant="live" />);
+    expect(screen.getByRole("link", { name: /Explore the area profile/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Print \/ save as PDF/ })).toBeInTheDocument();
   });
 
-  it("offers 'Open the full report' linking to /buyer/report for this exact pin (P1-1)", () => {
+  it("offers the pin-report link to /buyer/report for this exact pin (P1-1)", () => {
     render(<BuyerReportPanel report={makeReport()} place={PLACE} variant="live" />);
-    const link = screen.getByRole("link", { name: /Open the full report/ });
+    const link = screen.getByRole("link", { name: /Full report for this pin/ });
     expect(link).toHaveAttribute(
       "href",
       expect.stringContaining("/buyer/report?lat=-37.813600&lng=144.963100")
     );
   });
 
-  it("hides the full-report link when there is no pin", () => {
+  it("the word 'report' appears in only ONE of the two header links", () => {
+    render(<BuyerReportPanel report={makeReport()} place={PLACE} variant="live" />);
+    const reportLinks = screen
+      .getAllByRole("link")
+      .filter((l) => /report/i.test(l.textContent ?? ""));
+    expect(reportLinks.length).toBe(1);
+    expect(reportLinks[0].textContent).toMatch(/Full report for this pin/);
+  });
+
+  it("hides the pin-report link when there is no pin", () => {
     render(
       <BuyerReportPanel
         report={makeReport({ location: { sa2Name: "Testville" } })}
@@ -226,7 +264,9 @@ describe("BuyerReportPanel - live (compact) variant", () => {
         variant="live"
       />
     );
-    expect(screen.queryByRole("link", { name: /Open the full report/ })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /Full report for this pin/ })
+    ).not.toBeInTheDocument();
   });
 
   it("shows clear-pin and save-check actions only when handlers are wired", () => {
@@ -250,10 +290,10 @@ describe("BuyerReportPanel - live (compact) variant", () => {
 });
 
 describe("BuyerReportPanel - embedded variant", () => {
-  it("renders the full report but no full-area-report button (it IS that page)", () => {
+  it("renders the full report but no area-profile button (it IS that page)", () => {
     render(<BuyerReportPanel report={makeReport()} place={PLACE} variant="embedded" />);
     expect(screen.getByRole("heading", { name: "Sources and confidence" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /See the full area report/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Explore the area profile/ })).not.toBeInTheDocument();
     // No "Sample report" disclaimer suffix outside the sample variant
     expect(screen.queryByText(/Sample report - not a report/)).not.toBeInTheDocument();
   });
@@ -287,8 +327,10 @@ describe("BuyerReportPanel - full variant (/buyer/report route for a real pin)",
     ).toBe(2);
     expect(screen.getAllByText(/Confidence: high/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/as at 2026-05-29/).length).toBeGreaterThan(0);
-    // It IS the full pin report - no self-referential "Open the full report"
-    expect(screen.queryByRole("link", { name: /Open the full report/ })).not.toBeInTheDocument();
+    // It IS the full pin report - no self-referential pin-report link
+    expect(
+      screen.queryByRole("link", { name: /Full report for this pin/ })
+    ).not.toBeInTheDocument();
   });
 });
 
@@ -329,6 +371,9 @@ describe("BuyerReportPanel - price context card (P1-6 wiring)", () => {
     stubPriceFetch();
     render(<BuyerReportPanel report={makeReport()} place={PLACE} variant="live" />);
     expect(await screen.findByRole("heading", { name: "Price context" })).toBeInTheDocument();
+    // Glimpse: the source/licence/vintage footer stays out of the live panel.
+    expect(screen.queryByText(/not a valuation/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Valuer-General/)).not.toBeInTheDocument();
   });
 
   it("renders in the full variant too (and shows the not-a-valuation framing)", async () => {

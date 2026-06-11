@@ -33,19 +33,19 @@ test.describe("journey: pin-drop report via URL", () => {
     });
     await expect(visible(page, "heading", "Sun & light")).toBeVisible();
     await expect(visible(page, "heading", "Nearby amenities")).toBeVisible();
-    // P1-2 acceptance: findings/provenance lines carry an inline "as at <date>"
-    // dataset-vintage stamp.
-    await expect(
-      page.getByText(/as at \d{4}/).filter({ visible: true }).first()
-    ).toBeVisible();
+    // Glimpse rule: the live panel shows NO dataset-vintage stamps on screen -
+    // "as at <date>" provenance lives in the full pin report it links to.
+    await expect(page.getByText(/as at \d{4}/).filter({ visible: true })).toHaveCount(0);
     // The pin's coordinates are echoed in the header (toFixed(5)).
     await expect(
       page.getByText("-37.81360, 144.96310").filter({ visible: true }).first()
     ).toBeVisible();
     // The dated-artifact promise: print/save-as-PDF is one tap away.
     await expect(visible(page, "button", /Print \/ save as PDF/)).toBeVisible();
-    // And the full report is reachable from the live panel.
-    await expect(visible(page, "link", /See the full area report/)).toBeVisible();
+    // Both artifacts are reachable from the live panel: the PIN report (the
+    // only link with "report" in it) and the AREA profile.
+    await expect(visible(page, "link", /Full report for this pin/)).toBeVisible();
+    await expect(visible(page, "link", /Explore the area profile/)).toBeVisible();
   });
 });
 

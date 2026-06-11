@@ -740,7 +740,10 @@ describe("parcel-level planning lens (P1-5)", () => {
     expect(z?.geography).toBe("parcel");
     expect(z?.title).toMatch(/^Zoned GRZ1 - General Residential Zone/);
     expect(z?.summary).toMatch(/residential/i);
-    expect(z?.summary).toMatch(/As at 2014-06-13/);
+    // The vintage rides on `asAt` (rendered in full variants only) - the body
+    // sentence stays date-free so the live glimpse never shows it.
+    expect(z?.summary).not.toMatch(/as at/i);
+    expect(z?.asAt).toBe("2014-06-13");
     expect(z?.sourceRefs?.length ?? 0).toBeGreaterThan(0);
   });
 
@@ -754,7 +757,11 @@ describe("parcel-level planning lens (P1-5)", () => {
     expect(ho?.kind).toBe("verify");
     expect(ho?.geography).toBe("parcel");
     expect(ho?.title).toMatch(/Heritage Overlay HO123 applies at this exact location/);
-    expect(ho?.summary).toMatch(/as at 2020-02-06/);
+    // Title carries the code; the body sentence is code-free plain English and
+    // the vintage rides on `asAt` (full-report rendering only).
+    expect(ho?.summary).not.toContain("HO123");
+    expect(ho?.summary).not.toMatch(/as at/i);
+    expect(ho?.asAt).toBe("2020-02-06");
     // The SA2 area-share findings for the same overlay families are suppressed.
     expect(r.findings.find((f) => f.id === "heritage-overlay")).toBeFalsy();
     expect(r.findings.find((f) => f.id === "conservation-overlays")).toBeFalsy();
@@ -770,8 +777,10 @@ describe("parcel-level planning lens (P1-5)", () => {
     const clear = r.findings.find((f) => f.id === "parcel-overlays-clear");
     expect(clear).toBeTruthy();
     expect(clear?.kind).toBe("neutral");
-    // P1-2 negative-finding convention: inline as-at + absence-not-a-guarantee.
-    expect(clear?.summary).toMatch(/as at 2026-06-10/);
+    // P1-2 negative-finding convention: dated all-clear (vintage on `asAt`,
+    // shown in full variants) + absence-not-a-guarantee caveat.
+    expect(clear?.asAt).toBe("2026-06-10");
+    expect(clear?.summary).not.toMatch(/as at/i);
     expect(clear?.caveat).toMatch(/not a guarantee/i);
   });
 
@@ -818,7 +827,8 @@ describe("parcel-level planning lens (P1-5)", () => {
     expect(r.findings.find((f) => f.id === "parcel-overlay-PO12")).toBeFalsy(); // never a verify
     const other = r.findings.find((f) => f.id === "parcel-overlay-other");
     expect(other?.kind).toBe("neutral");
-    expect(other?.summary).toContain("PO12");
+    // Plain-English description, no raw overlay code in the body.
+    expect(other?.summary).toContain("Parking Overlay - Precinct 12");
     const clear = r.findings.find((f) => f.id === "parcel-overlays-clear");
     expect(clear).toBeTruthy();
     expect(clear?.summary).toMatch(/Less critical controls do apply/);

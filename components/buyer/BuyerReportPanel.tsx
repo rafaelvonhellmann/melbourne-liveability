@@ -6,7 +6,6 @@ import Link from "next/link";
 import { X, ShieldAlert, CheckCircle2, HelpCircle, Info, Bookmark, BookmarkCheck, Printer } from "lucide-react";
 import type { BuyerReport, BuyerFinding, BuyerConfidence, BuyerGeography } from "@/lib/buyer-report";
 import { anchorKindLabel, bandLabel } from "@/lib/anchors";
-import { SunPathDiagram } from "./SunPathDiagram";
 import { UrbanHeatCard } from "./UrbanHeatCard";
 import { TreeCanopyCard } from "./TreeCanopyCard";
 import { AircraftNoiseCard } from "./AircraftNoiseCard";
@@ -104,10 +103,11 @@ export function BuyerReportPanel({
   // isochrone; the free tier uses a straight-line radius. Drive the copy off it.
   const precise = report.accessMode === "precise";
   const reachLabel = precise ? "reachable on foot" : "within ~1.2 km";
-  // The live map panel is a LIGHT set of pin-specific hints; the heavy chrome and
-  // the area-level sections (which duplicate the /places profile) are hidden there
-  // and reached via the "See the full area report" button. The sample + embedded
-  // (/places) variants render the full report.
+  // The live map panel is a GLIMPSE - easy to digest, with NO citations, source/
+  // licence attributions, dataset dates or methodology caveats. All provenance
+  // lives in the full pin report ("Full report for this pin") and the /places
+  // profile ("Explore the area profile"), both linked from the header. The
+  // sample + embedded (/places) + full variants render the full report.
   const isLive = variant === "live";
   const [show3d, setShow3d] = useState(false);
   const [showReach, setShowReach] = useState(false);
@@ -119,7 +119,14 @@ export function BuyerReportPanel({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h2 className="font-display text-base font-semibold text-ink">Buyer Location Check</h2>
-            {!isLive && (
+            {/* The live panel is a GLIMPSE: this single compact not-advice line is
+                the ONLY disclaimer it carries - sources, dates and caveats live in
+                the full pin report it links to (s18 dominant message moves there). */}
+            {isLive ? (
+              <p className="text-xs text-ink-muted">
+                Information only, not advice - verify before you buy.
+              </p>
+            ) : (
               <p className="text-xs text-ink-muted">
                 A sourced, plain-English screening report for this location.
               </p>
@@ -152,25 +159,28 @@ export function BuyerReportPanel({
         </dl>
         {/* P1-1: the live hint panel links to the FULL buyer report for this
             exact pin (/buyer/report) - verify-actions, provenance, sources and
-            caveats on screen. Distinct from the AREA report link below (which
-            goes to the /places suburb profile). Next <Link> handles basePath. */}
+            caveats on screen. Named so it cannot be confused with the AREA
+            profile link below: "report" appears in exactly ONE of the two.
+            Next <Link> handles basePath. */}
         {isLive && hasPin && (
           <Link
             href={`/buyer/report?lat=${(report.location.lat as number).toFixed(6)}&lng=${(report.location.lng as number).toFixed(6)}`}
             onClick={() => track("buyer_open_full_report")}
             className="no-print mt-1 flex items-center justify-between gap-2 rounded-lg bg-accent px-3.5 py-2.5 text-sm font-semibold text-white shadow-card transition hover:bg-accent/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
-            <span>Open the full report</span>
+            <span>Full report for this pin (sources &amp; detail)</span>
             <span aria-hidden className="text-base leading-none">&rarr;</span>
           </Link>
         )}
+        {/* AREA profile link (/places suburb profile) - deliberately does NOT
+            contain the word "report" (see naming note above). */}
         {place && !place.nonResidential && variant !== "embedded" && (
           <Link
             href={`/places/${place.slug}`}
             onClick={() => track("buyer_see_full_report", { slug: place.slug })}
             className="no-print mt-1 flex items-center justify-between gap-2 rounded-lg bg-accent px-3.5 py-2.5 text-sm font-semibold text-white shadow-card transition hover:bg-accent/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
-            <span>See the full area report</span>
+            <span>Explore the area profile</span>
             <span aria-hidden className="text-base leading-none">&rarr;</span>
           </Link>
         )}
@@ -227,8 +237,8 @@ export function BuyerReportPanel({
 
       {/* Printable region begins */}
       <div className="buyer-print-root space-y-4">
-        {/* Not-advice banner (full report only; the live hint panel keeps the
-            compact disclaimer at the foot instead). */}
+        {/* Not-advice banner (full report only; the live hint panel keeps its
+            single compact not-advice line in the header instead). */}
         {!isLive && (
           <div className="rounded-lg border border-[#E9C8B4] border-l-[3px] border-l-accent bg-[#FBEEE6] px-3 py-2 text-xs leading-relaxed text-[#9A552F]">
             <b>Information only - verify before buying.</b> A second opinion to help you decide what
@@ -305,10 +315,13 @@ export function BuyerReportPanel({
                 ))}
               </ul>
             )}
-            <p className="mt-2 text-[11px] leading-snug text-ink-muted">
-              Based on your saved preferences - these re-frame the facts, they never change
-              the score, and a flag means &ldquo;verify&rdquo;, not a verdict.
-            </p>
+            {/* Methodology note - full report only (the live glimpse stays clean). */}
+            {!isLive && (
+              <p className="mt-2 text-[11px] leading-snug text-ink-muted">
+                Based on your saved preferences - these re-frame the facts, they never change
+                the score, and a flag means &ldquo;verify&rdquo;, not a verdict.
+              </p>
+            )}
           </Section>
         )}
 
@@ -348,11 +361,14 @@ export function BuyerReportPanel({
                 </li>
               ))}
             </ul>
-            <p className="mt-2 text-[11px] leading-snug text-ink-muted">
-              {report.anchorDistances.some((d) => d.driveMin != null)
-                ? "Off-peak driving time + road distance where routing is available (OpenStreetMap routing, ODbL), otherwise straight-line. Verify the real commute at peak hour."
-                : "Straight-line distance from this pin to your saved places - not drive or public-transport time. Verify the real commute at peak hour."}
-            </p>
+            {/* Routing-source + methodology note - full report only. */}
+            {!isLive && (
+              <p className="mt-2 text-[11px] leading-snug text-ink-muted">
+                {report.anchorDistances.some((d) => d.driveMin != null)
+                  ? "Off-peak driving time + road distance where routing is available (OpenStreetMap routing, ODbL), otherwise straight-line. Verify the real commute at peak hour."
+                  : "Straight-line distance from this pin to your saved places - not drive or public-transport time. Verify the real commute at peak hour."}
+              </p>
+            )}
           </Section>
         )}
 
@@ -389,11 +405,12 @@ export function BuyerReportPanel({
           </Section>
         )}
 
-        {/* 3b. Sun & light - honest sun-path diagram (lib/sun, not a shadow map). */}
+        {/* 3b. Sun & light - ideal-orientation note + opt-in 3D shadow simulator.
+            (The static sun-path diagram that sat here was removed on owner
+            feedback - it didn't help buyers; the text says what matters.) */}
         {report.location.lat != null && (
           <Section title="Sun & light">
-            <SunPathDiagram lat={report.location.lat} />
-            <p className="mt-2 text-[11px] leading-snug text-ink-muted">
+            <p className="text-[11px] leading-snug text-ink-muted">
               <b className="text-ink">Best light comes from the {sunSideWord}.</b> Living
               areas, windows or a yard facing {sunSideWord} get the warmest, most reliable
               sun - and winter sun sits low, so tall buildings or trees on that side can
@@ -433,38 +450,45 @@ export function BuyerReportPanel({
             lng={report.location.lng as number}
             lat={report.location.lat as number}
             areaName={report.location.sa2Name}
+            compact={isLive}
           />
         )}
         {/* Urban heat at the pin - v2 Environment lens (auto-fetched; the card
-            omits itself outside the metro Cooling & Greening heat layer). */}
+            omits itself outside the metro Cooling & Greening heat layer).
+            compact = live glimpse: no attributions, vintages or caveats. */}
         {hasPin && variant !== "embedded" && (
           <UrbanHeatCard
             lng={report.location.lng as number}
             lat={report.location.lat as number}
+            compact={isLive}
           />
         )}
         {hasPin && variant !== "embedded" && (
           <TreeCanopyCard
             lng={report.location.lng as number}
             lat={report.location.lat as number}
+            compact={isLive}
           />
         )}
         {hasPin && variant !== "embedded" && (
           <AircraftNoiseCard
             lng={report.location.lng as number}
             lat={report.location.lat as number}
+            compact={isLive}
           />
         )}
         {hasPin && variant !== "embedded" && (
           <WaterwayHealthCard
             lng={report.location.lng as number}
             lat={report.location.lat as number}
+            compact={isLive}
           />
         )}
         {hasPin && variant !== "embedded" && (
           <BeachQualityCard
             lng={report.location.lng as number}
             lat={report.location.lat as number}
+            compact={isLive}
           />
         )}
         {/* 3c. How far you can get - reachability isochrone (opt-in; fires routing). */}
@@ -496,13 +520,16 @@ export function BuyerReportPanel({
           </Section>
         )}
 
-        {/* 4. Nearby amenities */}
+        {/* 4. Nearby amenities. The precision/source line is full-report detail -
+            the live glimpse shows just the list. */}
         <Section
           title="Nearby amenities"
           precision={
-            precise
-              ? "Point-level · street-network ~15-min walk · src: OpenStreetMap routing (ODbL)"
-              : "Point-level · straight-line from the pin · src: OpenStreetMap (ODbL)"
+            isLive
+              ? undefined
+              : precise
+                ? "Point-level · street-network ~15-min walk · src: OpenStreetMap routing (ODbL)"
+                : "Point-level · straight-line from the pin · src: OpenStreetMap (ODbL)"
           }
         >
           {report.nearbyAmenities.length === 0 ? (
@@ -555,13 +582,16 @@ export function BuyerReportPanel({
                   </div>
                 );
               })}
-              <p className="text-[11px] leading-snug text-ink-muted">
-                {precise
-                  ? "Street-network ~15-minute walk isochrone (OpenStreetMap routing); the distance shown to each amenity is still straight-line."
-                  : "Straight-line, not street-network walking time."}{" "}
-                Public-transport stop proximity is reflected in the Transport score below, not in this
-                pin-level list yet.
-              </p>
+              {/* Measurement-method note - full report only. */}
+              {!isLive && (
+                <p className="text-[11px] leading-snug text-ink-muted">
+                  {precise
+                    ? "Street-network ~15-minute walk isochrone (OpenStreetMap routing); the distance shown to each amenity is still straight-line."
+                    : "Straight-line, not street-network walking time."}{" "}
+                  Public-transport stop proximity is reflected in the Transport score below, not in this
+                  pin-level list yet.
+                </p>
+              )}
             </div>
           )}
         </Section>
@@ -673,14 +703,17 @@ export function BuyerReportPanel({
         </Section>
         )}
 
-        {/* 8. Disclaimer */}
-        <div className="rounded-lg border border-surface-border bg-surface-sunken px-3 py-2.5">
-          {report.disclaimers.map((d, i) => (
-            <p key={i} className="text-[11px] leading-relaxed text-ink-muted">
-              {d}
-            </p>
-          ))}
-        </div>
+        {/* 8. Disclaimer (full report only - the live glimpse carries its single
+            compact not-advice line in the header instead). */}
+        {!isLive && (
+          <div className="rounded-lg border border-surface-border bg-surface-sunken px-3 py-2.5">
+            {report.disclaimers.map((d, i) => (
+              <p key={i} className="text-[11px] leading-relaxed text-ink-muted">
+                {d}
+              </p>
+            ))}
+          </div>
+        )}
 
         {/* Print-only footer: brand + provenance reminder on every PDF page set. */}
         <div className="mt-4 hidden border-t border-surface-border pt-2 text-[10px] leading-snug text-ink-muted print:block">
@@ -769,6 +802,9 @@ function FindingCard({ f, compact = false }: { f: BuyerFinding; compact?: boolea
           >
             <span>Confidence: {f.confidence}</span>
             <span>Geography: {GEO_LABEL[f.geography]}</span>
+            {/* Finding-level vintage (e.g. planning-map "as at" date) - moved out
+                of the summary body so the compact glimpse never shows it. */}
+            {f.asAt && <span className="num">As at {f.asAt}</span>}
             {f.sourceRefs && f.sourceRefs.length > 0 && (
               <span className="normal-case">
                 {/* P1-2: every on-screen source carries its dataset vintage

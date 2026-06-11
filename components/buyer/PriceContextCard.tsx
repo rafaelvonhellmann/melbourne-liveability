@@ -47,11 +47,14 @@ export function PriceContextCard({
   lng,
   lat,
   areaName,
+  compact = false,
 }: {
   lng: number;
   lat: number;
   /** Suburb/SA2 name at the pin if known (e.g. report.location.sa2Name). */
   areaName?: string | null;
+  /** Live glimpse panel: medians only, no source/licence/vintage footer. */
+  compact?: boolean;
 }) {
   const [res, setRes] = useState<ResolvedPriceContext | null>(null);
   const [status, setStatus] = useState<"loading" | "done" | "none">("loading");
@@ -104,14 +107,18 @@ export function PriceContextCard({
           <span className="num">)</span>
         </p>
       )}
-      <p className="mt-2 text-[11px] leading-snug text-ink-muted">
-        Context only - not a valuation. Suburb medians move with the handful of
-        properties that actually sold or were let; they say nothing about any
-        specific property. Valuer-General Victoria property sales (CC BY 4.0,
-        houses as at {file.sources.house.period}, units as at{" "}
-        {file.sources.unit.period}) and Homes Victoria / DFFH Rental Report (CC
-        BY 4.0, as at {file.sources.rent.period}), via DataVic open data.
-      </p>
+      {/* Source/licence/vintage footer - full report only (the live glimpse
+          keeps its single not-advice line in the panel header). */}
+      {!compact && (
+        <p className="mt-2 text-[11px] leading-snug text-ink-muted">
+          Context only - not a valuation. Suburb medians move with the handful of
+          properties that actually sold or were let; they say nothing about any
+          specific property. Valuer-General Victoria property sales (CC BY 4.0,
+          houses as at {file.sources.house.period}, units as at{" "}
+          {file.sources.unit.period}) and Homes Victoria / DFFH Rental Report (CC
+          BY 4.0, as at {file.sources.rent.period}), via DataVic open data.
+        </p>
+      )}
     </div>
   );
 }

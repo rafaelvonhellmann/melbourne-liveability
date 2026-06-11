@@ -949,6 +949,14 @@ export default function MapPage() {
                 <b className="num text-ink">{buyerPlace.context.cyclability.index}</b>/100
               </span>
             )}
+            {/* Honesty label: this ring is a crow-flies circle, NOT a routed
+                isochrone - near the coast it overlaps water. Say so whenever
+                it is visible (no coastline geometry is shipped to clip it). */}
+            {showCycleRadius && (
+              <span className="text-[11px] text-ink-muted">
+                Approximate straight-line range - ignores roads and water.
+              </span>
+            )}
           </div>
           {isPreciseWalkConfigured() && (
             <div className="rounded-lg border border-surface-border bg-surface px-3 py-2 text-xs">

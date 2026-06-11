@@ -16,7 +16,16 @@ const BAND_STYLE: Record<TreeCanopy["band"], { label: string; cls: string }> = {
   "very leafy": { label: "Very leafy", cls: "border-[#117733]/50 bg-[#e0f0e2] text-[#0f5a2c]" },
 };
 
-export function TreeCanopyCard({ lng, lat }: { lng: number; lat: number }) {
+export function TreeCanopyCard({
+  lng,
+  lat,
+  compact = false,
+}: {
+  lng: number;
+  lat: number;
+  /** Live glimpse panel: drop the caveat + attribution. */
+  compact?: boolean;
+}) {
   const [canopy, setCanopy] = useState<TreeCanopy | null>(null);
   const [status, setStatus] = useState<"loading" | "done" | "none">("loading");
 
@@ -53,9 +62,16 @@ export function TreeCanopyCard({ lng, lat }: { lng: number; lat: number }) {
       {status === "done" && canopy && (
         <p className="mt-2 text-xs leading-relaxed text-ink-muted">
           About <b className="text-ink">{canopy.canopyPct.toFixed(1)}%</b> of the area around this
-          spot sits under tree canopy (trees 3 m+); Greater Melbourne averages ~15%. Leafier streets
-          run cooler in summer.{" "}
-          <span className="text-ink-muted">&copy; State of Victoria (DTP), 2018 (CC BY 4.0).</span>
+          spot sits under tree canopy (trees 3 m+); Greater Melbourne averages ~15%.
+          {!compact && (
+            <>
+              {" "}
+              Leafier streets run cooler in summer.{" "}
+              <span className="text-ink-muted">
+                &copy; State of Victoria (DTP), 2018 (CC BY 4.0).
+              </span>
+            </>
+          )}
         </p>
       )}
     </div>

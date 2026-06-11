@@ -271,6 +271,12 @@ export function ReachabilityCard({ lng, lat }: { lng: number; lat: number }) {
                 <>No mapped suburbs fall inside this {minutes}-minute area - try a longer time.</>
               )}
             </p>
+            {reachable.length > 0 && (
+              <p className="text-[11px] leading-snug text-ink-muted">
+                On the map: the shaded blue area is how far you can get; each blue dot marks
+                the centre of a suburb inside it.
+              </p>
+            )}
 
             {topN.length > 0 && (
               <ul className="space-y-1">
@@ -301,10 +307,13 @@ export function ReachabilityCard({ lng, lat }: { lng: number; lat: number }) {
           </>
         )}
 
+        {/* Panel-glimpse rule: no source/licence citations here - provenance for
+            the routing data lives in the full pin report. Keep the one practical
+            honesty note buyers need (off-peak vs peak). */}
         <p className="text-[11px] leading-snug text-ink-muted">
-          {mode === "drive" ? "Driving" : "Walking"} times are typical off-peak estimates from
-          OpenStreetMap routing (ODbL) - real peak-hour trips run longer. The score is our
-          all-round liveability blend across all measured topics (higher = better).
+          {mode === "drive" ? "Driving" : "Walking"} times are typical off-peak estimates -
+          real peak-hour trips run longer. The score is our all-round liveability blend
+          across all measured topics (higher = better).
         </p>
       </div>
     </div>
