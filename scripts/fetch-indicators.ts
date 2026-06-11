@@ -7,6 +7,11 @@ import { RAW } from "./lib/paths.js";
 import { loadMelbourneSa2Codes } from "./lib/melbourne-sa2-codes.js";
 import { fetchArcGisTable, overpassMelbourne } from "./lib/arcgis-fetch.js";
 import { downloadToFile } from "./lib/gov-fetch.js";
+import {
+  assertXlsxFile,
+  pickLgaOffencesXlsx,
+  type CkanCrimeResource,
+} from "./lib/vcsa-crime.js";
 import { fetchVicHospitalPoints } from "./lib/vic-facilities.js";
 import { G37_SERVICE, G37_FIELDS } from "../lib/social-housing.js";
 import { STRESS_SERVICE, STRESS_FIELDS } from "../lib/housing-stress.js";
@@ -110,15 +115,24 @@ async function main() {
       { headers: { "User-Agent": UA } }
     );
     const data = (await pkg.json()) as {
-      result?: { resources?: { url: string; format: string; name: string }[] };
+      result?: { resources?: CkanCrimeResource[] };
     };
-    const xlsx = (data.result?.resources ?? [])
-      .filter((r) => /xlsx/i.test(r.format ?? "") && /LGA.*Recorded/i.test(r.name ?? ""))
-      .sort((a, b) => (b.name ?? "").localeCompare(a.name ?? ""))[0];
-    if (xlsx?.url) {
-      await downloadToFile(xlsx.url, path.join(RAW, "vcsa-lga-offences.xlsx"));
-      console.log(`  ${xlsx.name}`);
+    const resources = data.result?.resources ?? [];
+    // Latest edition by parsed year-ending date, matching name OR URL: the
+    // June 2026 CKAN rename broke the old /LGA.*Recorded/ display-name filter
+    // and the `if (url)` skip made it silent - the refresh shipped no crime
+    // workbook and the coverage gate zeroed domains.safety (run 27280836153).
+    const xlsx = pickLgaOffencesXlsx(resources);
+    if (!xlsx?.url) {
+      throw new Error(
+        `no LGA offences XLSX among ${resources.length} CKAN resources ` +
+          `(latest names: ${resources.slice(-3).map((r) => r.name).join("; ")})`
+      );
     }
+    const dest = path.join(RAW, "vcsa-lga-offences.xlsx");
+    await downloadToFile(xlsx.url, dest);
+    await assertXlsxFile(dest); // a 200 HTML/WAF page must not pose as the workbook
+    console.log(`  ${xlsx.name}`);
   } catch (e) {
     console.warn("  Crime:", (e as Error).message);
   }

@@ -5,14 +5,19 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import * as turf from "@turf/turf";
 import XLSX from "xlsx";
+import "./lib/xlsx-fs.js"; // wires fs into the ESM build - readFile throws without it
 import type { FeatureCollection, Polygon, MultiPolygon } from "geojson";
 import { RAW, GENERATED } from "./lib/paths.js";
 import { getProp, featureGeometry } from "./lib/abs-geo.js";
 import type { CrosswalkFile } from "../lib/crosswalk-types.js";
 import {
   applyCrimeToPlaces,
+  findCrimeSheet,
   parseLgaCrimeTable02,
   parseSuburbCrimeTable03,
+  LGA_CRIME_LABELS,
+  SUBURB_CRIME_LABELS,
+  type CrimeCounts,
 } from "./lib/vcsa-crime.js";
 import { countWithinKm, minDistanceKm } from "./lib/proximity.js";
 import { scoredGpPoints } from "./lib/poi-classify.js";
@@ -300,12 +305,22 @@ async function main() {
 
   try {
     const wb = XLSX.readFile(path.join(RAW, "vcsa-lga-offences.xlsx"));
-    const t02 = wb.SheetNames.find((n) => /^Table 02/i.test(n));
-    const t03 = wb.SheetNames.find((n) => /^Table 03/i.test(n));
-    const lga = t02 ? parseLgaCrimeTable02(wb.Sheets[t02]) : { property: new Map(), violent: new Map() };
-    const suburb = t03
-      ? parseSuburbCrimeTable03(wb.Sheets[t03])
-      : new Map();
+    // Sheets located by the column labels we consume (preferring the documented
+    // "Table 0x" names) so a renamed sheet / preamble rows in a new VCSA
+    // edition cannot silently parse to zero. Missing BOTH is an error: the
+    // coverage gate would refuse the refresh anyway, so say why here.
+    const t02 = findCrimeSheet(wb, /^Table 02/i, LGA_CRIME_LABELS, ["Suburb/Town Name"]);
+    const t03 = findCrimeSheet(wb, /^Table 03/i, SUBURB_CRIME_LABELS);
+    if (!t02 && !t03) {
+      throw new Error(
+        `no sheet has the known crime columns (sheets: ${wb.SheetNames.join(", ")})`
+      );
+    }
+    if (!t03) console.warn("Crime: suburb sheet (Table 03) not found - LGA fallback only");
+    const lga = t02
+      ? parseLgaCrimeTable02(t02)
+      : { property: new Map<string, number>(), violent: new Map<string, number>() };
+    const suburb = t03 ? parseSuburbCrimeTable03(t03) : new Map<string, CrimeCounts>();
     const stats = applyCrimeToPlaces(byCode.values(), cw, suburb, lga);
     console.log(
       `Crime: ${stats.suburbMatched} SA2 via Table 03+crosswalk, ${stats.lgaFallback} LGA fallback`
@@ -624,8 +639,13 @@ async function main() {
   try {
     vifMap = readVifProjections(path.join(RAW, "vif2023-sa2.xlsx"));
     if (vifMap.size) console.log(`VIF projections: ${vifMap.size} SA2s`);
-  } catch {
-    /* VIF file optional */
+    else console.warn("VIF projections: file parsed but yielded 0 SA2 rows");
+  } catch (e) {
+    // The file is optional locally, but it is COMMITTED (data/raw/vif2023-sa2
+    // .xlsx) since the workflow stopped fetching it - so a load failure in CI
+    // is unexpected and was invisible here when refresh run 27280836153
+    // carried projections forward with no clue why. Say why, keep going.
+    console.warn("VIF projections not loaded:", (e as Error).message);
   }
 
   // ABS building approvals per SA2 (context only, never scored) - the "what's

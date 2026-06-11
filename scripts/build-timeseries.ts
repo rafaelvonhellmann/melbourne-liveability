@@ -8,9 +8,9 @@
  * concordance, so they carry no silent boundary break):
  *   • population     - ABS ERP, annual 2001–2023, per SA2 (ABS already supplies
  *                      the whole series on 2021 SA2 boundaries → no concordance).
- *   • propertyCrime  - VCSA recorded offences, year-ending-September 2016–2025,
- *                      per LGA (native LGA geography; rate per 100,000 from the
- *                      release's own LGA population denominators).
+ *   • propertyCrime  - VCSA recorded offences, 2016 to the latest year-ending
+ *                      edition, per LGA (native LGA geography; rate per 100,000
+ *                      from the release's own LGA population denominators).
  *   • violentCrime   - VCSA recorded offences, as above.
  *
  * Deferred (documented in methodology/HANDOVER, NOT faked here): the 2-point
@@ -21,10 +21,16 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import XLSX from "xlsx";
+import "./lib/xlsx-fs.js"; // wires fs into the ESM build - readFile throws without it
 import { RAW, GENERATED, PUBLIC_DATA } from "./lib/paths.js";
 import { loadMelbourneSa2Codes } from "./lib/melbourne-sa2-codes.js";
 import { fetchArcGisTable } from "./lib/arcgis-fetch.js";
 import { normaliseLgaKey } from "../lib/timeseries.js";
+import {
+  findCrimeSheet,
+  sheetRecords,
+  LGA_CRIME_LABELS,
+} from "./lib/vcsa-crime.js";
 import type {
   IndicatorSeries,
   TimeseriesFile,
@@ -97,16 +103,19 @@ async function buildPopulationSeries(): Promise<IndicatorSeries | null> {
   };
 }
 
-const CRIME_YEARS = Array.from({ length: 2025 - 2016 + 1 }, (_, i) => 2016 + i);
-
 type CrimeAccum = { property: number; violent: number };
 
+const CRIME_RATE_LABEL = "LGA Rate per 100,000 population";
+
 /**
- * VCSA Table 02 (LGA) → property/violent recorded-offence rate per 100,000,
- * year-ending September. We sum the release's own "LGA Rate per 100,000
- * population" across offence subgroups within a division (rows are unique per
- * LGA/year/subgroup, so this is exact and uses the correct per-year LGA
- * population denominator). Native LGA geography - never implies SA2 precision.
+ * VCSA Table 02 (LGA) → property/violent recorded-offence rate per 100,000
+ * (year-ending month per the release's own "Year ending" column). We sum the
+ * release's own "LGA Rate per 100,000 population" across offence subgroups
+ * within a division (rows are unique per LGA/year/subgroup, so this is exact
+ * and uses the correct per-year LGA population denominator). Native LGA
+ * geography - never implies SA2 precision. Sheet + header located by column
+ * labels (shape-tolerant), years taken from the data, so a new edition cannot
+ * silently drop its latest year.
  */
 function buildCrimeSeries(): IndicatorSeries[] {
   let wb: XLSX.WorkBook;
@@ -116,15 +125,19 @@ function buildCrimeSeries(): IndicatorSeries[] {
     console.warn("  Crime XLSX not loaded:", (e as Error).message);
     return [];
   }
-  const sheetName = wb.SheetNames.find((n) => /^Table 02/i.test(n));
-  if (!sheetName) {
-    console.warn("  Crime: Table 02 sheet not found");
+  const required = [...LGA_CRIME_LABELS, CRIME_RATE_LABEL];
+  const sheet = findCrimeSheet(wb, /^Table 02/i, required, ["Suburb/Town Name"]);
+  if (!sheet) {
+    console.warn(
+      `  Crime: no sheet with columns ${required.join(", ")} (sheets: ${wb.SheetNames.join(", ")})`
+    );
     return [];
   }
-  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(
-    wb.Sheets[sheetName],
-    { defval: "" }
-  );
+  const rows = sheetRecords(sheet, required);
+  // "year ending September" until the release says otherwise - read it from
+  // the data so a December/March edition does not ship a wrong period label.
+  const yearEnding =
+    String(rows.find((r) => String(r["Year ending"]).trim())?.["Year ending"] ?? "September").trim();
 
   // lgaKey → year → {property, violent} summed rate per 100,000.
   const byLga = new Map<string, Map<number, CrimeAccum>>();
@@ -132,7 +145,7 @@ function buildCrimeSeries(): IndicatorSeries[] {
     const lgaRaw = String(row["Local Government Area"] ?? "").trim();
     const year = Number(row["Year"]);
     const division = String(row["Offence Division"] ?? "");
-    const rate = Number(row["LGA Rate per 100,000 population"]);
+    const rate = Number(row[CRIME_RATE_LABEL]);
     if (!lgaRaw || !Number.isFinite(year) || !Number.isFinite(rate)) continue;
     let kind: keyof CrimeAccum | null = null;
     if (/^B\s/.test(division)) kind = "property";
@@ -146,8 +159,14 @@ function buildCrimeSeries(): IndicatorSeries[] {
     years.set(year, acc);
   }
 
+  // Years come FROM the export (2016..latest), not a hardcoded range that
+  // would silently drop the newest year when the next edition adds one.
+  const crimeYears = [
+    ...new Set([...byLga.values()].flatMap((m) => [...m.keys()])),
+  ].sort((a, b) => a - b);
+
   const mkPoints = (kind: keyof CrimeAccum): TimeseriesPoint[] =>
-    CRIME_YEARS.map((y) => {
+    crimeYears.map((y) => {
       const values: Record<string, number> = {};
       for (const [lgaKey, years] of byLga) {
         const acc = years.get(y);
@@ -167,7 +186,7 @@ function buildCrimeSeries(): IndicatorSeries[] {
     cadence: "annual",
     compareMode: "value",
     higherIsBetter: false,
-    periodLabel: "year ending September",
+    periodLabel: `year ending ${yearEnding}`,
     sourceId: "vcsa-recorded-offences",
     boundaryNote,
     points: mkPoints("property"),
@@ -180,7 +199,7 @@ function buildCrimeSeries(): IndicatorSeries[] {
     cadence: "annual",
     compareMode: "value",
     higherIsBetter: false,
-    periodLabel: "year ending September",
+    periodLabel: `year ending ${yearEnding}`,
     sourceId: "vcsa-recorded-offences",
     boundaryNote,
     points: mkPoints("violent"),
