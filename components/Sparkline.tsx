@@ -57,7 +57,7 @@ export function Sparkline({ series, format, width = 132, height = 34, fluid = fa
   // worse, neutral ink for flat. Always paired with an arrow + sign below.
   // "Better" blue darkened from #2c7fb8 to meet WCAG 4.5:1 on the cream surface
   // (the small delta text was 4.12:1); "worse" orange + flat grey already pass.
-  const color = flat ? "#6B6862" : better ? "#1f6aa6" : "#AD4F2E";
+  const color = flat ? "#5C5C6E" : better ? "#1f6aa6" : "#B42318";
   const arrow = flat ? "→" : rising ? "▲" : "▼";
 
   const deltaText =
@@ -101,7 +101,7 @@ export function Sparkline({ series, format, width = 132, height = 34, fluid = fa
             cy={y(last.value)}
             r={3.4}
             fill={color}
-            stroke="#FAF9F5"
+            stroke="#FDFDFD"
             strokeWidth={1.2}
           />
         </svg>

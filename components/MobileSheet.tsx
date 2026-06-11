@@ -146,7 +146,7 @@ export function MobileSheet({
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 md:hidden">
       <div
         data-position={position}
-        className={`pointer-events-auto flex flex-col rounded-t-2xl border border-surface-border bg-surface pb-[env(safe-area-inset-bottom)] shadow-card transition-[height] duration-300 ease-out ${
+        className={`pointer-events-auto flex flex-col rounded-t-2xl border border-surface-border bg-surface pb-[env(safe-area-inset-bottom)] shadow-card transition-[height] duration-300 ease-sheet ${
           position === "full" ? "h-[92dvh]" : ""
         }`}
       >

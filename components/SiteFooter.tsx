@@ -24,6 +24,17 @@ export function SiteFooter() {
   return (
     <footer className="mt-12 border-t border-surface-border bg-surface">
       <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-ink-muted">
+        <div className="mb-4 flex items-center gap-2 text-ink">
+          {/* Casement-F mark (same geometry as app/icon.svg), ink via currentColor */}
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <rect x="2.5" y="2.5" width="19" height="19" rx="4.5" fill="none" stroke="currentColor" strokeWidth="2" />
+            <line x1="9.5" y1="2.5" x2="9.5" y2="21.5" stroke="currentColor" strokeWidth="2" />
+            <line x1="9.5" y1="8.5" x2="21.5" y2="8.5" stroke="currentColor" strokeWidth="2" />
+          </svg>
+          <span className="text-sm font-semibold uppercase tracking-[0.06em]">
+            {PRODUCT_NAME}
+          </span>
+        </div>
         <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2">
           {LINKS.map((l) => (
             <Link key={l.href} href={l.href} className="hover:text-accent">

@@ -5,21 +5,39 @@
 @import "maplibre-gl/dist/maplibre-gl.css";
 
 :root {
-  /* Chrome — Theme A warm-editorial */
-  --bg: #f0eee6;
-  --surface: #faf9f5;
-  --surface2: #f3f1e9;
-  --ink: #1a1a18;
-  --muted: #6b6862;
-  --border: #e3dfd3;
-  /* Accent matches the Tailwind theme's accessible value: #AD4F2E clears WCAG
-     2.2 AA (about 5.07:1 on #faf9f5) as text + white-on-fill. The old #d97757
-     was ~2.96:1 and failed AA for links/labels using this var. */
-  --accent: #ad4f2e;
+  /* Chrome - Festra Direction A "Surveyor": near-white surfaces, violet-gray
+     secondary ink, daylight cobalt accent. See DESIGN-SYSTEM-PROPOSAL.md +
+     FABLE-ULTRAPLAN s18.8 owner amendments (ink #181818). */
+  --bg: #fdfdfd;
+  --surface: #f6f6f8;
+  --surface2: #f4f4f7;
+  --ink: #181818;
+  --muted: #5c5c6e;
+  --border: #e3e3ec;
+  /* Accent #2052CC clears WCAG 2.2 AA (~6.5:1 on bg) as text AND as
+     white-on-fill; --accent-hover is the hover/pressed step (~8.6:1). */
+  --accent: #2052cc;
+  --accent-hover: #1a43a8;
+  --accent-tint: #edf3fc;
   --accent-ink: #fff;
-  --focus: #9c4221;
-  --radius: 10px;
-  --shadow: 0 1px 3px rgba(40, 35, 25, 0.08), 0 8px 24px rgba(40, 35, 25, 0.06);
+  --focus: #2052cc;
+  /* Semantic (data voice, never brand): tinted bg + full-strength ink. */
+  --risk: #b42318;
+  --risk-tint: #fdecea;
+  --caution: #b54708;
+  --caution-tint: #fcf1e6;
+  --pass: #067647;
+  --radius: 12px;
+  /* Hairline ring + tight ambient only - no soft blob shadows. */
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.05);
+
+  /* Motion tokens - one signature ease, one duration scale, everywhere. */
+  --ease-festra: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-1: 120ms; /* micro: hover fills, exits, fades */
+  --dur-2: 180ms; /* menus, tooltips enter, backdrop fades */
+  --dur-3: 240ms; /* popups, panel content, sheet snap */
+  --dur-4: 300ms; /* panel slide, sheet open, blur-up reveal */
 
   /* Data palette — colorblind-safe YlGnBu, never themed */
   --d1: #ffffcc;
@@ -52,7 +70,7 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Visible focus ring using the warm focus token */
+/* Visible focus ring: 2px accent, 2px offset, always visible */
 :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
@@ -195,12 +213,12 @@ body {
     width: 100%;
     padding: 0;
     background: #fff;
-    /* Print the warm accent, card borders, badges + the sun-path diagram. By
+    /* Print the accent rule, card borders, badges + the sun-path diagram. By
        default Chrome strips colour from print - that flatness is what made the
        PDF feel robotic. */
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-    color: #2b2722;
+    color: #181818;
     font-size: 10.5pt;
     line-height: 1.5;
   }
@@ -235,7 +253,7 @@ body {
     break-inside: avoid;
   }
 
-  /* Branded header band: a warm accent rule under the title + meta. */
+  /* Branded header band: an accent rule under the title + meta. */
   .buyer-print-root header {
     border-bottom: 2px solid var(--accent);
     padding-bottom: 10px;
@@ -247,7 +265,7 @@ body {
 
   /* Links read as ink in print (the Sources list carries the real addresses). */
   .buyer-print-root a {
-    color: #9c4221 !important;
+    color: #1a43a8 !important;
     text-decoration: none;
   }
 }
@@ -258,9 +276,9 @@ body {
  * onboarding scroll-story; reusable site-wide.
  * ------------------------------------------------------------------------- */
 :root {
-  --t-dur-micro: 0.18s;
-  --t-dur-std: 0.5s;
-  --t-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --t-dur-micro: var(--dur-2);
+  --t-dur-std: 0.5s; /* reserved hero settle (scroll-story reveal) */
+  --t-ease-out: var(--ease-festra);
 }
 
 /* Scroll-reveal: hidden until the element gets .is-visible (IntersectionObserver). */

@@ -367,7 +367,7 @@ export function MelbourneMap({
         id: "buyer-radius-fill",
         type: "fill",
         source: "buyer-radius",
-        paint: { "fill-color": "#AD4F2E", "fill-opacity": 0.16 },
+        paint: { "fill-color": "#2052CC", "fill-opacity": 0.16 },
       });
       // White casing under the dashed ring so it stays legible on dark / satellite
       // basemaps as well as light ones (the 0.1-opacity ring was too faint - user feedback).
@@ -662,7 +662,7 @@ export function MelbourneMap({
       return;
     }
     if (!pinMarkerRef.current) {
-      pinMarkerRef.current = new maplibregl.Marker({ color: "#AD4F2E" })
+      pinMarkerRef.current = new maplibregl.Marker({ color: "#2052CC" })
         .setLngLat(buyerPin)
         .addTo(map);
     } else {

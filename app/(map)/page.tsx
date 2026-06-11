@@ -992,7 +992,7 @@ export default function MapPage() {
                 </div>
               )}
               {preciseStatus === "error" && (
-                <p className="mt-1 text-[11px] text-[#9A552F]">
+                <p className="mt-1 text-[11px] text-[#1A43A8]">
                   Couldn&apos;t fetch the walk isochrone just now - still showing straight-line. Try
                   again shortly.
                 </p>
@@ -1187,7 +1187,7 @@ export default function MapPage() {
             <div className="pointer-events-none absolute left-1/2 top-16 z-20 w-[min(92%,30rem)] -translate-x-1/2">
               <div
                 role="alert"
-                className="pointer-events-auto rounded-lg border border-[#E9C8B4] bg-[#FBEEE6] px-3 py-2 text-xs leading-snug text-[#9A552F] shadow-card"
+                className="pointer-events-auto rounded-lg border border-[#C9DAF5] bg-[#EDF3FC] px-3 py-2 text-xs leading-snug text-[#1A43A8] shadow-card"
               >
                 <span className="font-medium">Could not load area data.</span> Check your
                 connection and{" "}
@@ -1324,7 +1324,7 @@ export default function MapPage() {
         {/* Desktop sidebar - explore tools only; ranked suburb lists are deferred
             to a future signed-in profile feature. Collapsible for a full-width map. */}
         <aside
-          className={`hidden shrink-0 flex-col border-l border-surface-border bg-surface transition-[width] duration-300 ease-out md:flex ${
+          className={`hidden shrink-0 flex-col border-l border-surface-border bg-surface transition-[width] duration-300 ease-festra md:flex ${
             sidebarCollapsed
               ? "w-0 overflow-hidden border-l-0"
               : buyerMode
@@ -1448,8 +1448,16 @@ function TopBar({
 }) {
   return (
     <header className="z-20 flex shrink-0 items-center gap-3 border-b border-surface-border bg-surface px-4 py-3">
-      <Link href="/" className="font-display text-lg font-medium tracking-tight text-ink">
-        {PRODUCT_NAME}
+      <Link href="/" className="flex shrink-0 items-center gap-2 text-ink">
+        {/* Casement-F mark (same geometry as app/icon.svg), ink via currentColor */}
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <rect x="2.5" y="2.5" width="19" height="19" rx="4.5" fill="none" stroke="currentColor" strokeWidth="2" />
+          <line x1="9.5" y1="2.5" x2="9.5" y2="21.5" stroke="currentColor" strokeWidth="2" />
+          <line x1="9.5" y1="8.5" x2="21.5" y2="8.5" stroke="currentColor" strokeWidth="2" />
+        </svg>
+        <span className="text-base font-semibold uppercase tracking-[0.06em]">
+          {PRODUCT_NAME}
+        </span>
       </Link>
       <div className="hidden w-full max-w-sm flex-1 sm:block">
         <SearchBox

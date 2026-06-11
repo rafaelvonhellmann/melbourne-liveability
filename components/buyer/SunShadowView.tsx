@@ -143,9 +143,9 @@ function Compass({ bearing }: { bearing: number }) {
         style={{ transform: `rotate(${-bearing}deg)` }}
       >
         {/* Red needle points north; grey points south. */}
-        <polygon points="22,12 25,23 22,20 19,23" fill="#AD4F2E" />
+        <polygon points="22,12 25,23 22,20 19,23" fill="#181818" />
         <polygon points="22,32 19,21 22,24 25,21" fill="#bcbeb8" />
-        <text x="22" y="9" textAnchor="middle" fontSize="7" fontWeight="700" fill="#AD4F2E">N</text>
+        <text x="22" y="9" textAnchor="middle" fontSize="7" fontWeight="700" fill="#181818">N</text>
         <text x="22" y="42" textAnchor="middle" fontSize="6" fontWeight="600" fill="#8a857b">S</text>
         <text x="40" y="24.5" textAnchor="middle" fontSize="6" fontWeight="600" fill="#8a857b">E</text>
         <text x="4" y="24.5" textAnchor="middle" fontSize="6" fontWeight="600" fill="#8a857b">W</text>
@@ -201,7 +201,7 @@ export function SunShadowView({ lng, lat }: { lng: number; lat: number }) {
     // Decorative canvas: keep it out of the tab order + AT tree (WCAG 4.1.2).
     map.getCanvas().setAttribute("tabindex", "-1");
     map.getCanvas().setAttribute("aria-hidden", "true");
-    new maplibregl.Marker({ color: "#D97757" }).setLngLat([lng, lat]).addTo(map);
+    new maplibregl.Marker({ color: "#2052CC" }).setLngLat([lng, lat]).addTo(map);
     // Keep the compass rose in sync if the user rotates the 3D view.
     map.on("rotate", () => setBearing(map.getBearing()));
 

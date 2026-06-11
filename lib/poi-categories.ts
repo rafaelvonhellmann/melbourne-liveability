@@ -46,7 +46,7 @@ export type PoiCategory = {
 
 /**
  * Categorical palette - qualitative ColorBrewer Dark2/Set1-derived hues.
- * Distinct from the YlGnBu data ramp, the coral chrome accent (#D97757) and the
+ * Distinct from the YlGnBu data ramp, the cobalt chrome accent (#2052CC) and the
  * neutral no-data grey (#d9d6cf).
  */
 export const POI_CATEGORIES: PoiCategory[] = [

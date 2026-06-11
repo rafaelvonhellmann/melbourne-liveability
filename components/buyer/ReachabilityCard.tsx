@@ -92,7 +92,7 @@ export function ReachabilityCard({ lng, lat }: { lng: number; lat: number }) {
     mapRef.current = map;
     map.getCanvas().setAttribute("tabindex", "-1");
     map.getCanvas().setAttribute("aria-hidden", "true");
-    new maplibregl.Marker({ color: "#D97757" }).setLngLat([lng, lat]).addTo(map);
+    new maplibregl.Marker({ color: "#2052CC" }).setLngLat([lng, lat]).addTo(map);
 
     let tries = 0;
     const addLayers = () => {

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
@@ -16,6 +16,12 @@ const fraunces = Fraunces({
   display: "swap",
   weight: ["400", "500", "600"],
 });
+
+/* Browser chrome matches the Surveyor near-white canvas. The favicon is the
+   casement-F mark, auto-served by Next from app/icon.svg. */
+export const viewport: Viewport = {
+  themeColor: "#FDFDFD",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(

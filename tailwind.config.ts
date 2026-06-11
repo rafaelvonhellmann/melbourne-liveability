@@ -8,27 +8,33 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Warm-editorial "Theme A" chrome
-        bg: "#F0EEE6",
+        // Festra Direction A "Surveyor" chrome (DESIGN-SYSTEM-PROPOSAL.md +
+        // FABLE-ULTRAPLAN s18.8 owner amendments). Near-white canvas, surface
+        // tint ladder, violet-gray secondary, daylight cobalt accent.
+        bg: "#FDFDFD",
         surface: {
-          DEFAULT: "#FAF9F5",
-          raised: "#FAF9F5",
-          sunken: "#F3F1E9",
-          border: "#E3DFD3",
+          DEFAULT: "#F6F6F8",
+          raised: "#FDFDFD",
+          sunken: "#F4F4F7",
+          border: "#E3E3EC",
         },
         ink: {
-          DEFAULT: "#1A1A18",
-          muted: "#6B6862",
+          DEFAULT: "#181818",
+          muted: "#5C5C6E",
         },
         accent: {
-          // Deepened from the original coral #D97757 (~3.1:1 on light) to meet
-          // WCAG AA 4.5:1 as BOTH text-on-light and white-text-on-fill (contrast
-          // is symmetric). #AD4F2E is ~5.1/4.6/4.7 on surface/bg/sunken and ~5.3
-          // on white. Tunable, but keep it at least this dark to stay AA.
-          DEFAULT: "#AD4F2E",
+          // Cobalt #2052CC clears WCAG 2.2 AA (~6.5:1 on bg) as BOTH
+          // text-on-light and white-text-on-fill. `focus` is the
+          // hover/pressed step (~8.6:1); `tint` is selected rows / halos.
+          DEFAULT: "#2052CC",
           ink: "#FFFFFF",
-          focus: "#9C4221",
+          focus: "#1A43A8",
+          tint: "#EDF3FC",
         },
+        // Semantic status colors - data voice, never brand chrome.
+        risk: { DEFAULT: "#B42318", tint: "#FDECEA" },
+        caution: { DEFAULT: "#B54708", tint: "#FCF1E6" },
+        pass: { DEFAULT: "#067647" },
         // Colorblind-safe YlGnBu data channel — never themed
         data: {
           1: "#ffffcc",
@@ -44,10 +50,25 @@ const config: Config = {
         display: ["var(--font-fraunces)", "Georgia", "serif"],
       },
       borderRadius: {
-        lg: "10px",
+        // Rectangle scale 8/12/16 (cap 16); pills stay rounded-full.
+        lg: "12px",
       },
       boxShadow: {
-        card: "0 1px 3px rgba(40,35,25,.08), 0 8px 24px rgba(40,35,25,.06)",
+        // Hairline ring lives on the element border; shadow stays tight
+        // ambient only - no soft blob shadows.
+        card: "0 1px 3px rgba(0,0,0,.06), 0 2px 6px rgba(0,0,0,.05)",
+      },
+      transitionTimingFunction: {
+        // Default every transition-* utility onto the signature curve.
+        DEFAULT: "var(--ease-festra)",
+        festra: "var(--ease-festra)",
+        sheet: "var(--ease-sheet)",
+      },
+      transitionDuration: {
+        DEFAULT: "120ms",
+        "120": "120ms",
+        "180": "180ms",
+        "240": "240ms",
       },
     },
   },
