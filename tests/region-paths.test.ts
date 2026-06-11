@@ -108,11 +108,14 @@ describe("coverage gate region-awareness", () => {
   });
 
   it("a region with no committed baseline is a first-run pass (absent in HEAD)", () => {
-    // Canberra has never been committed - the gate's existsInHead check must
-    // report it absent so the first canberra refresh passes silently.
-    expect(existsInHead("data/generated/places.canberra.json")).toBe(false);
-    expect(existsInHead("data/generated/carried-fields.canberra.json")).toBe(false);
-    // ...while the melbourne baseline is present (gate actually compares).
+    // Region bakes land in CI one by one (canberra first, 2026-06-11), so this
+    // can no longer assume any REAL region is absent. The gate's behaviour
+    // under test is existsInHead itself: absent artifact -> first-run pass.
+    expect(existsInHead("data/generated/places.never-baked.json")).toBe(false);
+    expect(existsInHead("data/generated/carried-fields.never-baked.json")).toBe(false);
+    // ...while committed baselines are present (gate actually compares):
+    // melbourne (historical name) and canberra (first CI-baked region).
     expect(existsInHead("data/generated/places.json")).toBe(true);
+    expect(existsInHead("data/generated/places.canberra.json")).toBe(true);
   });
 });

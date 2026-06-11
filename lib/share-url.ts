@@ -7,7 +7,12 @@ import {
   type InterestViewId,
 } from "./interest-views";
 import { BASE_PATH } from "./asset-path";
-import REGIONS from "./regions";
+import {
+  DEFAULT_REGION,
+  getRegion,
+  sanitizeRegionId,
+  type RegionId,
+} from "./regions";
 
 export type MapUrlState = {
   weights: ScoreWeights | null;
@@ -21,18 +26,33 @@ export type MapUrlState = {
   buyer: boolean;
   /** Dropped buyer pin as [lng, lat], or null. Restored from ?lat=&lng=. */
   pin: [number, number] | null;
+  /** Capital-city region (?region=). Absent or unknown resolves to melbourne
+   * (never throws); serialized URLs omit the param for melbourne so existing
+   * share URLs stay byte-identical. */
+  region: RegionId;
 };
 
-// Generous Greater-Melbourne bounding box - rejects junk / out-of-region coords
-// so a crafted URL cannot drop a pin in the ocean or interstate. Derived from
-// the region registry's melbourne pinBbox (lib/regions.ts); values unchanged.
-const PIN_BBOX = REGIONS.melbourne.pinBbox;
-const MEL_BBOX = {
-  minLng: PIN_BBOX.west,
-  maxLng: PIN_BBOX.east,
-  minLat: PIN_BBOX.south,
-  maxLat: PIN_BBOX.north,
-};
+/**
+ * Whether a coordinate falls inside a region's generous pin envelope (the
+ * registry pinBbox, lib/regions.ts) - rejects junk / out-of-region coords so a
+ * crafted URL cannot drop a pin in the ocean or interstate. Bounds are
+ * inclusive, exactly like the historical Melbourne literal box.
+ */
+export function inRegionBBox(
+  lng: number,
+  lat: number,
+  region: RegionId = DEFAULT_REGION
+): boolean {
+  const box = getRegion(region).pinBbox;
+  return (
+    Number.isFinite(lng) &&
+    Number.isFinite(lat) &&
+    lat >= box.south &&
+    lat <= box.north &&
+    lng >= box.west &&
+    lng <= box.east
+  );
+}
 
 /**
  * Whether a coordinate falls inside the Greater-Melbourne bounding box. Exported
@@ -40,23 +60,20 @@ const MEL_BBOX = {
  * (Nominatim's bounded=1 is a preference, not a guarantee).
  */
 export function inMelbourneBBox(lng: number, lat: number): boolean {
-  return (
-    Number.isFinite(lng) &&
-    Number.isFinite(lat) &&
-    lat >= MEL_BBOX.minLat &&
-    lat <= MEL_BBOX.maxLat &&
-    lng >= MEL_BBOX.minLng &&
-    lng <= MEL_BBOX.maxLng
-  );
+  return inRegionBBox(lng, lat, DEFAULT_REGION);
 }
 
-function parsePin(latRaw: string | null, lngRaw: string | null): [number, number] | null {
+function parsePin(
+  latRaw: string | null,
+  lngRaw: string | null,
+  region: RegionId
+): [number, number] | null {
   if (latRaw == null || lngRaw == null) return null;
   const lat = Number(latRaw);
   const lng = Number(lngRaw);
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-  if (lat < MEL_BBOX.minLat || lat > MEL_BBOX.maxLat) return null;
-  if (lng < MEL_BBOX.minLng || lng > MEL_BBOX.maxLng) return null;
+  // Validate against the URL's own region - a canberra link may carry a
+  // canberra pin, but a melbourne link still rejects everything interstate.
+  if (!inRegionBBox(lng, lat, region)) return null;
   return [lng, lat];
 }
 
@@ -90,6 +107,8 @@ export function serializeList(slugs: string[]): string {
 
 export function parseMapUrlState(search: string): MapUrlState {
   const params = new URLSearchParams(search);
+  // Region first: the pin envelope below is validated against it.
+  const region = sanitizeRegionId(params.get("region"));
   return {
     weights: parseWeightsFromSearchParams(search),
     shortlist: parseListParam(params.get("list")),
@@ -100,7 +119,8 @@ export function parseMapUrlState(search: string): MapUrlState {
     layer: parseLayer(params.get("layer")),
     select: parseSelect(params.get("select")),
     buyer: params.get("buyer") === "1",
-    pin: parsePin(params.get("lat"), params.get("lng")),
+    pin: parsePin(params.get("lat"), params.get("lng"), region),
+    region,
   };
 }
 
@@ -109,6 +129,11 @@ export function buildMapUrl(
   state: Partial<MapUrlState>
 ): string {
   const params = new URLSearchParams();
+  // Melbourne (the default) NEVER carries the param, so every pre-region share
+  // URL serializes byte-identically. Unknown ids cannot reach here (RegionId).
+  if (state.region && state.region !== DEFAULT_REGION) {
+    params.set("region", state.region);
+  }
   if (state.weights && Object.keys(state.weights).length > 0) {
     params.set("w", serializeWeights(state.weights));
   }

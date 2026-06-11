@@ -55,6 +55,12 @@ type LandingProps = {
  * weights / shortlist / layer) AND the visitor has not been onboarded yet.
  * Mirrors OnboardingModal's skip rule for pre-flag returning users (any saved
  * preference marks them as seen). localStorage unavailable -> never gate.
+ *
+ * Decision of record: ?region= ALONE does not count as share state - a
+ * first-time visitor on a region-only link still gets the landing, and the
+ * region applies to the map after dismissal (least surprising: the landing is
+ * the product intro, not melbourne-specific state). Region links WITH share
+ * state (pin/select/view/weights/list) skip the landing exactly as today.
  */
 export function shouldShowLanding(search: string): boolean {
   const url = parseMapUrlState(search);

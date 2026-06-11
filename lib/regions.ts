@@ -254,6 +254,27 @@ export function resolveRegionId(raw?: string | null): RegionId {
   return id as RegionId;
 }
 
+/** URL-param-grade region resolution: trims/lowercases, and resolves BOTH
+ * empty and unknown values to DEFAULT_REGION without ever throwing. This is
+ * the ?region= seam - a crafted or stale link must degrade to the Melbourne
+ * map, never crash the route. Pipeline args keep the loud resolveRegionId. */
+export function sanitizeRegionId(raw?: string | null): RegionId {
+  const id = (raw ?? "").trim().toLowerCase();
+  return isRegionId(id) ? id : DEFAULT_REGION;
+}
+
+/** Map-framing bounds for fitBounds: the region's data extent (bbox) as
+ * [[west, south], [east, north]]. Melbourne's values equal the historical
+ * MELBOURNE_BOUNDS (lib/region.ts) exactly. */
+export function regionBounds(
+  region: Region
+): [[number, number], [number, number]] {
+  return [
+    [region.bbox.west, region.bbox.south],
+    [region.bbox.east, region.bbox.north],
+  ];
+}
+
 /** Overpass QL bbox clause "(south,west,north,east)" for a region's data
  * extent - the exact string embedded in Overpass queries. */
 export function overpassBbox(region: Region): string {

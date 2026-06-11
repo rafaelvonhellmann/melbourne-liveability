@@ -140,6 +140,17 @@ describe("shouldShowLanding (first-visit gate)", () => {
     expect(localStorage.getItem(ONBOARDED_KEY)).toBeNull();
   });
 
+  it("region-only links still gate - the region applies after dismissal (decision of record)", () => {
+    // ?region= alone restores nothing the map could show over the landing, so
+    // a first-time visitor on a region-only link gets the product intro first.
+    expect(shouldShowLanding("?region=canberra")).toBe(true);
+    // A region link WITH share state (here a canberra pin, valid against the
+    // URL's own region) is a share visit exactly as today.
+    expect(
+      shouldShowLanding("?region=canberra&buyer=1&lat=-35.2802&lng=149.1310")
+    ).toBe(false);
+  });
+
   it("skips pre-flag returning users with saved prefs and marks them seen (modal parity)", () => {
     localStorage.setItem(
       "mlv-user-prefs-v1",

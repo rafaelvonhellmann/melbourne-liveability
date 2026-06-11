@@ -20,6 +20,7 @@ const MelbourneMap = dynamic(
   }
 );
 import { LayerToggle } from "@/components/LayerToggle";
+import { RegionSwitcher } from "@/components/RegionSwitcher";
 import { SearchBox } from "@/components/SearchBox";
 import { DomainSliders } from "@/components/DomainSliders";
 import { InterestViews } from "@/components/InterestViews";
@@ -62,14 +63,18 @@ import { findSa2ForPoint } from "@/lib/buyer-location";
 import { MAJOR_PROJECTS } from "@/lib/major-projects";
 import type { GeocodeResult } from "@/lib/geocode";
 import { withBase } from "@/lib/asset-path";
-import { DEFAULT_REGION, dataPath, getRegion } from "@/lib/regions";
+import { DEFAULT_REGION, dataPath, getRegion, type RegionId } from "@/lib/regions";
 import { PRODUCT_NAME } from "@/lib/brand";
 import { loadPoisNear, loadReportTilesNear } from "@/lib/report-tiles";
-import { parseMapUrlState, buildMapUrl, inMelbourneBBox } from "@/lib/share-url";
+import { parseMapUrlState, buildMapUrl, inRegionBBox } from "@/lib/share-url";
 import { track } from "@/lib/analytics";
 import type { Feature, FeatureCollection, Point } from "geojson";
 import type { Place } from "@/lib/types";
-import { loadPlaces, getPlaceBySlug } from "@/lib/places-data";
+import {
+  loadRegionPlaces,
+  regionDataAvailable,
+  getPlaceBySlug,
+} from "@/lib/places-data";
 import { buildSearchIndex } from "@/lib/search";
 import { DOMAIN_LABELS, domainProperty } from "@/lib/colors";
 import { useMapPersonalisation } from "@/lib/use-map-personalisation";
@@ -100,11 +105,61 @@ export default function MapPage() {
   // Pins are OFF by default - they only appear when the user enables a category.
   const [visiblePins, setVisiblePins] = useState<Record<string, boolean>>({});
   // Camera target for the area search / list selections. Map clicks never set
-  // this, so clicking a place on the map preserves the current view.
+  // this, so clicking a place on the map preserves the current view. `zoom` is
+  // only set by the region switcher (fly to the capital's framing zoom); the
+  // search flows keep the historical max(current, 12) behaviour.
   const [focusTarget, setFocusTarget] = useState<{
     center: [number, number];
+    zoom?: number;
     nonce: number;
   } | null>(null);
+
+  // ---- Region seam (?region= + the capital switcher) ----------------------
+  // One-shot from the URL, like the other share-URL state. Melbourne (the
+  // default) resolves synchronously with zero extra work; any other region is
+  // probed for a baked places artifact first and degrades to the Melbourne
+  // map (with the visible notice below) when its dataset is not published yet
+  // - a crafted or stale link must never crash the route. Declared BEFORE the
+  // personalisation hook so every URL it writes can carry the region.
+  const searchParams = useSearchParams();
+  const [urlRegion] = useState<RegionId>(
+    () => parseMapUrlState(searchParams.toString()).region
+  );
+  const [regionState, setRegionState] = useState<{
+    region: RegionId;
+    fellBack: boolean;
+  } | null>(
+    urlRegion === DEFAULT_REGION
+      ? { region: DEFAULT_REGION, fellBack: false }
+      : null
+  );
+  useEffect(() => {
+    if (urlRegion === DEFAULT_REGION) return; // resolved synchronously above
+    let live = true;
+    void regionDataAvailable(urlRegion).then((ok) => {
+      if (!live) return;
+      // A manual switcher pick may have resolved the region first - the URL
+      // probe must never stomp it (prev is only null while still unresolved).
+      setRegionState(
+        (prev) =>
+          prev ??
+          (ok
+            ? { region: urlRegion, fellBack: false }
+            : { region: DEFAULT_REGION, fellBack: true })
+      );
+    });
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot URL region
+  }, []);
+  // Effective region for data loading, camera framing and URL writes. The map
+  // mounts only after regionState resolves, so it never frames the wrong city.
+  const region = regionState?.region ?? DEFAULT_REGION;
+  // The capital a fallback degraded FROM (URL probe miss, or an artifact that
+  // 404'd mid-session under the loader): drives the visible "showing Greater
+  // Melbourne instead" notice and the data-region-fallback marker.
+  const [fellBackFrom, setFellBackFrom] = useState<RegionId | null>(null);
 
   const {
     weights,
@@ -133,7 +188,7 @@ export default function MapPage() {
     getShareUrl,
     noteRecentView,
     resetWeights,
-  } = useMapPersonalisation();
+  } = useMapPersonalisation(region);
 
   // "No layer": paint the map with no choropleth (basemap + area outlines only).
   // Local UI state - not URL-persisted.
@@ -151,16 +206,37 @@ export default function MapPage() {
   }, [confidenceMode, walkAccessMode, cyclabilityMode, socialHousingMode, hazardLayer]);
 
   useEffect(() => {
-    loadPlaces()
-      .then((p) => {
-        setPlaces(p);
+    if (!regionState) return; // non-default region still resolving
+    let live = true;
+    loadRegionPlaces(regionState.region)
+      .then((r) => {
+        if (!live) return;
+        setPlaces(r.places);
         setLoadError(false);
+        if (regionState.fellBack) {
+          // URL probe miss - already resolved to melbourne; just say so.
+          setFellBackFrom(urlRegion);
+        } else if (r.fellBack) {
+          // The artifact 404'd mid-session UNDER the loader (e.g. un-baked
+          // between the switcher probe and the fetch). Revert the WHOLE app to
+          // melbourne - region prop, map sources, camera - so the map never
+          // sits on a 404'd sa2 source with another capital's framing. The
+          // re-run of this effect for melbourne is a cached no-op.
+          setFellBackFrom(regionState.region);
+          setRegionState({ region: DEFAULT_REGION, fellBack: false });
+          const def = getRegion(DEFAULT_REGION);
+          setFocusTarget({ center: def.mapCenter, zoom: def.zoom, nonce: Date.now() });
+        }
       })
       .catch((e) => {
+        if (!live) return;
         console.error(e);
         setLoadError(true);
       });
-  }, []);
+    return () => {
+      live = false;
+    };
+  }, [regionState, urlRegion]);
 
   // Press Escape to clear the selected-area card - a seamless "back to the map"
   // (the friend feedback: selecting an area felt like a trap with no easy exit).
@@ -208,7 +284,6 @@ export default function MapPage() {
   // renders the map shell either way) - but it runs BEFORE the first paint,
   // so a first-time visitor's first painted frame is the landing, never a
   // map-shell flash, and the OnboardingModal cannot blink open underneath.
-  const searchParams = useSearchParams();
   const [showLanding, setShowLanding] = useState(false);
   // In-session memory that the landing handled onboarding. The landing sets the
   // mlv-onboarded-v1 flag on every dismissal path, but localStorage.setItem can
@@ -312,7 +387,9 @@ export default function MapPage() {
   }
   async function ensureSa2Geo(): Promise<FeatureCollection> {
     if (sa2GeoRef.current) return sa2GeoRef.current;
-    const res = await fetch(withBase(dataPath(DEFAULT_REGION, "places.geojson")));
+    // Effective region (one-shot): pin flows can only run after the map mounts,
+    // which is gated on regionState - so this never races the region probe.
+    const res = await fetch(withBase(dataPath(region, "places.geojson")));
     sa2GeoRef.current = (await res.json()) as FeatureCollection;
     return sa2GeoRef.current;
   }
@@ -421,6 +498,41 @@ export default function MapPage() {
         view: interestView,
         buyer: mode,
         pin: mode ? pin : null,
+        // Effective region: serialized only when non-melbourne, so melbourne
+        // URL rewrites stay byte-identical to today.
+        region,
+      }),
+      { scroll: false }
+    );
+  };
+
+  // Capital switcher (RegionSwitcher). Resolves the region directly - the
+  // switcher only enables baked regions, so no second availability probe -
+  // then: the places effect above reloads the dataset through the seam, the
+  // map's region prop swaps its sa2/poi sources, and the existing focusTarget
+  // fly-to seam (reduced-motion aware) carries the camera to the new capital
+  // at its registry framing zoom. City-specific selection state is cleared;
+  // buyer mode itself stays (the panel gates honestly outside melbourne).
+  const switchRegion = (next: RegionId) => {
+    if (next === region) return;
+    setSelected(null);
+    setBuyerPin(null);
+    setBuyerSa2(null);
+    setBuyerReport(null);
+    sa2GeoRef.current = null; // pin flows must re-fetch the new region's polygons
+    setFellBackFrom(null);
+    setRegionState({ region: next, fellBack: false });
+    const def = getRegion(next);
+    setFocusTarget({ center: def.mapCenter, zoom: def.zoom, nonce: Date.now() });
+    track("region_switch", { region: next });
+    router.replace(
+      buildMapUrl("/", {
+        weights,
+        shortlist,
+        view: interestView,
+        buyer: buyerMode,
+        pin: null,
+        region: next,
       }),
       { scroll: false }
     );
@@ -458,6 +570,11 @@ export default function MapPage() {
     // must fall back to area-level). Default pin for map clicks / restored pins.
     mode: "pin" | "sa2" = "pin"
   ) => {
+    // Pin reports are melbourne-only today: every report input below (report
+    // tiles, stations, school zones, traffic, parcels...) is melbourne-baked.
+    // Outside melbourne the buyer panel shows an honest one-liner instead, so
+    // never fetch melbourne tiles for another capital's pin.
+    if (region !== DEFAULT_REGION) return;
     // The parcel shape belongs to the previous pin until this pin's fetch
     // resolves below - back to "not resolved yet" so the confirm card hides.
     setBuyerParcelShape(undefined);
@@ -560,6 +677,13 @@ export default function MapPage() {
   const selectFromSearch = (slug: string) => {
     const p = getPlaceBySlug(places, slug);
     if (!p) return;
+    // Outside melbourne the pin deep-dive is gated (melbourne-baked tiles), so
+    // an area search selects + pans instead - the area scores experience works
+    // fully for any baked region.
+    if (region !== DEFAULT_REGION) {
+      focusPlace(p);
+      return;
+    }
     // Searching enters the buyer deep-dive at the area centroid; click the map
     // to refine to the exact spot.
     const c = p.centroid as [number, number];
@@ -577,9 +701,9 @@ export default function MapPage() {
   // mirrors a map click at the geocoded coordinate; suburb/SA2 search + map
   // clicks remain the primary flows.
   const selectFromAddress = async (r: GeocodeResult) => {
-    // Enforce the same hard Greater-Melbourne bound that URL pins get - Nominatim's
+    // Enforce the same hard per-region bound that URL pins get - Nominatim's
     // bounded=1 is a preference, so don't trust an out-of-region geocode result.
-    if (!inMelbourneBBox(r.lng, r.lat)) return;
+    if (!inRegionBBox(r.lng, r.lat, region)) return;
     const lngLat: [number, number] = [r.lng, r.lat];
     setBuyerMode(true);
     setSelected(null);
@@ -694,7 +818,10 @@ export default function MapPage() {
       setBuyerMode(true);
       setSelected(null);
       if (url.pin) {
-        void restorePin(url.pin);
+        // Validate against the EFFECTIVE region: a fell-back link (e.g. a
+        // sydney pin now served the melbourne map) must not restore a pin
+        // outside the region actually shown.
+        if (inRegionBBox(url.pin[0], url.pin[1], region)) void restorePin(url.pin);
       } else if (url.select) {
         // Entered Buyer Check from a specific area profile - pan there so the
         // user drops their exact-address pin in the right place (no selection
@@ -723,9 +850,10 @@ export default function MapPage() {
             view: interestView,
             buyer: true,
             pin: buyerPin,
+            region,
           })
         : undefined,
-    [buyerPin, weights, shortlist, interestView]
+    [buyerPin, weights, shortlist, interestView, region]
   );
 
   const personalisationControls = (
@@ -785,7 +913,14 @@ export default function MapPage() {
           Exit
         </button>
       </div>
-      {!buyerPin ? (
+      {region !== DEFAULT_REGION ? (
+        // Honest gate: the pin report's inputs (report tiles, stations, school
+        // zones, traffic, parcels) are melbourne-baked - no broken empty
+        // sections for another capital. Area scores + compare still work.
+        <p className="rounded-lg border border-dashed border-surface-border bg-surface px-3 py-4 text-sm text-ink-muted">
+          Full pin reports are Melbourne-only today - your capital is coming.
+        </p>
+      ) : !buyerPin ? (
         <div className="space-y-3">
           <p className="rounded-lg border border-dashed border-surface-border bg-surface px-3 py-4 text-sm text-ink-muted">
             Click the map - or search a suburb or full address in the top bar - to drop a
@@ -1022,14 +1157,24 @@ export default function MapPage() {
   }
 
   return (
-    <main className="flex h-screen w-screen flex-col overflow-hidden bg-bg text-ink">
+    <main
+      className="flex h-screen w-screen flex-col overflow-hidden bg-bg text-ink"
+      // Region seam markers. Both are OMITTED on the default melbourne path,
+      // so the prerendered/e2e DOM stays identical.
+      data-region={region !== DEFAULT_REGION ? region : undefined}
+      data-region-fallback={fellBackFrom ?? undefined}
+    >
       <h1 className="sr-only">
-        {PRODUCT_NAME} - Greater Melbourne liveability map and pin-level Buyer Check
+        {region === DEFAULT_REGION
+          ? `${PRODUCT_NAME} - Greater Melbourne liveability map and pin-level Buyer Check`
+          : `${PRODUCT_NAME} - ${getRegion(region).label} liveability map`}
       </h1>
       <TopBar
         searchIndex={searchIndex}
         onSearchSelect={selectFromSearch}
         onGeocode={selectFromAddress}
+        region={region}
+        onRegionSwitch={switchRegion}
       />
 
       {!landingHandledRef.current && (
@@ -1037,12 +1182,12 @@ export default function MapPage() {
         onPick={selectInterestView}
         onDismiss={() => {
           // Intro hand-off: the vignette's pin-zoom continues onto the REAL
-          // map with a gentle flyTo to the Melbourne centre (focusTarget is
+          // map with a gentle flyTo to the region centre (focusTarget is
           // the existing search fly-to seam). Skipped when a shared URL
           // already framed something - never stomp a restored pin/selection.
           if (buyerMode || selected || initialBuyerPin) return;
           setFocusTarget({
-            center: getRegion(DEFAULT_REGION).mapCenter,
+            center: getRegion(region).mapCenter,
             nonce: Date.now(),
           });
         }}
@@ -1057,8 +1202,18 @@ export default function MapPage() {
 
       <div className="flex min-h-0 flex-1">
         <div className="relative min-w-0 flex-1">
+          {/* Mount the map only once the region is resolved (synchronous for
+              melbourne - identical render tree to today), so a probed region
+              never initialises the camera/sources on the wrong city. The
+              placeholder matches the dynamic-import loading state. */}
+          {!regionState ? (
+            <div className="absolute inset-0 grid place-items-center bg-surface-sunken text-sm text-ink-muted">
+              Loading map...
+            </div>
+          ) : (
           <MelbourneMap
             className="absolute inset-0"
+            region={regionState.region}
             activeDomain={activeDomain}
             confidenceMode={confidenceMode}
             walkAccessMode={walkAccessMode}
@@ -1073,7 +1228,15 @@ export default function MapPage() {
             hoverProp={paintedProp}
             hoverLabel={activeLayerLabel}
             buyerMode={buyerMode}
-            initialBuyerPin={initialBuyerPin}
+            // A fell-back link's pin (validated against the URL's own region)
+            // must not aim the camera outside the region actually mounted -
+            // maxBounds would clamp it onto the envelope edge at zoom 14.5.
+            initialBuyerPin={
+              initialBuyerPin &&
+              inRegionBBox(initialBuyerPin[0], initialBuyerPin[1], regionState.region)
+                ? initialBuyerPin
+                : null
+            }
             buyerPin={buyerPin}
             anchorPoints={buyerMode ? profile?.anchors ?? [] : []}
             transitLines={buyerMode ? transitLines : []}
@@ -1090,6 +1253,7 @@ export default function MapPage() {
               else selectPlace(p);
             }}
           />
+          )}
 
           {/* Buyer-mode map legend: Big Build pins + (with a pin) nearby transit. */}
           {buyerMode && (
@@ -1160,6 +1324,24 @@ export default function MapPage() {
                 </button>
                 .
               </div>
+            </div>
+          )}
+
+          {/* Region fallback - visible and honest (never a silent Melbourne
+              map after a link or switch whose dataset is not published yet).
+              The data-load alert above covers the harder failure and wins. */}
+          {fellBackFrom && !loadError && (
+            <div className="pointer-events-none absolute left-1/2 top-16 z-20 w-[min(92%,30rem)] -translate-x-1/2">
+              <p
+                role="status"
+                data-testid="region-fallback-note"
+                className="pointer-events-auto rounded-lg border border-[#C9DAF5] bg-[#EDF3FC] px-3 py-2 text-xs leading-snug text-[#1A43A8] shadow-card"
+              >
+                <span className="font-medium">
+                  {getRegion(fellBackFrom).label} is not available yet.
+                </span>{" "}
+                Showing Greater Melbourne instead.
+              </p>
             </div>
           )}
 
@@ -1333,6 +1515,8 @@ export default function MapPage() {
         }
         search={
           <div className="space-y-3">
+            {/* Capital switcher (mobile home - the top bar hides it below sm). */}
+            <RegionSwitcher region={region} onSwitch={switchRegion} className="sm:hidden" />
             <SearchBox
               index={searchIndex}
               onSelect={(e) => selectFromSearch(e.slug)}
@@ -1401,10 +1585,14 @@ function TopBar({
   searchIndex,
   onSearchSelect,
   onGeocode,
+  region,
+  onRegionSwitch,
 }: {
   searchIndex: ReturnType<typeof buildSearchIndex>;
   onSearchSelect: (slug: string) => void;
   onGeocode: (result: GeocodeResult) => void;
+  region: RegionId;
+  onRegionSwitch: (next: RegionId) => void;
 }) {
   return (
     <header className="z-20 flex shrink-0 items-center gap-3 border-b border-surface-border bg-surface px-4 py-3">
@@ -1424,6 +1612,13 @@ function TopBar({
           onGeocode={onGeocode}
         />
       </div>
+      {/* Capital switcher - desktop top bar only; on mobile (<sm) it lives in
+          the sheet's search controls so the 390px bar never overflows. */}
+      <RegionSwitcher
+        region={region}
+        onSwitch={onRegionSwitch}
+        className="hidden shrink-0 sm:block"
+      />
       <nav className="ml-auto flex flex-wrap items-center gap-2 text-sm">
         <FeedbackButton />
         <NavLink href="/buyer">Buyer check</NavLink>

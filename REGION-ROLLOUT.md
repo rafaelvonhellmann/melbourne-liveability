@@ -6,10 +6,34 @@ build take `--region <id>` / `REGION` env (default `melbourne`, byte-identical
 output and filenames); non-default regions emit region-suffixed artifacts
 (`places.<region>.json` etc. - see "Per-region output emit" below) and the
 preserve-context / coverage-diff gates compare each region's own artifact.
-What is NOT done: the app/UI region switcher (later wave - the lib data
-loaders already take a region param defaulting to melbourne), per-state Tier-B
-fetch modules, per-region GTFS/timeseries/provenance, region-suffixed RAW
-attribute files (osm-*/abs-*), and per-region OSM building-tile bakes.
+What is NOT done: per-state Tier-B fetch modules, per-region
+GTFS/timeseries/provenance, region-suffixed RAW attribute files (osm-*/abs-*),
+and per-region OSM building-tile bakes.
+
+Status after the app wave (?region= seam + capital switcher): the map route
+takes ?region= (sanitized - empty/unknown degrade to melbourne, never throw),
+the top bar / mobile sheet carry the capital switcher (unbaked capitals
+disabled with a "Coming soon" hint via a session-cached HEAD probe of
+places.<region>.json), camera framing + sa2/poi map sources resolve from the
+registry per region, and every URL write (buyer sync, personalisation edits,
+copied share links) carries the region param. Melbourne always serializes
+WITHOUT the param and resolves the exact historical artifact URLs -
+pre-region share URLs and the seeded e2e path stay byte-identical. Decisions
+of record:
+
+- Region-only URLs (?region=canberra, nothing else) still show the landing to
+  a first-time visitor; the region applies to the map after dismissal. Any
+  share state (pin/select/view/weights/list/buyer) skips the landing as today.
+- An unavailable region (URL probe miss, or an artifact that 404s mid-session
+  under the loader) degrades to the Melbourne map WITH a visible "not
+  available yet" notice (plus a data-region-fallback marker); a mid-session
+  404 also reverts the map sources/camera to melbourne - never a crash, never
+  an empty map.
+- A fell-back link's buyer pin (valid for the URL's own region) is ignored
+  rather than clamped against the melbourne panning envelope.
+- Pin reports stay melbourne-only (every report input is melbourne-baked);
+  outside melbourne the buyer panel says so honestly and area search selects +
+  pans instead of dropping a pin.
 
 ## What "launch" can honestly mean on June 20
 

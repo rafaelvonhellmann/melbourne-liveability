@@ -6,7 +6,6 @@ import type { DomainId } from "@/lib/types";
 import type { BuyerAnchor } from "@/lib/anchors";
 import type { NoiseLine } from "@/lib/noise";
 import { MAJOR_PROJECTS } from "@/lib/major-projects";
-import { MELBOURNE_BOUNDS, MELBOURNE_CENTER, MELBOURNE_MAX_BOUNDS } from "@/lib/region";
 import {
   choroplethFillColor,
   choroplethFillColorByProp,
@@ -14,7 +13,13 @@ import {
   socialFillColorByProp,
 } from "@/lib/map-expressions";
 import { withBase } from "@/lib/asset-path";
-import { DEFAULT_REGION, dataPath } from "@/lib/regions";
+import {
+  DEFAULT_REGION,
+  dataPath,
+  getRegion,
+  regionBounds,
+  type RegionId,
+} from "@/lib/regions";
 import { poiCircleColorExpression } from "@/lib/poi-categories";
 import { buildPoiPopupHtml, escapeHtml, safeHttpUrl, type PoiFeatureProps } from "@/lib/poi-feature";
 import { WALK_THRESHOLD_KM } from "@/lib/walk-access";
@@ -41,11 +46,11 @@ function circlePolygon(
 // ~7.5MB, and all categories are OFF by default, so we defer the fetch+parse
 // until the user first enables a category instead of paying it on every map
 // open. Idempotent. Layer starts hidden; the visiblePins effect sets the filter.
-function addPoiLayer(map: maplibregl.Map): void {
+function addPoiLayer(map: maplibregl.Map, region: RegionId): void {
   if (map.getSource("pois")) return;
   map.addSource("pois", {
     type: "geojson",
-    data: withBase(dataPath(DEFAULT_REGION, "pois.geojson")),
+    data: withBase(dataPath(region, "pois.geojson")),
   });
   map.addLayer({
     id: "poi-circles",
@@ -80,6 +85,14 @@ const MAJOR_PROJECTS_FC: GeoJSON.FeatureCollection = {
 
 type MelbourneMapProps = {
   className?: string;
+  /**
+   * Capital-city region framing the camera and the per-region sa2/poi data
+   * sources (registry-driven, lib/regions.ts). One-shot: the page resolves it
+   * BEFORE mounting the map, so reading it at init keeps the
+   * map-initialises-once invariant. Defaults to melbourne (identical values
+   * and URLs to the historical constants).
+   */
+  region?: RegionId;
   activeDomain: DomainId;
   confidenceMode?: boolean;
   walkAccessMode?: boolean;
@@ -98,8 +111,11 @@ type MelbourneMapProps = {
    * In-app camera target used by the area search (pan/zoom to a result) - a
    * `nonce` lets the same place re-trigger a fly-to. Map *clicks* deliberately
    * do NOT set this, so selecting an area on the map preserves the view.
+   * `zoom` (optional) pins the flight's target zoom - the region switcher uses
+   * it to land at the capital's registry framing zoom; the search flows omit
+   * it and keep the historical max(current, 12).
    */
-  focusTarget?: { center: [number, number]; nonce: number } | null;
+  focusTarget?: { center: [number, number]; zoom?: number; nonce: number } | null;
   /** Slug of the currently-selected SA2 - drawn with a highlight outline. */
   selectedSlug?: string | null;
   /** Feature property currently painted on the choropleth (e.g. "pct_affordability"). */
@@ -180,6 +196,7 @@ function fillColorFor(
 
 export function MelbourneMap({
   className,
+  region = DEFAULT_REGION,
   activeDomain,
   confidenceMode = false,
   walkAccessMode = false,
@@ -237,31 +254,34 @@ export function MelbourneMap({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
+    // Registry-driven camera (lib/regions.ts). Melbourne resolves to the exact
+    // historical constants, so the default map initialises byte-identically.
+    const regionDef = getRegion(region);
     const map = new maplibregl.Map({
       container: containerRef.current,
       style: BASEMAP,
-      center: MELBOURNE_CENTER,
-      zoom: 9,
-      // Generous envelope (see region.ts) so panning is free in every
-      // direction; the initial fitBounds below still frames Greater Melbourne.
-      maxBounds: MELBOURNE_MAX_BOUNDS,
+      center: regionDef.mapCenter,
+      zoom: regionDef.zoom,
+      // Generous envelope (see lib/regions.ts) so panning is free in every
+      // direction; the initial fitBounds below still frames the region.
+      maxBounds: regionDef.maxBounds,
     });
 
     // Nav (+/–) lives top-left so it never collides with the layers
     // control / legend card pinned to the top-right.
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
     // Land directly on the shared pin (no whole-metro flash) if one is in the URL;
-    // otherwise frame Greater Melbourne.
+    // otherwise frame the region's data extent.
     if (initialBuyerPin) {
       map.jumpTo({ center: initialBuyerPin, zoom: 14.5 });
     } else {
-      map.fitBounds(MELBOURNE_BOUNDS, { padding: 40, duration: 0 });
+      map.fitBounds(regionBounds(regionDef), { padding: 40, duration: 0 });
     }
 
     map.on("load", () => {
       map.addSource("sa2", {
         type: "geojson",
-        data: withBase(dataPath(DEFAULT_REGION, "places.geojson")),
+        data: withBase(dataPath(region, "places.geojson")),
       });
       map.addLayer({
         id: "sa2-fill",
@@ -849,7 +869,7 @@ export function MelbourneMap({
         return;
       }
       // First enable: lazily fetch + add the (heavy) POI source/layer.
-      addPoiLayer(map);
+      addPoiLayer(map, region);
       if (!map.getLayer("poi-circles")) return;
       const catFilter: unknown[] = ["in", ["get", "pinType"], ["literal", allowed]];
       // In buyer mode, clip amenity pins to the ~15-min walk circle around the
@@ -867,7 +887,7 @@ export function MelbourneMap({
       return;
     }
     applyFilter();
-  }, [visiblePins, buyerMode, buyerPin]);
+  }, [visiblePins, buyerMode, buyerPin, region]);
 
   // Highlight the selected SA2 by filtering the dedicated outline layer to its
   // slug. Updating a filter (not re-adding sources/layers) keeps the map view,
@@ -890,6 +910,42 @@ export function MelbourneMap({
     applyFilter();
   }, [selectedSlug]);
 
+  // Region switch (post-mount): swap the sa2 + poi sources to the new
+  // capital's artifacts (dataPath seam - the choropleth repaints from the
+  // region's own geojson) and re-aim the panning envelope. The maxBounds are
+  // lifted for the flight - the new capital usually lies OUTSIDE the old
+  // region's envelope, which would clamp the page-driven focusTarget fly-to
+  // below - and re-clamped to the new region's envelope when the camera
+  // settles. Declared BEFORE the focusTarget effect so the bounds are already
+  // free when the fly-to fires in the same commit. The initial mount is a
+  // no-op (the init effect already framed this region).
+  const lastRegionRef = useRef(region);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || lastRegionRef.current === region) return;
+    lastRegionRef.current = region;
+    const regionDef = getRegion(region);
+    map.setMaxBounds(null);
+    const reclamp = () => map.setMaxBounds(regionDef.maxBounds);
+    map.once("moveend", reclamp);
+    // Sources only exist after "load" - a switch racing the first style load
+    // defers to the next idle (whenStyleReady), like the other mount-time syncs.
+    const cancelData = whenStyleReady(map, () => {
+      (map.getSource("sa2") as maplibregl.GeoJSONSource | undefined)?.setData(
+        withBase(dataPath(region, "places.geojson"))
+      );
+      // The POI source is lazy (addPoiLayer) - only re-point it if it exists.
+      (map.getSource("pois") as maplibregl.GeoJSONSource | undefined)?.setData(
+        withBase(dataPath(region, "pois.geojson"))
+      );
+    });
+    return () => {
+      // A second switch mid-flight must not re-clamp to THIS region's bounds.
+      map.off("moveend", reclamp);
+      cancelData?.();
+    };
+  }, [region]);
+
   // Area search drives an in-app pan/zoom (no reload). Triggered only via the
   // `focusTarget` nonce; map clicks never set it, so clicking preserves view.
   useEffect(() => {
@@ -897,7 +953,7 @@ export function MelbourneMap({
     if (!map || !focusTarget) return;
     map.flyTo({
       center: focusTarget.center,
-      zoom: Math.max(map.getZoom(), 12),
+      zoom: focusTarget.zoom ?? Math.max(map.getZoom(), 12),
       duration: prefersReducedMotion() ? 0 : 900,
       essential: true,
     });
@@ -909,7 +965,8 @@ export function MelbourneMap({
       ref={containerRef}
       className={className ?? "h-full w-full"}
       role="application"
-      aria-label="Greater Melbourne liveability map"
+      // Melbourne renders the exact historical label string.
+      aria-label={`${getRegion(region).label} liveability map`}
     />
   );
 }

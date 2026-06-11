@@ -9,6 +9,7 @@ import {
   mergeWeights,
 } from "./weights";
 import { buildMapUrl, parseMapUrlState } from "./share-url";
+import { DEFAULT_REGION, type RegionId } from "./regions";
 import {
   loadUserPrefs,
   saveUserPrefs,
@@ -25,7 +26,14 @@ function persistPrefs(patch: Partial<UserPrefs>) {
   saveUserPrefs({ ...cur, ...patch, version: 1 });
 }
 
-export function useMapPersonalisation() {
+/**
+ * @param region Effective capital-city region: every URL this hook writes
+ * (weight/lens/shortlist edits, the copied share link) carries it, so a
+ * personalisation edit after a region switch never strips ?region= from the
+ * URL. Melbourne (the default) serializes to no param at all - byte-identical
+ * URLs to the pre-region behaviour. URL-state only, never persisted to prefs.
+ */
+export function useMapPersonalisation(region: RegionId = DEFAULT_REGION) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -189,6 +197,7 @@ export function useMapPersonalisation() {
           weights: merged,
           shortlist: next.shortlist,
           view: next.interestView,
+          region,
         }),
         { scroll: false }
       );
@@ -198,7 +207,7 @@ export function useMapPersonalisation() {
         interestView: next.interestView,
       });
     },
-    [router]
+    [router, region]
   );
 
   const setWeightsAndSync = useCallback(
@@ -235,8 +244,9 @@ export function useMapPersonalisation() {
         weights,
         shortlist,
         view: interestView,
+        region,
       }),
-    [weights, shortlist, interestView]
+    [weights, shortlist, interestView, region]
   );
 
   const noteRecentView = useCallback((slug: string, name: string) => {
