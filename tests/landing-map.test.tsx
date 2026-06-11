@@ -58,6 +58,9 @@ vi.mock("maplibre-gl", () => {
     jumpTo(pose: unknown) {
       this.jumpCalls.push(pose);
     }
+    getZoom() {
+      return 13.8;
+    }
     remove() {
       this.removed = true;
     }

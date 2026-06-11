@@ -39,6 +39,9 @@ vi.mock("../lib/geocode", () => ({
 vi.mock("maplibre-gl", () => {
   class FakeMap {
     constructor(public options: Record<string, unknown>) {}
+    getZoom() {
+      return 13.8;
+    }
     jumpTo() {}
     remove() {}
     on() {}

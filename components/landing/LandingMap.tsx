@@ -2,6 +2,7 @@
 
 import {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
@@ -48,6 +49,10 @@ type MaplibreLib = {
 
 /** Same public basemap style as MelbourneMap (components/MelbourneMap.tsx). */
 const BASEMAP = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
+
+/** Real-world radius of the pin ring - the farthest plotted amenity sits at
+ * 633 m, so 820 m keeps every dot (plus its own width) clearly inside. */
+const RING_METERS = 820;
 
 /** Whole-metro default when no keyframes are supplied (matches lib/region). */
 const DEFAULT_POSE: CameraPose = {
@@ -266,6 +271,21 @@ export const LandingMap = forwardRef<LandingMapHandle, LandingMapProps>(function
   // Last REQUESTED pose - identical repeats (holding a keyframe, or the
   // reduced-motion snap re-resolving the same end) never touch the map.
   const lastPoseRef = useRef<CameraPose | null>(null);
+  // The radius ring is GEOGRAPHIC (real metres, not fixed px) so every real
+  // amenity dot we plot sits honestly inside it at any zoom - sized from the
+  // web-mercator metres-per-pixel at the pose's zoom and the pin's latitude.
+  const ringElRef = useRef<HTMLSpanElement | null>(null);
+  const sizeRing = useCallback((zoom: number, lat: number) => {
+    const el = ringElRef.current;
+    if (!el) return;
+    const metersPerPx =
+      (40075016.686 * Math.cos((lat * Math.PI) / 180)) / 2 ** (zoom + 9);
+    const r = Math.round(RING_METERS / metersPerPx);
+    el.style.width = `${r * 2}px`;
+    el.style.height = `${r * 2}px`;
+    el.style.left = `${-r}px`;
+    el.style.top = `${-r}px`;
+  }, []);
 
   useImperativeHandle(
     ref,
@@ -300,6 +320,7 @@ export const LandingMap = forwardRef<LandingMapHandle, LandingMapProps>(function
           }
           pendingPoseRef.current = null;
           map.jumpTo(pose);
+          sizeRing(pose.zoom, pose.center[1]);
           return;
         }
         if (rafRef.current === null) {
@@ -309,7 +330,10 @@ export const LandingMap = forwardRef<LandingMapHandle, LandingMapProps>(function
             rafRef.current = null;
             const next = pendingPoseRef.current;
             pendingPoseRef.current = null;
-            if (next && mapRef.current) mapRef.current.jumpTo(next);
+            if (next && mapRef.current) {
+              mapRef.current.jumpTo(next);
+              sizeRing(next.zoom, next.center[1]);
+            }
           });
           // A synchronous rAF (test stubs, some headless rigs) has already run
           // the callback - storing its id would block every later schedule.
@@ -317,7 +341,7 @@ export const LandingMap = forwardRef<LandingMapHandle, LandingMapProps>(function
         }
       },
     }),
-    []
+    [sizeRing]
   );
 
   // Mount the map once. maplibre-gl is dynamically imported HERE so the chunk
@@ -416,13 +440,15 @@ export const LandingMap = forwardRef<LandingMapHandle, LandingMapProps>(function
       const dot = document.createElement("span");
       dot.className = "landing-pin";
       el.append(ring, dot);
+      ringElRef.current = ring;
       pinMarkerRef.current = new Marker({ element: el, anchor: "center" })
         .setLngLat([pinLng, pinLat])
         .addTo(map);
+      sizeRing(map.getZoom(), pinLat);
     } else {
       pinMarkerRef.current.setLngLat([pinLng, pinLat]);
     }
-  }, [ready, pinVisible, pinLng, pinLat]);
+  }, [ready, pinVisible, pinLng, pinLat, sizeRing]);
 
   // Amenity dots - one tiny Marker each, staggered via the --dot-i CSS var.
   // Rebuilt only when content actually changes (the key check) so parent

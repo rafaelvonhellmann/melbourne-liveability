@@ -434,8 +434,13 @@ export function Landing({
                   body="Amenities within a walk, planning rules and noise - the picture the listing leaves out, straight off the map."
                 />
               </div>
-              <div className="landing-sheet pointer-events-auto max-h-[52vh] w-full overflow-hidden rounded-t-lg border border-surface-border bg-bg shadow-card sm:absolute sm:inset-y-0 sm:right-0 sm:max-h-none sm:w-[340px] sm:rounded-none sm:border-y-0 sm:border-r-0">
-                <GlimpsePanel />
+              {/* Outer div owns the desktop centering transform; the slide-in
+                  animation transform lives on .landing-sheet inside so the two
+                  never fight. Height hugs the content - no dead cream below. */}
+              <div className="w-full sm:absolute sm:right-0 sm:top-1/2 sm:w-[340px] sm:-translate-y-1/2">
+                <div className="landing-sheet pointer-events-auto max-h-[52vh] w-full overflow-y-auto overflow-x-hidden rounded-t-lg border border-surface-border bg-bg shadow-card sm:max-h-[88vh] sm:rounded-l-lg sm:rounded-tr-none sm:border-r-0">
+                  <GlimpsePanel />
+                </div>
               </div>
             </div>
           </section>
