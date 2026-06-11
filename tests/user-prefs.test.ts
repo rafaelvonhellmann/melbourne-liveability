@@ -168,3 +168,34 @@ describe("buyer profile back-compat", () => {
     expect(p && "walkability" in p).toBe(false);
   });
 });
+
+describe("interestView enum-drift guard (live incident 2026-06-11)", () => {
+  it("strips a persona-era lens id an old build wrote", () => {
+    localStorage.setItem(
+      "mlv-user-prefs-v1",
+      JSON.stringify({ version: 1, interestView: "youngPro", shortlist: [], recent: [], savedChecks: [] })
+    );
+    expect(loadUserPrefs().interestView).toBeUndefined();
+  });
+  it("strips non-string and unknown lens ids but keeps valid ones", () => {
+    localStorage.setItem("mlv-user-prefs-v1", JSON.stringify({ version: 1, interestView: 5 }));
+    expect(loadUserPrefs().interestView).toBeUndefined();
+    localStorage.setItem("mlv-user-prefs-v1", JSON.stringify({ version: 1, interestView: "family" }));
+    expect(loadUserPrefs().interestView).toBe("family");
+  });
+  it("drops savedChecks entries with non-string label/areaName", () => {
+    localStorage.setItem(
+      "mlv-user-prefs-v1",
+      JSON.stringify({
+        version: 1,
+        savedChecks: [
+          { lat: -37.8, lng: 144.9, label: { bad: true } },
+          { lat: -37.8, lng: 144.9, label: "good" },
+        ],
+      })
+    );
+    const prefs = loadUserPrefs();
+    expect(prefs.savedChecks).toHaveLength(1);
+    expect(prefs.savedChecks[0].label).toBe("good");
+  });
+});

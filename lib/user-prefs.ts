@@ -1,5 +1,5 @@
 import type { ScoreWeights } from "./types";
-import type { InterestViewId } from "./interest-views";
+import { parseInterestView, type InterestViewId } from "./interest-views";
 import type { BuyerProfile } from "./buyer-fit";
 
 const STORAGE_KEY = "mlv-user-prefs-v1";
@@ -81,6 +81,12 @@ function migrateFromV1(parsed: StoredPrefs): UserPrefs {
     ...DEFAULT_PREFS,
     ...parsed,
     version: CURRENT_PREFS_VERSION,
+    // Enum drift guard: a lens id written by an older/newer build (persona-era
+    // ids, rollback skew) must never reach INTEREST_VIEWS lookups - it crashed
+    // every map route for returning visitors (live incident 2026-06-11).
+    interestView:
+      parseInterestView((parsed.interestView as string | undefined) ?? null) ??
+      undefined,
     shortlist: Array.isArray(parsed.shortlist)
       ? parsed.shortlist.filter((s) => typeof s === "string").slice(0, MAX_SHORTLIST)
       : [],
@@ -94,7 +100,11 @@ function migrateFromV1(parsed: StoredPrefs): UserPrefs {
               !!c &&
               typeof c === "object" &&
               Number.isFinite((c as SavedCheck).lat) &&
-              Number.isFinite((c as SavedCheck).lng)
+              Number.isFinite((c as SavedCheck).lng) &&
+              ((c as SavedCheck).label === undefined ||
+                typeof (c as SavedCheck).label === "string") &&
+              ((c as SavedCheck).areaName === undefined ||
+                typeof (c as SavedCheck).areaName === "string")
           )
           .slice(0, MAX_SAVED_CHECKS)
       : [],

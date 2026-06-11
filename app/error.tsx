@@ -46,6 +46,20 @@ export default function Error({
         >
           Back to map
         </Link>
+        <button
+          type="button"
+          onClick={() => {
+            try {
+              localStorage.removeItem("mlv-user-prefs-v1");
+            } catch {
+              /* storage unavailable - nothing to clear */
+            }
+            reset();
+          }}
+          className="rounded-md border border-surface-border px-4 py-2 text-sm text-ink-muted transition-colors hover:border-accent hover:text-accent"
+        >
+          Reset saved preferences
+        </button>
       </div>
     </div>
   );

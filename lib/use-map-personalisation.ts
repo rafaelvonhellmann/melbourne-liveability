@@ -67,8 +67,14 @@ export function useMapPersonalisation() {
         ? mergeWeights(prefs.weights)
         : getDefaultWeights();
 
-    const viewId = url.view ?? prefs.interestView ?? "general";
-    const view = INTEREST_VIEWS[viewId];
+    // prefs.interestView is sanitised at load, but guard the lookup anyway -
+    // an unknown id must degrade to the default lens, never crash the route.
+    const storedView =
+      prefs.interestView && prefs.interestView in INTEREST_VIEWS
+        ? prefs.interestView
+        : null;
+    const viewId = url.view ?? storedView ?? "general";
+    const view = INTEREST_VIEWS[viewId] ?? INTEREST_VIEWS.general;
     if (view.weights && !url.weights) w = view.weights;
 
     setWeights(w);
