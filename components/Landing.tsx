@@ -142,14 +142,18 @@ const KEYFRAMES: CameraKeyframe[] = [
 /** Where the accent pin lands - Brunswick East. */
 const PIN: [number, number] = [144.9764, -37.7699];
 
-/** ~6 amenity dots around the pin, wearing the live POI palette colours. */
+/**
+ * REAL amenities around the pin, straight from the baked POI tile
+ * (public/data/report-tiles/pois/14/14790/10050.json) wearing each category's
+ * live map colour - so the landing shows exactly what the app would show here.
+ */
 const AMENITY_DOTS: AmenityDot[] = [
-  { lngLat: [144.9737, -37.7682], color: NEARBY_DOT_COLORS[0] },
-  { lngLat: [144.9794, -37.7674], color: NEARBY_DOT_COLORS[1] },
-  { lngLat: [144.9722, -37.7716], color: NEARBY_DOT_COLORS[2] },
-  { lngLat: [144.9801, -37.7723], color: NEARBY_DOT_COLORS[3] },
-  { lngLat: [144.9752, -37.7741], color: NEARBY_DOT_COLORS[4] },
-  { lngLat: [144.9785, -37.7699], color: NEARBY_DOT_COLORS[5] },
+  { lngLat: [144.97598, -37.76945], color: "#117733" }, // Fleming Park, 62 m
+  { lngLat: [144.97634, -37.77049], color: "#A6761D" }, // Joan Specialty Coffee, 65 m
+  { lngLat: [144.97958, -37.77028], color: "#E6AB02" }, // Nexus Performance, 282 m
+  { lngLat: [144.97959, -37.76747], color: "#377EB8" }, // East Brunswick Medical Centre, 389 m
+  { lngLat: [144.98097, -37.76585], color: "#D95F02" }, // Montessori Beginnings childcare, 603 m
+  { lngLat: [144.97957, -37.76479], color: "#E7298A" }, // Brunswick East Primary School, 633 m
 ];
 
 /**
@@ -445,11 +449,11 @@ export function Landing({
           >
             {/* Desktop: the report sheet owns the centre-left; the caption sits
                 clear of it on the RIGHT so it never covers the report (owner). */}
-            <div className="sticky top-0 flex h-screen flex-col justify-end gap-3 overflow-hidden p-4 sm:block sm:p-0">
-              <div className="sm:absolute sm:left-[7%] sm:top-1/2 sm:w-full sm:max-w-xl sm:-translate-y-1/2">
+            <div className="sticky top-0 flex h-screen flex-col justify-end gap-3 overflow-hidden p-4 lg:block lg:p-0">
+              <div className="lg:absolute lg:left-[7%] lg:top-1/2 lg:w-full lg:max-w-xl lg:-translate-y-1/2">
                 <ReportSheet />
               </div>
-              <div className="order-first sm:absolute sm:right-8 sm:top-1/2 sm:w-[340px] sm:-translate-y-1/2 lg:right-12">
+              <div className="order-first lg:absolute lg:right-12 lg:top-1/2 lg:w-[340px] lg:-translate-y-1/2">
                 <CaptionCard
                   heading="Go deep when you are serious"
                   body="Every line carries its source and date, so you can verify each fact before you act on it."
@@ -465,11 +469,11 @@ export function Landing({
             className="landing-scene pointer-events-none relative h-[120vh]"
           >
             {/* Mirror of scene 4: table centre-right, caption clear on the LEFT. */}
-            <div className="sticky top-0 flex h-screen flex-col justify-end gap-3 overflow-hidden p-4 sm:block sm:p-0">
-              <div className="sm:absolute sm:right-[6%] sm:top-1/2 sm:w-full sm:max-w-2xl sm:-translate-y-1/2">
+            <div className="sticky top-0 flex h-screen flex-col justify-end gap-3 overflow-hidden p-4 lg:block lg:p-0">
+              <div className="lg:absolute lg:right-[6%] lg:top-1/2 lg:w-full lg:max-w-2xl lg:-translate-y-1/2">
                 <CompareTable />
               </div>
-              <div className="order-first sm:absolute sm:left-8 sm:top-1/2 sm:w-[340px] sm:-translate-y-1/2 lg:left-12">
+              <div className="order-first lg:absolute lg:left-12 lg:top-1/2 lg:w-[340px] lg:-translate-y-1/2">
                 <CaptionCard
                   heading="Compare before you commit"
                   body="Shortlist areas as you go, compare before you commit - side by side, with Greater Melbourne as the baseline."

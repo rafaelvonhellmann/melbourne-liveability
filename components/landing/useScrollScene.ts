@@ -91,7 +91,6 @@ export function useScrollScene(
     let last: ScrollSceneState | null = null;
 
     const measure = () => {
-      frame = null;
       const viewportH = window.innerHeight || 1;
       const rects: SceneRect[] = [];
       for (const r of sceneRefsRef.current) {
@@ -115,7 +114,16 @@ export function useScrollScene(
 
     const schedule = () => {
       if (frame !== null) return;
-      frame = requestAnimationFrame(measure);
+      let ran = false;
+      const id = requestAnimationFrame(() => {
+        ran = true;
+        frame = null;
+        measure();
+      });
+      // A synchronous rAF (test stubs, some headless rigs) has already run the
+      // callback - storing its id would block every later schedule (the same
+      // guard as the rig's jumpTo coalescing in LandingMap).
+      if (!ran) frame = id;
     };
 
     measure(); // initial position (e.g. restored scroll)

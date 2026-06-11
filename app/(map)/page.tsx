@@ -210,6 +210,11 @@ export default function MapPage() {
   // map-shell flash, and the OnboardingModal cannot blink open underneath.
   const searchParams = useSearchParams();
   const [showLanding, setShowLanding] = useState(false);
+  // In-session memory that the landing handled onboarding. The landing sets the
+  // mlv-onboarded-v1 flag on every dismissal path, but localStorage.setItem can
+  // throw where getItem works (legacy Safari private mode, quota-full) - the
+  // OnboardingModal must still never fire right after the landing dismisses.
+  const landingHandledRef = useRef(false);
   useBeforePaintEffect(() => {
     // One-shot first-visit gate; later URL rewrites (syncBuyerUrl) never re-gate.
     setShowLanding(shouldShowLanding(window.location.search));
@@ -1003,7 +1008,10 @@ export default function MapPage() {
         searchIndex={searchIndex}
         onGeocode={(r) => void selectFromAddress(r)}
         onAreaSelect={selectFromSearch}
-        onDismiss={() => setShowLanding(false)}
+        onDismiss={() => {
+          landingHandledRef.current = true;
+          setShowLanding(false);
+        }}
         onProfileChoice={(choice) => {
           // Landing already persisted the raw choice (PROFILE_CHOICE_KEY); a
           // card click additionally opens the ProfileSetup sheet over the map.
@@ -1024,6 +1032,7 @@ export default function MapPage() {
         onGeocode={selectFromAddress}
       />
 
+      {!landingHandledRef.current && (
       <OnboardingModal
         onPick={selectInterestView}
         onDismiss={() => {
@@ -1038,6 +1047,7 @@ export default function MapPage() {
           });
         }}
       />
+      )}
 
       {/* Post-landing profile setup sheet. Landing set the onboarded flag on
           every dismissal path, so the OnboardingModal never opens behind it. */}

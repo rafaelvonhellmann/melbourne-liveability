@@ -312,33 +312,46 @@ describe("Landing scroll scenes", () => {
     expect(
       screen.getAllByRole("heading", { level: 3, name: "Brunswick East" }).length
     ).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText("Woolworths Brunswick East")).toBeInTheDocument();
-    expect(screen.getByText("350 m")).toBeInTheDocument();
+    // REAL POIs from the baked tile (report-tiles/pois/14/14790/10050.json).
+    expect(screen.getByText("Fleming Park")).toBeInTheDocument();
+    expect(screen.getByText("62 m")).toBeInTheDocument();
+    expect(screen.getByText("Joan Specialty Coffee")).toBeInTheDocument();
+    expect(screen.getByText("East Brunswick Medical Centre")).toBeInTheDocument();
     expect(screen.getByText("Heritage rules apply here")).toBeInTheDocument();
     expect(screen.getByText("Tram corridor within 200 m")).toBeInTheDocument();
   });
 
-  it("scene 4 report sheet shows source+date provenance, risk chips and the verify teaser", async () => {
+  it("scene 4 area report glance: real percentile ranks, walk-access counts, source note", async () => {
     await renderLanding();
-    // "Buyer location check" is the sheet eyebrow label; the area name is
-    // the heading (owner: lead the report glance with the area).
-    expect(screen.getByText("Buyer location check")).toBeInTheDocument();
-    expect(screen.getByText("src: Vicmap Planning, May 2026")).toBeInTheDocument();
-    expect(screen.getByText("src: VicPlan hazard mapping, Apr 2026")).toBeInTheDocument();
-    expect(screen.getByText("Heritage: check")).toBeInTheDocument();
-    expect(screen.getByText("Flood: clear")).toBeInTheDocument();
-    expect(screen.getByText("What to verify before you offer")).toBeInTheDocument();
+    // The eyebrow names the surface; the area name is the heading.
+    expect(screen.getByText("Area report - free for every suburb")).toBeInTheDocument();
+    // Real percentiles from places.json (brunswick-east-206011106).
+    expect(
+      screen.getByText("How it ranks across Greater Melbourne")
+    ).toBeInTheDocument();
+    // Appears in BOTH the rank bars and the compare table - assert both.
+    expect(screen.getAllByText("Affordability").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("92").length).toBeGreaterThanOrEqual(1);
+    // Real walk-access counts within 1.2 km.
+    expect(screen.getByText("Within a 1.2 km walk")).toBeInTheDocument();
+    expect(screen.getByText("Cafes and restaurants")).toBeInTheDocument();
+    expect(screen.getAllByText("67").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Schools in the area")).toBeInTheDocument();
+    expect(screen.getByText(/src: ABS ERP 2023/)).toBeInTheDocument();
   });
 
-  it("scene 5 compare table: areas vs the Greater Melbourne baseline, four rows", async () => {
+  it("scene 5 compare table: real ranks vs the Greater Melbourne baseline, education honestly to Preston East", async () => {
     await renderLanding();
     const table = screen.getByRole("table");
-    for (const name of ["Brunswick East", "Preston", "Greater Melbourne"]) {
+    for (const name of ["Brunswick East", "Preston East", "Greater Melbourne"]) {
       expect(within(table).getByRole("columnheader", { name })).toBeInTheDocument();
     }
-    for (const name of ["Liveability", "Transport", "Safety trend", "Green space"]) {
+    for (const name of ["Affordability", "Health access", "Transport", "Education"]) {
       expect(within(table).getByRole("rowheader", { name })).toBeInTheDocument();
     }
+    // Preston East wins education (82 vs 57) - the table must not flatter;
+    // 82 appears twice in the table (BE transport + PE education).
+    expect(within(table).getAllByText("82").length).toBeGreaterThanOrEqual(2);
   });
 });
 
