@@ -1,0 +1,25 @@
+{
+  // Self-contained: typechecks before any `npm install` has ever run in
+  // backend/. Worker globals (Request, Response, fetch, crypto.subtle) come
+  // from lib WebWorker; the Cloudflare bindings (D1Database, KVNamespace,
+  // R2Bucket, ExecutionContext) come from types/ambient.d.ts. At cutover,
+  // after `npm install`, delete types/ambient.d.ts and switch to
+  //   "types": ["@cloudflare/workers-types"]
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "WebWorker"],
+    // Empty on purpose: do NOT auto-load @types/* from the repo root
+    // node_modules (e.g. @types/node would fight lib WebWorker globals).
+    "types": [],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "types/**/*.d.ts", "vitest.config.ts"]
+}

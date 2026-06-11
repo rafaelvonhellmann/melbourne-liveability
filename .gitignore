@@ -25,3 +25,6 @@ playwright/.cache/
 
 # Design handoff bundle (not part of the app)
 .design-handoff/
+
+# Backend worker (backend/node_modules already matched by node_modules/ above)
+backend/.wrangler/

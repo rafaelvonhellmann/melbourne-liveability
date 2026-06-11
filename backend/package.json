@@ -1,0 +1,20 @@
+{
+  "name": "festra-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Festra API worker (Cloudflare Workers + D1 + KV). Scaffold: every route except /api/health returns 501 coming_soon until cutover.",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250601.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.1",
+    "wrangler": "^4.0.0"
+  }
+}
