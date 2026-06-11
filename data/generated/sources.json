@@ -61,8 +61,8 @@
     "licence": "CC BY 3.0 AU",
     "verifyNote": "Download-data tables carry CC BY 3.0 AU; some CSA web pages state CC BY 4.0 - re-verify at next refresh (checked 2026-06-10)",
     "period": "2025 (latest year in export)",
-    "fetchedAt": "2026-05-29",
-    "sha256": "63575380bd8956834a28dc3f14aad4d6b844c72e945098bfd34c34c4566df95d"
+    "fetchedAt": "2026-06-11",
+    "sha256": "bbf52f8d821643d0fee8b670cad547307a00b45b5958f3633bbba87145de2398"
   },
   {
     "id": "ptv-gtfs",
@@ -70,8 +70,8 @@
     "url": "https://opendata.transport.vic.gov.au/dataset/gtfs-schedule",
     "licence": "CC BY 4.0",
     "period": "rolling schedule export",
-    "fetchedAt": "2026-06-03",
-    "sha256": "0bf00a18fbee0625425b5c0ba35aece0eba60df17ccb6ab832bef1e96fee57d8"
+    "fetchedAt": "2026-06-11",
+    "sha256": "bc4b9c4d1a059cabf54606409551966aeedacbb2ea946822da23732f6e6911ad"
   },
   {
     "id": "osm-pt",
@@ -79,8 +79,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-03",
-    "sha256": "117b81e8f3704a954aa1fcdf5357c51e6f3e9ed5dad99de459cfae0a7cea19d6"
+    "fetchedAt": "2026-06-11",
+    "sha256": "3e953031d8161136da83ea0648a0c6263c5ddb94e785564afcc9317932549124"
   },
   {
     "id": "vic-mapshare-hospitals",
@@ -97,8 +97,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-03",
-    "sha256": "d4cd545dd4e57b2b2e971ed26f55a85d8c8cfd9e4c48cbe070dec08b7aac543e"
+    "fetchedAt": "2026-06-11",
+    "sha256": "de8e311cd265445a41e9d27b56ba9697893d5253709e9d8e9761d4c17f80a63a"
   },
   {
     "id": "osm-post",
@@ -106,8 +106,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-03",
-    "sha256": "3277751365b81234a85fd91357081ae1fedcd4327ea560f792ef189e0b4c7e58"
+    "fetchedAt": "2026-06-11",
+    "sha256": "3e939d4b25b0c0042968da21cc364eb82069aeb50c350f6f78e48e9b2dbe7b5e"
   },
   {
     "id": "osm-clinical-social",
@@ -115,8 +115,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-03",
-    "sha256": "ec27f37ce8c0fdf6f83988da35e149b24a0d1398aff02a617599cbe5693e934b"
+    "fetchedAt": "2026-06-11",
+    "sha256": "6eb7d67e764efaaefcfb4a87832d1be11d779766e7baec9606dda1d85b3827be"
   },
   {
     "id": "abs-census-labour-2016",
@@ -151,8 +151,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-03",
-    "sha256": "e74c7c37d2dc9dd10626424018f9243f359b062d92ab9103ad1a5837a9ae1b8a"
+    "fetchedAt": "2026-06-11",
+    "sha256": "552b891f907972d562884ef838273de9bb26d3b3b5cb7faef7c4204b391c60ca"
   },
   {
     "id": "abs-census-preschool-2021",
@@ -196,8 +196,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-03",
-    "sha256": "247ad96a902bb43af96f613c804546a04b3c0033424f57ff11124286dced07cd"
+    "fetchedAt": "2026-06-11",
+    "sha256": "a2bc06501253691e3bbf350d8b6c5f24b6a46039a4e09bb3139f966257c1f992"
   },
   {
     "id": "osm-cycleways",
@@ -205,8 +205,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-03",
-    "sha256": "34202973ef610c010c55213644c7960e3d2a7c5a4a48b0be57e4a6a6589bef23"
+    "fetchedAt": "2026-06-11",
+    "sha256": "ed26bc28df1a3f9857f0f27475314668b098bbe5742fdff391c411a5f7f01a09"
   },
   {
     "id": "osm-aged-care",
@@ -214,8 +214,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL - attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-03",
-    "sha256": "526cb984118bc7dd27e9fc4d760a89505d9abf84d84e0c0b7fc8f3c26a5cfa57"
+    "fetchedAt": "2026-06-11",
+    "sha256": "a9d727e26160d9bbc40dfdfdf8809431776cb66ca249f459ef3b7848246f8899"
   },
   {
     "id": "vicmap-police",
@@ -232,8 +232,8 @@
     "url": "https://services-ap1.arcgis.com/P744lA0wf4LlBZ84/ArcGIS/rest/services/Vicmap_Features_of_Interest/FeatureServer",
     "licence": "CC BY 4.0 (Victoria)",
     "period": "current",
-    "fetchedAt": "2026-06-03",
-    "sha256": "224bf01e6cb7f0e80907ba32c266d166b2c748f75c8f5d5ace9c6b92a69f8306"
+    "fetchedAt": "2026-06-11",
+    "sha256": "74ddd71d1873d367de4f6ceb82c4e5a7bdb5600233b189a5f87fb49b6c4f60d2"
   },
   {
     "id": "vic-planning-heritage",
@@ -286,8 +286,8 @@
     "url": "https://www.abs.gov.au/statistics/industry/building-and-construction/building-approvals-australia",
     "licence": "CC BY 4.0",
     "period": "monthly (rolling)",
-    "fetchedAt": "2026-06-03",
-    "sha256": "5f9615d79a90c7d8bca3922bd27904efa87bb320e954bb7fe6d14ff04820c7d5"
+    "fetchedAt": "2026-06-11",
+    "sha256": "3c00ef9c7b43e7431d39e3325623d63e75a943bb80400627271b847a1a709dad"
   },
   {
     "id": "vic-school-zones",
@@ -358,8 +358,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL - attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-03",
-    "sha256": "0899fb7e83f949b6a6aad283fc4315de57ba0bc21b4ea56e8ae42b187276cf05"
+    "fetchedAt": "2026-06-11",
+    "sha256": "2533614c6c999645b0704755a2dd92eaf97452aa35cbd6eec1de2335892530e9"
   },
   {
     "id": "osm-nuisance-points",
@@ -367,8 +367,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL - attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-03",
-    "sha256": "5577bc7f8ae342452778f3ef0521dd73ca4b19e8018fe82d76b4b4d638f04bbc"
+    "fetchedAt": "2026-06-11",
+    "sha256": "d63b6b576e133bbf268ca439787b36c4dc209a93a4e69e992e98de79c733c29a"
   },
   {
     "id": "osm-train-stations",
@@ -376,8 +376,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL - attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-03",
-    "sha256": "46d8d0e895bd7e5a70fd3b83361ce74242de39167c290cc2f14743bc4e7a74c8"
+    "fetchedAt": "2026-06-11",
+    "sha256": "bfc199e65c0a329db774bcff80e05265e98852aeb41a8976573a4fa1f2cc1844"
   },
   {
     "id": "osm-future-transport",
