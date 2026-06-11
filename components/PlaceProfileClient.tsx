@@ -14,7 +14,7 @@ import { metricsForDomain } from "@/lib/metric-catalog";
 import type { GmBenchmarks, GmContext } from "@/lib/benchmarks";
 import type { PlaceSeries } from "@/lib/timeseries";
 import { MIN_TREND_POINTS } from "@/lib/timeseries";
-import { Sparkline } from "./Sparkline";
+import { Sparkline, TrendMethodNote } from "./Sparkline";
 import { ScoreBadge, DomainBar } from "./ScoreVisuals";
 import { MetricCard } from "./MetricCard";
 import { ContextPanels } from "./ContextPanels";
@@ -765,6 +765,7 @@ function PopulationTrendCard({ series }: { series?: PlaceSeries }) {
         )}{" "}
         · context only - not in the score.
       </p>
+      <TrendMethodNote series={[series]} />
     </div>
   );
 }
@@ -816,6 +817,8 @@ function AffordabilityTrendCard({ rent, mortgage }: { rent?: PlaceSeries; mortga
         )}{" "}
         · ratio of medians (cost / income), not a 30%-stress share · context only - not in the score.
       </p>
+      {/* ONE note for the whole card - both lines share the same build method. */}
+      <TrendMethodNote series={lines} />
     </div>
   );
 }

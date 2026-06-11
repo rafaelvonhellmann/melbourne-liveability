@@ -32,7 +32,7 @@ export const DOMAIN_REGISTRY: DomainConfig[] = [
     defaultWeight: 30,
     layer: "choropleth",
     description:
-      "How heavy local rents are relative to LOCAL median income - a rent-BURDEN measure, not a sale price and not how cheap an area is to move into. High-income suburbs can score well even with high rents, so read it alongside the area's socio-economic rank (SEIFA).",
+      "How heavy local rents are relative to local median income - a rent-burden measure, not a sale price and not how cheap an area is to move into. High-income suburbs can score well even with high rents, so read it alongside the area's socio-economic rank (SEIFA).",
   },
   {
     id: "transport",

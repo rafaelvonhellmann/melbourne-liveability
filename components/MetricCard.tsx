@@ -7,7 +7,7 @@ import type { PlaceSeries } from "@/lib/timeseries";
 import { MIN_TREND_POINTS } from "@/lib/timeseries";
 import { getSource, shortSourceName } from "@/lib/sources";
 import { percentileToColor } from "@/lib/colors";
-import { Sparkline } from "./Sparkline";
+import { Sparkline, TrendMethodNote } from "./Sparkline";
 
 type MetricCardProps = {
   def: MetricDef;
@@ -60,6 +60,19 @@ export function MetricCard({ def, value, benchmark, series, mapHref }: MetricCar
         </p>
       )}
 
+      {/* Trend chart first, then the source line, then ONE how-built note -
+          the note never sits above the source attribution. Enlarged to match
+          the population-trend chart on the overview. */}
+      {hasTrend && (
+        <Sparkline
+          series={series!}
+          format={(v) => formatMetricValue(v, def.format)}
+          fluid
+          width={360}
+          height={130}
+        />
+      )}
+
       <div className="mt-3 border-t border-surface-border pt-2.5 text-[11px] text-ink-muted">
         <span className="text-ink-muted">Source: </span>
         {source ? (
@@ -78,12 +91,7 @@ export function MetricCard({ def, value, benchmark, series, mapHref }: MetricCar
         {value?.stale && <span className="text-[#9A552F]"> · may be out of date</span>}
       </div>
 
-      {hasTrend && (
-        <Sparkline
-          series={series!}
-          format={(v) => formatMetricValue(v, def.format)}
-        />
-      )}
+      {hasTrend && <TrendMethodNote series={[series]} />}
 
       {mapHref && (
         <Link

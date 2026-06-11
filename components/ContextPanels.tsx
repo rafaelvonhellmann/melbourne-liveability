@@ -138,9 +138,21 @@ export function ContextPanels({
       {context.schools &&
         context.schools.government + context.schools.catholic + context.schools.independent > 0 && (
           <Panel title="Schools in this area">
-            <Row label="Government" value={context.schools.government} />
-            <Row label="Catholic" value={context.schools.catholic} />
-            <Row label="Independent" value={context.schools.independent} />
+            <Row
+              label="Government"
+              value={context.schools.government}
+              gm={gmRel(context.schools.government, gmContext?.schoolsGovernment)}
+            />
+            <Row
+              label="Catholic"
+              value={context.schools.catholic}
+              gm={gmRel(context.schools.catholic, gmContext?.schoolsCatholic)}
+            />
+            <Row
+              label="Independent"
+              value={context.schools.independent}
+              gm={gmRel(context.schools.independent, gmContext?.schoolsIndependent)}
+            />
             <p className="mt-2 text-xs text-ink-muted">
               Open schools located inside this area, counted by sector (not enrolment numbers).
               A count of what&apos;s here - enrolment zones still decide where a child can go, so
@@ -151,12 +163,21 @@ export function ContextPanels({
 
       {context.socialHousing && context.socialHousing.socialPct != null && (
         <Panel title="Social housing supply">
-          <Row label="Social housing %" value={fmtPct(context.socialHousing.socialPct)} />
+          <Row
+            label="Social housing %"
+            value={fmtPct(context.socialHousing.socialPct)}
+            gm={gmRel(context.socialHousing.socialPct, gmContext?.socialPct)}
+          />
           <Row
             label="Public (state authority) %"
             value={fmtPct(context.socialHousing.statePct)}
+            gm={gmRel(context.socialHousing.statePct, gmContext?.statePct)}
           />
-          <Row label="Community housing %" value={fmtPct(context.socialHousing.communityPct)} />
+          <Row
+            label="Community housing %"
+            value={fmtPct(context.socialHousing.communityPct)}
+            gm={gmRel(context.socialHousing.communityPct, gmContext?.communityPct)}
+          />
           {context.socialHousing.dwellings != null && (
             <Row
               label="Social-housing dwellings"
@@ -179,10 +200,12 @@ export function ContextPanels({
             <Row
               label="Renters paying >30% of income"
               value={fmtPct(context.housingStress.rentStressPct)}
+              gm={gmRel(context.housingStress.rentStressPct, gmContext?.rentStressPct)}
             />
             <Row
               label="Mortgaged paying >30% of income"
               value={fmtPct(context.housingStress.mortgageStressPct)}
+              gm={gmRel(context.housingStress.mortgageStressPct, gmContext?.mortgageStressPct)}
             />
             <p className="mt-2 text-xs text-ink-muted">
               Share of households (by tenure) spending more than 30% of income on
@@ -204,6 +227,7 @@ export function ContextPanels({
                 <Row
                   label="Area within a Heritage Overlay"
                   value={fmtPct(context.planning.heritageOverlayPct)}
+                  gm={gmMedianPct(gmContext?.heritageOverlayPct)}
                 />
                 <p className="mt-2 text-xs text-ink-muted">
                   Share of this area inside a Heritage Overlay, which
@@ -261,12 +285,6 @@ export function ContextPanels({
           <p className="text-sm text-ink-muted">{context.environment.note}</p>
         </Panel>
       )}
-
-      {context.politics && (
-        <Panel title="Politics / civic">
-          <p className="text-sm text-ink-muted">{context.politics.note}</p>
-        </Panel>
-      )}
     </section>
   );
 }
@@ -316,8 +334,9 @@ function fmtPct(v: number | null): string | null {
 
 /**
  * Frame a value against the Greater-Melbourne median as a plain-English relative
- * phrase ("~12% below the Greater Melbourne median") rather than two raw numbers
- * the reader has to compare themselves.
+ * phrase ("12% below the Greater Melbourne median") rather than two raw numbers
+ * the reader has to compare themselves. Plain numbers, no "~" - these are
+ * understood approximations.
  */
 function gmRel(value: number | null | undefined, gm: number | null | undefined): string | null {
   if (value == null || gm == null || !Number.isFinite(value) || !Number.isFinite(gm) || gm === 0) {
@@ -325,12 +344,21 @@ function gmRel(value: number | null | undefined, gm: number | null | undefined):
   }
   const pct = Math.round(((value - gm) / Math.abs(gm)) * 100);
   if (Math.abs(pct) < 2) return "about the Greater Melbourne median";
-  return `~${Math.abs(pct)}% ${pct > 0 ? "above" : "below"} the Greater Melbourne median`;
+  return `${Math.abs(pct)}% ${pct > 0 ? "above" : "below"} the Greater Melbourne median`;
+}
+
+/**
+ * Absolute Greater-Melbourne median note for shares where the typical area is at
+ * or near zero (e.g. heritage overlay), where a relative % would be meaningless.
+ */
+function gmMedianPct(gm: number | null | undefined): string | null {
+  if (gm == null || !Number.isFinite(gm)) return null;
+  return `Greater Melbourne median: ${gm.toFixed(1)}%`;
 }
 
 function ownerApprox(renterPct: number | null): string | null {
   if (renterPct == null || !Number.isFinite(renterPct)) return null;
-  return `~${Math.max(0, 100 - renterPct).toFixed(1)}%`;
+  return `${Math.max(0, 100 - renterPct).toFixed(1)}%`;
 }
 
 /** Visual renter-vs-owner split - a quick read of whether an area is rental- or
@@ -351,7 +379,7 @@ function TenureSplit({ renterPct }: { renterPct: number | null }) {
       </div>
       <div className="mt-1 flex justify-between text-[10px] text-ink-muted">
         <span>Renters {renter.toFixed(0)}%</span>
-        <span>Owner / other ~{owner.toFixed(0)}%</span>
+        <span>Owner / other {owner.toFixed(0)}%</span>
       </div>
     </div>
   );

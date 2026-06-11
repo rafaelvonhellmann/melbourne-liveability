@@ -76,7 +76,7 @@ export function computeGmBenchmarks(places: Place[]): GmBenchmarks {
 }
 
 /**
- * Greater-Melbourne MEDIAN for each context-panel metric (the "typical
+ * Greater-Melbourne median for each context-panel metric (the "typical
  * residential SA2"), so the Equity & community panels can show how an area
  * compares - the context tab previously showed raw values with no baseline.
  * Median is robust to the long tail (e.g. a few very dense or very renter-heavy
@@ -92,6 +92,19 @@ export type GmContext = {
   bachelorPlusPct?: number;
   postgradPct?: number;
   volunteerPct?: number;
+  /** Median open-school counts by sector (areas that report a school mix). */
+  schoolsGovernment?: number;
+  schoolsCatholic?: number;
+  schoolsIndependent?: number;
+  /** Social-housing supply medians. */
+  socialPct?: number;
+  statePct?: number;
+  communityPct?: number;
+  /** Housing-stress medians (>30% of income on housing). */
+  rentStressPct?: number;
+  mortgageStressPct?: number;
+  /** Median share of area inside a Heritage Overlay. */
+  heritageOverlayPct?: number;
 };
 
 export function computeGmContext(places: Place[]): GmContext {
@@ -118,5 +131,14 @@ export function computeGmContext(places: Place[]): GmContext {
     bachelorPlusPct: med((p) => p.context?.community?.bachelorPlusPct),
     postgradPct: med((p) => p.context?.community?.postgradPct),
     volunteerPct: med((p) => p.context?.community?.volunteerPct),
+    schoolsGovernment: med((p) => p.context?.schools?.government),
+    schoolsCatholic: med((p) => p.context?.schools?.catholic),
+    schoolsIndependent: med((p) => p.context?.schools?.independent),
+    socialPct: med((p) => p.context?.socialHousing?.socialPct),
+    statePct: med((p) => p.context?.socialHousing?.statePct),
+    communityPct: med((p) => p.context?.socialHousing?.communityPct),
+    rentStressPct: med((p) => p.context?.housingStress?.rentStressPct),
+    mortgageStressPct: med((p) => p.context?.housingStress?.mortgageStressPct),
+    heritageOverlayPct: med((p) => p.context?.planning?.heritageOverlayPct),
   };
 }

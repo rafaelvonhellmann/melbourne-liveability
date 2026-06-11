@@ -130,16 +130,30 @@ export function Sparkline({ series, format, width = 132, height = 34, fluid = fa
           </figcaption>
         </div>
       </div>
-      {series.boundaryNote && (
-        <p className="mt-1.5 text-[10px] leading-tight text-ink-muted">
-          <Link
-            href="/methodology#profile"
-            className="underline decoration-dotted underline-offset-2 hover:text-accent"
-          >
-            How this trend is built (geography &amp; boundary notes)
-          </Link>
-        </p>
-      )}
     </figure>
+  );
+}
+
+/**
+ * The ONE "how this trend is built" methodology note for a trend card. Rendered
+ * by the card - after its source line, never per-chart - so a card with several
+ * sparklines (e.g. rent + mortgage) carries exactly one note and the note never
+ * sits above the source attribution.
+ */
+export function TrendMethodNote({
+  series,
+}: {
+  series: (PlaceSeries | undefined)[];
+}) {
+  if (!series.some((s) => s?.boundaryNote)) return null;
+  return (
+    <p className="mt-1.5 text-[10px] leading-tight text-ink-muted">
+      <Link
+        href="/methodology#profile"
+        className="underline decoration-dotted underline-offset-2 hover:text-accent"
+      >
+        How this trend is built (geography &amp; boundary notes)
+      </Link>
+    </p>
   );
 }

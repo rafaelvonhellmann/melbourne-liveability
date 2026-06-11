@@ -41,7 +41,7 @@ export const METRIC_CATALOG: MetricDef[] = [
     format: "ratio",
     higherIsBetter: false,
     description:
-      "Median weekly rent ÷ LOCAL equivalised household income - a cost-pressure proxy (lower is better). Wealthy areas can look affordable because residents' incomes are high, not because rents are low. No sale-price data.",
+      "Median weekly rent ÷ local equivalised household income - a cost-pressure proxy (lower is better). Wealthy areas can look affordable because residents' incomes are high, not because rents are low. No sale-price data.",
   },
   {
     domain: "transport",
@@ -74,21 +74,21 @@ export const METRIC_CATALOG: MetricDef[] = [
     domain: "safety",
     key: "propertyCrime",
     label: "Property crime",
-    unit: "rate",
+    unit: "offences per 100,000 residents (rate)",
     format: "rate",
     higherIsBetter: false,
     description:
-      "Recorded property offences (theft, burglary, car crime) per person, for the wider suburb / council area.",
+      "Recorded property offences (theft, burglary, car crime) per 100,000 residents, for the wider suburb / council area.",
   },
   {
     domain: "safety",
     key: "violentCrime",
     label: "Violent crime",
-    unit: "rate",
+    unit: "offences per 100,000 residents (rate)",
     format: "rate",
     higherIsBetter: false,
     description:
-      "Recorded offences against the person (assault and similar) per person, for the wider suburb / council area.",
+      "Recorded offences against the person (assault and similar) per 100,000 residents, for the wider suburb / council area.",
   },
   {
     domain: "health",
@@ -197,9 +197,13 @@ export function formatMetricValue(
     case "count":
       return Math.round(raw).toLocaleString("en-AU");
     case "rate":
-      return Math.abs(raw) >= 1000
-        ? Math.round(raw).toLocaleString("en-AU")
-        : raw.toFixed(1);
+      // Rates are always 1 decimal with en-AU thousands separators, so "1,988.0"
+      // and "629.6" read as the same unit (previously >=1000 dropped the decimal
+      // and looked like a raw count next to a rate).
+      return raw.toLocaleString("en-AU", {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      });
     default:
       return String(raw);
   }

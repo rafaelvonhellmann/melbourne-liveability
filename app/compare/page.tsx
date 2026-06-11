@@ -18,6 +18,11 @@ import {
 import { computeWeightedScore } from "@/lib/scoring";
 import { V1_SCORED_DOMAINS, getDomain } from "@/lib/domains";
 import { metricsForDomain, formatMetricValue } from "@/lib/metric-catalog";
+import {
+  computeBenchmark,
+  computeGmBenchmarks,
+  computeGmContext,
+} from "@/lib/benchmarks";
 import { parseListParam, buildCompareUrl } from "@/lib/share-url";
 import { loadUserPrefs } from "@/lib/user-prefs";
 import { buildSearchIndex } from "@/lib/search";
@@ -178,7 +183,7 @@ export default function ComparePage() {
                   }}
                   onGeocode={addByAddress}
                 />
-                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-ink-muted">
+                <div className="flex items-center gap-2 text-[11px] tracking-wide text-ink-muted">
                   <span className="h-px flex-1 bg-surface-border" aria-hidden />
                   or browse
                   <span className="h-px flex-1 bg-surface-border" aria-hidden />
@@ -207,7 +212,7 @@ export default function ComparePage() {
 
           {shortlistChips.length > 0 && (
             <fieldset className="rounded-lg border border-surface-border bg-surface p-3">
-              <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+              <legend className="px-1 text-xs font-semibold tracking-wide text-ink-muted">
                 Quick add from your shortlist
               </legend>
               <div className="mt-1 flex flex-wrap gap-2">
@@ -262,7 +267,7 @@ export default function ComparePage() {
         </div>
 
         {selected.length >= 2 && (
-          <CompareTable selected={selected} weights={weights} />
+          <CompareTable selected={selected} places={places} weights={weights} />
         )}
       </main>
     </div>
@@ -354,13 +359,42 @@ function bestIndexDir(values: (number | null)[], higherIsBetter: boolean): numbe
 
 function CompareTable({
   selected,
+  places,
   weights,
 }: {
   selected: Place[];
+  places: Place[];
   weights: ScoreWeights;
 }) {
   const totals = selected.map((p) => computeWeightedScore(p, weights).total);
   const bestTotal = bestIndex(totals);
+
+  // Greater-Melbourne baseline: the MEDIAN residential area for every compared
+  // row, so each value can be read against the regional typical, not only the
+  // other shortlisted areas. Pure + memoised - recomputed only when the dataset
+  // or the weights change. The GM column never competes for the ★.
+  const gm = useMemo(() => {
+    const residential = places.filter((p) => !p.nonResidential);
+    const totalMedian =
+      computeBenchmark(
+        residential.map((p) => computeWeightedScore(p, weights).total)
+      )?.median ?? null;
+    const domainMedians: Partial<Record<(typeof V1)[number], number>> = {};
+    for (const d of V1) {
+      const med = computeBenchmark(
+        residential
+          .map((p) => p.domains[d]?.percentile)
+          .filter((v): v is number => v != null)
+      )?.median;
+      if (med != null) domainMedians[d] = med;
+    }
+    return {
+      benchmarks: computeGmBenchmarks(places),
+      context: computeGmContext(places),
+      totalMedian,
+      domainMedians,
+    };
+  }, [places, weights]);
 
   const pctOrDash = (v: number | null | undefined) =>
     v != null && Number.isFinite(v) ? `${v.toFixed(1)}%` : "—";
@@ -373,31 +407,43 @@ function CompareTable({
           ? String(p.context.equity.irsadDecile)
           : "—"
       ),
+      gm:
+        gm.context.irsadDecile != null
+          ? String(Math.round(gm.context.irsadDecile))
+          : "—",
     },
     {
       label: "Renter households %",
       values: selected.map((p) => pctOrDash(p.context?.community?.renterPct)),
+      gm: pctOrDash(gm.context.renterPct),
     },
     {
       label: "Owner-occupied % (approx)",
       values: selected.map((p) => {
         const r = p.context?.community?.renterPct;
         return r != null && Number.isFinite(r)
-          ? `~${Math.max(0, 100 - r).toFixed(1)}%`
+          ? `${Math.max(0, 100 - r).toFixed(1)}%`
           : "—";
       }),
+      gm:
+        gm.context.renterPct != null
+          ? `${Math.max(0, 100 - gm.context.renterPct).toFixed(1)}%`
+          : "—",
     },
     {
       label: "Apartment dwellings %",
       values: selected.map((p) => pctOrDash(p.context?.community?.apartmentPct)),
+      gm: pctOrDash(gm.context.apartmentPct),
     },
     {
       label: "First Nations %",
       values: selected.map((p) => pctOrDash(p.context?.community?.firstNationsPct)),
+      gm: pctOrDash(gm.context.firstNationsPct),
     },
     {
       label: "Completed Year 12 %",
       values: selected.map((p) => pctOrDash(p.context?.community?.year12Pct)),
+      gm: pctOrDash(gm.context.year12Pct),
     },
   ];
 
@@ -418,9 +464,17 @@ function CompareTable({
                 <div className="mt-0.5 text-xs font-normal text-ink-muted">{p.lga}</div>
               </th>
             ))}
+            <th className="border-b border-l border-surface-border bg-surface-sunken/60 px-3 py-3">
+              <span className="font-display text-base font-medium text-ink-muted">
+                Greater Melbourne
+              </span>
+              <div className="mt-0.5 text-xs font-normal text-ink-muted">
+                median area (baseline)
+              </div>
+            </th>
           </tr>
           <tr>
-            <td className="border-b border-surface-border px-3 py-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+            <td className="border-b border-surface-border px-3 py-3 text-xs font-semibold tracking-wide text-ink-muted">
               Overall score
             </td>
             {totals.map((t, i) => (
@@ -437,6 +491,9 @@ function CompareTable({
                 {i === bestTotal && <span className="ml-1 text-accent">★</span>}
               </td>
             ))}
+            <td className="num border-b border-l border-surface-border bg-surface-sunken/60 px-3 py-3 text-sm text-ink-muted">
+              {gm.totalMedian != null ? gm.totalMedian.toFixed(0) : "—"}
+            </td>
           </tr>
         </thead>
         <tbody>
@@ -451,7 +508,7 @@ function CompareTable({
                 <tr className="bg-surface-sunken/50">
                   <td className="border-b border-surface-border px-3 py-2.5 font-medium text-ink">
                     {cfg?.label}{" "}
-                    <span className="text-[10px] font-normal uppercase tracking-wide text-ink-muted">
+                    <span className="text-[10px] font-normal tracking-wide text-ink-muted">
                       percentile
                     </span>
                   </td>
@@ -472,6 +529,9 @@ function CompareTable({
                       </span>
                     </td>
                   ))}
+                  <td className="num border-b border-l border-surface-border px-3 py-2.5 text-ink-muted">
+                    {gm.domainMedians[d] != null ? gm.domainMedians[d]!.toFixed(0) : "—"}
+                  </td>
                 </tr>
                 {/* Raw sub-indicators for this domain */}
                 {metrics.map((def) => {
@@ -480,12 +540,18 @@ function CompareTable({
                     return iv && iv.raw != null && Number.isFinite(iv.raw) ? iv.raw : null;
                   });
                   const bestRaw = bestIndexDir(raws, def.higherIsBetter);
+                  const gmMedian = gm.benchmarks[d]?.[def.key]?.median ?? null;
                   return (
                     <tr key={def.key}>
                       <td className="border-b border-surface-border py-2 pl-7 pr-3 text-xs text-ink-muted">
                         {def.label}{" "}
                         <span className="text-ink-muted/70">
                           ({def.higherIsBetter ? "↑ better" : "↓ better"})
+                        </span>
+                        {/* The unit on its own line, so a bare number ("1,988.0")
+                            is never ambiguous about what it counts. */}
+                        <span className="block text-[10px] leading-snug text-ink-muted/70">
+                          {def.unit}
                         </span>
                       </td>
                       {raws.map((r, i) => (
@@ -499,6 +565,9 @@ function CompareTable({
                           {i === bestRaw && <span className="ml-1 text-accent">★</span>}
                         </td>
                       ))}
+                      <td className="num border-b border-l border-surface-border px-3 py-2 text-xs text-ink-muted">
+                        {formatMetricValue(gmMedian, def.format)}
+                      </td>
                     </tr>
                   );
                 })}
@@ -509,8 +578,8 @@ function CompareTable({
           {/* Context section header */}
           <tr className="bg-surface-sunken">
             <td
-              colSpan={selected.length + 1}
-              className="border-b border-surface-border px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-ink-muted"
+              colSpan={selected.length + 2}
+              className="border-b border-surface-border px-3 py-2 text-[11px] font-semibold tracking-wide text-ink-muted"
             >
               Context - not part of the score
             </td>
@@ -529,6 +598,9 @@ function CompareTable({
                   {v}
                 </td>
               ))}
+              <td className="num border-b border-l border-surface-border px-3 py-2.5 italic text-ink-muted">
+                {row.gm}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -536,8 +608,10 @@ function CompareTable({
       <p className="px-3 py-3 text-xs text-ink-muted">
         Shaded rows are each domain&apos;s Greater-Melbourne percentile; the rows beneath
         are its raw sub-indicators (↑/↓ marks which direction is better). The best value
-        per row is marked ★. Context rows are <b className="text-ink">not part of the
-        score</b> - orientation only.
+        per row is marked ★. The <b className="text-ink">Greater Melbourne</b> column is
+        the median across all residential areas - a regional baseline, never a competitor
+        for the ★. Context rows are <b className="text-ink">not part of the score</b> -
+        orientation only.
       </p>
     </div>
   );
