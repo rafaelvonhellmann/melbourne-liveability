@@ -28,13 +28,54 @@ export function tilePath(x: number, y: number, z: number = BUILDING_TILE_Z): str
   return `/data/buildings/${z}/${x}/${y}.json`;
 }
 
-/** The pin's tile plus its 8 neighbours - the set a shadow could reach across. */
-export function tilesForPin(lng: number, lat: number): { x: number; y: number }[] {
+/** Geographic bounding box of a slippy tile (west < east, south < north). */
+export function tileBounds(
+  x: number,
+  y: number,
+  z: number = BUILDING_TILE_Z
+): { west: number; east: number; south: number; north: number } {
+  const n = 2 ** z;
+  const latFromY = (yy: number) =>
+    (Math.atan(Math.sinh(Math.PI * (1 - (2 * yy) / n))) * 180) / Math.PI;
+  return {
+    west: (x / n) * 360 - 180,
+    east: ((x + 1) / n) * 360 - 180,
+    north: latFromY(y),
+    south: latFromY(y + 1),
+  };
+}
+
+/**
+ * The pin's tile plus the neighbours a shadow could reach across.
+ *
+ * Without `radiusM`: the full 3x3 block (bake-time / conservative callers).
+ * With `radiusM`: neighbours whose nearest edge is farther than `radiusM`
+ * from the pin are skipped - at z14 a tile is ~2.4 km across, so a ~350 m
+ * shadow radius usually needs just 1 tile (2-4 near a tile edge/corner),
+ * saving most of the 9 fetches. The pin's own tile is always included.
+ */
+export function tilesForPin(
+  lng: number,
+  lat: number,
+  radiusM?: number
+): { x: number; y: number }[] {
   const { x, y } = lngLatToTile(lng, lat);
+  const mPerDegLat = 110574;
+  const mPerDegLng = 111320 * Math.cos((lat * Math.PI) / 180);
   const out: { x: number; y: number }[] = [];
   for (let dx = -1; dx <= 1; dx++) {
     for (let dy = -1; dy <= 1; dy++) {
-      out.push({ x: x + dx, y: y + dy });
+      const tx = x + dx;
+      const ty = y + dy;
+      if (radiusM != null && (dx !== 0 || dy !== 0)) {
+        // Nearest point of the neighbour tile to the pin = the pin clamped to
+        // the tile's bbox. Equirectangular metres are plenty at this scale.
+        const b = tileBounds(tx, ty);
+        const dLng = (Math.min(Math.max(lng, b.west), b.east) - lng) * mPerDegLng;
+        const dLat = (Math.min(Math.max(lat, b.south), b.north) - lat) * mPerDegLat;
+        if (dLng * dLng + dLat * dLat > radiusM * radiusM) continue;
+      }
+      out.push({ x: tx, y: ty });
     }
   }
   return out;
