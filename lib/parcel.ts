@@ -5,8 +5,8 @@
  * are millions statewide, so this is a per-pin query (never a bundled asset or a
  * per-SA2 median). Context only, never scored.
  *
- * The fetch (fetchParcelAreaAt) runs only in the browser, like the walk-isochrone
- * paid tier; the geometry math (bboxAround, pickParcelArea) is pure + unit-tested.
+ * The fetch (fetchParcelAreaAt) runs only in the browser, like route-drive /
+ * reachability; the geometry math (bboxAround, pickParcelArea) is pure + unit-tested.
  */
 import * as turf from "@turf/turf";
 import type { FeatureCollection, Feature, Polygon, MultiPolygon } from "geojson";

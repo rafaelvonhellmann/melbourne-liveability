@@ -216,10 +216,11 @@ export interface BuildBuyerReportInput {
   pois?: Feature<Point>[];
   radiusMeters?: number;
   /**
-   * Paid-tier opt-in: a street-network walk isochrone polygon (from
-   * lib/walk-isochrone). When supplied, "nearby" is computed by containment in
-   * this polygon instead of a straight-line radius, and `accessMode` becomes
-   * "precise". Stays pure - the fetch happens in the client, the polygon is data.
+   * Optional street-network walk isochrone polygon. When supplied, "nearby" is
+   * computed by containment in this polygon instead of a straight-line radius,
+   * and `accessMode` becomes "precise". Stays pure - the polygon is plain data.
+   * (No live caller supplies one since the precise-walk opt-in was removed; the
+   * engine keeps the capability for tests / a future server-side provider.)
    */
   isochrone?: Polygon | MultiPolygon;
   /** Inject for deterministic output (SSR/build/tests); defaults to now. */

@@ -261,4 +261,39 @@ export function overpassBbox(region: Region): string {
   return `(${south},${west},${north},${east})`;
 }
 
+/** Bare filename only: letters/digits/dot/dash/underscore, no leading dot, no
+ * path separators - so a region-suffixed name can never traverse directories. */
+const SAFE_DATA_FILE = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+
+/**
+ * Region-suffixed data artifact filename (P4.1 Phase B - per-region output
+ * emit). The DEFAULT region (melbourne) keeps the exact historical name -
+ * zero churn for the live site; every other region gets its id inserted
+ * before the extension:
+ *   regionDataFile("melbourne", "places.json")  -> "places.json"
+ *   regionDataFile("canberra", "places.json")   -> "places.canberra.json"
+ *   regionDataFile("canberra", "places.geojson") -> "places.canberra.geojson"
+ * Throws on unknown regions and on unsafe names (path separators, "..",
+ * leading dot) - a bad name must fail loud, never write outside data dirs.
+ */
+export function regionDataFile(regionId: RegionId, name: string): string {
+  getRegion(regionId); // validates, throws on unknown
+  if (!SAFE_DATA_FILE.test(name) || name.includes("..")) {
+    throw new Error(
+      `Unsafe data filename '${name}' (bare name expected, e.g. "places.json")`
+    );
+  }
+  if (regionId === DEFAULT_REGION) return name;
+  const dot = name.lastIndexOf(".");
+  return dot > 0
+    ? `${name.slice(0, dot)}.${regionId}${name.slice(dot)}`
+    : `${name}.${regionId}`;
+}
+
+/** Public URL path for a region's data artifact (under /data). Melbourne
+ * resolves to the exact URLs the live site fetches today. */
+export function dataPath(regionId: RegionId, name: string): string {
+  return `/data/${regionDataFile(regionId, name)}`;
+}
+
 export default REGIONS;

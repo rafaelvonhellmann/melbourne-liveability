@@ -94,8 +94,9 @@ export function pushHazardOverlayFinding(findings: BuyerFinding[], ctx: EngineCt
  * 5a') Parcel-level planning zone + overlays (pin mode only - a runtime
  *      VicPlan point lookup, see lib/planning-at). When the lookup resolved,
  *      the point answer REPLACES the SA2 heritage/conservation area-share
- *      findings below: "HO123 applies at this exact location" (or a dated
- *      all-clear) beats "31% of this area has a Heritage Overlay". The SA2
+ *      findings below: "a heritage permit is needed here (Heritage Overlay
+ *      HO123)" (or a dated all-clear) beats "31% of this area has a Heritage
+ *      Overlay". The SA2
  *      findings remain the fallback whenever the lens is null (lookup failed
  *      or sa2 mode). The bushfire/flood hazard finding (5) is NOT suppressed:
  *      its bushfire share is the Bushfire-Prone Area, a separate instrument a
@@ -128,19 +129,21 @@ export function pushParcelPlanningFindings(findings: BuyerFinding[], ctx: Engine
         id: "planning-zone",
         kind: "neutral",
         severity: "info",
-        title: `Zoned ${zone.code} - ${zone.description}`,
+        // Plain words lead, the code follows in parentheses - never the
+        // other way round.
+        title: `Zoning here: ${zone.description} (${zone.code})`,
         // Body text stays code-free plain English (the title carries the code);
         // the vintage rides on `asAt`, rendered only in full-report variants.
         summary: `${zoneGroupMeaning(zone.parent)}${
           zone.gazetted
             ? ""
-            : " This zoning is a proposed amendment, not yet gazetted - check its current status."
+            : " This zoning is only proposed and not yet in force - check its current status."
         }`,
         asAt: zone.asAt,
         whyItMatters:
           "The zone decides what can be built or run on this land and around it - by you and by your neighbours.",
         verifyAction:
-          "Read the zone schedule in the council planning scheme and confirm the zoning on the planning certificate (Section 32).",
+          "Confirm the zoning on the planning certificate (Section 32) and check the detailed rules in the council planning scheme.",
         confidence: "high",
         geography: "parcel",
         caveat: withParcelCaveat(
@@ -159,15 +162,17 @@ export function pushParcelPlanningFindings(findings: BuyerFinding[], ctx: Engine
         id: `parcel-overlay-${o.code}`,
         kind: "verify",
         severity: meta.severity,
-        title: `${meta.name} ${o.code} applies at this exact location`,
+        // Plain words lead ("Changes to the outside of this home need a
+        // heritage permit"), the proper name + code follow in parentheses.
+        title: `${meta.plainTitle} (${meta.name} ${o.code})`,
         // The title carries the overlay code; the body stays code-free plain
         // English, and the "as at" vintage rides on `asAt` (full report only).
-        summary: `${meta.name} is mapped over this exact point. ${meta.buyerMeaning}`,
+        summary: `${meta.buyerMeaning} This rule is mapped over this exact spot.`,
         asAt: o.asAt,
         whyItMatters:
-          "Planning overlays control what you can build, change or remove - they affect cost, insurability and the feasibility of your plans.",
+          "Rules like this control what you can build, change or remove - they affect cost, insurance and whether your plans are possible.",
         verifyAction:
-          "Confirm the overlay and read its schedule on the planning certificate (Section 32) / VicPlan before you offer.",
+          "Confirm this rule and its exact requirements on the planning certificate (Section 32) or VicPlan before you offer.",
         confidence: "high",
         geography: "parcel",
         caveat: withParcelCaveat(
@@ -177,15 +182,15 @@ export function pushParcelPlanningFindings(findings: BuyerFinding[], ctx: Engine
       });
     }
     if (otherOverlays.length > 0) {
-      // Plain-English descriptions only - the planning certificate carries the
-      // exact codes, and the description names the control well enough here.
-      const list = otherOverlays.map((o) => o.description).join(", ");
+      // Plain words lead; the control names ride in parentheses - the
+      // planning certificate carries the exact codes.
+      const list = otherOverlays.map((o) => o.description).join("; ");
       findings.push({
         id: "parcel-overlay-other",
         kind: "neutral",
         severity: "info",
-        title: "Other planning controls at this point",
-        summary: `Also mapped at this exact point: ${list}. These are typically less buyer-critical controls (such as parking precincts or development contributions) - the planning certificate lists them all.`,
+        title: "Other council rules here",
+        summary: `This spot also has some additional council rules - things like parking requirements or developer contributions (${list}). These rarely affect everyday buyers; the planning certificate your conveyancer orders lists them all.`,
         confidence: "high",
         geography: "parcel",
         caveat: withParcelCaveat("Point lookup of the Vicmap planning overlay maps."),
@@ -200,9 +205,9 @@ export function pushParcelPlanningFindings(findings: BuyerFinding[], ctx: Engine
         id: "parcel-overlays-clear",
         kind: "neutral",
         severity: "info",
-        title: "No major planning overlay mapped at this point",
-        summary: `None of the buyer-critical planning overlays we track (heritage, flood, bushfire, erosion, contamination audit, public acquisition, landscape/vegetation, airport noise, design) is mapped at this exact point.${
-          otherOverlays.length > 0 ? " Less critical controls do apply - see above." : ""
+        title: "No major planning restrictions here",
+        summary: `We checked the planning rules that matter most when buying - heritage protection, flood and bushfire zones, land contamination, compulsory government acquisition, protected vegetation, airport noise and design controls. None applies at this exact spot.${
+          otherOverlays.length > 0 ? " Some minor rules do apply - see 'Other council rules here'." : ""
         }`,
         asAt: planningAt.checkedAt,
         verifyAction:

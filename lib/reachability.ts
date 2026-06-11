@@ -10,16 +10,40 @@
  * (no API key, CORS-open) so the feature works on the static deploy out of the
  * box. If NEXT_PUBLIC_ORS_API_KEY is set, it upgrades to OpenRouteService
  * isochrones (higher quotas / your own key). Either way the response is reduced
- * to a Polygon/MultiPolygon by the shared parseOrsIsochrone parser.
+ * to a Polygon/MultiPolygon by the parseOrsIsochrone parser below.
  *
- * Same design constraints as walk-isochrone.ts / route-drive.ts: a runtime,
- * client-side fetch (static-export safe, no server route), provider-isolated,
- * and never throwing to the caller. OSM-derived routing (ODbL); attribute OSM.
+ * Same design constraints as route-drive.ts: a runtime, client-side fetch
+ * (static-export safe, no server route), provider-isolated, and never throwing
+ * to the caller. OSM-derived routing (ODbL); attribute OSM.
  */
 import type { Polygon, MultiPolygon } from "geojson";
 import type { LngLat } from "./buyer-location";
 import { timeoutSignal } from "./fetch-timeout";
-import { parseOrsIsochrone } from "./walk-isochrone";
+
+/**
+ * Pull the isochrone polygon out of an OpenRouteService isochrones response
+ * (Valhalla's `polygons: true` response is the same GeoJSON FeatureCollection
+ * shape). Pure (no network) so it is unit-testable. Returns null for any shape
+ * that is not a usable Polygon / MultiPolygon.
+ */
+export function parseOrsIsochrone(
+  json: unknown
+): Polygon | MultiPolygon | null {
+  if (!json || typeof json !== "object") return null;
+  const features = (json as { features?: unknown }).features;
+  if (!Array.isArray(features) || features.length === 0) return null;
+  // One feature per requested range; we ask for a single range.
+  for (const f of features) {
+    const geom = (f as { geometry?: unknown } | null)?.geometry;
+    if (!geom || typeof geom !== "object") continue;
+    const t = (geom as { type?: unknown }).type;
+    const coords = (geom as { coordinates?: unknown }).coordinates;
+    if ((t === "Polygon" || t === "MultiPolygon") && Array.isArray(coords)) {
+      return geom as Polygon | MultiPolygon;
+    }
+  }
+  return null;
+}
 
 export type ReachMode = "drive" | "walk";
 
@@ -42,7 +66,7 @@ export const REACH_MINUTES: Record<ReachMode, number[]> = {
   walk: [10, 20, 30],
 };
 
-/** Optional ORS API key (shared with walk-isochrone / route-drive). */
+/** Optional ORS API key (shared with route-drive). */
 function orsApiKey(): string | undefined {
   const k = process.env.NEXT_PUBLIC_ORS_API_KEY;
   return k && k.trim() ? k.trim() : undefined;

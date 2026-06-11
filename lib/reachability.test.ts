@@ -1,10 +1,65 @@
 import { describe, it, expect } from "vitest";
+import type { Polygon, MultiPolygon } from "geojson";
 import {
   reachProfile,
   valhallaCosting,
   REACH_MINUTES,
   isReachabilityConfigured,
+  parseOrsIsochrone,
 } from "./reachability";
+
+// Unit square 0..1 with a hole 0.4..0.6 (same fixture style as buyer-location).
+const square: Polygon = {
+  type: "Polygon",
+  coordinates: [
+    [
+      [0, 0],
+      [0, 1],
+      [1, 1],
+      [1, 0],
+      [0, 0],
+    ],
+    [
+      [0.4, 0.4],
+      [0.4, 0.6],
+      [0.6, 0.6],
+      [0.6, 0.4],
+      [0.4, 0.4],
+    ],
+  ],
+};
+
+describe("parseOrsIsochrone", () => {
+  it("extracts a Polygon geometry from an ORS FeatureCollection", () => {
+    const ors = {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          properties: { value: 900, group_index: 0 },
+          geometry: square,
+        },
+      ],
+    };
+    expect(parseOrsIsochrone(ors)).toEqual(square);
+  });
+
+  it("extracts a MultiPolygon too", () => {
+    const mp: MultiPolygon = {
+      type: "MultiPolygon",
+      coordinates: [square.coordinates],
+    };
+    const ors = { type: "FeatureCollection", features: [{ geometry: mp }] };
+    expect(parseOrsIsochrone(ors)?.type).toBe("MultiPolygon");
+  });
+
+  it("returns null for missing / empty / malformed shapes", () => {
+    expect(parseOrsIsochrone(null)).toBeNull();
+    expect(parseOrsIsochrone({})).toBeNull();
+    expect(parseOrsIsochrone({ features: [] })).toBeNull();
+    expect(parseOrsIsochrone({ features: [{ geometry: { type: "Point", coordinates: [0, 0] } }] })).toBeNull();
+  });
+});
 
 describe("reachability", () => {
   it("maps each mode to its ORS profile", () => {

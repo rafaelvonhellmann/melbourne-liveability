@@ -53,9 +53,9 @@ type RawPoi = Feature<Point> & {
  * ways:
  *  - default (free tier): straight-line (haversine) distance within
  *    `radiusMeters` - same honesty caveat as the 15-min-access layer.
- *  - when an `isochrone` polygon is supplied (paid-tier precise walk routing):
- *    the POI is kept iff it falls inside that street-network walk isochrone
- *    (see lib/walk-isochrone). The displayed `distanceMeters` stays straight-line.
+ *  - when an `isochrone` polygon is supplied: the POI is kept iff it falls
+ *    inside that street-network walk isochrone. The displayed `distanceMeters`
+ *    stays straight-line.
  * `limitPerCategory` caps how many of each category are returned (for display);
  * omit it to return every reachable POI. Pure: the polygon is plain data, so
  * this stays network-free and deterministic.

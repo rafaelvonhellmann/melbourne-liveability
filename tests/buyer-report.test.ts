@@ -738,7 +738,8 @@ describe("parcel-level planning lens (P1-5)", () => {
     expect(z).toBeTruthy();
     expect(z?.kind).toBe("neutral");
     expect(z?.geography).toBe("parcel");
-    expect(z?.title).toMatch(/^Zoned GRZ1 - General Residential Zone/);
+    // Plain words lead; the code follows in parentheses, never the lead.
+    expect(z?.title).toBe("Zoning here: General Residential Zone - Schedule 1 (GRZ1)");
     expect(z?.summary).toMatch(/residential/i);
     // The vintage rides on `asAt` (rendered in full variants only) - the body
     // sentence stays date-free so the live glimpse never shows it.
@@ -756,7 +757,10 @@ describe("parcel-level planning lens (P1-5)", () => {
     expect(ho).toBeTruthy();
     expect(ho?.kind).toBe("verify");
     expect(ho?.geography).toBe("parcel");
-    expect(ho?.title).toMatch(/Heritage Overlay HO123 applies at this exact location/);
+    // Plain-first title: meaning leads, the proper name + code in parentheses.
+    expect(ho?.title).toBe(
+      "Changes to the outside of this home need a heritage permit (Heritage Overlay HO123)"
+    );
     // Title carries the code; the body sentence is code-free plain English and
     // the vintage rides on `asAt` (full-report rendering only).
     expect(ho?.summary).not.toContain("HO123");
@@ -777,6 +781,10 @@ describe("parcel-level planning lens (P1-5)", () => {
     const clear = r.findings.find((f) => f.id === "parcel-overlays-clear");
     expect(clear).toBeTruthy();
     expect(clear?.kind).toBe("neutral");
+    // Plain-language copy: what we checked, in human words.
+    expect(clear?.title).toBe("No major planning restrictions here");
+    expect(clear?.summary).toMatch(/planning rules that matter most when buying/);
+    expect(clear?.summary).toMatch(/None applies at this exact spot/);
     // P1-2 negative-finding convention: dated all-clear (vintage on `asAt`,
     // shown in full variants) + absence-not-a-guarantee caveat.
     expect(clear?.asAt).toBe("2026-06-10");
@@ -827,11 +835,15 @@ describe("parcel-level planning lens (P1-5)", () => {
     expect(r.findings.find((f) => f.id === "parcel-overlay-PO12")).toBeFalsy(); // never a verify
     const other = r.findings.find((f) => f.id === "parcel-overlay-other");
     expect(other?.kind).toBe("neutral");
-    // Plain-English description, no raw overlay code in the body.
-    expect(other?.summary).toContain("Parking Overlay - Precinct 12");
+    expect(other?.title).toBe("Other council rules here");
+    // Plain words lead; the control's full name rides in parentheses, no raw
+    // overlay code in the body.
+    expect(other?.summary).toMatch(/additional council rules/);
+    expect(other?.summary).toContain("(Parking Overlay - Precinct 12)");
+    expect(other?.summary).toMatch(/rarely affect everyday buyers/);
     const clear = r.findings.find((f) => f.id === "parcel-overlays-clear");
     expect(clear).toBeTruthy();
-    expect(clear?.summary).toMatch(/Less critical controls do apply/);
+    expect(clear?.summary).toMatch(/Some minor rules do apply - see 'Other council rules here'/);
   });
 
   it("a PAO at the exact point is high severity and tops the priority checks", () => {

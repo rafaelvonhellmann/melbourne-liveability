@@ -83,6 +83,12 @@ export const WHITELISTED_OVERLAY_PARENTS = [
 
 export type ParcelOverlayMeta = {
   name: string;
+  /**
+   * Plain-words finding headline: what this rule MEANS for the buyer, no
+   * codes or proper nouns ("Changes to the outside of this home need a
+   * heritage permit"). The finding title appends "(name + code)" after it.
+   */
+  plainTitle: string;
   /** What it means / restricts for a buyer, in plain English. */
   buyerMeaning: string;
   /** Finding severity when this overlay is mapped at the exact point. */
@@ -90,9 +96,11 @@ export type ParcelOverlayMeta = {
 };
 
 /**
- * Plain-English meaning per whitelisted overlay family. Reuses the SA2
- * conservation-overlay wording (lib/planning-overlays) where the family
- * already has one, so parcel + area findings never disagree.
+ * Plain-English meaning per whitelisted overlay family. The proper-noun
+ * `name` reuses the SA2 conservation-overlay naming (lib/planning-overlays)
+ * where the family already has one, so parcel + area findings never disagree
+ * on what a control is called; the parcel-level explanation text is written
+ * plain-first for a non-expert reader.
  */
 export const PARCEL_OVERLAY_META: Record<
   (typeof WHITELISTED_OVERLAY_PARENTS)[number],
@@ -100,80 +108,100 @@ export const PARCEL_OVERLAY_META: Record<
 > = {
   PAO: {
     name: CONSERVATION_OVERLAY_META.PAO.name,
-    buyerMeaning: CONSERVATION_OVERLAY_META.PAO.buyerMeaning,
+    plainTitle: "The government has reserved this land for a future public project",
+    buyerMeaning:
+      "The government has earmarked this land for a future project - such as a road, rail line or school - and can compulsorily buy it from the owner.",
     severity: "high",
   },
   EAO: {
     name: CONSERVATION_OVERLAY_META.EAO.name,
-    buyerMeaning: CONSERVATION_OVERLAY_META.EAO.buyerMeaning,
+    plainTitle: "This land may be contaminated and need a clean-up check",
+    buyerMeaning:
+      "The land may be contaminated, often from past industrial use. A formal contamination check (an environmental audit) can be required before homes or childcare are allowed here.",
     severity: "high",
   },
   FO: {
     name: "Floodway Overlay",
+    plainTitle: "Floodwater flows across this land in a major flood",
     buyerMeaning:
-      "This is the highest-hazard flood mapping - the land carries active floodwater and development is tightly restricted.",
+      "This is the most serious flood mapping - floodwater actually flows across this land in a major flood, and building anything new here is very tightly restricted.",
     severity: "high",
   },
   BMO: {
     name: "Bushfire Management Overlay",
+    plainTitle: "Building here must meet bushfire safety rules",
     buyerMeaning:
-      "Mapped bushfire hazard - building works need bushfire permits, construction standards (BAL rating) and defendable space, and insurance can cost more.",
+      "This land has a mapped bushfire risk. Building work needs bushfire permits, fire-resistant construction (a BAL rating) and cleared space around the home - and insurance can cost more.",
     severity: "high",
   },
   LSIO: {
     name: "Land Subject to Inundation Overlay",
+    plainTitle: "This land can flood when a nearby river or creek rises",
     buyerMeaning:
-      "Mapped river/open-channel flood risk - building needs flood-aware permits and conditions, and insurance can cost more.",
+      "This land can flood when a nearby river or creek rises. Building work needs flood-related permits and conditions, and insurance can cost more.",
     severity: "medium",
   },
   SBO: {
     name: "Special Building Overlay",
+    plainTitle: "This land can flood in heavy rain",
     buyerMeaning:
-      "A mapped overland stormwater flow path - the land can flood in heavy rain and building works carry drainage conditions.",
+      "Stormwater can run across this land in heavy rain. New building work must be designed to stay clear of that water.",
     severity: "medium",
   },
   HO: {
     name: "Heritage Overlay",
+    plainTitle: "Changes to the outside of this home need a heritage permit",
     buyerMeaning:
-      "Demolition, external alterations, additions and sometimes fences or trees need a heritage permit - it shapes what you can change.",
+      "Knocking down, extending or changing the outside of the home - sometimes even fences or trees - needs a heritage permit. It shapes what you can change.",
     severity: "medium",
   },
   MAEO: {
     name: "Melbourne Airport Environs Overlay",
+    plainTitle: "Expect significant aircraft noise here",
     buyerMeaning:
-      "Significant aircraft noise is forecast here - controls apply to new dwellings, subdivision and noise attenuation.",
+      "Melbourne Airport flight paths bring significant aircraft noise here. New homes can need soundproofing, and some building and subdivision is restricted.",
     severity: "medium",
   },
   AEO: {
     name: "Airport Environs Overlay",
+    plainTitle: "Expect aircraft noise here",
     buyerMeaning:
-      "Aircraft noise is forecast here - controls apply to new dwellings and noise attenuation.",
+      "A nearby airport brings aircraft noise here. New homes can need soundproofing, and some building is restricted.",
     severity: "medium",
   },
   ESO: {
     name: CONSERVATION_OVERLAY_META.ESO.name,
-    buyerMeaning: CONSERVATION_OVERLAY_META.ESO.buyerMeaning,
+    plainTitle: "Extra environmental rules limit building and tree removal here",
+    buyerMeaning:
+      "You may need a permit to build or remove vegetation here, because the area protects something environmental - such as a waterway, wildlife habitat or the coast.",
     severity: "medium",
   },
   SLO: {
     name: CONSERVATION_OVERLAY_META.SLO.name,
-    buyerMeaning: CONSERVATION_OVERLAY_META.SLO.buyerMeaning,
+    plainTitle: "Rules here protect the look of the landscape",
+    buyerMeaning:
+      "Rules control what buildings look like, where they sit and which trees can be removed, so the area keeps its valued landscape.",
     severity: "medium",
   },
   VPO: {
     name: CONSERVATION_OVERLAY_META.VPO.name,
-    buyerMeaning: CONSERVATION_OVERLAY_META.VPO.buyerMeaning,
+    plainTitle: "Removing trees or plants here needs a permit",
+    buyerMeaning:
+      "You need a council permit to remove, destroy or cut back protected trees and plants.",
     severity: "medium",
   },
   EMO: {
     name: CONSERVATION_OVERLAY_META.EMO.name,
-    buyerMeaning: CONSERVATION_OVERLAY_META.EMO.buyerMeaning,
+    plainTitle: "This land can erode or slip, so building is controlled",
+    buyerMeaning:
+      "The land is prone to erosion or landslip, so building here needs extra checks and approvals.",
     severity: "medium",
   },
   DDO: {
     name: "Design and Development Overlay",
+    plainTitle: "Design rules shape what can be built here",
     buyerMeaning:
-      "Built form is controlled here - height limits, setbacks or design requirements apply to building work.",
+      "The council sets design rules here - such as height limits, how far buildings sit from boundaries, or how they must look.",
     severity: "low",
   },
 };
@@ -184,42 +212,42 @@ export const PARCEL_OVERLAY_META: Record<
  * planning advice. Unknown codes get an honest generic line.
  */
 const ZONE_GROUP_MEANING: Record<string, string> = {
-  GRZ: "A general residential zone - houses, townhouses and some units are the expected use here.",
-  NRZ: "A neighbourhood residential zone - the most restrictive residential zoning, intended to limit density and protect existing character.",
+  GRZ: "A general residential zone - houses, townhouses and some units are what this area is set up for.",
+  NRZ: "A neighbourhood residential zone - the strictest residential zoning, designed to limit how many homes go on each block and keep the area's existing look.",
   RGZ: "A residential growth zone - apartments and townhouses are encouraged, so expect denser development around you over time.",
-  LDRZ: "A low-density residential zone - large lots, often without full urban services.",
+  LDRZ: "A low-density residential zone - large lots, often without all the usual connections such as sewerage.",
   MUZ: "A mixed-use zone - housing sits alongside shops, offices and light commercial uses.",
-  TZ: "A township zone - small-town residential and local business uses.",
+  TZ: "A township zone - small-town living and local business uses.",
   C1Z: "A commercial zone - shops, offices and services; expect business activity, deliveries and evening trade around you.",
-  C2Z: "A commercial zone for offices, trade and industry support - residential use is limited.",
-  C3Z: "A commercial zone aimed at employment and creative industries - residential use is limited.",
-  IN1Z: "An industrial zone - new dwellings are generally prohibited and industrial activity operates nearby.",
-  IN2Z: "An industrial zone - new dwellings are generally prohibited and industrial activity operates nearby.",
-  IN3Z: "An industrial zone - new dwellings are generally prohibited and industrial activity operates nearby.",
-  FZ: "A farming zone - agriculture comes first; building or subdividing for a dwelling is restricted.",
-  RLZ: "A rural living zone - residential lots in a rural setting, with agriculture operating nearby.",
-  GWZ: "A green wedge zone - non-urban land protected from subdivision and most development.",
-  GWAZ: "A green wedge A zone - non-urban land protected from subdivision and most development.",
-  RCZ: "A rural conservation zone - development is tightly controlled to protect environmental values.",
+  C2Z: "A commercial zone for offices, trade and businesses that support industry - living here is limited.",
+  C3Z: "A commercial zone aimed at jobs and creative industries - living here is limited.",
+  IN1Z: "An industrial zone - new homes are generally not allowed and industrial activity operates nearby.",
+  IN2Z: "An industrial zone - new homes are generally not allowed and industrial activity operates nearby.",
+  IN3Z: "An industrial zone - new homes are generally not allowed and industrial activity operates nearby.",
+  FZ: "A farming zone - farming comes first; building a home or splitting the land is restricted.",
+  RLZ: "A rural living zone - homes on large lots in a rural setting, with farming operating nearby.",
+  GWZ: "A green wedge zone - countryside land kept open on purpose; splitting lots or building much here is not allowed.",
+  GWAZ: "A green wedge A zone - countryside land kept open on purpose; splitting lots or building much here is not allowed.",
+  RCZ: "A rural conservation zone - building is tightly controlled to protect the natural environment.",
   RAZ: "A rural activity zone - farming alongside compatible tourism and business uses.",
   PPRZ: "Public park and recreation land - not ordinarily available for private development.",
   PCRZ: "Public conservation land - protected; not ordinarily available for private development.",
   PUZ: "A public use zone - land reserved for a public purpose such as a school, hospital or utility.",
   RDZ: "A road zone - land set aside for an existing or proposed road.",
-  SUZ: "A special use zone - a site-specific zoning; what is allowed depends entirely on its schedule.",
-  CDZ: "A comprehensive development zone - governed by a site-specific development plan.",
+  SUZ: "A special use zone - a one-off zoning for this site; what is allowed depends entirely on the rules written for it.",
+  CDZ: "A comprehensive development zone - this land has its own tailor-made development plan that sets the rules.",
   ACZ: "An activity centre zone - the planning scheme directs higher-density housing, shops and services here.",
-  CCZ: "The capital city zone - central-city uses, built form and heights apply.",
-  DZ: "The Docklands zone - precinct-specific central-city development controls apply.",
+  CCZ: "The capital city zone - central-city rules about what can be built and how tall apply here.",
+  DZ: "The Docklands zone - the Docklands precinct has its own central-city building rules.",
   UGZ: "An urban growth zone - a future suburb; expect years of construction and change as precinct plans roll out.",
-  UFZ: "An urban floodway zone - land at significant flood risk; development is heavily restricted.",
+  UFZ: "An urban floodway zone - land at significant flood risk; building here is heavily restricted.",
   PDZ: "A priority development zone - earmarked for coordinated redevelopment.",
 };
 
 export function zoneGroupMeaning(parent: string): string {
   return (
     ZONE_GROUP_MEANING[parent] ??
-    "What you can build or change here depends on this zone and its schedule - check the council planning scheme."
+    "What you can build or change here depends on this zone's own rules - check the council planning scheme."
   );
 }
 

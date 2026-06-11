@@ -8,7 +8,7 @@
  * API key, CORS-open) so the feature works on the static deploy out of the box.
  * If NEXT_PUBLIC_ORS_API_KEY is set, it upgrades to OpenRouteService directions.
  *
- * Same design constraints as walk-isochrone.ts: a runtime, client-side fetch
+ * Same design constraints as reachability.ts: a runtime, client-side fetch
  * (static-export safe, no server route), provider-isolated, and never throwing
  * to the caller - on any failure callers keep the straight-line distance.
  * OSM-derived routing (ODbL); attribute contributors.
@@ -19,7 +19,7 @@ import { timeoutSignal } from "./fetch-timeout";
 const ORS_DRIVE_URL = "https://api.openrouteservice.org/v2/directions/driving-car/geojson";
 const VALHALLA_ROUTE_URL = "https://valhalla1.openstreetmap.de/route";
 
-/** ORS API key (shared with the walk-isochrone feature). Public by necessity. */
+/** ORS API key (shared with the reachability feature). Public by necessity. */
 function orsApiKey(): string | undefined {
   const k = process.env.NEXT_PUBLIC_ORS_API_KEY;
   return k && k.trim() ? k.trim() : undefined;

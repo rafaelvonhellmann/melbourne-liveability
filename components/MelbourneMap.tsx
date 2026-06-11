@@ -14,6 +14,7 @@ import {
   socialFillColorByProp,
 } from "@/lib/map-expressions";
 import { withBase } from "@/lib/asset-path";
+import { DEFAULT_REGION, dataPath } from "@/lib/regions";
 import { poiCircleColorExpression } from "@/lib/poi-categories";
 import { buildPoiPopupHtml, escapeHtml, safeHttpUrl, type PoiFeatureProps } from "@/lib/poi-feature";
 import { WALK_THRESHOLD_KM } from "@/lib/walk-access";
@@ -42,7 +43,10 @@ function circlePolygon(
 // open. Idempotent. Layer starts hidden; the visiblePins effect sets the filter.
 function addPoiLayer(map: maplibregl.Map): void {
   if (map.getSource("pois")) return;
-  map.addSource("pois", { type: "geojson", data: withBase("/data/pois.geojson") });
+  map.addSource("pois", {
+    type: "geojson",
+    data: withBase(dataPath(DEFAULT_REGION, "pois.geojson")),
+  });
   map.addLayer({
     id: "poi-circles",
     type: "circle",
@@ -237,7 +241,7 @@ export function MelbourneMap({
     map.on("load", () => {
       map.addSource("sa2", {
         type: "geojson",
-        data: withBase("/data/places.geojson"),
+        data: withBase(dataPath(DEFAULT_REGION, "places.geojson")),
       });
       map.addLayer({
         id: "sa2-fill",
@@ -335,15 +339,11 @@ export function MelbourneMap({
       // ~15-min bike reach ring (straight-line) around the buyer pin. Added
       // BEFORE the walk radius so the smaller coral walk ring draws on top of it.
       // A cool teal, distinct from the coral walk ring; off until toggled.
+      // Edge only (no fill): a filled crow-flies disc reads as "reachable area"
+      // and near the bay it would shade open water.
       map.addSource("cycle-radius", {
         type: "geojson",
         data: { type: "FeatureCollection", features: [] },
-      });
-      map.addLayer({
-        id: "cycle-radius-fill",
-        type: "fill",
-        source: "cycle-radius",
-        paint: { "fill-color": "#0E7C86", "fill-opacity": 0.06 },
       });
       map.addLayer({
         id: "cycle-radius-line",
@@ -357,17 +357,14 @@ export function MelbourneMap({
         },
       });
 
-      // 15-min-walk radius around the buyer pin (straight-line ~1.2 km). Drawn
-      // under the POI pins so amenities sit on top of the shaded reach.
+      // 15-min-walk radius around the buyer pin (straight-line ~1.2 km). Edge
+      // only - no fill. A filled circle implied "everything shaded is walkable"
+      // and, near the coast, shaded open water (no coastline geometry is shipped
+      // to clip it). The dashed ring + the in-panel "straight-line distance, not
+      // a route" label keep it honest. Drawn under the POI pins.
       map.addSource("buyer-radius", {
         type: "geojson",
         data: { type: "FeatureCollection", features: [] },
-      });
-      map.addLayer({
-        id: "buyer-radius-fill",
-        type: "fill",
-        source: "buyer-radius",
-        paint: { "fill-color": "#2052CC", "fill-opacity": 0.16 },
       });
       // White casing under the dashed ring so it stays legible on dark / satellite
       // basemaps as well as light ones (the 0.1-opacity ring was too faint - user feedback).
