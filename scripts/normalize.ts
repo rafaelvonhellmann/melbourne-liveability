@@ -20,6 +20,7 @@ import {
   type CrimeCounts,
 } from "./lib/vcsa-crime.js";
 import { countWithinKm, minDistanceKm } from "./lib/proximity.js";
+import { osmPoints, isChildcareAmenity } from "./lib/osm-points.js";
 import { scoredGpPoints } from "./lib/poi-classify.js";
 import { buildHazardIndex, overlayPctInSa2 } from "./lib/sa2-overlay-pct.js";
 import { computeCyclabilityByCode } from "./lib/cyclability-compute.js";
@@ -108,22 +109,6 @@ async function loadAttrJsonAsync(file: string) {
   } catch {
     return [];
   }
-}
-
-function osmPoints(
-  data: { elements?: { lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> }[] } | null,
-  filter?: (tags: Record<string, string>) => boolean
-): [number, number][] {
-  const pts: [number, number][] = [];
-  for (const el of data?.elements ?? []) {
-    const lat = el.lat ?? el.center?.lat;
-    const lon = el.lon ?? el.center?.lon;
-    if (lat == null || lon == null) continue;
-    const tags = el.tags ?? {};
-    if (filter && !filter(tags)) continue;
-    pts.push([lon, lat]);
-  }
-  return pts;
 }
 
 async function main() {
@@ -445,7 +430,7 @@ async function main() {
     pharmacy: [],
     gp: gpsContext,
     school: schoolPts,
-    childcare: osmPoints(schoolsJson, (t) => t.amenity === "kindergarten"),
+    childcare: osmPoints(schoolsJson, isChildcareAmenity),
     park: [],
     cafe_restaurant: [],
     gym_leisure: [],

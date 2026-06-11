@@ -184,11 +184,13 @@ async function main() {
   );
 
   console.log("Overpass schools + childcare...");
+  // nwr = node + way + relation. Large schools are often mapped as
+  // multipolygon RELATIONS (Brighton showed 1 of 4 schools when only
+  // node+way were fetched - see AMENITY-AUDIT.md). The helper's default
+  // `out center` yields a representative point for ways and relations alike.
   const schools = await overpassMelbourne(`
-    node["amenity"="school"](-38.35,144.45,-37.45,145.65);
-    way["amenity"="school"](-38.35,144.45,-37.45,145.65);
-    node["amenity"~"kindergarten|childcare|preschool"](-38.35,144.45,-37.45,145.65);
-    way["amenity"~"kindergarten|childcare|preschool"](-38.35,144.45,-37.45,145.65);
+    nwr["amenity"="school"](-38.35,144.45,-37.45,145.65);
+    nwr["amenity"~"kindergarten|childcare|preschool"](-38.35,144.45,-37.45,145.65);
   `);
   await writeFile(path.join(RAW, "osm-schools.json"), JSON.stringify(schools));
 
@@ -197,14 +199,17 @@ async function main() {
   // supermarkets/grocery, pharmacy, parks/open space, cafe/restaurant,
   // gym/leisure. Used straight-line from SA2 centroids - context only, never
   // scored. OSM is ODbL; attribute contributors.
+  // nwr (node + way + relation) everywhere: cafes/restaurants/pharmacies/gyms
+  // were fetched as NODES only, missing building-mapped venues (cafes -45% in
+  // Brighton, -21% in Fitzroy), and park relations were never fetched - see
+  // AMENITY-AUDIT.md. `out center` (helper default) gives ways/relations a
+  // representative point that the consumers already decode via `el.center`.
   console.log("Overpass everyday amenities (15-min access)...");
   const amenities = await overpassMelbourne(`
-    node["shop"~"supermarket|convenience|greengrocer"](-38.35,144.45,-37.45,145.65);
-    way["shop"~"supermarket|convenience|greengrocer"](-38.35,144.45,-37.45,145.65);
-    node["amenity"~"pharmacy|cafe|restaurant|fast_food|gym"](-38.35,144.45,-37.45,145.65);
-    node["shop"="chemist"](-38.35,144.45,-37.45,145.65);
-    node["leisure"~"park|garden|fitness_centre|sports_centre"](-38.35,144.45,-37.45,145.65);
-    way["leisure"~"park|garden|fitness_centre|sports_centre"](-38.35,144.45,-37.45,145.65);
+    nwr["shop"~"supermarket|convenience|greengrocer"](-38.35,144.45,-37.45,145.65);
+    nwr["amenity"~"pharmacy|cafe|restaurant|fast_food|gym"](-38.35,144.45,-37.45,145.65);
+    nwr["shop"="chemist"](-38.35,144.45,-37.45,145.65);
+    nwr["leisure"~"park|garden|fitness_centre|sports_centre"](-38.35,144.45,-37.45,145.65);
   `);
   await writeFile(path.join(RAW, "osm-amenities.json"), JSON.stringify(amenities));
 

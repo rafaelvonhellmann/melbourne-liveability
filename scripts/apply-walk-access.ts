@@ -19,35 +19,17 @@ import { RAW, GENERATED } from "./lib/paths.js";
 import type { Place, PlaceContext } from "../lib/types.js";
 import { countWithinKm } from "./lib/proximity.js";
 import {
+  osmPoints,
+  isChildcareAmenity,
+  type OsmEl,
+} from "./lib/osm-points.js";
+import {
   WALK_THRESHOLD_KM,
   WALK_CATEGORY_IDS,
   classifyOsmAmenity,
   summariseWalkAccess,
   type WalkCategoryId,
 } from "../lib/walk-access.js";
-
-type OsmEl = {
-  lat?: number;
-  lon?: number;
-  center?: { lat: number; lon: number };
-  tags?: Record<string, string>;
-};
-
-function osmPoints(
-  data: { elements?: OsmEl[] } | null,
-  filter?: (tags: Record<string, string>) => boolean
-): [number, number][] {
-  const pts: [number, number][] = [];
-  for (const el of data?.elements ?? []) {
-    const lat = el.lat ?? el.center?.lat;
-    const lon = el.lon ?? el.center?.lon;
-    if (lat == null || lon == null) continue;
-    const tags = el.tags ?? {};
-    if (filter && !filter(tags)) continue;
-    pts.push([lon, lat]);
-  }
-  return pts;
-}
 
 async function loadJson(dir: string, file: string): Promise<{ elements?: OsmEl[] }> {
   try {
@@ -72,7 +54,7 @@ async function main() {
     pharmacy: [],
     gp: osmPoints(health, (t) => /doctors|clinic/.test(t.amenity ?? "")),
     school: osmPoints(schools, (t) => t.amenity === "school"),
-    childcare: osmPoints(schools, (t) => t.amenity === "kindergarten"),
+    childcare: osmPoints(schools, isChildcareAmenity),
     park: [],
     cafe_restaurant: [],
     gym_leisure: [],
