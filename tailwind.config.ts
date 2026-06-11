@@ -46,8 +46,19 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
-        display: ["var(--font-fraunces)", "Georgia", "serif"],
+        // Festra type system (DESIGN-SYSTEM-PROPOSAL.md s3 + plan s18.8):
+        // Inter UI/body, General Sans display (wordmark/headings, 500/600),
+        // IBM Plex Mono for data figures. Vars set by next/font in layout.tsx.
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "var(--font-sans)", "system-ui", "sans-serif"],
+        mono: [
+          "var(--font-mono)",
+          "ui-monospace",
+          "SFMono-Regular",
+          "Menlo",
+          "Consolas",
+          "monospace",
+        ],
       },
       borderRadius: {
         // Rectangle scale 8/12/16 (cap 16); pills stay rounded-full.

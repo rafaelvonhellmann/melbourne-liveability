@@ -237,7 +237,9 @@ export function PinReportClient() {
     return (
       <div className="flex min-h-screen flex-col bg-bg text-ink">
         <div className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">
-          <h1 className="font-display text-2xl font-semibold text-ink">Full buyer report</h1>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">
+            Full buyer report
+          </h1>
           <p className="mt-2 text-sm leading-relaxed text-ink-muted">
             This page needs a pin. Drop one on the map (or search a full address) and choose
             &ldquo;Full report for this pin&rdquo;.
@@ -276,7 +278,7 @@ export function PinReportClient() {
         <Link href={backHref} className="no-print text-sm text-accent hover:underline">
           &larr; Back to the map (keeps this pin)
         </Link>
-        <h1 className="mt-4 font-display text-2xl font-semibold text-ink">
+        <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight text-ink">
           Full buyer report{areaLabel ? ` - ${areaLabel}` : ""}
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-muted">
