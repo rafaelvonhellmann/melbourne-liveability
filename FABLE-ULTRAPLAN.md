@@ -541,3 +541,78 @@ to exist beyond a discount.
 below all Phase 1-2 work - sun is commodity (review 3.7); density gating +
 honest low-coverage copy suffices at launch. The buyer-lens verdict: terrain
 shadows change no purchase decision; the wrong-lot risk did.
+
+---
+
+## 18. Owner product review (2026-06-11) - directives and roadmap deltas
+
+Quick fixes + investigations executed same-day (right-panel citation strip,
+two-reports naming, compare GM column + uniform rates, /places restructure,
+politics removal, shadow-sim image removal, reachability ocean/legend,
+amenity truth audit). Standing directives recorded:
+
+1. **The right-side panel is a GLIMPSE** - no citations, no dates, no
+   caveats there, ever. Provenance lives in the full pin report only. This
+   supersedes the earlier per-finding-provenance-on-screen rule for the
+   compact panel (the s18 defence rides on the full report + artifact).
+2. **Two-source rule:** every metric should be corroborated by a second
+   source; where impossible, flag the single-source status in methodology +
+   disclaimer. Fold into P3-5's licence/coverage gate (a per-source
+   "corroboratedBy" field in sources.json; build fails new lenses without
+   either a second source or the flagged exemption).
+3. **Autonomous monthly upstream discovery (NEW P3-7):** beyond refreshing
+   known sources, a monthly discovery job per region scans the relevant
+   portals (DataVic/CKAN APIs, ArcGIS catalogs, agency pages from
+   EXPANSION-PLAN) for NEW editions/datasets in every product context and
+   files a triaged issue. The owner cannot hand-feed data updates; the
+   2026-06 VCSA edition break proves the need. Design: CKAN package_search
+   diffs + dataset-page hash watch + per-region source registry.
+4. **Sun/shadow rework:** owner reports the 3D simulator unreliable and
+   wants a ShadeMap-LIKE owned experience (2D shadow overlay on the map)
+   built from our extruded-footprint data - never an external link
+   (liability). Spike: 2D shadow projection rendered as a map layer
+   (computed from building heights + sun azimuth/altitude), replacing the
+   fragile per-pin 3D scene as the default; 3D stays optional. (Reference
+   noted: amap "abot-earth" planetary 3D - aspirational, not the bar.)
+5. **PWA/performance track:** service-worker caching of tiles + data
+   (offline-tolerant repeat visits), per-profile persistence; evaluate
+   installable PWA before any native-app thought. Extends P1-7's diet.
+6. **Personalised onboarding (revisit):** a short profile-building
+   onboarding feeding the report ordering (replaces the deleted decorative
+   fields with WIRED ones only). Design after the design-system overhaul.
+7. **Agent-seller trends:** trends an agent could use with a buyer
+   (days-on-market style narratives from open data only - VG quarterly
+   series, building approvals, population). Candidate Phase 1.5 lens pack.
+8. **Design system overhaul (APPROVED 2026-06-11): Direction A "Surveyor".**
+   Owner picked A from the three mockups (design-mockups/festra-a-*.html).
+   Owner token amendments, resolved: spacing strictly 4px grid (adopted);
+   icons 18px / 1.5px stroke / 24px bound (adopted - matches lucide-react);
+   body 14px UI / 16px report, 18px panel titles (adopted; display ladder
+   above 18 stays for landing/report H1s); ink #181818-class darkness
+   (adopted); secondary gray: keep A's violet-tinted #5C5C6E over the
+   proposed pure #6A6A6A for undertone coherence with surfaces (taste call,
+   owner may override); radius: rectangles capped at 16px per anti-slop
+   rule, full-pill reserved for pills/search - the proposed 40px ceiling
+   applies ONLY to pills, never cards; typeface: owner floated Geist -
+   REJECTED per the spec's own anti-slop ban (Geist is the most
+   AI-coded-product-default face of 2025-26; Inter stays for UI, General
+   Sans/PP Neue Montreal for display, IBM Plex Mono for data). Rollout:
+   tokens-first (globals.css vars + tailwind.config swap + motion tokens),
+   then component-level polish, AFTER the owner-UX batch merges (file
+   conflict avoidance).
+9. **Permits lens (NEW ADD, licence-verified):** VBA Building Permit
+   Activity data (DataVic Access Policy, monthly CSV/XLSX, street-level,
+   permit class + cost of works, 2014-) powers two buyer findings:
+   (a) "Recent building permits nearby" (construction pipeline, pool
+   installs, secondary dwellings - monthly bake fits the existing cron);
+   (b) "What the rules allow here" card: granny-flat / small-second-home
+   eligibility SIGNALS (VIC <60m2 permit-exempt pathway + zone + lot size
+   from the existing parcel lens) and the pool-barrier rule note - framed
+   strictly as rules-that-apply, never "you can build" (advice boundary).
+   The tweet-style contractor lead-gen mailer business is OUT of scope
+   (scope-creep guard); its measure->skill->action pattern is noted as the
+   Phase 5 B2B white-label shape. GeoLibre re-evaluated for 3D sun: still
+   NO (standalone Tauri GIS app, not a lib; its 3D = deck.gl Tile3DLayer
+   over photorealistic mesh tiles, which for Melbourne means Google 3D
+   Tiles = banned GMP ToS + cost); the owned 2D shadow overlay (item 4)
+   remains the path.

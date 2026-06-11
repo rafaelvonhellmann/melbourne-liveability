@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Festra design direction A - Surveyor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FDFDFD; --ink:#1A1A22; --mut:#5C5C6E; --srf:#F6F6F8; --srf2:#F4F4F7;
+    --hair:#E3E3EC; --acc:#2052CC; --acc-hover:#1A43A8; --tint:#EDF3FC;
+    --risk:#B42318; --caution:#B54708; --pass:#067647;
+    --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--srf2);color:var(--ink);font-family:Inter,system-ui,sans-serif;
+       -webkit-font-smoothing:antialiased;padding:40px 20px;display:flex;flex-direction:column;
+       align-items:center;gap:28px}
+  .mono{font-family:"IBM Plex Mono",monospace}
+  h1{font-size:15px;font-weight:600;letter-spacing:.01em}
+  h1 span{color:var(--mut);font-weight:400}
+  .app{width:min(1060px,100%);background:var(--bg);border-radius:14px;overflow:hidden;
+       box-shadow:inset 0 0 0 1px rgba(26,26,34,.08),0 1px 3px rgba(26,26,34,.06),0 2px 6px rgba(26,26,34,.05)}
+  .top{display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:1px solid var(--hair)}
+  .wordmark{font-size:16px;font-weight:600;letter-spacing:.06em}
+  .search{flex:0 1 340px;display:flex;align-items:center;gap:9px;background:var(--srf);
+          border:1px solid var(--hair);border-radius:999px;padding:9px 16px;font-size:13.5px;
+          color:var(--mut);transition:border-color .12s var(--ease)}
+  .search:hover{border-color:#c9c9d8}
+  .navlink{font-size:13px;color:var(--mut);text-decoration:none;padding:6px 10px;border-radius:8px;
+           transition:background .12s var(--ease),color .12s var(--ease)}
+  .navlink:hover{background:rgba(26,26,34,.06);color:var(--ink)}
+  .top .right{margin-left:auto;display:flex;gap:2px}
+  .stage{display:flex;height:520px}
+  .map{flex:1;position:relative;background:#F2F2EF;overflow:hidden}
+  .pin{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--ink);
+       border:1.5px solid #fff;cursor:pointer;transition:transform .12s var(--ease)}
+  .pin:hover{transform:scale(1.25)}
+  .pin.sel{width:16px;height:16px;background:var(--acc);border:2.5px solid #fff;
+           outline:4px solid var(--tint)}
+  .popup{position:absolute;background:#fff;border-radius:12px;padding:11px 14px;min-width:190px;
+         box-shadow:inset 0 0 0 1px rgba(26,26,34,.08),0 2px 6px rgba(26,26,34,.07);
+         animation:pop .2s var(--ease)}
+  @keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+  .popup::after{content:"";position:absolute;left:-6px;top:24px;width:10px;height:10px;
+                background:#fff;transform:rotate(45deg);box-shadow:inset 1px -1px 0 0 rgba(26,26,34,.08)}
+  .ctrls{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;gap:7px}
+  .ctrl{width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.92);
+        backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;
+        box-shadow:inset 0 0 0 1px rgba(26,26,34,.08),0 1px 3px rgba(26,26,34,.06);cursor:pointer;
+        font-size:18px;color:var(--ink);user-select:none;transition:background .12s var(--ease)}
+  .ctrl:hover{background:#fff}
+  .panel{width:330px;border-left:1px solid var(--hair);display:flex;flex-direction:column;background:var(--bg)}
+  .panel-head{padding:16px 18px 13px;border-bottom:1px solid var(--hair)}
+  .addr{font-size:15.5px;font-weight:600}
+  .lot{font-size:12px;color:var(--mut);margin-top:3px}
+  .notadvice{font-size:11.5px;color:var(--mut);margin-top:6px}
+  .findings{flex:1;overflow:auto;padding:10px 18px;display:flex;flex-direction:column;gap:13px}
+  .f{display:flex;gap:11px;align-items:flex-start;animation:rise .3s var(--ease) backwards}
+  .f:nth-child(2){animation-delay:.03s}.f:nth-child(3){animation-delay:.06s}
+  .f:nth-child(4){animation-delay:.09s}.f:nth-child(5){animation-delay:.12s}
+  @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex:none}
+  .f h3{font-size:13.5px;font-weight:600;line-height:1.35}
+  .f p{font-size:12.5px;line-height:1.5;color:var(--mut);margin-top:2px}
+  .pricebox{background:var(--tint);border-radius:10px;padding:11px 13px;font-size:13px}
+  .panel-foot{padding:14px 18px;border-top:1px solid var(--hair)}
+  .cta{display:block;width:100%;background:var(--acc);color:#fff;border:none;border-radius:10px;
+       padding:12px;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;
+       transition:background .12s var(--ease),transform .12s var(--ease)}
+  .cta:hover{background:var(--acc-hover)}
+  .cta:active{transform:scale(.985)}
+  .alt{display:block;text-align:center;font-size:13px;color:var(--mut);margin-top:9px;
+       text-decoration:none;transition:color .12s var(--ease)}
+  .alt:hover{color:var(--ink)}
+  .row{width:min(1060px,100%);display:flex;gap:24px;align-items:stretch;flex-wrap:wrap}
+  .card{flex:1;min-width:280px;background:var(--bg);border-radius:14px;padding:18px 20px;
+        box-shadow:inset 0 0 0 1px rgba(26,26,34,.08),0 1px 3px rgba(26,26,34,.05)}
+  .card h2{font-size:13px;font-weight:600;color:var(--mut);margin-bottom:14px;letter-spacing:.02em}
+  .logos{display:flex;gap:34px;align-items:center}
+  .logos figure{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .logos figcaption{font-size:11.5px;color:var(--mut)}
+  .swatches{display:flex;gap:10px;flex-wrap:wrap}
+  .sw{width:74px}
+  .sw i{display:block;height:44px;border-radius:9px;box-shadow:inset 0 0 0 1px rgba(26,26,34,.1)}
+  .sw span{display:block;font-size:10.5px;color:var(--mut);margin-top:5px}
+  .type p{margin-top:6px}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<h1>Festra - direction A "Surveyor" <span>· near-white surfaces, violet-gray ink, daylight cobalt</span></h1>
+
+<div class="app">
+  <div class="top">
+    <svg width="24" height="24" viewBox="0 0 24 24" aria-label="Festra logo"><rect x="2.5" y="2.5" width="19" height="19" rx="4.5" fill="none" stroke="var(--ink)" stroke-width="2"/><line x1="9.5" y1="2.5" x2="9.5" y2="21.5" stroke="var(--ink)" stroke-width="2"/><line x1="9.5" y1="8.5" x2="21.5" y2="8.5" stroke="var(--ink)" stroke-width="2"/></svg>
+    <span class="wordmark">FESTRA</span>
+    <div class="search">&#x2315;&nbsp; 12 Acacia St, Abbotsford</div>
+    <nav class="right">
+      <a class="navlink" href="#">Compare</a>
+      <a class="navlink" href="#">Methodology</a>
+      <a class="navlink" href="#">About</a>
+    </nav>
+  </div>
+  <div class="stage">
+    <div class="map">
+      <svg width="100%" height="100%" viewBox="0 0 700 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <rect width="700" height="520" fill="#F2F2EF"/>
+        <path d="M0 400 Q200 370 340 420 T700 390 L700 520 L0 520 Z" fill="#DCE7F0"/>
+        <path d="M0 398 Q200 368 340 418 T700 388" fill="none" stroke="#C3D4E4" stroke-width="2.5"/>
+        <g stroke="#FFFFFF" stroke-width="11"><path d="M100 0 V520 M250 0 V400 M420 0 V520 M570 0 V400"/><path d="M0 110 H700 M0 240 H700 M0 340 H420"/></g>
+        <g stroke="#E4E4DF" stroke-width="1.5"><path d="M175 0 V520 M335 0 V400 M495 0 V520 M50 0 V520 M645 0 V400"/><path d="M0 60 H700 M0 175 H700 M0 295 H700"/></g>
+        <g fill="#E9EDE4"><rect x="430" y="120" width="130" height="110" rx="4"/><rect x="110" y="250" width="130" height="84" rx="4"/></g>
+        <g fill="#EBEBE7"><rect x="110" y="65" width="26" height="20"/><rect x="146" y="65" width="22" height="20"/><rect x="110" y="122" width="26" height="22"/><rect x="262" y="122" width="29" height="20"/><rect x="262" y="186" width="26" height="20"/><rect x="345" y="65" width="26" height="20"/><rect x="345" y="186" width="29" height="22"/><rect x="510" y="250" width="26" height="20"/><rect x="580" y="122" width="29" height="20"/><rect x="510" y="65" width="24" height="20"/><rect x="180" y="186" width="24" height="18"/></g>
+      </svg>
+      <div class="pin sel" style="left:38%;top:40%"></div>
+      <div class="pin" style="left:60%;top:21%"></div>
+      <div class="pin" style="left:21%;top:64%"></div>
+      <div class="pin" style="left:74%;top:55%"></div>
+      <div class="popup" style="left:calc(38% + 26px);top:calc(40% - 22px)">
+        <p style="font-size:13.5px;font-weight:600">12 Acacia St</p>
+        <p class="lot">Lot 7 <span class="mono">PS428117</span> &middot; 412 m&sup2;</p>
+      </div>
+      <div class="ctrls">
+        <div class="ctrl">+</div>
+        <div class="ctrl">&minus;</div>
+        <div class="ctrl">&#9678;</div>
+      </div>
+    </div>
+    <aside class="panel">
+      <div class="panel-head">
+        <p class="addr">12 Acacia St, Abbotsford</p>
+        <p class="lot">Lot 7 <span class="mono">PS428117</span> &middot; 412 m&sup2; &middot; confirmed</p>
+        <p class="notadvice">Information only - verify before buying</p>
+      </div>
+      <div class="findings">
+        <div class="f"><span class="dot" style="background:var(--caution)"></span><div>
+          <h3>Heritage overlay (HO5)</h3>
+          <p>Changes to the facade, additions and some fences need a heritage permit.</p></div></div>
+        <div class="f"><span class="dot" style="background:var(--risk)"></span><div>
+          <h3>Busy road within 200 m</h3>
+          <p>Hoddle St carries heavy traffic - worth listening at peak hour.</p></div></div>
+        <div class="f"><span class="dot" style="background:var(--pass)"></span><div>
+          <h3>No flood or bushfire overlay</h3>
+          <p>Clear at this exact point.</p></div></div>
+        <div class="f"><span class="dot" style="background:var(--pass)"></span><div>
+          <h3>Station 8 min away on foot</h3>
+          <p>Victoria Park station, level walk the whole way.</p></div></div>
+        <div class="f pricebox" style="display:block">
+          House median <b class="mono">$1.21m</b> &middot; unit <b class="mono">$642k</b> &middot; rent <b class="mono">$640/wk</b>
+        </div>
+      </div>
+      <div class="panel-foot">
+        <button class="cta">Full report for this pin</button>
+        <a class="alt" href="#">Explore the area profile</a>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div class="row">
+  <div class="card">
+    <h2>Logo concepts (fenestra = window)</h2>
+    <div class="logos">
+      <figure>
+        <svg width="44" height="44" viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="19" height="19" rx="4.5" fill="none" stroke="var(--ink)" stroke-width="2"/><line x1="9.5" y1="2.5" x2="9.5" y2="21.5" stroke="var(--ink)" stroke-width="2"/><line x1="9.5" y1="8.5" x2="21.5" y2="8.5" stroke="var(--ink)" stroke-width="2"/></svg>
+        <figcaption>Casement F</figcaption>
+      </figure>
+      <figure>
+        <svg width="44" height="44" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="var(--ink)"/><rect x="8" y="5" width="8" height="14" rx="1.5" fill="var(--acc)"/><path d="M8 19 L16 12.5 L16 19 Z" fill="var(--tint)"/></svg>
+        <figcaption>Light through</figcaption>
+      </figure>
+      <figure>
+        <svg width="44" height="44" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3.5" fill="none" stroke="var(--ink)" stroke-width="2"/><path d="M12 3 L19.5 7 L19.5 21 L12 17 Z" fill="var(--acc)" opacity="0.92"/></svg>
+        <figcaption>Open sash</figcaption>
+      </figure>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Palette</h2>
+    <div class="swatches">
+      <div class="sw"><i style="background:var(--bg)"></i><span>bg FDFDFD</span></div>
+      <div class="sw"><i style="background:var(--ink)"></i><span>ink 1A1A22</span></div>
+      <div class="sw"><i style="background:var(--mut)"></i><span>muted 5C5C6E</span></div>
+      <div class="sw"><i style="background:var(--srf)"></i><span>surface F6F6F8</span></div>
+      <div class="sw"><i style="background:var(--acc)"></i><span>accent 2052CC</span></div>
+      <div class="sw"><i style="background:var(--tint)"></i><span>tint EDF3FC</span></div>
+      <div class="sw"><i style="background:var(--risk)"></i><span>risk B42318</span></div>
+      <div class="sw"><i style="background:var(--caution)"></i><span>caution B54708</span></div>
+      <div class="sw"><i style="background:var(--pass)"></i><span>pass 067647</span></div>
+    </div>
+  </div>
+  <div class="card type">
+    <h2>Type &amp; motion</h2>
+    <p style="font-size:24px;font-weight:600;letter-spacing:-.01em">Clarity before the offer.</p>
+    <p style="font-size:14px;line-height:1.6;color:var(--mut)">Inter for the interface, IBM Plex Mono for the facts: <span class="mono" style="color:var(--ink)">Lot 7 PS428117 - 412 m&sup2;</span>. One easing curve everywhere; nothing bounces, nothing glows. Hover the buttons and pins to feel it.</p>
+  </div>
+</div>
+</body>
+</html>
