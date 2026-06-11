@@ -81,23 +81,17 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
   }
 
   const radiusMeters = input.radiusMeters ?? DEFAULT_RADIUS_METERS;
-  const isochrone = input.isochrone;
-  const accessMode: "straight" | "precise" = isochrone ? "precise" : "straight";
-  const amenityCaveat = accessMode === "precise" ? STREET_NETWORK_CAVEAT : STRAIGHT_LINE_CAVEAT;
-  const walkPhrase =
-    accessMode === "precise"
-      ? "within a ~15-minute street-network walk"
-      : "within roughly a 15-minute walk";
+  const amenityCaveat = STRAIGHT_LINE_CAVEAT;
+  const walkPhrase = "within roughly a 15-minute walk";
 
-  // Nearby amenities (display: top 8 per category) + full reachable counts. When
-  // an isochrone is supplied, "reachable" means inside that walk polygon; else a
-  // straight-line radius. OSM splits a single park into many nodes/segments, so
+  // Nearby amenities (display: top 8 per category) + full reachable counts,
+  // measured by straight-line radius. OSM splits a single park into many nodes/segments, so
   // we collapse same-park pins (dedupeParkAmenities) before counting OR listing —
   // otherwise one park reads as a dozen. Counts + list derive from one deduped,
   // nearest-first pass.
   const allNearby = dedupeParkAmenities(
     point && input.pois
-      ? getNearbyAmenities(point, input.pois, { radiusMeters, isochrone })
+      ? getNearbyAmenities(point, input.pois, { radiusMeters })
       : []
   );
   const amenityCountsByCategory: Record<string, number> = {};
@@ -209,7 +203,6 @@ export function buildBuyerReport(input: BuildBuyerReportInput): BuyerReport {
     id,
     generatedAt: input.generatedAt ?? new Date().toISOString(),
     mode,
-    accessMode,
     location: {
       lat: hasPoint ? input.lat : undefined,
       lng: hasPoint ? input.lng : undefined,

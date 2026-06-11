@@ -49,16 +49,11 @@ type RawPoi = Feature<Point> & {
 };
 
 /**
- * POIs near a point, sorted nearest-first. Reachability is decided one of two
- * ways:
- *  - default (free tier): straight-line (haversine) distance within
- *    `radiusMeters` - same honesty caveat as the 15-min-access layer.
- *  - when an `isochrone` polygon is supplied: the POI is kept iff it falls
- *    inside that street-network walk isochrone. The displayed `distanceMeters`
- *    stays straight-line.
- * `limitPerCategory` caps how many of each category are returned (for display);
- * omit it to return every reachable POI. Pure: the polygon is plain data, so
- * this stays network-free and deterministic.
+ * POIs near a point, sorted nearest-first, kept when their straight-line
+ * (haversine) distance falls within `radiusMeters` - same honesty caveat as
+ * the 15-min-access layer. `limitPerCategory` caps how many of each category
+ * are returned (for display); omit it to return every reachable POI. Pure,
+ * network-free, deterministic.
  */
 export function getNearbyAmenities(
   point: { lat: number; lng: number },
@@ -66,12 +61,10 @@ export function getNearbyAmenities(
   options?: {
     radiusMeters?: number;
     limitPerCategory?: number;
-    isochrone?: Polygon | MultiPolygon;
   }
 ): NearbyAmenity[] {
   if (!Array.isArray(pois) || pois.length === 0) return [];
   const radiusKm = (options?.radiusMeters ?? DEFAULT_RADIUS_METERS) / 1000;
-  const isochrone = options?.isochrone;
   const pin: LngLat = [point.lng, point.lat];
   // Per-category provenance: police + childcare now come from authoritative
   // Vicmap (not OSM), hospitals from Vicmap + OSM, everything else from OSM.
@@ -94,11 +87,7 @@ export function getNearbyAmenities(
     const coords = f.geometry?.coordinates as LngLat | undefined;
     if (!coords || coords.length < 2) continue;
     const km = haversineKm(pin, coords);
-    if (isochrone) {
-      if (!pointInPolygon(coords, isochrone)) continue;
-    } else if (km > radiusKm) {
-      continue;
-    }
+    if (km > radiusKm) continue;
     const props = f.properties ?? {};
     const category = String(props.pinType ?? "").trim();
     if (!category) continue;

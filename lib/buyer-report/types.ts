@@ -98,12 +98,6 @@ export interface BuyerReport {
   id: string;
   generatedAt: string;
   mode: "pin" | "sa2";
-  /**
-   * How the "nearby on foot" reachability was measured: `"straight"` =
-   * straight-line radius (free tier / default), `"precise"` = street-network
-   * walk isochrone (paid-tier opt-in). Drives the caveat + labels in the UI.
-   */
-  accessMode: "straight" | "precise";
   location: {
     lat?: number;
     lng?: number;
@@ -215,14 +209,6 @@ export interface BuildBuyerReportInput {
   /** Raw POI features for the nearby computation. */
   pois?: Feature<Point>[];
   radiusMeters?: number;
-  /**
-   * Optional street-network walk isochrone polygon. When supplied, "nearby" is
-   * computed by containment in this polygon instead of a straight-line radius,
-   * and `accessMode` becomes "precise". Stays pure - the polygon is plain data.
-   * (No live caller supplies one since the precise-walk opt-in was removed; the
-   * engine keeps the capability for tests / a future server-side provider.)
-   */
-  isochrone?: Polygon | MultiPolygon;
   /** Inject for deterministic output (SSR/build/tests); defaults to now. */
   generatedAt?: string;
   /** Optional precomputed overall liveability score; else derived from `place`. */

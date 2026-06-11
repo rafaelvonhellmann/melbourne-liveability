@@ -426,57 +426,6 @@ describe("buildBuyerReport", () => {
     expect(JSON.stringify(a)).toEqual(JSON.stringify(b));
   });
 
-  it("defaults to straight-line accessMode when no isochrone is supplied", () => {
-    expect(report.accessMode).toBe("straight");
-  });
-});
-
-describe("buildBuyerReport with a walk isochrone (paid-tier precise mode)", () => {
-  // A box around ONLY the far GP (~2.22 km away) — which the 1.2 km straight-line
-  // radius excludes — and excluding the near supermarket (~0.56 km). Proves the
-  // nearby set is decided by polygon containment, not crow-flies radius.
-  const isochrone: Polygon = {
-    type: "Polygon",
-    coordinates: [
-      [
-        [144.965, -37.785],
-        [144.975, -37.785],
-        [144.975, -37.775],
-        [144.965, -37.775],
-        [144.965, -37.785],
-      ],
-    ],
-  };
-
-  it("filters nearby amenities by containment and flags accessMode=precise", () => {
-    const report = buildBuyerReport({
-      lat: PIN.lat,
-      lng: PIN.lng,
-      place: samplePlace(),
-      pois: POIS,
-      isochrone,
-      generatedAt: "t",
-    });
-    expect(report.accessMode).toBe("precise");
-    const cats = Object.keys(report.amenityCountsByCategory);
-    expect(cats).toContain("gp"); // inside the isochrone (radius would drop it at 2.2 km)
-    expect(cats).not.toContain("supermarket"); // outside it (radius would keep it at 0.56 km)
-  });
-
-  it("swaps the amenity caveat to the street-network wording in precise mode", () => {
-    const report = buildBuyerReport({
-      lat: PIN.lat,
-      lng: PIN.lng,
-      place: samplePlace(),
-      pois: POIS,
-      isochrone,
-      generatedAt: "t",
-    });
-    const amenityFinding = report.findings.find(
-      (f) => f.geography === "poi-radius" && f.caveat
-    );
-    expect(amenityFinding?.caveat).toMatch(/street-network walk isochrone/i);
-  });
 });
 
 describe("buildBuyerReport provenance discipline", () => {

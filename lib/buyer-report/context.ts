@@ -13,9 +13,9 @@ export interface EngineCtx {
   hasPoint: boolean;
   /** The point used for nearby maths: the pin, else the SA2 centroid. */
   point: { lat: number; lng: number } | null;
-  /** "within a ~15-minute street-network walk" (precise) vs the straight-line phrasing. */
+  /** The straight-line 15-minute-walk phrasing used across findings. */
   walkPhrase: string;
-  /** STREET_NETWORK_CAVEAT (precise) or STRAIGHT_LINE_CAVEAT (straight). */
+  /** STRAIGHT_LINE_CAVEAT - distances are straight-line, not routes. */
   amenityCaveat: string;
   /** Total reachable POIs per category after park dedupe. */
   amenityCountsByCategory: Record<string, number>;

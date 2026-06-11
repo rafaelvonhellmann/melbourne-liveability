@@ -99,10 +99,7 @@ export function BuyerReportPanel({
   const community = place?.context?.community;
   const equity = place?.context?.equity;
   const generated = report.generatedAt?.slice(0, 10) || "—";
-  // Paid-tier precise walk routing recomputes "nearby" against a street-network
-  // isochrone; the free tier uses a straight-line radius. Drive the copy off it.
-  const precise = report.accessMode === "precise";
-  const reachLabel = precise ? "reachable on foot" : "within ~1.2 km";
+  const reachLabel = "within ~1.2 km";
   // The live map panel is a GLIMPSE - easy to digest, with NO citations, source/
   // licence attributions, dataset dates or methodology caveats. All provenance
   // lives in the full pin report ("Full report for this pin") and the /places
@@ -527,14 +524,12 @@ export function BuyerReportPanel({
           precision={
             isLive
               ? undefined
-              : precise
-                ? "Point-level · street-network ~15-min walk · src: OpenStreetMap routing (ODbL)"
-                : "Point-level · straight-line from the pin · src: OpenStreetMap (ODbL)"
+              : "Point-level · straight-line from the pin · src: OpenStreetMap (ODbL)"
           }
         >
           {report.nearbyAmenities.length === 0 ? (
             <p className="text-sm text-ink-muted">
-              No mapped amenities {precise ? "reachable within a ~15-minute walk" : "within ~1.2 km"} in
+              No mapped amenities within ~1.2 km in
               the available open data, or no pin dropped yet.
             </p>
           ) : (
@@ -585,9 +580,7 @@ export function BuyerReportPanel({
               {/* Measurement-method note - full report only. */}
               {!isLive && (
                 <p className="text-[11px] leading-snug text-ink-muted">
-                  {precise
-                    ? "Street-network ~15-minute walk isochrone (OpenStreetMap routing); the distance shown to each amenity is still straight-line."
-                    : "Straight-line, not street-network walking time."}{" "}
+                  Straight-line, not street-network walking time.{" "}
                   Public-transport stop proximity is reflected in the Transport score below, not in this
                   pin-level list yet.
                 </p>
