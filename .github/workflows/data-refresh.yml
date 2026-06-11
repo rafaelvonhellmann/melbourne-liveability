@@ -115,6 +115,9 @@ jobs:
             echo "pushed=false" >> "$GITHUB_OUTPUT"
           else
             git commit -m "chore(data): automated refresh $(date -u +%Y-%m-%d)"
+            # Master may have moved during the multi-hour run; the data commit
+            # touches only data/generated + public/data, so a rebase is safe.
+            git pull --rebase origin master
             git push
             echo "pushed=true" >> "$GITHUB_OUTPUT"
           fi
