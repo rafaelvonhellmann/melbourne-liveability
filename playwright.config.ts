@@ -24,9 +24,13 @@ export default defineConfig({
   // Dev mode compiles routes on first hit; give assertions headroom.
   expect: { timeout: 10_000 },
   use: {
-    baseURL: staticMode
-      ? "http://localhost:4173/melbourne-liveability"
-      : "http://localhost:3000",
+    // E2E_BASE_URL lets the same static suite run against PRODUCTION
+    // (e.g. E2E_BASE_URL=https://.../melbourne-liveability STATIC_E2E=1).
+    baseURL:
+      process.env.E2E_BASE_URL ??
+      (staticMode
+        ? "http://localhost:4173/melbourne-liveability"
+        : "http://localhost:3000"),
     trace: "on-first-retry",
   },
   // Both modes run desktop + mobile: CI only ever runs STATIC_E2E=1, so the

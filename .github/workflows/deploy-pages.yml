@@ -96,3 +96,30 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v5
+  # The pre-publish e2e proves the ARTIFACT; this proves the LIVE EDGE -
+  # cache propagation, chunk integrity and data fetches as real users see them.
+  verify-live:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Wait for Pages propagation
+        run: |
+          for i in $(seq 1 20); do
+            marker=$(curl -fsS "https://rafaelvonhellmann.github.io/melbourne-liveability/" | grep -c Festra || true)
+            [ "$marker" -gt 0 ] && exit 0
+            sleep 15
+          done
+          echo "site did not propagate in 5 minutes" && exit 1
+      - name: E2E against the live site
+        env:
+          STATIC_E2E: "1"
+          E2E_BASE_URL: https://rafaelvonhellmann.github.io/melbourne-liveability
+        run: npx playwright test --project=chromium
+
