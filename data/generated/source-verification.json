@@ -1,9 +1,276 @@
 {
-  "checkedAt": "2026-06-11T08:28:43.404Z",
+  "checkedAt": "2026-06-11T15:16:16.278Z",
   "sources": 56,
   "referencedInCode": 0,
-  "networkChecked": false,
+  "networkChecked": true,
   "errors": [],
-  "warnings": [],
-  "liveness": []
+  "warnings": [
+    "unreachable url vcsa-recorded-offences: https://www.crimestatistics.vic.gov.au/crime-statistics/latest-victorian-crime-data/download-data (403)"
+  ],
+  "liveness": [
+    {
+      "id": "abs-sa2-income-dbr",
+      "url": "https://dbr.abs.gov.au/",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "abs-census-rent-2021",
+      "url": "https://www.abs.gov.au/databyregion",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "abs-erp-sa2",
+      "url": "https://www.abs.gov.au/statistics/people/population/regional-population",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "abs-erp-sa2-series",
+      "url": "https://www.abs.gov.au/statistics/people/population/regional-population",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "abs-census-tsp-sa2",
+      "url": "https://www.abs.gov.au/census/find-census-data",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vcsa-recorded-offences",
+      "url": "https://www.crimestatistics.vic.gov.au/crime-statistics/latest-victorian-crime-data/download-data",
+      "ok": false,
+      "status": 403
+    },
+    {
+      "id": "ptv-gtfs",
+      "url": "https://opendata.transport.vic.gov.au/dataset/gtfs-schedule",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "osm-pt",
+      "url": "https://www.openstreetmap.org/",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vic-mapshare-hospitals",
+      "url": "https://enterprise.mapshare.vic.gov.au/server/rest/services/Hosted/Emergency_Services__VMFEAT_FOI_POINT_/FeatureServer",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "osm-health",
+      "url": "https://www.openstreetmap.org/",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "osm-post",
+      "url": "https://www.openstreetmap.org/",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "osm-clinical-social",
+      "url": "https://www.openstreetmap.org/",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "abs-census-labour-2016",
+      "url": "https://dbr.abs.gov.au/",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vic-planning-bpa",
+      "url": "https://services-ap1.arcgis.com/P744lA0wf4LlBZ84/ArcGIS/rest/services/Vicmap_Planning/FeatureServer/9",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vic-planning-flood",
+      "url": "https://plan-gis.mapshare.vic.gov.au/arcgis/rest/services/Planning/Vicplan_PlanningSchemeOverlays/MapServer",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "osm-schools",
+      "url": "https://www.openstreetmap.org/",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "abs-census-preschool-2021",
+      "url": "https://dbr.abs.gov.au/",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "abs-seifa-2021",
+      "url": "https://www.abs.gov.au/statistics/people/people-and-communities/socio-economic-indexes-areas-seifa-australia/latest-release",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "abs-census-community-2021",
+      "url": "https://dbr.abs.gov.au/",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "abs-census-g49-sa2",
+      "url": "https://www.abs.gov.au/census/find-census-data",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "osm-amenities",
+      "url": "https://www.openstreetmap.org/",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "osm-cycleways",
+      "url": "https://www.openstreetmap.org/",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "osm-aged-care",
+      "url": "https://www.openstreetmap.org/",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vicmap-police",
+      "url": "https://enterprise.mapshare.vic.gov.au/server/rest/services/Hosted/Emergency_Services__VMFEAT_FOI_POINT_/FeatureServer",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vicmap-foi",
+      "url": "https://services-ap1.arcgis.com/P744lA0wf4LlBZ84/ArcGIS/rest/services/Vicmap_Features_of_Interest/FeatureServer",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vic-planning-heritage",
+      "url": "https://plan-gis.mapshare.vic.gov.au/arcgis/rest/services/Planning/Vicplan_PlanningSchemeOverlays/MapServer",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vic-planning-overlays",
+      "url": "https://plan-gis.mapshare.vic.gov.au/arcgis/rest/services/Planning/Vicplan_PlanningSchemeOverlays/MapServer",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vic-coastal-inundation",
+      "url": "https://biod-gis.mapshare.vic.gov.au/arcgis/rest/services/CoastKit/LCHAInundation/MapServer",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vic-fire-history",
+      "url": "https://discover.data.vic.gov.au/dataset/fire-history-overlay-of-most-recent-fires",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vif2023-sa2",
+      "url": "https://www.data.vic.gov.au/victoria-future-2023-vif2023-data-available-excel-spreadsheets",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "abs-building-approvals",
+      "url": "https://www.abs.gov.au/statistics/industry/building-and-construction/building-approvals-australia",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vic-school-zones",
+      "url": "https://discover.data.vic.gov.au/dataset/victorian-government-school-zones-2026",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "dtp-aadt",
+      "url": "https://discover.data.vic.gov.au/dataset/historical-annual-average-daily-traffic-volume",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vic-water-corp",
+      "url": "https://discover.data.vic.gov.au/dataset/melbourne-water-retailers",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "epa-air",
+      "url": "https://www.epa.vic.gov.au/for-community/airwatch",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vic-activity-centres",
+      "url": "https://discover.data.vic.gov.au/dataset/vicmap-planning",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "osm-noise-corridors",
+      "url": "https://www.openstreetmap.org/",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "osm-nuisance-points",
+      "url": "https://www.openstreetmap.org/",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "osm-train-stations",
+      "url": "https://www.openstreetmap.org/",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "osm-future-transport",
+      "url": "https://www.openstreetmap.org/",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vic-doe-school-locations",
+      "url": "https://discover.data.vic.gov.au/dataset/school-locations-2025",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vgv-median-house-suburb",
+      "url": "https://discover.data.vic.gov.au/dataset/victorian-property-sales-report-median-house-by-suburb-time-series",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "vgv-median-unit-suburb",
+      "url": "https://discover.data.vic.gov.au/dataset/victorian-property-sales-report-median-unit-by-suburb-time-series",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "dffh-rental-report-suburb",
+      "url": "https://discover.data.vic.gov.au/dataset/rental-report-quarterly-moving-annual-rents-by-suburb",
+      "ok": true,
+      "status": 200
+    }
+  ]
 }

@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-06-11T04:18:24.399Z",
+  "checkedAt": "2026-06-11T14:53:36.164Z",
   "items": [
     {
       "id": "abs-sa2-income-dbr",
@@ -52,24 +52,24 @@
     {
       "id": "vcsa-recorded-offences",
       "cadence": "quarterly",
-      "fetchedAt": "2026-05-29",
-      "monthsSinceFetch": 0.4,
+      "fetchedAt": "2026-06-11",
+      "monthsSinceFetch": 0,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
     {
       "id": "ptv-gtfs",
       "cadence": "rolling",
-      "fetchedAt": "2026-06-03",
-      "monthsSinceFetch": 0.3,
+      "fetchedAt": "2026-06-11",
+      "monthsSinceFetch": 0,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
     {
       "id": "osm-pt",
       "cadence": "rolling",
-      "fetchedAt": "2026-06-03",
-      "monthsSinceFetch": 0.3,
+      "fetchedAt": "2026-06-11",
+      "monthsSinceFetch": 0,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
@@ -84,15 +84,15 @@
     {
       "id": "osm-health",
       "cadence": "rolling",
-      "fetchedAt": "2026-06-03",
-      "monthsSinceFetch": 0.3,
+      "fetchedAt": "2026-06-11",
+      "monthsSinceFetch": 0,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
     {
       "id": "osm-post",
       "cadence": "n/a",
-      "fetchedAt": "2026-06-03",
+      "fetchedAt": "2026-06-11",
       "monthsSinceFetch": null,
       "upstreamLastUpdated": null,
       "status": "unknown"
@@ -100,7 +100,7 @@
     {
       "id": "osm-clinical-social",
       "cadence": "n/a",
-      "fetchedAt": "2026-06-03",
+      "fetchedAt": "2026-06-11",
       "monthsSinceFetch": null,
       "upstreamLastUpdated": null,
       "status": "unknown"
@@ -132,8 +132,8 @@
     {
       "id": "osm-schools",
       "cadence": "rolling",
-      "fetchedAt": "2026-06-03",
-      "monthsSinceFetch": 0.3,
+      "fetchedAt": "2026-06-11",
+      "monthsSinceFetch": 0,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
@@ -165,30 +165,30 @@
       "id": "abs-census-g49-sa2",
       "cadence": "census",
       "fetchedAt": "2026-06-04",
-      "monthsSinceFetch": 0.2,
+      "monthsSinceFetch": 0.3,
       "upstreamLastUpdated": "2023-12-11",
       "status": "fresh"
     },
     {
       "id": "osm-amenities",
       "cadence": "rolling",
-      "fetchedAt": "2026-06-03",
-      "monthsSinceFetch": 0.3,
+      "fetchedAt": "2026-06-11",
+      "monthsSinceFetch": 0,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
     {
       "id": "osm-cycleways",
       "cadence": "rolling",
-      "fetchedAt": "2026-06-03",
-      "monthsSinceFetch": 0.3,
+      "fetchedAt": "2026-06-11",
+      "monthsSinceFetch": 0,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
     {
       "id": "osm-aged-care",
       "cadence": "n/a",
-      "fetchedAt": "2026-06-03",
+      "fetchedAt": "2026-06-11",
       "monthsSinceFetch": null,
       "upstreamLastUpdated": null,
       "status": "unknown"
@@ -204,10 +204,10 @@
     {
       "id": "vicmap-foi",
       "cadence": "annual",
-      "fetchedAt": "2026-06-03",
-      "monthsSinceFetch": 0.3,
+      "fetchedAt": "2026-06-11",
+      "monthsSinceFetch": 0,
       "upstreamLastUpdated": "2026-06-07",
-      "status": "update-available"
+      "status": "fresh"
     },
     {
       "id": "vic-planning-heritage",
@@ -252,8 +252,8 @@
     {
       "id": "abs-building-approvals",
       "cadence": "rolling",
-      "fetchedAt": "2026-06-03",
-      "monthsSinceFetch": 0.3,
+      "fetchedAt": "2026-06-11",
+      "monthsSinceFetch": 0,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
@@ -316,24 +316,24 @@
     {
       "id": "osm-noise-corridors",
       "cadence": "rolling",
-      "fetchedAt": "2026-06-03",
-      "monthsSinceFetch": 0.3,
+      "fetchedAt": "2026-06-11",
+      "monthsSinceFetch": 0,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
     {
       "id": "osm-nuisance-points",
       "cadence": "rolling",
-      "fetchedAt": "2026-06-03",
-      "monthsSinceFetch": 0.3,
+      "fetchedAt": "2026-06-11",
+      "monthsSinceFetch": 0,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
     {
       "id": "osm-train-stations",
       "cadence": "rolling",
-      "fetchedAt": "2026-06-03",
-      "monthsSinceFetch": 0.3,
+      "fetchedAt": "2026-06-11",
+      "monthsSinceFetch": 0,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
