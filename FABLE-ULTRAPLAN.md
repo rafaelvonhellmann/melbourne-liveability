@@ -44,6 +44,8 @@ corrections. Apply those corrections to the docs as part of Phase 0.
   must be costed as one; otherwise cut it from launch). No consumer
   subscription. GST-inclusive display. No "saved checks sync" claim until
   accounts exist (Phase 5). Year 2: B2B white-label seats $49-99/mo.
+- **Pricing intel (verified 2026-06-11, web-sourced):** RP Data/Cotality agent packages $179.99-$319.99/mo on 12-mo terms (min $2,159-$3,839/yr); Cotality consumer arm propertyvalue.com.au sells PREPAID passes week $49 / month $99 / 6-mo $249 / 12-mo $439 (passes, not recurring - nobody in market bills recurring weekly/6-monthly); Landchecker free tier already includes national planning zones+overlays, Standard ~$75/user/mo (derived), Advanced $240/mo, member one-off premium report $24.90; REA/Domain/bank AVM reports are FREE (lead-gen) - the threat is free, not price; building+pest anchor $400-800. IMPLICATIONS: keep $39 snapshot (band $24.90-$49 is real); 3-pack sweet spot $79-99 (vs $89 plan figure - fine); agent tier must wedge UNDER $75/seat/mo with report credits; publish transparent flat pricing as a marketed differentiator vs Cotality quote-only contracts; free tier differentiates on SYNTHESIS (scores/lenses/honest provenance), paid on per-property due-diligence depth - never compete on price estimates (free AVMs own that).
+
 - **Repo/IP:** decide per Decision Register D3 before any payment code lands.
 - **Expansion:** region-registry refactor -> Canberra pilot (quiet) -> Sydney
   flagship -> Brisbane -> Adelaide/Perth -> Hobart -> Darwin. National

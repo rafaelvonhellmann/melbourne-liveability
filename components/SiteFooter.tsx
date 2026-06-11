@@ -48,6 +48,19 @@ export function SiteFooter() {
           over open data -{" "}
           <span className="font-medium text-ink">not relocation, financial, or legal advice</span>.
         </p>
+        <p className="mt-3 text-xs">
+          Contact{" "}
+          <a href="mailto:hello@festra.au" className="hover:text-accent">
+            hello@festra.au
+          </a>{" "}
+          -{" "}
+          <a
+            href="mailto:hello@festra.au?subject=Festra%20feedback"
+            className="hover:text-accent"
+          >
+            Send feedback
+          </a>
+        </p>
       </div>
     </footer>
   );

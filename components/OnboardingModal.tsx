@@ -162,6 +162,19 @@ export function OnboardingModal({ onPick, onDismiss }: Props) {
     onDismiss?.();
   }, [onDismiss]);
 
+  // Move focus into the dialog when it opens. Kept separate from the keydown
+  // effect below: that one re-binds whenever the parent re-renders (onDismiss
+  // is an inline prop) and re-running it would yank focus back to the first
+  // card while the modal is open.
+  useEffect(() => {
+    if (!open) return;
+    panelRef.current
+      ?.querySelector<HTMLElement>(
+        'button, [href], input, [tabindex]:not([tabindex="-1"])'
+      )
+      ?.focus();
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
     const panel = panelRef.current;
@@ -173,8 +186,6 @@ export function OnboardingModal({ onPick, onDismiss }: Props) {
             )
           )
         : [];
-    // Move focus into the dialog on open.
-    focusables()[0]?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();

@@ -1,0 +1,595 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { ChevronDown } from "lucide-react";
+import { SearchBox } from "@/components/SearchBox";
+import { SiteFooter } from "@/components/SiteFooter";
+import {
+  LandingMap,
+  NEARBY_DOT_COLORS,
+  type AmenityDot,
+  type CameraKeyframe,
+  type LandingMapHandle,
+} from "@/components/landing/LandingMap";
+import { useScrollScene, type ScrollSceneState } from "@/components/landing/useScrollScene";
+import {
+  CaptionCard,
+  CompareTable,
+  GlimpsePanel,
+  ReportSheet,
+} from "@/components/landing/scenes";
+import { PRODUCT_NAME } from "@/lib/brand";
+import { parseMapUrlState } from "@/lib/share-url";
+import { loadUserPrefs } from "@/lib/user-prefs";
+import { track } from "@/lib/analytics";
+import type { SearchIndexEntry } from "@/lib/search";
+import type { GeocodeResult } from "@/lib/geocode";
+
+/** Same flag the OnboardingModal reads/sets - one onboarding gate, one key. */
+export const ONBOARDED_KEY = "mlv-onboarded-v1";
+/** Where the final-band profile choice is persisted for the profile flow. */
+export const PROFILE_CHOICE_KEY = "mlv-profile-choice-v1";
+
+export type LandingProfileChoice = "buyer" | "agent" | null;
+
+type LandingProps = {
+  /** Suburb / data-area search index (the same one the map's TopBar uses). */
+  searchIndex: SearchIndexEntry[];
+  /** Exact-address pick -> the buyer pin seam (page.tsx selectFromAddress). */
+  onGeocode: (result: GeocodeResult) => void;
+  /** Suburb / data-area pick -> area-centroid buyer check (selectFromSearch). */
+  onAreaSelect: (slug: string) => void;
+  /** Fired once on every dismissal path, after the onboarded flag is set. */
+  onDismiss: () => void;
+  /**
+   * Final-band profile choice; null = skipped. The choice is persisted under
+   * PROFILE_CHOICE_KEY before this fires - the full profile flow builds on it.
+   */
+  onProfileChoice: (type: LandingProfileChoice) => void;
+};
+
+/**
+ * First-visit gate decision for the map route. The landing shows only when the
+ * URL restores nothing (no shared pin / buyer state / selection / lens /
+ * weights / shortlist / layer) AND the visitor has not been onboarded yet.
+ * Mirrors OnboardingModal's skip rule for pre-flag returning users (any saved
+ * preference marks them as seen). localStorage unavailable -> never gate.
+ */
+export function shouldShowLanding(search: string): boolean {
+  const url = parseMapUrlState(search);
+  if (
+    url.buyer ||
+    url.pin !== null ||
+    url.select !== null ||
+    url.layer !== null ||
+    url.view !== null ||
+    url.weights !== null ||
+    url.shortlist.length > 0
+  ) {
+    return false;
+  }
+  try {
+    if (localStorage.getItem(ONBOARDED_KEY)) return false;
+    const prefs = loadUserPrefs();
+    if (prefs.interestView || prefs.personaId || prefs.shortlist.length > 0) {
+      localStorage.setItem(ONBOARDED_KEY, "1");
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function markOnboarded() {
+  try {
+    localStorage.setItem(ONBOARDED_KEY, "1");
+  } catch {
+    /* ignore */
+  }
+}
+
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
+/** Pin-dot F mark (same geometry as app/icon.svg), accent via currentColor. */
+function FMark({ size = 26 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={Math.round((size * 28) / 26)}
+      viewBox="0 0 26 28"
+      aria-hidden="true"
+      focusable="false"
+      className="text-accent"
+    >
+      <g fill="currentColor">
+        <circle cx="6" cy="4" r="1.9" />
+        <circle cx="11" cy="4" r="1.9" />
+        <circle cx="16" cy="4" r="1.9" />
+        <circle cx="21" cy="4" r="1.9" />
+        <circle cx="6" cy="9" r="1.9" />
+        <circle cx="6" cy="14" r="1.9" />
+        <circle cx="11" cy="14" r="1.9" />
+        <circle cx="16" cy="14" r="1.9" />
+        <circle cx="6" cy="19" r="1.9" />
+        <circle cx="6" cy="24" r="1.9" />
+      </g>
+    </svg>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+ * Camera script. Four resting points; five scenes drive between them:
+ *   scene 1 (hero)     holds "hero" (all Australia),
+ *   scene 2 (pinning)  flies hero -> approach -> pin as the user scrolls,
+ *   scenes 3-5         push in gently from "pin" to "hold" across all three.
+ * ------------------------------------------------------------------------- */
+
+const KEYFRAMES: CameraKeyframe[] = [
+  { id: "hero", center: [134.0, -27.2], zoom: 3.9 },
+  { id: "approach", center: [144.95, -37.81], zoom: 8.5 },
+  { id: "pin", center: [144.9764, -37.7699], zoom: 13.8 },
+  { id: "hold", center: [144.9764, -37.7699], zoom: 14.2 },
+];
+
+/** Where the accent pin lands - Brunswick East. */
+const PIN: [number, number] = [144.9764, -37.7699];
+
+/** ~6 amenity dots around the pin, wearing the live POI palette colours. */
+const AMENITY_DOTS: AmenityDot[] = [
+  { lngLat: [144.9737, -37.7682], color: NEARBY_DOT_COLORS[0] },
+  { lngLat: [144.9794, -37.7674], color: NEARBY_DOT_COLORS[1] },
+  { lngLat: [144.9722, -37.7716], color: NEARBY_DOT_COLORS[2] },
+  { lngLat: [144.9801, -37.7723], color: NEARBY_DOT_COLORS[3] },
+  { lngLat: [144.9752, -37.7741], color: NEARBY_DOT_COLORS[4] },
+  { lngLat: [144.9785, -37.7699], color: NEARBY_DOT_COLORS[5] },
+];
+
+/**
+ * Scene section heights in vh - MUST match the h-[..vh] classes below. Used to
+ * remap the hook's raw section progress onto the scene's ACTIVE window (the
+ * stretch where the viewport midline is inside the section), so the camera is
+ * continuous across scene handoffs: each scene's drive starts exactly where
+ * the previous scene's drive ended.
+ */
+const SCENE_VH = [100, 150, 120, 120, 120] as const;
+
+/**
+ * Raw section progress t (0 = top at viewport bottom, 1 = bottom at viewport
+ * top) -> 0..1 across the section's active window. r = height / viewport.
+ */
+export function sceneLocalT(t: number, heightVh: number): number {
+  const r = heightVh / 100;
+  const u = (t * (1 + r) - 0.5) / r;
+  return u < 0 ? 0 : u > 1 ? 1 : u;
+}
+
+/** How far through scene 2's fly-in the pin drops, then the dots follow. */
+const PIN_AT = 0.7;
+const DOTS_AT = 0.85;
+
+/**
+ * First-visit landing for the map route: the app brought forward. A live
+ * (non-interactive) map is the full-screen backdrop; five scroll scenes drive
+ * its camera from all-Australia down to a Brunswick East pin, then preview the
+ * real product surfaces - the glimpse panel, the sourced report, the compare
+ * table - before the three-door close band (explore free / paid report /
+ * profile). Rendered INSTEAD of the map UI
+ * (see the gating seam in app/(map)/page.tsx); every dismissal path sets
+ * ONBOARDED_KEY - the same flag the OnboardingModal uses - so the modal never
+ * fires afterwards.
+ */
+export function Landing({
+  searchIndex,
+  onGeocode,
+  onAreaSelect,
+  onDismiss,
+  onProfileChoice,
+}: LandingProps) {
+  const rootRef = useRef<HTMLElement>(null);
+  const rigRef = useRef<LandingMapHandle>(null);
+  const closeBandRef = useRef<HTMLElement>(null);
+
+  const s0 = useRef<HTMLElement>(null);
+  const s1 = useRef<HTMLElement>(null);
+  const s2 = useRef<HTMLElement>(null);
+  const s3 = useRef<HTMLElement>(null);
+  const s4 = useRef<HTMLElement>(null);
+  const sceneRefs = useMemo(() => [s0, s1, s2, s3, s4], []);
+
+  // Pin + dots flip on when scene 2's fly-in passes the zoom threshold
+  // (scrub-style: scrolling back above the threshold lifts them again). These
+  // are the ONLY scroll-derived React state - discrete flips, not progress.
+  const [pinVisible, setPinVisible] = useState(false);
+  const [dotsVisible, setDotsVisible] = useState(false);
+
+  // Last --scene-t written per scene, so unchanged values skip the DOM write.
+  const sceneTRef = useRef<number[]>([]);
+
+  /**
+   * Per-frame scroll work, entirely off the React render path: scrub each
+   * scene's --scene-t custom property (CSS derives the entrance/exit ramps),
+   * drive the camera piecewise with matching endpoints at every handoff
+   * (scene 1 exits ON "pin"; scene 2 enters AT "pin", so the pose never jumps
+   * when the active scene flips), then update the two threshold booleans -
+   * same-value sets bail out of rendering, so steady scrolling re-renders
+   * nothing.
+   */
+  const onSceneFrame = useCallback(
+    ({ activeScene, progress }: ScrollSceneState) => {
+      for (let i = 0; i < sceneRefs.length; i++) {
+        const t = activeScene === i ? progress : activeScene > i ? 1 : 0;
+        if (sceneTRef.current[i] !== t) {
+          sceneTRef.current[i] = t;
+          sceneRefs[i].current?.style.setProperty("--scene-t", t.toFixed(4));
+        }
+      }
+      const rig = rigRef.current;
+      if (rig) {
+        if (activeScene === 0) {
+          rig.setSceneProgress("hero", "approach", 0);
+        } else if (activeScene === 1) {
+          const u = sceneLocalT(progress, SCENE_VH[1]);
+          if (u < 0.5) rig.setSceneProgress("hero", "approach", u * 2);
+          else rig.setSceneProgress("approach", "pin", u * 2 - 1);
+        } else {
+          const u = sceneLocalT(progress, SCENE_VH[activeScene] ?? 120);
+          rig.setSceneProgress("pin", "hold", (activeScene - 2 + u) / 3);
+        }
+      }
+      const flyT =
+        activeScene > 1 ? 1 : activeScene === 1 ? sceneLocalT(progress, SCENE_VH[1]) : 0;
+      setPinVisible(flyT >= PIN_AT);
+      setDotsVisible(flyT >= DOTS_AT);
+    },
+    [sceneRefs]
+  );
+
+  useScrollScene(rootRef, sceneRefs, onSceneFrame);
+
+  // A11y: the landing is dismissible from the keyboard without scrolling -
+  // Escape opens the map (same flag-then-dismiss contract as every other
+  // path). Two polite exceptions: the search combobox consumed the event to
+  // close its popup (defaultPrevented), or a non-empty input should clear
+  // natively (type="search" Escape behaviour) before the page-level dismiss.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      const t = e.target;
+      if (t instanceof HTMLInputElement && t.value !== "") return;
+      markOnboarded();
+      track("landing_escape");
+      onDismiss();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onDismiss]);
+
+  const pickAddress = (r: GeocodeResult) => {
+    markOnboarded();
+    track("landing_search", { kind: "address" });
+    onGeocode(r);
+    onDismiss();
+  };
+
+  const pickArea = (entry: SearchIndexEntry) => {
+    markOnboarded();
+    track("landing_search", { kind: "area" });
+    onAreaSelect(entry.slug);
+    onDismiss();
+  };
+
+  const explore = () => {
+    markOnboarded();
+    track("landing_explore");
+    onDismiss();
+  };
+
+  /** Close-band free door - same dismissal contract, its own analytics event. */
+  const openMap = () => {
+    markOnboarded();
+    track("landing_open_map");
+    onDismiss();
+  };
+
+  const signIn = () => {
+    track("landing_sign_in");
+    closeBandRef.current?.scrollIntoView?.({
+      behavior: prefersReducedMotion() ? "auto" : "smooth",
+      block: "start",
+    });
+  };
+
+  const chooseProfile = (type: "buyer" | "agent") => {
+    try {
+      localStorage.setItem(PROFILE_CHOICE_KEY, type);
+    } catch {
+      /* ignore */
+    }
+    markOnboarded();
+    track("landing_profile", { choice: type });
+    onProfileChoice(type);
+    onDismiss();
+  };
+
+  const skipProfile = () => {
+    markOnboarded();
+    track("landing_profile", { choice: "skip" });
+    onProfileChoice(null);
+    onDismiss();
+  };
+
+  return (
+    <main ref={rootRef} className="min-h-screen bg-bg text-ink">
+      <div className="relative">
+        {/* The live map backdrop - sticky for the whole scroll story, scrolled
+            away naturally by the close band. Non-interactive; the scroll owns
+            the camera via the rig's setSceneProgress seam. */}
+        <div className="sticky top-0 h-screen w-full overflow-hidden">
+          <LandingMap
+            ref={rigRef}
+            keyframes={KEYFRAMES}
+            pin={PIN}
+            pinVisible={pinVisible}
+            amenityDots={AMENITY_DOTS}
+            dotsVisible={dotsVisible}
+          />
+          {/* Soft Crema veil so cards and copy stay readable over any tile. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-gradient-to-b from-bg/30 via-transparent to-bg/20"
+          />
+        </div>
+
+        {/* The five scroll scenes, overlaid on the sticky map. Sections are
+            pointer-events-none so the basemap attribution stays clickable;
+            interactive cards re-enable themselves. */}
+        <div className="relative z-10 -mt-[100vh]">
+          {/* Scene 1 - hero: wordmark + the big search over all Australia. */}
+          <section
+            ref={s0}
+            data-testid="landing-scene-1"
+            className="landing-scene pointer-events-none relative flex h-screen flex-col items-center justify-center px-4"
+          >
+            <button
+              type="button"
+              onClick={signIn}
+              className="landing-el pointer-events-auto absolute right-4 top-4 rounded-md border border-surface-border bg-bg/70 px-3 py-1.5 text-sm text-ink backdrop-blur-sm transition-colors hover:border-accent hover:text-accent sm:right-6 sm:top-6"
+            >
+              Sign in
+            </button>
+
+            <div className="landing-el pointer-events-auto w-full max-w-2xl rounded-lg border border-surface-border bg-bg/85 p-6 shadow-card backdrop-blur-sm sm:p-8">
+              <div className="flex items-center justify-center gap-2.5">
+                <FMark size={28} />
+                <h1 className="font-display text-2xl font-semibold uppercase tracking-[0.06em] text-accent">
+                  {PRODUCT_NAME}
+                </h1>
+              </div>
+              <div className="mt-6 [&_form]:bg-surface-raised [&_form]:px-4 [&_form]:py-3 [&_form]:shadow-card [&_input]:text-base">
+                <SearchBox
+                  index={searchIndex}
+                  onSelect={pickArea}
+                  onGeocode={pickAddress}
+                  placeholder="A window onto your new home"
+                />
+              </div>
+              <div className="mt-5 flex flex-col items-center gap-1.5 text-sm">
+                <span className="flex items-center gap-1 text-ink-muted">
+                  or scroll to see how it works
+                  <ChevronDown
+                    className="h-4 w-4 motion-safe:animate-bounce"
+                    aria-hidden
+                  />
+                </span>
+                <button
+                  type="button"
+                  onClick={explore}
+                  className="font-medium text-accent underline-offset-2 hover:underline"
+                >
+                  Explore the map
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* Scene 2 - pinning: the camera flies Australia -> Melbourne ->
+              Brunswick East; the pin drops past the zoom threshold. */}
+          <section
+            ref={s1}
+            data-testid="landing-scene-2"
+            className="landing-scene pointer-events-none relative h-[150vh]"
+          >
+            <div className="sticky top-0 flex h-screen flex-col justify-end p-4 pb-10 sm:justify-center sm:p-10 lg:p-16">
+              <CaptionCard
+                heading="Drop a pin anywhere in Australia"
+                body="Type an address or tap the map. Festra opens a window on that exact spot - here, Brunswick East."
+                footnote="Greater Melbourne today, every capital at launch."
+              />
+            </div>
+          </section>
+
+          {/* Scene 3 - glimpse: the right-side panel aesthetic slides in over
+              the held map (bottom sheet on mobile, the app's own metaphor). */}
+          <section
+            ref={s2}
+            data-testid="landing-scene-3"
+            className="landing-scene pointer-events-none relative h-[120vh]"
+          >
+            <div className="sticky top-0 flex h-screen flex-col justify-end overflow-hidden sm:block">
+              <div className="p-4 sm:absolute sm:left-10 sm:top-1/2 sm:max-w-sm sm:-translate-y-1/2 sm:p-0 lg:left-16">
+                <CaptionCard
+                  heading="Read the area in one glance"
+                  body="Amenities within a walk, planning rules and noise - the picture the listing leaves out, straight off the map."
+                />
+              </div>
+              <div className="landing-sheet pointer-events-auto max-h-[52vh] w-full overflow-hidden rounded-t-lg border border-surface-border bg-bg shadow-card sm:absolute sm:inset-y-0 sm:right-0 sm:max-h-none sm:w-[340px] sm:rounded-none sm:border-y-0 sm:border-r-0">
+                <GlimpsePanel />
+              </div>
+            </div>
+          </section>
+
+          {/* Scene 4 - report: the glimpse recedes; the sourced report sheet
+              rises. Every line carries its source and date. */}
+          <section
+            ref={s3}
+            data-testid="landing-scene-4"
+            className="landing-scene pointer-events-none relative h-[120vh]"
+          >
+            {/* Desktop: the report sheet owns the centre-left; the caption sits
+                clear of it on the RIGHT so it never covers the report (owner). */}
+            <div className="sticky top-0 flex h-screen flex-col justify-end gap-3 overflow-hidden p-4 sm:block sm:p-0">
+              <div className="sm:absolute sm:left-[7%] sm:top-1/2 sm:w-full sm:max-w-xl sm:-translate-y-1/2">
+                <ReportSheet />
+              </div>
+              <div className="order-first sm:absolute sm:right-8 sm:top-1/2 sm:w-[340px] sm:-translate-y-1/2 lg:right-12">
+                <CaptionCard
+                  heading="Go deep when you are serious"
+                  body="Every line carries its source and date, so you can verify each fact before you act on it."
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Scene 5 - compare: the table rises; shortlist and decide. */}
+          <section
+            ref={s4}
+            data-testid="landing-scene-5"
+            className="landing-scene pointer-events-none relative h-[120vh]"
+          >
+            {/* Mirror of scene 4: table centre-right, caption clear on the LEFT. */}
+            <div className="sticky top-0 flex h-screen flex-col justify-end gap-3 overflow-hidden p-4 sm:block sm:p-0">
+              <div className="sm:absolute sm:right-[6%] sm:top-1/2 sm:w-full sm:max-w-2xl sm:-translate-y-1/2">
+                <CompareTable />
+              </div>
+              <div className="order-first sm:absolute sm:left-8 sm:top-1/2 sm:w-[340px] sm:-translate-y-1/2 lg:left-12">
+                <CaptionCard
+                  heading="Compare before you commit"
+                  body="Shortlist areas as you go, compare before you commit - side by side, with Greater Melbourne as the baseline."
+                />
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      {/* Close band - the sign-in anchor and the three doors out: explore
+          free, the paid report, or save a profile. Solid Crema; the sticky map
+          backdrop releases here and scrolls away naturally. */}
+      <section
+        ref={closeBandRef}
+        id="get-started"
+        aria-labelledby="get-started-heading"
+        className="relative z-10 border-t border-surface-border bg-bg px-4 pb-16 pt-14"
+      >
+        <div className="mx-auto max-w-5xl">
+          <h2
+            id="get-started-heading"
+            className="font-display text-2xl font-semibold text-accent-focus"
+          >
+            Set up your window
+          </h2>
+          <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-ink-muted">
+            The map is free to explore. Go deeper on one address when you are
+            serious, or tell us who you are and the window starts shaped around it.
+          </p>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {/* Free door - everything already live, no gate. */}
+            <div className="flex flex-col rounded-lg border border-surface-border bg-surface-raised p-5 shadow-card">
+              <h3 className="font-display text-lg font-semibold text-ink">
+                Explore free
+              </h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">
+                The live map, area glimpses, suburb pages and side-by-side
+                comparisons - all of it, today.
+              </p>
+              <p className="mt-2 text-xs text-ink-muted">No account needed.</p>
+              <div className="mt-auto pt-4">
+                <button
+                  type="button"
+                  onClick={openMap}
+                  className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-focus"
+                >
+                  Open the map
+                </button>
+              </div>
+            </div>
+
+            {/* Paid door - the one-off report. No payment wiring yet; the
+                sample page shows exactly what $39 buys. */}
+            <div className="flex flex-col rounded-lg border border-surface-border bg-surface-raised p-5 shadow-card">
+              <h3 className="font-display text-lg font-semibold text-ink">
+                Buyer Report Snapshot - $39
+              </h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">
+                A full provenance report for one specific address - every fact
+                sourced and dated, a what-to-verify checklist, printable for your
+                records.
+              </p>
+              <p className="mt-2 text-xs text-ink-muted">Available at launch.</p>
+              <div className="mt-auto pt-4">
+                <Link
+                  href="/buyer/sample-report"
+                  onClick={() => track("landing_sample_report")}
+                  className="inline-block rounded-md border border-accent px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent hover:text-accent-ink"
+                >
+                  See a sample report
+                </Link>
+              </div>
+            </div>
+
+            {/* Profile door - the compact chooser; ProfileSetup opens over the
+                map after dismissal (the onProfileChoice seam in page.tsx). */}
+            <div className="flex flex-col rounded-lg border border-surface-border bg-surface-raised p-5 shadow-card">
+              <h3 className="font-display text-lg font-semibold text-ink">
+                Save your search
+              </h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">
+                Pick how you use {PRODUCT_NAME} and the map starts shaped around
+                it.
+              </p>
+              <div className="mt-3 space-y-2">
+                <button
+                  type="button"
+                  onClick={() => chooseProfile("buyer")}
+                  className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-left text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent"
+                >
+                  I am buying a home
+                </button>
+                <button
+                  type="button"
+                  onClick={() => chooseProfile("agent")}
+                  className="w-full rounded-md border border-surface-border bg-surface px-3 py-2 text-left text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent"
+                >
+                  I work with buyers
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={skipProfile}
+                className="mt-2 self-start text-sm text-ink-muted underline-offset-2 hover:text-accent hover:underline"
+              >
+                Skip for now
+              </button>
+              <p className="mt-auto pt-3 text-xs text-ink-muted">
+                Profiles live on this device for now - accounts are coming.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="relative z-10 bg-bg">
+        <SiteFooter />
+      </div>
+    </main>
+  );
+}

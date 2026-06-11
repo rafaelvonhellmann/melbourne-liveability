@@ -137,6 +137,26 @@ function prefersReducedMotion(): boolean {
   );
 }
 
+/**
+ * Run a source/layer sync now if the style is ready, else defer it to the next
+ * "idle" (the load handler adds every source). Needed for props that are
+ * already set when the map MOUNTS - e.g. the landing hero search drops a buyer
+ * pin before this component ever renders - where the [prop] effect fires
+ * before "load" and getSource() returns undefined. Returns a cleanup that
+ * cancels the deferred sync so an effect re-run never leaves a stale closure
+ * registered behind the fresh one.
+ */
+function whenStyleReady(map: maplibregl.Map, apply: () => void): (() => void) | undefined {
+  if (map.isStyleLoaded()) {
+    apply();
+    return undefined;
+  }
+  map.once("idle", apply);
+  return () => {
+    map.off("idle", apply);
+  };
+}
+
 function fillColorFor(
   activeDomain: DomainId,
   noLayer: boolean,
@@ -227,7 +247,7 @@ export function MelbourneMap({
       maxBounds: MELBOURNE_MAX_BOUNDS,
     });
 
-    // Nav (+/–) lives top-left so it never collides with the floating layer
+    // Nav (+/–) lives top-left so it never collides with the layers
     // control / legend card pinned to the top-right.
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
     // Land directly on the shared pin (no whole-metro flash) if one is in the URL;
@@ -648,15 +668,19 @@ export function MelbourneMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    const radiusSrc = map.getSource("buyer-radius") as maplibregl.GeoJSONSource | undefined;
-    radiusSrc?.setData({
-      type: "FeatureCollection",
-      features: buyerPin ? [circlePolygon(buyerPin, WALK_THRESHOLD_KM)] : [],
+    // The ring source only exists after "load"; a pin set at mount (landing
+    // hero search) must defer this sync or the walk ring never appears.
+    const cancelRing = whenStyleReady(map, () => {
+      const radiusSrc = map.getSource("buyer-radius") as maplibregl.GeoJSONSource | undefined;
+      radiusSrc?.setData({
+        type: "FeatureCollection",
+        features: buyerPin ? [circlePolygon(buyerPin, WALK_THRESHOLD_KM)] : [],
+      });
     });
     if (!buyerPin) {
       pinMarkerRef.current?.remove();
       pinMarkerRef.current = null;
-      return;
+      return cancelRing;
     }
     if (!pinMarkerRef.current) {
       pinMarkerRef.current = new maplibregl.Marker({ color: "#2052CC" })
@@ -678,6 +702,7 @@ export function MelbourneMap({
         duration: prefersReducedMotion() ? 0 : 550,
       });
     }
+    return cancelRing;
   }, [buyerPin]);
 
   // ~15-min bike reach ring - independent toggle, only shown with a pin down.
@@ -728,33 +753,42 @@ export function MelbourneMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    const src = map.getSource("transit-lines") as maplibregl.GeoJSONSource | undefined;
-    if (!src) return;
-    const NEAR_DEG = 0.025; // ~2.7 km
-    const feats =
-      buyerPin && transitLines.length > 0
-        ? transitLines
-            .filter((l) =>
-              l.coords.some(
-                ([lng, lat]) =>
-                  Math.abs(lng - buyerPin[0]) < NEAR_DEG &&
-                  Math.abs(lat - buyerPin[1]) < NEAR_DEG
+    // Cached tiles can resolve before the style loads (landing -> instant pin):
+    // defer like the other source syncs instead of dropping the data.
+    return whenStyleReady(map, () => {
+      const src = map.getSource("transit-lines") as maplibregl.GeoJSONSource | undefined;
+      if (!src) return;
+      const NEAR_DEG = 0.025; // ~2.7 km
+      const feats =
+        buyerPin && transitLines.length > 0
+          ? transitLines
+              .filter((l) =>
+                l.coords.some(
+                  ([lng, lat]) =>
+                    Math.abs(lng - buyerPin[0]) < NEAR_DEG &&
+                    Math.abs(lat - buyerPin[1]) < NEAR_DEG
+                )
               )
-            )
-            .map((l) => ({
-              type: "Feature" as const,
-              properties: { kind: l.kind },
-              geometry: { type: "LineString" as const, coordinates: l.coords },
-            }))
-        : [];
-    src.setData({ type: "FeatureCollection", features: feats });
+              .map((l) => ({
+                type: "Feature" as const,
+                properties: { kind: l.kind },
+                geometry: { type: "LineString" as const, coordinates: l.coords },
+              }))
+          : [];
+      src.setData({ type: "FeatureCollection", features: feats });
+    });
   }, [transitLines, buyerPin]);
 
   // Big Build pins show only in buyer mode (city-shaping context for a purchase).
+  // Deferred when the style is still loading: buyer mode can be ON at mount
+  // (landing hero search), before the load handler adds the layer.
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !map.getLayer("major-projects")) return;
-    map.setLayoutProperty("major-projects", "visibility", buyerMode ? "visible" : "none");
+    if (!map) return;
+    return whenStyleReady(map, () => {
+      if (!map.getLayer("major-projects")) return;
+      map.setLayoutProperty("major-projects", "visibility", buyerMode ? "visible" : "none");
+    });
   }, [buyerMode]);
 
   // Crosshair cursor in buyer mode to signal "click to drop a pin".

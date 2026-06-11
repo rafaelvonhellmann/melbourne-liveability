@@ -19,6 +19,8 @@ type SearchBoxProps = {
    * pin. The suburb / SA2 local search stays the primary path.
    */
   onGeocode?: (result: GeocodeResult) => void;
+  /** Override the input placeholder (the landing hero uses an invitation line). */
+  placeholder?: string;
 };
 
 type GeoState = {
@@ -41,7 +43,12 @@ function isAddressLike(q: string): boolean {
   return /\d/.test(q) && (/^\s*\d/.test(q) || q.includes(","));
 }
 
-export function SearchBox({ index, onSelect, onGeocode }: SearchBoxProps) {
+export function SearchBox({
+  index,
+  onSelect,
+  onGeocode,
+  placeholder = "Search a suburb, data area or full address…",
+}: SearchBoxProps) {
   const [q, setQ] = useState("");
   const [geo, setGeo] = useState<GeoState>(GEO_IDLE);
   // Combobox state: the popup opens when the user types (or submits a geocode)
@@ -220,7 +227,7 @@ export function SearchBox({ index, onSelect, onGeocode }: SearchBoxProps) {
           value={q}
           onChange={(e) => onQueryChange(e.target.value)}
           onKeyDown={onKeyDown}
-          placeholder="Search a suburb, data area or full address…"
+          placeholder={placeholder}
           className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-muted"
           aria-label="Search by suburb, data area (SA2) or full street address"
           role="combobox"

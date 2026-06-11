@@ -104,47 +104,6 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
- * Pin-anchored floating report panel (components/FloatingPanel.tsx, desktop).
- * Enter: translateY(6px) + fade over --dur-3 on the signature ease. The global
- * prefers-reduced-motion rule above clamps the animation for those users.
- * ------------------------------------------------------------------------- */
-@keyframes floating-panel-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-.floating-panel-enter {
-  animation: floating-panel-in var(--dur-3) var(--ease-festra) both;
-}
-
-/* Connector caret: a rotated square half-out of the pin-facing edge, white to
- * match the raised card, with the two outward edges carrying the hairline
- * border so it reads as part of the card outline. Vertical position (top) is
- * set imperatively to track the pin. */
-.floating-panel-caret {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  background: #ffffff;
-  transform: rotate(45deg);
-}
-[data-side="right"] > .floating-panel-caret {
-  left: -6px;
-  border-left: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-[data-side="left"] > .floating-panel-caret {
-  right: -6px;
-  border-top: 1px solid var(--border);
-  border-right: 1px solid var(--border);
-}
-
-/* ---------------------------------------------------------------------------
  * Onboarding intro vignette (components/OnboardingModal.tsx). A decorative
  * once-through sequence on the modal's map "window": tap ripple -> pin drop
  * (--dur-3 on the signature ease, the floating-panel/pin-drop pattern) ->
@@ -421,5 +380,145 @@ body {
     opacity: 1;
     transform: none;
     transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Landing scroll-scene map rig (components/landing/LandingMap.tsx). The pin
+ * drops on the signature ease (the onboarding vignette gesture), a soft
+ * walk-radius ring breathes in beneath it, then the amenity dots stagger in
+ * 60ms apart (--dot-i, set by the rig). All marker visuals live on INNER
+ * spans - maplibre positions the marker root via inline transform, so the
+ * root must never carry a transform animation. Keyframes are from-only, so
+ * the reduced-motion override lands on the static final frame; delays are
+ * killed outright (the global clamp keeps them, dots would pop in late).
+ * ------------------------------------------------------------------------- */
+@keyframes landing-pin-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+}
+.landing-pin {
+  position: absolute;
+  left: -7px;
+  top: -7px;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: var(--accent);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.18);
+  animation: landing-pin-drop var(--dur-3) var(--ease-festra) both;
+}
+@keyframes landing-ring-in {
+  from {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+}
+.landing-pin-ring {
+  position: absolute;
+  left: -75px;
+  top: -75px;
+  width: 150px;
+  height: 150px;
+  border-radius: 9999px;
+  background: rgba(29, 78, 216, 0.1);
+  border: 1.5px dashed var(--accent);
+  animation: landing-ring-in 500ms var(--ease-festra) 180ms both;
+}
+@keyframes landing-dot-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px) scale(0.6);
+  }
+}
+.landing-dot {
+  position: absolute;
+  left: -5px;
+  top: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: var(--dot-color, var(--accent));
+  border: 1.5px solid #fff;
+  box-shadow: var(--shadow);
+  animation: landing-dot-in var(--dur-3) var(--ease-festra)
+    calc(var(--dot-i, 0) * 60ms) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-pin,
+  .landing-pin-ring,
+  .landing-dot {
+    animation: none !important;
+  }
+}
+/* The rig is pointer-events:none so the page scrolls through it, but the
+ * basemap attribution (OSM / CARTO licence links) must stay clickable. */
+.landing-map .maplibregl-ctrl {
+  pointer-events: auto;
+}
+
+/* ---------------------------------------------------------------------------
+ * Landing scroll scenes (components/Landing.tsx). Each scene section carries
+ * --scene-t inline (0 before, the section's scroll progress while active,
+ * 1 after); CSS derives an entrance ramp and an exit ramp from it, so every
+ * scene element's opacity/transform is scrubbed by scroll position - nothing
+ * auto-plays on a timer. The short transitions on the signature ease only
+ * smooth the gaps between discrete scroll events. Reduced motion: every
+ * element is fully visible and static within its section (the rig snaps the
+ * camera separately).
+ * ------------------------------------------------------------------------- */
+.landing-scene {
+  --scene-t: 0;
+  --landing-enter: clamp(0, calc((var(--scene-t) - 0.12) / 0.24), 1);
+  --landing-exit: clamp(0, calc((var(--scene-t) - 0.78) / 0.22), 1);
+}
+/* Captions, hero card, sign-in: fade + small rise on entry, fade on exit. */
+.landing-el {
+  opacity: calc(var(--landing-enter) * (1 - var(--landing-exit)));
+  transform: translateY(calc((1 - var(--landing-enter)) * 24px));
+  transition:
+    opacity var(--dur-2) var(--ease-festra),
+    transform var(--dur-2) var(--ease-festra);
+  will-change: transform, opacity;
+}
+/* Centered sheets (report, compare): rise further and settle to full scale. */
+.landing-rise {
+  opacity: calc(var(--landing-enter) * (1 - var(--landing-exit)));
+  transform: translateY(calc((1 - var(--landing-enter)) * 56px))
+    scale(calc(0.97 + 0.03 * var(--landing-enter)));
+  transition:
+    opacity var(--dur-2) var(--ease-festra),
+    transform var(--dur-2) var(--ease-festra);
+  will-change: transform, opacity;
+}
+/* Panel replica: bottom-sheet rise on mobile (the app's own metaphor); on
+ * desktop it slides in from the right edge and recedes (drift + scale-back)
+ * as the next scene takes over. */
+.landing-sheet {
+  opacity: calc(1 - var(--landing-exit) * 0.65);
+  transform: translateY(calc((1 - var(--landing-enter)) * 105%));
+  transition:
+    opacity var(--dur-2) var(--ease-festra),
+    transform var(--dur-2) var(--ease-festra);
+  will-change: transform, opacity;
+}
+@media (min-width: 640px) {
+  .landing-sheet {
+    transform: translateX(
+        calc((1 - var(--landing-enter)) * 105% + var(--landing-exit) * 8%)
+      )
+      scale(calc(1 - var(--landing-exit) * 0.04));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-el,
+  .landing-rise,
+  .landing-sheet {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 }
