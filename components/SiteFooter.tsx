@@ -26,10 +26,8 @@ export function SiteFooter() {
       <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-ink-muted">
         <div className="mb-4 flex items-center gap-2 text-ink">
           {/* Casement-F mark (same geometry as app/icon.svg), ink via currentColor */}
-          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <rect x="2.5" y="2.5" width="19" height="19" rx="4.5" fill="none" stroke="currentColor" strokeWidth="2" />
-            <line x1="9.5" y1="2.5" x2="9.5" y2="21.5" stroke="currentColor" strokeWidth="2" />
-            <line x1="9.5" y1="8.5" x2="21.5" y2="8.5" stroke="currentColor" strokeWidth="2" />
+          <svg width="20" height="20" viewBox="0 0 26 28" aria-hidden="true" focusable="false">
+            <g fill="currentColor"><circle cx="6" cy="4" r="1.9" /><circle cx="11" cy="4" r="1.9" /><circle cx="16" cy="4" r="1.9" /><circle cx="21" cy="4" r="1.9" /><circle cx="6" cy="9" r="1.9" /><circle cx="6" cy="14" r="1.9" /><circle cx="11" cy="14" r="1.9" /><circle cx="16" cy="14" r="1.9" /><circle cx="6" cy="19" r="1.9" /><circle cx="6" cy="24" r="1.9" /></g>
           </svg>
           <span className="text-sm font-semibold uppercase tracking-[0.06em]">
             {PRODUCT_NAME}

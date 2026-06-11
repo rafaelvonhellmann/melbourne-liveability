@@ -7,20 +7,20 @@
 :root {
   /* Chrome - Festra Direction A "Surveyor": near-white surfaces, violet-gray
      secondary ink, daylight cobalt accent. See DESIGN-SYSTEM-PROPOSAL.md +
-     FABLE-ULTRAPLAN s18.8 owner amendments (ink #181818). */
-  --bg: #fdfdfd;
-  --surface: #f6f6f8;
-  --surface2: #f4f4f7;
-  --ink: #181818;
-  --muted: #5c5c6e;
-  --border: #e3e3ec;
-  /* Accent #2052CC clears WCAG 2.2 AA (~6.5:1 on bg) as text AND as
+     FABLE-ULTRAPLAN s18.8 owner amendments (ink #1F1B16). */
+  --bg: #FBF8F3;
+  --surface: #F4EFE7;
+  --surface2: #F0EAE0;
+  --ink: #1F1B16;
+  --muted: #6B6259;
+  --border: #E6DFD2;
+  /* Accent #1D4ED8 clears WCAG 2.2 AA (~6.5:1 on bg) as text AND as
      white-on-fill; --accent-hover is the hover/pressed step (~8.6:1). */
-  --accent: #2052cc;
-  --accent-hover: #1a43a8;
-  --accent-tint: #edf3fc;
+  --accent: #1D4ED8;
+  --accent-hover: #1739A8;
+  --accent-tint: #E8EEFB;
   --accent-ink: #fff;
-  --focus: #2052cc;
+  --focus: #1D4ED8;
   /* Semantic (data voice, never brand): tinted bg + full-strength ink. */
   --risk: #b42318;
   --risk-tint: #fdecea;
@@ -229,7 +229,7 @@ body {
        PDF feel robotic. */
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-    color: #181818;
+    color: #1F1B16;
     font-size: 10.5pt;
     line-height: 1.5;
   }
@@ -276,7 +276,7 @@ body {
 
   /* Links read as ink in print (the Sources list carries the real addresses). */
   .buyer-print-root a {
-    color: #1a43a8 !important;
+    color: #1739A8 !important;
     text-decoration: none;
   }
 }

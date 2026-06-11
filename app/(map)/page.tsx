@@ -52,15 +52,15 @@ import type { SchoolZonesData } from "@/lib/school-zones";
 import type { TrafficSegment } from "@/lib/traffic";
 import type { EpaAirSite } from "@/lib/epa-air";
 import type { ActivityCentreFeature } from "@/lib/activity-centres";
-import { fetchParcelAreaAt, fetchParcelShapeAt, type ParcelInfo, type ParcelShape } from "@/lib/parcel";
+import { fetchParcelShapeAt, type ParcelInfo, type ParcelShape } from "@/lib/parcel";
 import { fetchPlanningAt, type PlanningAt } from "@/lib/planning-at";
 import { ParcelConfirmCard } from "@/components/buyer/ParcelConfirmCard";
 import type { Station, BusStop } from "@/lib/transit";
 import { findSa2ForPoint } from "@/lib/buyer-location";
 import { MAJOR_PROJECTS } from "@/lib/major-projects";
 import type { GeocodeResult } from "@/lib/geocode";
-import { fetchWalkIsochrone, isPreciseWalkConfigured, WALK_MINUTES } from "@/lib/walk-isochrone";
 import { withBase } from "@/lib/asset-path";
+import { DEFAULT_REGION, dataPath } from "@/lib/regions";
 import { PRODUCT_NAME } from "@/lib/brand";
 import { loadPoisNear, loadReportTilesNear } from "@/lib/report-tiles";
 import { parseMapUrlState, buildMapUrl, inMelbourneBBox } from "@/lib/share-url";
@@ -222,27 +222,25 @@ export default function MapPage() {
   const [showLayers, setShowLayers] = useState(true);
   const [buyerSa2, setBuyerSa2] = useState<{ slug?: string; sa2Code?: string } | null>(null);
   const [buyerReport, setBuyerReport] = useState<BuyerReportData | null>(null);
-  // Paid-tier "precise walk routing" fetch status (idle until the user opts in).
-  const [preciseStatus, setPreciseStatus] = useState<"idle" | "loading" | "error">("idle");
 
-  // Staleness guards for the async precise-walk fetch. `buyerPinRef` mirrors the
-  // current pin so an in-flight request can detect that the pin moved underneath
-  // it; `precisionAbortRef` cancels a superseded fetch. Without these, a slow ORS
-  // response for an old pin could overwrite the report for a newly dropped pin.
+  // Staleness guard for the async report-enrichment fetches. `buyerPinRef`
+  // mirrors the current pin so an in-flight request (drive enrichment, parcel/
+  // planning patch, SA2 resolve) can detect that the pin moved underneath it
+  // and never overwrite the report for a newly dropped pin.
   const buyerPinRef = useRef<[number, number] | null>(null);
   // Monotonic report-build counter. The pin-identity guard catches a MOVED pin,
-  // but not a new report generation for the SAME pin (free build -> precise
-  // recompute -> revert). Async drive-enrichment captures the seq at build time
-  // and only patches if it's still current, so a stale enrichment can't land on
-  // a newer generation's report.
+  // but not a new report generation for the SAME pin (e.g. a profile-save
+  // rebuild). Async drive-enrichment captures the seq at build time and only
+  // patches if it's still current, so a stale enrichment can't land on a newer
+  // generation's report.
   const buildSeqRef = useRef(0);
   useEffect(() => {
     buyerPinRef.current = buyerPin;
   }, [buyerPin]);
   // "Yes, this is the property" (ParcelConfirmCard), keyed to the exact pin it
   // was confirmed for - a moved pin invalidates it automatically, and report
-  // rebuilds for the SAME pin (parcel/planning patch, precise recompute)
-  // re-thread it instead of losing it.
+  // rebuilds for the SAME pin (parcel/planning patch, profile save) re-thread
+  // it instead of losing it.
   const confirmedParcelRef = useRef<{
     pin: [number, number];
     value: { areaM2: number; confirmedAt: string };
@@ -272,7 +270,6 @@ export default function MapPage() {
       cancelled = true;
     };
   }, [buyerMode, buyerPin]);
-  const precisionAbortRef = useRef<AbortController | null>(null);
 
   // SA2 polygons live in the MapLibre sources; for the report maths we also
   // need them as JS. Lazy-load once (kept out of the initial bundle).
@@ -287,7 +284,7 @@ export default function MapPage() {
   }
   async function ensureSa2Geo(): Promise<FeatureCollection> {
     if (sa2GeoRef.current) return sa2GeoRef.current;
-    const res = await fetch(withBase("/data/places.geojson"));
+    const res = await fetch(withBase(dataPath(DEFAULT_REGION, "places.geojson")));
     sa2GeoRef.current = (await res.json()) as FeatureCollection;
     return sa2GeoRef.current;
   }
@@ -433,11 +430,6 @@ export default function MapPage() {
     // must fall back to area-level). Default pin for map clicks / restored pins.
     mode: "pin" | "sa2" = "pin"
   ) => {
-    // A new/moved pin (or a "revert") always starts from the free straight-line
-    // report - any prior precise result no longer applies to this point. Cancel
-    // any in-flight precise fetch so its (now stale) result can't land late.
-    precisionAbortRef.current?.abort();
-    setPreciseStatus("idle");
     // The parcel shape belongs to the previous pin until this pin's fetch
     // resolves below - back to "not resolved yet" so the confirm card hides.
     setBuyerParcelShape(undefined);
@@ -519,75 +511,6 @@ export default function MapPage() {
         setBuyerReport(buildBuyerReport(buildArgs(parcel, planning)));
       })();
     }
-  };
-
-  // Paid-tier opt-in: recompute "nearby on foot" against a real street-network
-  // walk isochrone (OpenRouteService) instead of the straight-line radius. It is
-  // a runtime, client-side, env-gated fetch (so static export is untouched) and
-  // never runs on the free tier - the button is hidden without a configured key.
-  const recomputePrecise = async () => {
-    const pin = buyerPin;
-    if (!pin) return;
-    // Supersede any earlier in-flight precise request, and allow this one to be
-    // cancelled if the pin moves while ORS is still responding.
-    precisionAbortRef.current?.abort();
-    const ctrl = new AbortController();
-    precisionAbortRef.current = ctrl;
-    setPreciseStatus("loading");
-    const iso = await fetchWalkIsochrone(pin, WALK_MINUTES, { signal: ctrl.signal });
-    // Discard silently if this request was superseded or the pin moved under it —
-    // a stale isochrone must never overwrite the report for a different pin.
-    if (ctrl.signal.aborted || buyerPinRef.current !== pin) return;
-    if (!iso.ok) {
-      setPreciseStatus("error");
-      return;
-    }
-    const [feats, noiseLines, nuisancePoints, stations, schoolZones, traffic, epaAir, activityCentres, busStops, futureStations] = await Promise.all([
-      ensurePois(pin).catch(() => [] as Feature<Point>[]),
-      ensureNoiseLines(pin).catch(() => [] as NoiseLine[]),
-      ensureNuisancePoints().catch(() => [] as NuisancePoint[]),
-      ensureStations().catch(() => [] as Station[]),
-      ensureSchoolZones().catch(() => null),
-      ensureTraffic(pin).catch(() => [] as TrafficSegment[]),
-      ensureEpaAir().catch(() => [] as EpaAirSite[]),
-      ensureActivityCentres().catch(() => [] as ActivityCentreFeature[]),
-      ensureBusStops(pin).catch(() => [] as BusStop[]),
-      ensureFutureTransport().catch(() => [] as FutureStationLite[]),
-    ]);
-    const [parcel, planning] = await Promise.all([
-      fetchParcelAreaAt(pin[0], pin[1], ctrl.signal).catch(() => null),
-      fetchPlanningAt(pin[0], pin[1], { signal: ctrl.signal }).catch(() => null),
-    ]);
-    if (ctrl.signal.aborted || buyerPinRef.current !== pin) return;
-    const builtPreciseReport = buildBuyerReport({
-        lat: pin[1],
-        lng: pin[0],
-        place: buyerPlace,
-        pois: feats,
-        isochrone: iso.geom,
-        noiseLines,
-        nuisancePoints,
-        stations,
-        futureStations,
-        schoolZones: schoolZones ?? undefined,
-        traffic,
-        epaAir,
-        activityCentres,
-        parcel,
-        planning,
-        confirmedParcel:
-          confirmedParcelRef.current && confirmedParcelRef.current.pin === pin
-            ? confirmedParcelRef.current.value
-            : undefined,
-        busStops,
-        nearbyAreas: areaCentroids,
-        majorProjects: MAJOR_PROJECTS,
-        profile: profileRef.current,
-      });
-    const seq = ++buildSeqRef.current;
-    setBuyerReport(builtPreciseReport);
-    setPreciseStatus("idle");
-    void enrichAnchorsWithDrive(builtPreciseReport, pin, seq);
   };
 
   // Live map click in buyer mode (SA2 comes from the clicked map feature).
@@ -927,6 +850,12 @@ export default function MapPage() {
               );
             })}
           </div>
+          {/* Honesty label for the dashed walk ring on the map: it is a
+              crow-flies circle, not a routed walk, and no coastline geometry is
+              shipped to clip it - near the bay the ring crosses water. */}
+          <p className="text-[11px] text-ink-muted">
+            Dashed ring = straight-line distance, not a walking route.
+          </p>
           {/* ~15-min bike reach ring around the pin, plus this area's mapped
               cycle-infrastructure index (context-only, never scored). */}
           <div className="flex flex-wrap items-center gap-2">
@@ -958,47 +887,6 @@ export default function MapPage() {
               </span>
             )}
           </div>
-          {isPreciseWalkConfigured() && (
-            <div className="rounded-lg border border-surface-border bg-surface px-3 py-2 text-xs">
-              {buyerReport.accessMode === "precise" ? (
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-ink-muted">
-                    <b className="text-ink">Precise walk routing on</b> - &ldquo;nearby&rdquo; reflects
-                    a street-network ~15-min walk.
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (buyerPin) void buildReportFor(buyerPin, buyerSa2);
-                    }}
-                    className="shrink-0 text-accent hover:underline"
-                  >
-                    Revert
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-ink-muted">
-                    Free check uses straight-line distance. Recompute on the real street network?
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => void recomputePrecise()}
-                    disabled={preciseStatus === "loading"}
-                    className="shrink-0 rounded-md border border-accent bg-accent px-2.5 py-1 font-medium text-accent-ink transition-colors hover:bg-accent-focus disabled:opacity-60"
-                  >
-                    {preciseStatus === "loading" ? "Routing…" : "Use precise walk routing (beta)"}
-                  </button>
-                </div>
-              )}
-              {preciseStatus === "error" && (
-                <p className="mt-1 text-[11px] text-[#1A43A8]">
-                  Couldn&apos;t fetch the walk isochrone just now - still showing straight-line. Try
-                  again shortly.
-                </p>
-              )}
-            </div>
-          )}
           {/* Wrong-lot trust guard: the parcel outline under the pin + one-tap
               confirmation. Exact pins only (a suburb-centroid pin is not a
               property); hidden while the lookup is unresolved, and an explicit
@@ -1450,10 +1338,8 @@ function TopBar({
     <header className="z-20 flex shrink-0 items-center gap-3 border-b border-surface-border bg-surface px-4 py-3">
       <Link href="/" className="flex shrink-0 items-center gap-2 text-ink">
         {/* Casement-F mark (same geometry as app/icon.svg), ink via currentColor */}
-        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <rect x="2.5" y="2.5" width="19" height="19" rx="4.5" fill="none" stroke="currentColor" strokeWidth="2" />
-          <line x1="9.5" y1="2.5" x2="9.5" y2="21.5" stroke="currentColor" strokeWidth="2" />
-          <line x1="9.5" y1="8.5" x2="21.5" y2="8.5" stroke="currentColor" strokeWidth="2" />
+        <svg width="22" height="22" viewBox="0 0 26 28" aria-hidden="true" focusable="false">
+          <g fill="currentColor"><circle cx="6" cy="4" r="1.9" /><circle cx="11" cy="4" r="1.9" /><circle cx="16" cy="4" r="1.9" /><circle cx="21" cy="4" r="1.9" /><circle cx="6" cy="9" r="1.9" /><circle cx="6" cy="14" r="1.9" /><circle cx="11" cy="14" r="1.9" /><circle cx="16" cy="14" r="1.9" /><circle cx="6" cy="19" r="1.9" /><circle cx="6" cy="24" r="1.9" /></g>
         </svg>
         <span className="text-base font-semibold uppercase tracking-[0.06em]">
           {PRODUCT_NAME}

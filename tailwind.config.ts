@@ -11,25 +11,25 @@ const config: Config = {
         // Festra Direction A "Surveyor" chrome (DESIGN-SYSTEM-PROPOSAL.md +
         // FABLE-ULTRAPLAN s18.8 owner amendments). Near-white canvas, surface
         // tint ladder, violet-gray secondary, daylight cobalt accent.
-        bg: "#FDFDFD",
+        bg: "#FBF8F3",
         surface: {
-          DEFAULT: "#F6F6F8",
-          raised: "#FDFDFD",
-          sunken: "#F4F4F7",
-          border: "#E3E3EC",
+          DEFAULT: "#F4EFE7",
+          raised: "#FFFFFF",
+          sunken: "#F0EAE0",
+          border: "#E6DFD2",
         },
         ink: {
-          DEFAULT: "#181818",
-          muted: "#5C5C6E",
+          DEFAULT: "#1F1B16",
+          muted: "#6B6259",
         },
         accent: {
-          // Cobalt #2052CC clears WCAG 2.2 AA (~6.5:1 on bg) as BOTH
+          // Cobalt #1D4ED8 clears WCAG 2.2 AA (~6.5:1 on bg) as BOTH
           // text-on-light and white-text-on-fill. `focus` is the
           // hover/pressed step (~8.6:1); `tint` is selected rows / halos.
-          DEFAULT: "#2052CC",
+          DEFAULT: "#1D4ED8",
           ink: "#FFFFFF",
-          focus: "#1A43A8",
-          tint: "#EDF3FC",
+          focus: "#1739A8",
+          tint: "#E8EEFB",
         },
         // Semantic status colors - data voice, never brand chrome.
         risk: { DEFAULT: "#B42318", tint: "#FDECEA" },

@@ -37,7 +37,7 @@ const generalSans = localFont({
 /* Browser chrome matches the Surveyor near-white canvas. The favicon is the
    casement-F mark, auto-served by Next from app/icon.svg. */
 export const viewport: Viewport = {
-  themeColor: "#FDFDFD",
+  themeColor: "#FBF8F3",
 };
 
 export const metadata: Metadata = {
