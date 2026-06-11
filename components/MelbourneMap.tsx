@@ -127,6 +127,13 @@ type MelbourneMapProps = {
     lngLat: [number, number],
     sa2: { slug?: string; name?: string; sa2Code?: string } | null
   ) => void;
+  /**
+   * Reports the buyer pin's screen position in container pixels (map.project),
+   * re-fired on every camera change (move/zoom/resize, rAF-throttled) and with
+   * null when the pin clears. Feeds the desktop floating report panel so it
+   * stays anchored beside the pin without exposing the map instance.
+   */
+  onPinScreenMove?: (pos: { x: number; y: number } | null) => void;
 };
 
 function prefersReducedMotion(): boolean {
@@ -181,6 +188,7 @@ export function MelbourneMap({
   anchorPoints = [],
   transitLines = [],
   onPinDrop,
+  onPinScreenMove,
 }: MelbourneMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -195,6 +203,13 @@ export function MelbourneMap({
     buyerModeRef.current = buyerMode;
     onPinDropRef.current = onPinDrop;
   }, [buyerMode, onPinDrop]);
+
+  // Same ref trick for the pin-position reporter: the projection effect below
+  // depends only on the pin, never on the callback identity.
+  const onPinScreenMoveRef = useRef(onPinScreenMove);
+  useEffect(() => {
+    onPinScreenMoveRef.current = onPinScreenMove;
+  }, [onPinScreenMove]);
 
   // Keep the latest select handler in a ref so the map is initialised exactly
   // once. Putting `onPlaceSelect` in the init effect's deps caused the whole
@@ -678,6 +693,39 @@ export function MelbourneMap({
         duration: prefersReducedMotion() ? 0 : 550,
       });
     }
+  }, [buyerPin]);
+
+  // Report the pin's screen position (container px) for the floating desktop
+  // report panel. Fires once on pin set/move, then on every camera change -
+  // throttled to one projection per animation frame so a pan/zoom never stacks
+  // up work. Clears with null when the pin clears.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (!buyerPin) {
+      onPinScreenMoveRef.current?.(null);
+      return;
+    }
+    let frame = 0;
+    const report = () => {
+      const p = map.project(buyerPin);
+      onPinScreenMoveRef.current?.({ x: p.x, y: p.y });
+    };
+    const onCameraChange = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        report();
+      });
+    };
+    report();
+    map.on("move", onCameraChange);
+    map.on("resize", onCameraChange);
+    return () => {
+      map.off("move", onCameraChange);
+      map.off("resize", onCameraChange);
+      if (frame) cancelAnimationFrame(frame);
+    };
   }, [buyerPin]);
 
   // ~15-min bike reach ring - independent toggle, only shown with a pin down.

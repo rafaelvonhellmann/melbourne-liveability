@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MapPin, PanelRightClose, PanelRightOpen, Bike, Layers, ChevronDown } from "lucide-react";
@@ -26,6 +26,7 @@ import { InterestViews } from "@/components/InterestViews";
 import { ShortlistPanel } from "@/components/ShortlistPanel";
 import { ShareViewButton } from "@/components/ShareViewButton";
 import { MobileSheet } from "@/components/MobileSheet";
+import { FloatingPanel } from "@/components/FloatingPanel";
 import { MapLegend } from "@/components/MapLegend";
 import { POI_CATEGORY_BY_ID, type PoiCategoryId } from "@/lib/poi-categories";
 import { Attribution } from "@/components/Attribution";
@@ -60,7 +61,7 @@ import { findSa2ForPoint } from "@/lib/buyer-location";
 import { MAJOR_PROJECTS } from "@/lib/major-projects";
 import type { GeocodeResult } from "@/lib/geocode";
 import { withBase } from "@/lib/asset-path";
-import { DEFAULT_REGION, dataPath } from "@/lib/regions";
+import { DEFAULT_REGION, dataPath, getRegion } from "@/lib/regions";
 import { PRODUCT_NAME } from "@/lib/brand";
 import { loadPoisNear, loadReportTilesNear } from "@/lib/report-tiles";
 import { parseMapUrlState, buildMapUrl, inMelbourneBBox } from "@/lib/share-url";
@@ -222,6 +223,17 @@ export default function MapPage() {
   const [showLayers, setShowLayers] = useState(true);
   const [buyerSa2, setBuyerSa2] = useState<{ slug?: string; sa2Code?: string } | null>(null);
   const [buyerReport, setBuyerReport] = useState<BuyerReportData | null>(null);
+  // The buyer pin's on-screen position (map-container px), reported by the map
+  // on every camera frame - anchors the floating desktop report panel beside
+  // the pin. Sub-pixel jitter is dropped so a settled map never re-renders.
+  const [pinScreenPos, setPinScreenPos] = useState<{ x: number; y: number } | null>(null);
+  const onPinScreenMove = useCallback((pos: { x: number; y: number } | null) => {
+    setPinScreenPos((prev) =>
+      prev && pos && Math.abs(prev.x - pos.x) < 0.5 && Math.abs(prev.y - pos.y) < 0.5
+        ? prev
+        : pos
+    );
+  }, []);
 
   // Staleness guard for the async report-enrichment fetches. `buyerPinRef`
   // mirrors the current pin so an in-flight request (drive enrichment, parcel/
@@ -970,6 +982,11 @@ export default function MapPage() {
 
   const isHomeBuyer = interestView === "homeBuyer";
 
+  // Desktop buyer-PIN mode: the report glimpse floats beside the pin and the
+  // docked right sidebar collapses. Buyer mode WITHOUT a pin (the "click the
+  // map" prompt + saved checks) and area-selection mode keep the docked panel.
+  const buyerFloating = buyerMode && !!buyerPin;
+
   return (
     <main className="flex h-screen w-screen flex-col overflow-hidden bg-bg text-ink">
       <h1 className="sr-only">
@@ -981,7 +998,20 @@ export default function MapPage() {
         onGeocode={selectFromAddress}
       />
 
-      <OnboardingModal onPick={selectInterestView} />
+      <OnboardingModal
+        onPick={selectInterestView}
+        onDismiss={() => {
+          // Intro hand-off: the vignette's pin-zoom continues onto the REAL
+          // map with a gentle flyTo to the Melbourne centre (focusTarget is
+          // the existing search fly-to seam). Skipped when a shared URL
+          // already framed something - never stomp a restored pin/selection.
+          if (buyerMode || selected || initialBuyerPin) return;
+          setFocusTarget({
+            center: getRegion(DEFAULT_REGION).mapCenter,
+            nonce: Date.now(),
+          });
+        }}
+      />
 
       <div className="flex min-h-0 flex-1">
         <div className="relative min-w-0 flex-1">
@@ -1007,6 +1037,7 @@ export default function MapPage() {
             transitLines={buyerMode ? transitLines : []}
             showCycleRadius={showCycleRadius}
             onPinDrop={onPinDrop}
+            onPinScreenMove={onPinScreenMove}
             onPlaceSelect={(props) => {
               const p = places.find(
                 (x) => x.slug === props.slug || x.sa2Code === props.sa2Code
@@ -1192,28 +1223,45 @@ export default function MapPage() {
             </div>
           )}
 
+          {/* Buyer-pin mode (desktop): the report glimpse floats beside the
+              pin instead of docking right. Same buyerPanel content as the
+              mobile sheet; the docked sidebar below collapses while this
+              shows. Anchor updates ride the map's move events (rAF-throttled
+              in MelbourneMap), so the panel re-anchors on pan/zoom. */}
+          {buyerFloating && (
+            <FloatingPanel anchor={pinScreenPos} label="Location check report">
+              {buyerPanel}
+            </FloatingPanel>
+          )}
+
           {/* Collapse / expand the side panel (desktop) - sits on the map's right
-              edge so it stays reachable whether the panel is open or hidden. */}
-          <button
-            type="button"
-            onClick={() => setSidebarCollapsed((c) => !c)}
-            aria-label={sidebarCollapsed ? "Show side panel" : "Hide side panel"}
-            aria-expanded={!sidebarCollapsed}
-            className="absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 items-center rounded-l-lg border border-r-0 border-surface-border bg-surface px-1 py-3 text-ink-muted shadow-card transition-colors hover:text-accent md:flex"
-          >
-            {sidebarCollapsed ? (
-              <PanelRightOpen className="h-4 w-4" aria-hidden />
-            ) : (
-              <PanelRightClose className="h-4 w-4" aria-hidden />
-            )}
-          </button>
+              edge so it stays reachable whether the panel is open or hidden.
+              Hidden in floating buyer-pin mode (there is no docked panel then). */}
+          {!buyerFloating && (
+            <button
+              type="button"
+              onClick={() => setSidebarCollapsed((c) => !c)}
+              aria-label={sidebarCollapsed ? "Show side panel" : "Hide side panel"}
+              aria-expanded={!sidebarCollapsed}
+              className="absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 items-center rounded-l-lg border border-r-0 border-surface-border bg-surface px-1 py-3 text-ink-muted shadow-card transition-colors hover:text-accent md:flex"
+            >
+              {sidebarCollapsed ? (
+                <PanelRightOpen className="h-4 w-4" aria-hidden />
+              ) : (
+                <PanelRightClose className="h-4 w-4" aria-hidden />
+              )}
+            </button>
+          )}
         </div>
 
         {/* Desktop sidebar - explore tools only; ranked suburb lists are deferred
-            to a future signed-in profile feature. Collapsible for a full-width map. */}
+            to a future signed-in profile feature. Collapsible for a full-width map.
+            In buyer-PIN mode it collapses entirely: the report floats beside the
+            pin instead (FloatingPanel above). Buyer mode without a pin keeps the
+            docked "click the map" prompt + saved checks. */}
         <aside
           className={`hidden shrink-0 flex-col border-l border-surface-border bg-surface transition-[width] duration-300 ease-festra md:flex ${
-            sidebarCollapsed
+            sidebarCollapsed || buyerFloating
               ? "w-0 overflow-hidden border-l-0"
               : buyerMode
                 ? "w-[460px] lg:w-[520px]"
@@ -1221,7 +1269,11 @@ export default function MapPage() {
           }`}
         >
           {buyerMode ? (
-            <div className="min-h-0 flex-1 overflow-y-auto p-3">{buyerPanel}</div>
+            // No docked copy in floating mode - the panel would be a hidden
+            // duplicate of the floating + mobile-sheet renders otherwise.
+            !buyerFloating && (
+              <div className="min-h-0 flex-1 overflow-y-auto p-3">{buyerPanel}</div>
+            )
           ) : (
             <MapSidebar
               places={places}

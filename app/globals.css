@@ -103,6 +103,116 @@ body {
   font-size: 10px;
 }
 
+/* ---------------------------------------------------------------------------
+ * Pin-anchored floating report panel (components/FloatingPanel.tsx, desktop).
+ * Enter: translateY(6px) + fade over --dur-3 on the signature ease. The global
+ * prefers-reduced-motion rule above clamps the animation for those users.
+ * ------------------------------------------------------------------------- */
+@keyframes floating-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.floating-panel-enter {
+  animation: floating-panel-in var(--dur-3) var(--ease-festra) both;
+}
+
+/* Connector caret: a rotated square half-out of the pin-facing edge, white to
+ * match the raised card, with the two outward edges carrying the hairline
+ * border so it reads as part of the card outline. Vertical position (top) is
+ * set imperatively to track the pin. */
+.floating-panel-caret {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #ffffff;
+  transform: rotate(45deg);
+}
+[data-side="right"] > .floating-panel-caret {
+  left: -6px;
+  border-left: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+[data-side="left"] > .floating-panel-caret {
+  right: -6px;
+  border-top: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+
+/* ---------------------------------------------------------------------------
+ * Onboarding intro vignette (components/OnboardingModal.tsx). A decorative
+ * once-through sequence on the modal's map "window": tap ripple -> pin drop
+ * (--dur-3 on the signature ease, the floating-panel/pin-drop pattern) ->
+ * camera settles toward the pin (scale 1 -> 1.15 over 500ms) -> translucent
+ * data chips fade in at a 25ms stagger to opacity 0.9. All keyframes are
+ * `from`-only (the elements' natural styles ARE the final frame), so the
+ * reduced-motion override below lands on a static final frame - and the tap
+ * ripple's natural state is invisible, so it simply never shows. Zero network.
+ * ------------------------------------------------------------------------- */
+@keyframes onboard-tap {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  30% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+.onboard-tap {
+  opacity: 0;
+  animation: onboard-tap 360ms var(--ease-festra) 120ms both;
+}
+@keyframes onboard-pin-in {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+.onboard-pin {
+  animation: onboard-pin-in var(--dur-3) var(--ease-festra) 320ms both;
+}
+@keyframes onboard-zoom {
+  from {
+    transform: scale(1);
+  }
+}
+.onboard-cam {
+  transform: scale(1.15);
+  /* Matches the pin's position in the vignette - the zoom homes on the pin. */
+  transform-origin: 62% 40%;
+  animation: onboard-zoom 500ms var(--ease-festra) 600ms both;
+}
+@keyframes onboard-chip-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+}
+.onboard-chip {
+  opacity: 0.9;
+  animation: onboard-chip-in var(--dur-3) var(--ease-festra)
+    calc(1100ms + var(--chip-i, 0) * 25ms) both;
+}
+/* Static final frame for reduced motion: the global clamp above zeroes
+ * durations but keeps DELAYS (chips would pop in late) - kill these outright. */
+@media (prefers-reduced-motion: reduce) {
+  .onboard-tap,
+  .onboard-pin,
+  .onboard-cam,
+  .onboard-chip {
+    animation: none !important;
+  }
+}
+
 /* Warm-editorial styling for the map hover preview tooltip */
 .mlv-hover-popup .maplibregl-popup-content {
   background: var(--surface);
