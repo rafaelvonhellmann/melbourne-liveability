@@ -68,16 +68,16 @@ describe("colourblind-safe score ramp (RdYlBu)", () => {
 describe("percentileTextColor (legible on either ramp)", () => {
   it("white ink on the dark ends, dark ink on the pale middle (default ramp)", () => {
     expect(percentileTextColor(0)).toBe("#ffffff"); // deep red
-    expect(percentileTextColor(50)).toBe("#1F1B16"); // pale yellow
+    expect(percentileTextColor(50)).toBe("#1B2A4A"); // pale yellow
     expect(percentileTextColor(100)).toBe("#ffffff"); // dark green
   });
   it("white on the mid-blue good-end but dark on the light-blue (colourblind ramp)", () => {
     expect(percentileTextColor(100, true)).toBe("#ffffff"); // mid blue
-    expect(percentileTextColor(75, true)).toBe("#1F1B16"); // light blue #abd9e9
-    expect(percentileTextColor(50, true)).toBe("#1F1B16"); // pale yellow
+    expect(percentileTextColor(75, true)).toBe("#1B2A4A"); // light blue #abd9e9
+    expect(percentileTextColor(50, true)).toBe("#1B2A4A"); // pale yellow
   });
   it("falls back to dark ink for null", () => {
-    expect(percentileTextColor(null)).toBe("#1F1B16");
+    expect(percentileTextColor(null)).toBe("#1B2A4A");
   });
 });
 

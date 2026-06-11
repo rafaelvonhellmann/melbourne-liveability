@@ -13,7 +13,7 @@ export default function MapLayout({ children }: { children: React.ReactNode }) {
     <Suspense
       fallback={
         <div className="flex min-h-screen flex-col items-center justify-center bg-bg px-6 text-center text-ink">
-          <span className="flex items-center gap-2 font-display text-lg font-semibold uppercase tracking-[0.06em]">
+          <span className="flex items-center gap-2 font-display text-lg font-semibold uppercase tracking-[0.06em] text-accent">
             <svg width="20" height="20" viewBox="0 0 26 28" aria-hidden="true">
               <g fill="currentColor"><circle cx="6" cy="4" r="1.9" /><circle cx="11" cy="4" r="1.9" /><circle cx="16" cy="4" r="1.9" /><circle cx="21" cy="4" r="1.9" /><circle cx="6" cy="9" r="1.9" /><circle cx="6" cy="14" r="1.9" /><circle cx="11" cy="14" r="1.9" /><circle cx="16" cy="14" r="1.9" /><circle cx="6" cy="19" r="1.9" /><circle cx="6" cy="24" r="1.9" /></g>
             </svg>

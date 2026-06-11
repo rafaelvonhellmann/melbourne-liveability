@@ -1341,7 +1341,7 @@ function TopBar({
         <svg width="22" height="22" viewBox="0 0 26 28" aria-hidden="true" focusable="false">
           <g fill="currentColor"><circle cx="6" cy="4" r="1.9" /><circle cx="11" cy="4" r="1.9" /><circle cx="16" cy="4" r="1.9" /><circle cx="21" cy="4" r="1.9" /><circle cx="6" cy="9" r="1.9" /><circle cx="6" cy="14" r="1.9" /><circle cx="11" cy="14" r="1.9" /><circle cx="16" cy="14" r="1.9" /><circle cx="6" cy="19" r="1.9" /><circle cx="6" cy="24" r="1.9" /></g>
         </svg>
-        <span className="text-base font-semibold uppercase tracking-[0.06em]">
+        <span className="text-base font-semibold uppercase tracking-[0.06em] text-accent">
           {PRODUCT_NAME}
         </span>
       </Link>

@@ -7,12 +7,12 @@
 :root {
   /* Chrome - Festra Direction A "Surveyor": near-white surfaces, violet-gray
      secondary ink, daylight cobalt accent. See DESIGN-SYSTEM-PROPOSAL.md +
-     FABLE-ULTRAPLAN s18.8 owner amendments (ink #1F1B16). */
+     FABLE-ULTRAPLAN s18.8 owner amendments (ink #1B2A4A). */
   --bg: #FBF8F3;
   --surface: #F4EFE7;
   --surface2: #F0EAE0;
-  --ink: #1F1B16;
-  --muted: #6B6259;
+  --ink: #1B2A4A;
+  --muted: #4D5B7C;
   --border: #E6DFD2;
   /* Accent #1D4ED8 clears WCAG 2.2 AA (~6.5:1 on bg) as text AND as
      white-on-fill; --accent-hover is the hover/pressed step (~8.6:1). */
@@ -229,7 +229,7 @@ body {
        PDF feel robotic. */
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-    color: #1F1B16;
+    color: #1B2A4A;
     font-size: 10.5pt;
     line-height: 1.5;
   }

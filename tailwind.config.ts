@@ -19,8 +19,8 @@ const config: Config = {
           border: "#E6DFD2",
         },
         ink: {
-          DEFAULT: "#1F1B16",
-          muted: "#6B6259",
+          DEFAULT: "#1B2A4A",
+          muted: "#4D5B7C",
         },
         accent: {
           // Cobalt #1D4ED8 clears WCAG 2.2 AA (~6.5:1 on bg) as BOTH

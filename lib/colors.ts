@@ -148,11 +148,11 @@ function relativeLuminance(hex: string): number {
  * deep colours get white ink, the pale yellow/orange/light-blue middle gets dark.
  */
 export function percentileTextColor(pct: number | null, colorblind = false): string {
-  if (pct == null) return "#1F1B16";
+  if (pct == null) return "#1B2A4A";
   const v = Math.max(0, Math.min(100, pct));
   return relativeLuminance(percentileToColor(v, false, colorblind)) < 0.45
     ? "#ffffff"
-    : "#1F1B16";
+    : "#1B2A4A";
 }
 
 /**

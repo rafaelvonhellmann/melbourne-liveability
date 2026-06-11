@@ -552,6 +552,10 @@ Melbourne keeps full pin-report depth; per-state Tier-B lenses land per city
 in priority order as agent-hours allow (Sydney first). REGION-ROLLOUT.md
 (being generated) carries the per-city work table.
 
+**PRIORITY GATE (owner, 2026-06-12): nail ONBOARDING + MENU/PANEL UX first - regions/Canberra bake and all other areas HOLD until the owner explicitly approves moving on.**
+
+**Palette v2 (owner, 2026-06-12):** darks transition to navy - ink #1B2A4A, muted #4D5B7C (blue undertones replace warm blacks); wordmark + pin-dot F render in accent #1D4ED8. Headings inherit the navy ink; if the owner wants display headings in FULL accent blue, that is a one-token follow-up.
+
 **Workstreams:**
 1. Region registry + national bake loop (RUNNING - critical path).
 2. Onboarding rebuild: tailored buyer vs AGENT experience - agent mode
