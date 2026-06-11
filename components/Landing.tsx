@@ -475,7 +475,8 @@ export function Landing({
           >
             {/* Mirror of scene 4: table centre-right, caption clear on the LEFT. */}
             <div className="sticky top-0 flex h-screen flex-col justify-end gap-3 overflow-hidden p-4 lg:block lg:p-0">
-              <div className="lg:absolute lg:right-[6%] lg:top-1/2 lg:w-full lg:max-w-2xl lg:-translate-y-1/2">
+              {/* Owner: hard right - the table must sit clear of the pin ring. */}
+              <div className="w-full sm:ml-auto sm:max-w-xl lg:absolute lg:right-4 lg:top-1/2 lg:w-full lg:-translate-y-1/2">
                 <CompareTable />
               </div>
               <div className="order-first lg:absolute lg:left-12 lg:top-1/2 lg:w-[340px] lg:-translate-y-1/2">

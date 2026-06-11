@@ -321,7 +321,11 @@ describe("Landing scroll scenes", () => {
     expect(screen.getByText("Joan Specialty Coffee")).toBeInTheDocument();
     expect(screen.getByText("East Brunswick Medical Centre")).toBeInTheDocument();
     expect(screen.getByText("Heritage rules apply here")).toBeInTheDocument();
-    expect(screen.getByText("Tram corridor within 200 m")).toBeInTheDocument();
+    // The feature-breadth stubs advertise the panel's real sections.
+    expect(screen.getByText("Sun & light")).toBeInTheDocument();
+    expect(screen.getByText("How far you can get")).toBeInTheDocument();
+    expect(screen.getByText("Distance to your places")).toBeInTheDocument();
+    expect(screen.getByText("Things to verify")).toBeInTheDocument();
   });
 
   it("scene 4 area report glance: real percentile ranks, walk-access counts, source note", async () => {

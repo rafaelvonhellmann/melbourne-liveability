@@ -123,26 +123,38 @@ export function GlimpsePanel() {
         </ul>
       </section>
 
-      {/* Finding rows: the panel's flattened divider-row pattern with the
+      {/* Finding row: the panel's flattened divider-row pattern with the
           severity accent as a left bar. */}
       <section className="rounded-lg border border-surface-border bg-surface p-4 shadow-card">
         <p className="font-display text-sm font-semibold text-ink">Planning and noise</p>
-        <div className="mt-2 divide-y divide-surface-border">
-          <div className="border-l-[3px] border-l-caution py-2.5 pl-3 first:pt-0">
+        <div className="mt-2">
+          <div className="border-l-[3px] border-l-caution py-1 pl-3">
             <p className="text-sm font-medium text-ink">Heritage rules apply here</p>
             <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">
-              Parts of Brunswick East sit under a heritage overlay - changes to
-              facades and front fences can need a permit.
-            </p>
-          </div>
-          <div className="border-l-[3px] border-l-accent py-2.5 pl-3 last:pb-0">
-            <p className="text-sm font-medium text-ink">Tram corridor within 200 m</p>
-            <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">
-              Lygon Street trams run late into the evening - listen at the
-              property at peak hour.
+              Changes to facades and front fences can need a permit.
             </p>
           </div>
         </div>
+      </section>
+
+      {/* The rest of the live panel, as it appears before you scroll it -
+          REAL section titles from BuyerReportPanel, one-line teasers each.
+          This is the feature breadth the glimpse is advertising. */}
+      <section className="grid grid-cols-2 gap-2">
+        {[
+          ["Sun & light", "Simulate sun and shadows at any hour"],
+          ["How far you can get", "Real walk and cycle reach from here"],
+          ["Distance to your places", "Commutes to YOUR work and school"],
+          ["Things to verify", "The checks to run before you offer"],
+        ].map(([title, teaser]) => (
+          <div
+            key={title}
+            className="rounded-lg border border-surface-border bg-surface p-3 shadow-card"
+          >
+            <p className="font-display text-xs font-semibold text-ink">{title}</p>
+            <p className="mt-1 text-[11px] leading-snug text-ink-muted">{teaser}</p>
+          </div>
+        ))}
       </section>
     </div>
   );
@@ -190,6 +202,25 @@ export function ReportSheet() {
           north of Melbourne.
         </p>
       </header>
+
+      {/* The report's REAL tab rail (PlaceProfileClient) - every lens the
+          full page opens into. */}
+      <div className="mt-3 flex flex-wrap gap-1.5" aria-hidden="true">
+        {["Overview", "Safety", "Transport", "Home buyer", "Walk & cycle", "Equity & community"].map(
+          (tab, i) => (
+            <span
+              key={tab}
+              className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${
+                i === 0
+                  ? "bg-accent text-accent-ink"
+                  : "border border-surface-border bg-surface text-ink-muted"
+              }`}
+            >
+              {tab}
+            </span>
+          )
+        )}
+      </div>
 
       <div className="mt-4 grid gap-5 sm:grid-cols-[1.15fr_1fr]">
         {/* Percentile bars - the real ranks within Greater Melbourne. */}

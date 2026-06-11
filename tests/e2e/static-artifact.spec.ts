@@ -12,6 +12,16 @@ import { test, expect } from "@playwright/test";
 const BASE = "/melbourne-liveability";
 
 test("app shell renders under the base path", async ({ page, isMobile }) => {
+  // This asserts the MAP shell (search box / sheet tabs) under the base path;
+  // fresh visitors get the landing instead, so seed the seen-flag like the
+  // other map-focused suites. The landing has its own smoke coverage.
+  await page.addInitScript(() => {
+    try {
+      localStorage.setItem("mlv-onboarded-v1", "1");
+    } catch {
+      /* ignore */
+    }
+  });
   await page.goto(`${BASE}/`);
   await expect(page.getByRole("link", { name: /festra|liveable/i }).first()).toBeVisible();
   if (isMobile) {
