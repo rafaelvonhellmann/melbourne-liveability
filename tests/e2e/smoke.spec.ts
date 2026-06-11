@@ -76,7 +76,35 @@ test.describe("profile", () => {
   });
 });
 
+test.describe("landing", () => {
+  test("first visit shows the landing hero; explore enters the map", async ({ page }) => {
+    // No seeded flag: a genuinely fresh visitor must get the landing, not the map.
+    await page.goto("/");
+    await expect(
+      page.getByPlaceholder("A window onto your new home")
+    ).toBeVisible({ timeout: 20_000 });
+    await page.getByRole("button", { name: "Explore the map" }).click();
+    // Dismissal sets the onboarded flag and reveals the map chrome.
+    await expect(
+      page.getByRole("link", { name: /festra|liveable/i }).first()
+    ).toBeVisible({ timeout: 20_000 });
+  });
+});
+
 test.describe("map", () => {
+  // The map tests exercise the MAP, not the first-visit landing gate (the
+  // landing has its own smoke above) - seed the seen-flag like a returning
+  // user, exactly as journeys.spec.ts does.
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem("mlv-onboarded-v1", "1");
+      } catch {
+        /* ignore */
+      }
+    });
+  });
+
   test("map route loads and MapLibre paints a canvas", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("link", { name: /festra|liveable/i }).first()).toBeVisible();
