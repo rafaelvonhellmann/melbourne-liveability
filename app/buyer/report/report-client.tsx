@@ -240,7 +240,7 @@ export function PinReportClient() {
           <h1 className="font-display text-2xl font-semibold text-ink">Full buyer report</h1>
           <p className="mt-2 text-sm leading-relaxed text-ink-muted">
             This page needs a pin. Drop one on the map (or search a full address) and choose
-            &ldquo;Open the full report&rdquo;.
+            &ldquo;Full report for this pin&rdquo;.
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
             <Link

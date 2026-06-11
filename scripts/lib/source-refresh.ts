@@ -69,7 +69,12 @@ export const SOURCE_REFRESH: Record<
     probe: {
       type: "ckan",
       dataset: "data-tables-recorded-offences",
-      match: "LGA.*Recorded",
+      // Display names get renamed ("LGA Recorded Offences ..." became
+      // "Recorded offences by LGA - ..." in June 2026, which made the old
+      // "LGA.*Recorded" pattern match nothing and blinded this probe).
+      // Every resource in the dataset is an offences workbook, so "LGA"
+      // alone selects the LGA series across both naming eras.
+      match: "LGA",
     },
   },
   "vic-mapshare-hospitals": {

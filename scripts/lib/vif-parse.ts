@@ -8,6 +8,7 @@
  * GCCSA so we filter Region Type === "SA2". Years are 5-yearly columns.
  */
 import XLSX from "xlsx";
+import "./xlsx-fs.js"; // wires fs into the ESM build - readFile throws without it
 
 const YEARS = [2021, 2026, 2031, 2036];
 
