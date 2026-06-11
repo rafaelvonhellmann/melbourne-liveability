@@ -12,7 +12,25 @@ name: Data refresh
 on:
   schedule:
     - cron: "0 17 2 * *" # 02:00 AEST on the 2nd (cron is UTC)
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      region:
+        description: >-
+          Region to bake (lib/regions.ts id). melbourne = the full monthly
+          refresh; any other capital runs the Tier-A fetch+build only and
+          emits region-suffixed artifacts (places.<region>.json etc.).
+        required: false
+        default: melbourne
+        type: choice
+        options:
+          - melbourne
+          - sydney
+          - brisbane
+          - adelaide
+          - perth
+          - hobart
+          - darwin
+          - canberra
 
 permissions:
   contents: write
@@ -29,6 +47,11 @@ jobs:
     # The apply/overlay geometry steps run in-chain since P0-1 (2026-06-10)
     # and legitimately take >90 min with large overlay layers (EMO ~36k polygons).
     timeout-minutes: 180
+    env:
+      # scripts/lib/pipeline-region.ts reads REGION (or --region); melbourne is
+      # the byte-stable default, so scheduled runs are untouched. Other regions
+      # emit region-suffixed artifacts alongside the Melbourne set.
+      REGION: ${{ inputs.region || 'melbourne' }}
     steps:
       - uses: actions/checkout@v6
 
@@ -52,6 +75,8 @@ jobs:
       # 2026-06 regression). Keep this list in sync with the fetch scripts
       # AND with DATA-PIPELINE-AUDIT.md (apply step -> fetch -> workflow map).
       - name: Fetch heritage + POI + proxy layers
+        # VIC-only layers - other regions' Tier-A bake is fetch+build only.
+        if: env.REGION == 'melbourne'
         run: |
           npm run data:heritage
           npm run data:overlays
@@ -87,21 +112,32 @@ jobs:
       # regenerates the bake's inputs (pois.geojson via data:poi, bus-stops.json
       # via data:gtfs), so baking first would tile last month's data.
       - name: Rebake report tiles
+        # Pin-radius tiles are Melbourne-coverage today (z14 around the metro).
+        if: env.REGION == 'melbourne'
         run: npm run data:report-tiles
 
       # Refuse to commit an artifact that silently lost a field: fails when any
       # populated-field count in places.json drops >2% vs git HEAD or a field
       # disappears entirely. See DATA-PIPELINE-AUDIT.md.
       - name: Coverage gate (no silent field loss)
+        # Diffs the Melbourne places.json against HEAD; new regions have no
+        # baseline yet - their first bakes are verified by hand (canary).
+        if: env.REGION == 'melbourne'
         run: npx tsx scripts/verify-coverage-diff.ts
 
       - name: Test
+        env:
+          REGION: melbourne # unit tests assert the byte-stable default
         run: npm test
 
       - name: Verify data sources + citations
+        env:
+          REGION: melbourne # the manifest cites the melbourne artifact set
         run: npm run data:verify
 
       - name: Build static site
+        env:
+          REGION: melbourne # the app embeds the melbourne set; region files are additive
         run: npm run build
 
       - name: Commit refreshed data
@@ -114,7 +150,7 @@ jobs:
             echo "No data changes - upstream unchanged."
             echo "pushed=false" >> "$GITHUB_OUTPUT"
           else
-            git commit -m "chore(data): automated refresh $(date -u +%Y-%m-%d)"
+            git commit -m "chore(data): automated refresh $(date -u +%Y-%m-%d) [$REGION]"
             # Master may have moved during the multi-hour run; the data commit
             # touches only data/generated + public/data, so a rebase is safe.
             git pull --rebase origin master
