@@ -6,6 +6,7 @@ import { MapPin } from "lucide-react";
 import type { Feature, FeatureCollection, Point } from "geojson";
 import type { Place } from "@/lib/types";
 import { withBase } from "@/lib/asset-path";
+import { DEFAULT_REGION, dataPath } from "@/lib/regions";
 import { buildBuyerReport, type BuyerReport } from "@/lib/buyer-report";
 import { BuyerReportPanel } from "@/components/buyer/BuyerReportPanel";
 
@@ -22,7 +23,7 @@ export function BuyerHereCard({ place }: { place: Place }) {
     if (report || loading) return;
     setLoading(true);
     try {
-      const res = await fetch(withBase("/data/pois.geojson"));
+      const res = await fetch(withBase(dataPath(DEFAULT_REGION, "pois.geojson")));
       const fc = (await res.json()) as FeatureCollection;
       setReport(buildBuyerReport({ mode: "sa2", place, pois: fc.features as Feature<Point>[] }));
     } catch {

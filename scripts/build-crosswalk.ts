@@ -23,6 +23,7 @@ import {
 import { getProp, featureGeometry } from "./lib/abs-geo.js";
 import {
   PIPELINE_REGION,
+  generatedOutPath,
   sa2RawName,
   salRawName,
   lgaRawName,
@@ -235,7 +236,9 @@ async function main() {
     suburbAliases,
   };
 
-  const outPath = path.join(OUT_DIR, "crosswalk.json");
+  // Region-suffixed for non-default regions (crosswalk.canberra.json);
+  // melbourne keeps crosswalk.json exactly.
+  const outPath = generatedOutPath("crosswalk.json");
   await writeFile(outPath, JSON.stringify(out), "utf8");
   console.log(`Wrote ${outPath} (${Object.keys(sa2ToSuburb).length} SA2)`);
 }

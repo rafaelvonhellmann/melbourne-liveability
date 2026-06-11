@@ -21,6 +21,7 @@ import { ParcelConfirmCard } from "@/components/buyer/ParcelConfirmCard";
 import { MAJOR_PROJECTS } from "@/lib/major-projects";
 import { parseMapUrlState, buildMapUrl } from "@/lib/share-url";
 import { withBase } from "@/lib/asset-path";
+import { DEFAULT_REGION, dataPath } from "@/lib/regions";
 import { loadPoisNear, loadReportTilesNear } from "@/lib/report-tiles";
 import { track } from "@/lib/analytics";
 import type { NoiseLine } from "@/lib/noise";
@@ -93,7 +94,7 @@ async function loadReportInputs(pin: LngLat): Promise<ReportInputs> {
     busStops,
   ] = await Promise.all([
     loadPlaces().catch(() => [] as Place[]),
-    fetchJson<FeatureCollection>("/data/places.geojson").catch(() => null),
+    fetchJson<FeatureCollection>(dataPath(DEFAULT_REGION, "places.geojson")).catch(() => null),
     loadPoisNear(pin[0], pin[1]).catch(() => [] as Feature<Point>[]),
     loadReportTilesNear(pin[0], pin[1], "noise").catch(() => [] as NoiseLine[]),
     loadNuisancePoints().catch(() => [] as NuisancePoint[]),

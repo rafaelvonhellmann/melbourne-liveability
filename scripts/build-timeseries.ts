@@ -23,6 +23,7 @@ import path from "node:path";
 import XLSX from "xlsx";
 import "./lib/xlsx-fs.js"; // wires fs into the ESM build - readFile throws without it
 import { RAW, GENERATED, PUBLIC_DATA } from "./lib/paths.js";
+import { IS_DEFAULT_REGION, PIPELINE_REGION } from "./lib/pipeline-region.js";
 import { loadMelbourneSa2Codes } from "./lib/melbourne-sa2-codes.js";
 import { fetchArcGisTable } from "./lib/arcgis-fetch.js";
 import { normaliseLgaKey } from "../lib/timeseries.js";
@@ -333,6 +334,14 @@ async function buildAffordabilitySeries(): Promise<IndicatorSeries[]> {
 }
 
 async function main() {
+  // Melbourne-wired (VCSA crime + VIC-coded ABS pulls + raw provenance
+  // filenames): skip for other regions until a per-region series module lands.
+  if (!IS_DEFAULT_REGION) {
+    console.warn(
+      `build-timeseries: melbourne-only this wave - skipped for ${PIPELINE_REGION.label}.`
+    );
+    return;
+  }
   console.log("Building timeseries.json (historical trend context)...");
 
   const series: Record<string, IndicatorSeries> = {};

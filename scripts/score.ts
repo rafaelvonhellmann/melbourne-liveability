@@ -4,6 +4,7 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { GENERATED } from "./lib/paths.js";
+import { generatedOutPath } from "./lib/pipeline-region.js";
 import { percentileRank } from "../lib/scoring.js";
 import { V1_SCORED_DOMAINS } from "../lib/domains.js";
 import type {
@@ -179,7 +180,7 @@ async function main() {
   }
 
   const { places: raw } = JSON.parse(
-    await readFile(path.join(GENERATED, "indicators-raw.json"), "utf8")
+    await readFile(generatedOutPath("indicators-raw.json"), "utf8")
   ) as { places: RawPlace[] };
 
   const residential = raw.filter(
@@ -510,11 +511,12 @@ async function main() {
   });
 
   await mkdir(GENERATED, { recursive: true });
+  const outFile = generatedOutPath("places.json");
   await writeFile(
-    path.join(GENERATED, "places.json"),
+    outFile,
     JSON.stringify({ generatedAt: new Date().toISOString(), places })
   );
-  console.log(`Wrote places.json (${places.length} places)`);
+  console.log(`Wrote ${path.basename(outFile)} (${places.length} places)`);
 }
 
 main().catch((e) => {

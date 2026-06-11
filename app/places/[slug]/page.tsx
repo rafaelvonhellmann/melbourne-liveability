@@ -2,6 +2,7 @@ import Link from "next/link";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { PlacesFile } from "@/lib/places-data";
+import { DEFAULT_REGION, regionDataFile } from "@/lib/regions";
 import { computeWeightedScore } from "@/lib/scoring";
 import { getDefaultWeights } from "@/lib/weights";
 import { rankHomeBuyerPercentiles } from "@/lib/home-buyer";
@@ -17,7 +18,12 @@ let _placesFile: Promise<PlacesFile> | null = null;
 async function loadPlacesFile(): Promise<PlacesFile> {
   // Memoised across the many per-slug static builds (read the dataset once).
   if (!_placesFile) {
-    const file = path.join(process.cwd(), "public", "data", "places.json");
+    const file = path.join(
+      process.cwd(),
+      "public",
+      "data",
+      regionDataFile(DEFAULT_REGION, "places.json")
+    );
     _placesFile = readFile(file, "utf8").then(
       (txt) => JSON.parse(txt) as PlacesFile
     );
@@ -28,7 +34,12 @@ async function loadPlacesFile(): Promise<PlacesFile> {
 let _timeseries: Promise<TimeseriesFile | null> | null = null;
 async function loadTimeseries(): Promise<TimeseriesFile | null> {
   if (!_timeseries) {
-    const file = path.join(process.cwd(), "public", "data", "timeseries.json");
+    const file = path.join(
+      process.cwd(),
+      "public",
+      "data",
+      regionDataFile(DEFAULT_REGION, "timeseries.json")
+    );
     _timeseries = readFile(file, "utf8")
       .then((txt) => JSON.parse(txt) as TimeseriesFile)
       .catch(() => null);

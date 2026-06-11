@@ -10,6 +10,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { RAW, GENERATED, PUBLIC_DATA } from "./lib/paths.js";
+import { IS_DEFAULT_REGION, PIPELINE_REGION } from "./lib/pipeline-region.js";
 
 /** sourceId → raw file (relative to data/raw, or data/generated for derived precompute). */
 const SOURCE_FILES: Record<string, { dir: "raw" | "generated" | "public"; file: string }> = {
@@ -74,6 +75,15 @@ async function sha256(file: string): Promise<string | null> {
 }
 
 async function main() {
+  // sources.json is the MELBOURNE provenance manifest (it maps source ids to
+  // melbourne raw filenames). A non-default region run must not restamp it
+  // with another region's raw files. Per-region manifests are a later wave.
+  if (!IS_DEFAULT_REGION) {
+    console.warn(
+      `hash-sources: provenance manifest is melbourne-only this wave - skipped for ${PIPELINE_REGION.label}.`
+    );
+    return;
+  }
   const sourcesPath = path.join(GENERATED, "sources.json");
   const sources = JSON.parse(await readFile(sourcesPath, "utf8")) as Source[];
   const today = new Date().toISOString().slice(0, 10);

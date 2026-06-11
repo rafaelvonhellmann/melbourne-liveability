@@ -8,6 +8,11 @@ import XLSX from "xlsx";
 import "./lib/xlsx-fs.js"; // wires fs into the ESM build - readFile throws without it
 import type { FeatureCollection, Polygon, MultiPolygon } from "geojson";
 import { RAW, GENERATED } from "./lib/paths.js";
+import {
+  PIPELINE_REGION,
+  generatedOutPath,
+  sa2RawName,
+} from "./lib/pipeline-region.js";
 import { getProp, featureGeometry } from "./lib/abs-geo.js";
 import type { CrosswalkFile } from "../lib/crosswalk-types.js";
 import {
@@ -111,13 +116,18 @@ async function loadAttrJsonAsync(file: string) {
   }
 }
 
+// VIC-only raw sources (VCSA crime, MapShare hospitals, planning overlays,
+// VIF, DoE schools, water corps) are skipped for non-VIC regions - mirroring
+// fetch-indicators.ts - so a Canberra build can never join wrong-state data.
+const IS_VIC = PIPELINE_REGION.stateSlug === "vic";
+
 async function main() {
   const cw = JSON.parse(
-    await readFile(path.join(GENERATED, "crosswalk.json"), "utf8")
+    await readFile(generatedOutPath("crosswalk.json"), "utf8")
   ) as CrosswalkFile;
 
   const sa2Fc = JSON.parse(
-    await readFile(path.join(RAW, "sa2-melbourne.geojson"), "utf8")
+    await readFile(path.join(RAW, sa2RawName()), "utf8")
   ) as FeatureCollection;
 
   const byCode = new Map<string, Sa2Raw>();
@@ -288,36 +298,42 @@ async function main() {
     }
   }
 
-  try {
-    const wb = XLSX.readFile(path.join(RAW, "vcsa-lga-offences.xlsx"));
-    // Sheets located by the column labels we consume (preferring the documented
-    // "Table 0x" names) so a renamed sheet / preamble rows in a new VCSA
-    // edition cannot silently parse to zero. Missing BOTH is an error: the
-    // coverage gate would refuse the refresh anyway, so say why here.
-    const t02 = findCrimeSheet(wb, /^Table 02/i, LGA_CRIME_LABELS, ["Suburb/Town Name"]);
-    const t03 = findCrimeSheet(wb, /^Table 03/i, SUBURB_CRIME_LABELS);
-    if (!t02 && !t03) {
-      throw new Error(
-        `no sheet has the known crime columns (sheets: ${wb.SheetNames.join(", ")})`
-      );
-    }
-    if (!t03) console.warn("Crime: suburb sheet (Table 03) not found - LGA fallback only");
-    const lga = t02
-      ? parseLgaCrimeTable02(t02)
-      : { property: new Map<string, number>(), violent: new Map<string, number>() };
-    const suburb = t03 ? parseSuburbCrimeTable03(t03) : new Map<string, CrimeCounts>();
-    const stats = applyCrimeToPlaces(byCode.values(), cw, suburb, lga);
-    console.log(
-      `Crime: ${stats.suburbMatched} SA2 via Table 03+crosswalk, ${stats.lgaFallback} LGA fallback`
+  if (!IS_VIC) {
+    console.warn(
+      `Crime: VCSA is VIC-only - skipped for ${PIPELINE_REGION.label} (safety domain unscored)`
     );
-  } catch (e) {
-    console.warn("Crime XLSX not loaded:", (e as Error).message);
+  } else {
+    try {
+      const wb = XLSX.readFile(path.join(RAW, "vcsa-lga-offences.xlsx"));
+      // Sheets located by the column labels we consume (preferring the documented
+      // "Table 0x" names) so a renamed sheet / preamble rows in a new VCSA
+      // edition cannot silently parse to zero. Missing BOTH is an error: the
+      // coverage gate would refuse the refresh anyway, so say why here.
+      const t02 = findCrimeSheet(wb, /^Table 02/i, LGA_CRIME_LABELS, ["Suburb/Town Name"]);
+      const t03 = findCrimeSheet(wb, /^Table 03/i, SUBURB_CRIME_LABELS);
+      if (!t02 && !t03) {
+        throw new Error(
+          `no sheet has the known crime columns (sheets: ${wb.SheetNames.join(", ")})`
+        );
+      }
+      if (!t03) console.warn("Crime: suburb sheet (Table 03) not found - LGA fallback only");
+      const lga = t02
+        ? parseLgaCrimeTable02(t02)
+        : { property: new Map<string, number>(), violent: new Map<string, number>() };
+      const suburb = t03 ? parseSuburbCrimeTable03(t03) : new Map<string, CrimeCounts>();
+      const stats = applyCrimeToPlaces(byCode.values(), cw, suburb, lga);
+      console.log(
+        `Crime: ${stats.suburbMatched} SA2 via Table 03+crosswalk, ${stats.lgaFallback} LGA fallback`
+      );
+    } catch (e) {
+      console.warn("Crime XLSX not loaded:", (e as Error).message);
+    }
   }
 
   let usedGtfs = false;
   try {
     const gtfs = JSON.parse(
-      await readFile(path.join(GENERATED, "gtfs-transport.json"), "utf8")
+      await readFile(generatedOutPath("gtfs-transport.json"), "utf8")
     ) as {
       places: Record<
         string,
@@ -335,7 +351,11 @@ async function main() {
     }
     console.log("Transport: PTV GTFS precompute");
   } catch {
-    console.warn("gtfs-transport.json missing - run npm run data:gtfs first");
+    console.warn(
+      IS_VIC
+        ? "gtfs-transport.json missing - run npm run data:gtfs first"
+        : `Transport: no GTFS precompute for ${PIPELINE_REGION.label} (per-region GTFS pending) - OSM stop fallback`
+    );
   }
 
   if (!usedGtfs) {
@@ -361,13 +381,15 @@ async function main() {
   }
 
   let vicHospitals: [number, number][] = [];
-  try {
-    const raw = JSON.parse(
-      await readFile(path.join(RAW, "vic-hospitals.json"), "utf8")
-    ) as { points?: [number, number][] };
-    vicHospitals = raw.points ?? [];
-  } catch {
-    console.warn("vic-hospitals.json missing");
+  if (IS_VIC) {
+    try {
+      const raw = JSON.parse(
+        await readFile(path.join(RAW, "vic-hospitals.json"), "utf8")
+      ) as { points?: [number, number][] };
+      vicHospitals = raw.points ?? [];
+    } catch {
+      console.warn("vic-hospitals.json missing");
+    }
   }
 
   const healthJson = JSON.parse(
@@ -484,7 +506,11 @@ async function main() {
     );
   }
 
+  // Every overlay below is a VIC planning layer (vic-*.geojson) - for non-VIC
+  // regions resolve to null even if a stale local file exists, so the absent-
+  // file fallbacks ("not yet available") apply uniformly.
   async function loadOverlay(name: string): Promise<FeatureCollection | null> {
+    if (!IS_VIC) return null;
     try {
       return JSON.parse(
         await readFile(path.join(RAW, name), "utf8")
@@ -515,6 +541,10 @@ async function main() {
     }
     console.log(
       `Hazards: BPA=${bpa?.features.length ?? 0} flood=${floodFeatures.length} polygons`
+    );
+  } else if (!IS_VIC) {
+    console.warn(
+      `Hazards: VIC planning overlays not applicable to ${PIPELINE_REGION.label} - hazards domain unscored (per-state module pending)`
     );
   } else {
     console.warn(
@@ -621,16 +651,18 @@ async function main() {
     string,
     { population: Record<string, number>; dwellings: Record<string, number> }
   > = new Map();
-  try {
-    vifMap = readVifProjections(path.join(RAW, "vif2023-sa2.xlsx"));
-    if (vifMap.size) console.log(`VIF projections: ${vifMap.size} SA2s`);
-    else console.warn("VIF projections: file parsed but yielded 0 SA2 rows");
-  } catch (e) {
-    // The file is optional locally, but it is COMMITTED (data/raw/vif2023-sa2
-    // .xlsx) since the workflow stopped fetching it - so a load failure in CI
-    // is unexpected and was invisible here when refresh run 27280836153
-    // carried projections forward with no clue why. Say why, keep going.
-    console.warn("VIF projections not loaded:", (e as Error).message);
+  if (IS_VIC) {
+    try {
+      vifMap = readVifProjections(path.join(RAW, "vif2023-sa2.xlsx"));
+      if (vifMap.size) console.log(`VIF projections: ${vifMap.size} SA2s`);
+      else console.warn("VIF projections: file parsed but yielded 0 SA2 rows");
+    } catch (e) {
+      // The file is optional locally, but it is COMMITTED (data/raw/vif2023-sa2
+      // .xlsx) since the workflow stopped fetching it - so a load failure in CI
+      // is unexpected and was invisible here when refresh run 27280836153
+      // carried projections forward with no clue why. Say why, keep going.
+      console.warn("VIF projections not loaded:", (e as Error).message);
+    }
   }
 
   // ABS building approvals per SA2 (context only, never scored) - the "what's
@@ -657,36 +689,40 @@ async function main() {
   // School sector mix per SA2 (context only) - government/Catholic/independent
   // counts from VIC DoE. Optional file (run data:schools to fetch).
   let schoolsMix: Record<string, { government: number; catholic: number; independent: number }> = {};
-  try {
-    const sf = JSON.parse(
-      await readFile(path.join(RAW, "vic-schools-by-sa2.json"), "utf8")
-    ) as { places?: Record<string, { government: number; catholic: number; independent: number }> };
-    schoolsMix = sf.places ?? {};
-    if (Object.keys(schoolsMix).length) console.log(`School mix: ${Object.keys(schoolsMix).length} SA2s`);
-  } catch {
-    /* schools file optional */
+  if (IS_VIC) {
+    try {
+      const sf = JSON.parse(
+        await readFile(path.join(RAW, "vic-schools-by-sa2.json"), "utf8")
+      ) as { places?: Record<string, { government: number; catholic: number; independent: number }> };
+      schoolsMix = sf.places ?? {};
+      if (Object.keys(schoolsMix).length) console.log(`School mix: ${Object.keys(schoolsMix).length} SA2s`);
+    } catch {
+      /* schools file optional */
+    }
   }
 
   // Water retailer per SA2 (context only) - which corporation services the area.
   // Optional file (run data:water-corp to fetch from the Vicmap WFS).
   let waterCorps: WaterCorp[] = [];
-  try {
-    const wfc = JSON.parse(
-      await readFile(path.join(RAW, "water-corp.geojson"), "utf8")
-    ) as FeatureCollection;
-    waterCorps = wfc.features
-      .filter(
-        (f): f is typeof f & { geometry: Polygon | MultiPolygon } =>
-          !!f.geometry && (f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon")
-      )
-      .map((f) => ({
-        name: String(f.properties?.watercorp_name ?? ""),
-        url: f.properties?.url ? String(f.properties.url) : undefined,
-        geometry: f.geometry,
-      }));
-    if (waterCorps.length) console.log(`Water corps: ${waterCorps.length}`);
-  } catch {
-    /* water-corp file optional */
+  if (IS_VIC) {
+    try {
+      const wfc = JSON.parse(
+        await readFile(path.join(RAW, "water-corp.geojson"), "utf8")
+      ) as FeatureCollection;
+      waterCorps = wfc.features
+        .filter(
+          (f): f is typeof f & { geometry: Polygon | MultiPolygon } =>
+            !!f.geometry && (f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon")
+        )
+        .map((f) => ({
+          name: String(f.properties?.watercorp_name ?? ""),
+          url: f.properties?.url ? String(f.properties.url) : undefined,
+          geometry: f.geometry,
+        }));
+      if (waterCorps.length) console.log(`Water corps: ${waterCorps.length}`);
+    } catch {
+      /* water-corp file optional */
+    }
   }
 
   for (const p of byCode.values()) {
@@ -802,11 +838,12 @@ async function main() {
 
   await mkdir(GENERATED, { recursive: true });
   const places = [...byCode.values()];
+  const outFile = generatedOutPath("indicators-raw.json");
   await writeFile(
-    path.join(GENERATED, "indicators-raw.json"),
+    outFile,
     JSON.stringify({ generatedAt: new Date().toISOString(), places })
   );
-  console.log(`Wrote indicators-raw.json (${places.length} SA2)`);
+  console.log(`Wrote ${path.basename(outFile)} (${places.length} SA2)`);
 }
 
 main().catch((e) => {

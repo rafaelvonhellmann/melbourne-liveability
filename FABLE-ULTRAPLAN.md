@@ -566,7 +566,7 @@ in priority order as agent-hours allow (Sydney first). REGION-ROLLOUT.md
 4. Floating pin panel (desktop): detach the right sidebar into a shorter
    floating panel anchored near the pin - MOCK FIRST, owner approves, then
    build (mobile keeps the sheet).
-5. Design variant D for owner approval BEFORE any token flip: cream/off-white
+5. DECIDED 2026-06-12: VARIANT D "CREMA" APPROVED and flipped (bg #FBF8F3, ink #1F1B16, accent #1D4ED8, pin-dot F logo) - supersedes Direction A tokens. Original ask: cream/off-white
    surfaces + stronger/deeper blue accent, "It Takes a Village" illustrated
    warmth as reference, logo concept "F formed from clustered map pins".
    HONESTY NOTE recorded: cream was banned by the owner's own anti-slop

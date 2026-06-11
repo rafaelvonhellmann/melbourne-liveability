@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { PlacesFile } from "@/lib/places-data";
+import { DEFAULT_REGION, regionDataFile } from "@/lib/regions";
 
 export const dynamic = "force-static";
 
@@ -28,7 +29,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    const file = path.join(process.cwd(), "public", "data", "places.json");
+    const file = path.join(
+      process.cwd(),
+      "public",
+      "data",
+      regionDataFile(DEFAULT_REGION, "places.json")
+    );
     const data = JSON.parse(await readFile(file, "utf8")) as PlacesFile;
     const places = data.places
       .filter((p) => !p.nonResidential)

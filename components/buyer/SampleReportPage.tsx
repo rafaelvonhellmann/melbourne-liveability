@@ -3,6 +3,7 @@ import path from "node:path";
 import Link from "next/link";
 import type { FeatureCollection, Feature, Point } from "geojson";
 import type { PlacesFile } from "@/lib/places-data";
+import { DEFAULT_REGION, regionDataFile } from "@/lib/regions";
 import type { LngLat } from "@/lib/buyer-location";
 import { buildBuyerReport } from "@/lib/buyer-report";
 import { BuyerReportPanel } from "@/components/buyer/BuyerReportPanel";
@@ -13,10 +14,16 @@ const SAMPLE_SLUG = "brunswick-east-206011106";
 async function loadSample() {
   const root = process.cwd();
   const placesFile = JSON.parse(
-    await readFile(path.join(root, "public", "data", "places.json"), "utf8")
+    await readFile(
+      path.join(root, "public", "data", regionDataFile(DEFAULT_REGION, "places.json")),
+      "utf8"
+    )
   ) as PlacesFile;
   const pois = JSON.parse(
-    await readFile(path.join(root, "public", "data", "pois.geojson"), "utf8")
+    await readFile(
+      path.join(root, "public", "data", regionDataFile(DEFAULT_REGION, "pois.geojson")),
+      "utf8"
+    )
   ) as FeatureCollection;
   const place =
     placesFile.places.find((p) => p.slug === SAMPLE_SLUG) ??

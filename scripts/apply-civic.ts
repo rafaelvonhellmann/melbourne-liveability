@@ -16,8 +16,7 @@
  * carried-fields gate makes a SECOND consecutive miss fail the refresh.
  */
 import { readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { GENERATED } from "./lib/paths.js";
+import { PIPELINE_REGION, generatedOutPath } from "./lib/pipeline-region.js";
 import type { Place, PlaceContext } from "../lib/types.js";
 
 const G23_URL =
@@ -25,14 +24,15 @@ const G23_URL =
 
 type G23Row = { sa2_code_2021?: string | number; p_tot_tot?: number; p_tot_volunteer?: number };
 
-/** Paged fetch of Victorian SA2 volunteering rates -> Map<sa2Code, pct (1dp)>. */
+/** Paged fetch of the active region's state SA2 volunteering rates (G23 is a
+ * national table; SA2 codes lead with the state digit) -> Map<sa2Code, pct>. */
 async function fetchVolunteering(): Promise<Map<string, number>> {
   const out = new Map<string, number>();
   const page = 2000;
   let offset = 0;
   for (let i = 0; i < 10; i++) {
     const url =
-      `${G23_URL}?where=${encodeURIComponent("sa2_code_2021 LIKE '2%'")}` +
+      `${G23_URL}?where=${encodeURIComponent(`sa2_code_2021 LIKE '${PIPELINE_REGION.stateCode}%'`)}` +
       `&outFields=sa2_code_2021,p_tot_tot,p_tot_volunteer&returnGeometry=false&f=json` +
       `&resultOffset=${offset}&resultRecordCount=${page}`;
     const res = await fetch(url, { headers: { "User-Agent": "MelbourneLiveability/1.0" } });
@@ -69,7 +69,7 @@ async function fetchVolunteeringWithRetry(): Promise<Map<string, number>> {
 }
 
 async function main() {
-  const placesPath = path.join(GENERATED, "places.json");
+  const placesPath = generatedOutPath("places.json");
   const { generatedAt, places } = JSON.parse(await readFile(placesPath, "utf8")) as {
     generatedAt: string;
     places: Place[];
@@ -88,7 +88,7 @@ async function main() {
     }
     throw e;
   }
-  console.log(`ABS G23 volunteering: ${vol.size} VIC SA2s`);
+  console.log(`ABS G23 volunteering: ${vol.size} ${PIPELINE_REGION.state} SA2s`);
 
   let enriched = 0;
   for (const p of places) {

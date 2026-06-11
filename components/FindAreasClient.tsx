@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { withBase } from "@/lib/asset-path";
+import { DEFAULT_REGION, dataPath } from "@/lib/regions";
 import { parseQuery, rankAreas } from "@/lib/area-search";
 import type { Place } from "@/lib/types";
 
@@ -27,7 +28,7 @@ export function FindAreasClient() {
       setQuery(q);
       setSubmitted(q);
     }
-    fetch(withBase("/data/places.json"))
+    fetch(withBase(dataPath(DEFAULT_REGION, "places.json")))
       .then((r) => r.json())
       .then((j: { places?: Place[] } | Place[]) => setPlaces(Array.isArray(j) ? j : (j.places ?? [])))
       .catch(() => setPlaces([]));

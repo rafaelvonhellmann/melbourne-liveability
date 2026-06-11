@@ -14,11 +14,18 @@
  * DATA-PIPELINE-AUDIT.md for the apply-step -> fetch -> workflow audit.
  */
 import { execSync } from "node:child_process";
+import { IS_DEFAULT_REGION, PIPELINE_REGION } from "./lib/pipeline-region.js";
 
+// Region: `npm run data:build -- --region=<id>` or REGION env (default
+// melbourne, byte-identical output/filenames). Non-default regions skip the
+// Melbourne/VIC-wired steps until their per-state modules land:
+//   data:gtfs        - PTV-wired (transit falls back to OSM stops in normalize)
+//   data:hazards     - VIC planning overlays (hazards domain stays unscored)
+//   data:timeseries  - VCSA crime + VIC-coded ABS series
+//   data:hash        - sources.json provenance manifest is melbourne-only
 const steps = [
   "npm run data:crosswalk",
-  "npm run data:gtfs",
-  "npm run data:hazards",
+  ...(IS_DEFAULT_REGION ? ["npm run data:gtfs", "npm run data:hazards"] : []),
   "npm run data:normalize",
   "npx tsx scripts/preserve-context.ts snapshot",
   "npm run data:score",
@@ -26,18 +33,23 @@ const steps = [
   "npx tsx scripts/preserve-context.ts merge",
   "npm run data:geo",
   "npm run data:poi",
-  "npm run data:timeseries",
-  "npm run data:hash",
+  ...(IS_DEFAULT_REGION ? ["npm run data:timeseries", "npm run data:hash"] : []),
 ];
+
+console.log(`data:build region: ${PIPELINE_REGION.id} (${PIPELINE_REGION.label})`);
 
 for (const step of steps) {
   console.log(`\n> ${step}`);
+  // REGION is propagated explicitly so the `--region` CLI arg form reaches the
+  // child npm scripts too (they re-resolve the region from env).
   execSync(step, {
     stdio: "inherit",
     cwd: process.cwd(),
-    env: step.includes("apply-civic")
-      ? { ...process.env, APPLY_CIVIC_SOFT: "1" }
-      : process.env,
+    env: {
+      ...process.env,
+      REGION: PIPELINE_REGION.id,
+      ...(step.includes("apply-civic") ? { APPLY_CIVIC_SOFT: "1" } : {}),
+    },
   });
 }
 

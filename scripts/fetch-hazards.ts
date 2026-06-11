@@ -4,6 +4,7 @@
 import { writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { RAW } from "./lib/paths.js";
+import { PIPELINE_REGION } from "./lib/pipeline-region.js";
 import { fetchPlanLayerGeoJson } from "./lib/arcgis-plan-vic.js";
 
 const BPA_URL =
@@ -12,6 +13,14 @@ const OVERLAYS_URL =
   "https://plan-gis.mapshare.vic.gov.au/arcgis/rest/services/Planning/Vicplan_PlanningSchemeOverlays/MapServer";
 
 async function main() {
+  // VIC planning overlays only - skip for other regions (hazards stays
+  // unscored there until the per-state hazard modules land).
+  if (PIPELINE_REGION.stateSlug !== "vic") {
+    console.warn(
+      `fetch-hazards: VIC planning overlays only - skipped for ${PIPELINE_REGION.label}.`
+    );
+    return;
+  }
   await mkdir(RAW, { recursive: true });
 
   console.log("Bushfire Prone Areas (Vicmap Planning)...");

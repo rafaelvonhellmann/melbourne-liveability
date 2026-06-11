@@ -23,14 +23,17 @@
  */
 import { execFileSync } from "node:child_process";
 import { appendFile, copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { RAW, GENERATED, ROOT } from "./lib/paths.js";
+import { RAW, ROOT } from "./lib/paths.js";
+import { generatedOutPath, outName, rawOutPath } from "./lib/pipeline-region.js";
 import { carryForwardContext, type PlaceLike } from "./lib/context-merge.js";
 
-const PLACES = path.join(GENERATED, "places.json");
-const PLACES_REL = "data/generated/places.json";
-const SNAPSHOT = path.join(RAW, "places-pre-score-snapshot.json");
-const CARRIED = path.join(GENERATED, "carried-fields.json");
+// Region-suffixed for non-default regions (places.canberra.json etc.);
+// melbourne keeps the historical names. A region with no committed baseline
+// simply has nothing to snapshot/merge - first run passes clean.
+const PLACES = generatedOutPath("places.json");
+const PLACES_REL = `data/generated/${outName("places.json")}`;
+const SNAPSHOT = rawOutPath("places-pre-score-snapshot.json");
+const CARRIED = generatedOutPath("carried-fields.json");
 
 /** Dot-paths ("planning" or "community.volunteerPct") excluded from carry-forward. */
 const RETIRED_CONTEXT_KEYS: string[] = [];

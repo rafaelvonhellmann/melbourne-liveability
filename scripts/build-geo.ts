@@ -5,7 +5,12 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import * as turf from "@turf/turf";
 import type { Feature, FeatureCollection, Polygon, MultiPolygon } from "geojson";
-import { RAW, GENERATED, PUBLIC_DATA } from "./lib/paths.js";
+import { RAW, PUBLIC_DATA } from "./lib/paths.js";
+import {
+  generatedOutPath,
+  publicOutPath,
+  sa2RawName,
+} from "./lib/pipeline-region.js";
 import { getProp, featureGeometry } from "./lib/abs-geo.js";
 import type { Place } from "../lib/types.js";
 import type { DomainId } from "../lib/types.js";
@@ -16,10 +21,10 @@ function toFeature(geom: Polygon | MultiPolygon, props: Record<string, unknown>)
 
 async function main() {
   const sa2Fc = JSON.parse(
-    await readFile(path.join(RAW, "sa2-melbourne.geojson"), "utf8")
+    await readFile(path.join(RAW, sa2RawName()), "utf8")
   ) as FeatureCollection;
   const { places } = JSON.parse(
-    await readFile(path.join(GENERATED, "places.json"), "utf8")
+    await readFile(generatedOutPath("places.json"), "utf8")
   ) as { places: Place[] };
   const byCode = new Map(places.map((p) => [p.sa2Code, p]));
 
@@ -76,15 +81,15 @@ async function main() {
 
   await mkdir(PUBLIC_DATA, { recursive: true });
   const fc: FeatureCollection = { type: "FeatureCollection", features };
-  const outPath = path.join(PUBLIC_DATA, "places.geojson");
+  const outPath = publicOutPath("places.geojson");
   await writeFile(outPath, JSON.stringify(fc));
   const mb = (Buffer.byteLength(JSON.stringify(fc)) / 1_000_000).toFixed(2);
   console.log(`Wrote ${outPath} (${features.length} features, ~${mb} MB)`);
 
-  const placesPath = path.join(GENERATED, "places.json");
-  const publicPlaces = path.join(PUBLIC_DATA, "places.json");
+  const placesPath = generatedOutPath("places.json");
+  const publicPlaces = publicOutPath("places.json");
   await writeFile(publicPlaces, await readFile(placesPath));
-  console.log(`Copied places.json → public/data/`);
+  console.log(`Copied ${path.basename(placesPath)} → public/data/`);
 }
 
 main().catch((e) => {

@@ -5,6 +5,7 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import type { Feature, FeatureCollection, Point } from "geojson";
 import { RAW, PUBLIC_DATA } from "./lib/paths.js";
+import { PIPELINE_REGION, publicOutPath } from "./lib/pipeline-region.js";
 import { classifyOsmAmenity } from "../lib/walk-access.js";
 import {
   isPathologyLab,
@@ -128,8 +129,13 @@ async function main() {
   const post = JSON.parse(
     await readFile(path.join(RAW, "osm-post.json"), "utf8").catch(() => "{}")
   );
+  // Vicmap point facilities are VIC-only - never mix them into another
+  // region's pins even if a stale local file exists from a Melbourne fetch.
+  const isVic = PIPELINE_REGION.stateSlug === "vic";
   const vic = JSON.parse(
-    await readFile(path.join(RAW, "vic-hospitals.json"), "utf8").catch(() => "{}")
+    isVic
+      ? await readFile(path.join(RAW, "vic-hospitals.json"), "utf8").catch(() => "{}")
+      : "{}"
   ) as { points?: [number, number][] };
   const amenities = JSON.parse(
     await readFile(path.join(RAW, "osm-amenities.json"), "utf8").catch(() => "{}")
@@ -155,10 +161,14 @@ async function main() {
   // Authoritative Vicmap point facilities (CC BY 4.0) replace the sparse OSM
   // police + childcare pins. Context only - never scored. See fetch-vic-facilities.
   const vicPolice = JSON.parse(
-    await readFile(path.join(RAW, "vic-police.json"), "utf8").catch(() => "[]")
+    isVic
+      ? await readFile(path.join(RAW, "vic-police.json"), "utf8").catch(() => "[]")
+      : "[]"
   ) as NamedPoint[];
   const vicChildcare = JSON.parse(
-    await readFile(path.join(RAW, "vic-childcare.json"), "utf8").catch(() => "[]")
+    isVic
+      ? await readFile(path.join(RAW, "vic-childcare.json"), "utf8").catch(() => "[]")
+      : "[]"
   ) as NamedPoint[];
 
   const features = dedupeFeatures([
@@ -189,7 +199,7 @@ async function main() {
 
   const fc: FeatureCollection = { type: "FeatureCollection", features };
   await mkdir(PUBLIC_DATA, { recursive: true });
-  const out = path.join(PUBLIC_DATA, "pois.geojson");
+  const out = publicOutPath("pois.geojson");
   await writeFile(out, JSON.stringify(fc));
   console.log(`Wrote ${out} (${features.length} POIs)`);
 }

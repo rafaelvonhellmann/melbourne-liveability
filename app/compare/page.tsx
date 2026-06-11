@@ -8,6 +8,7 @@ import type { FeatureCollection } from "geojson";
 import { usePlaces } from "@/lib/use-places";
 import { findSa2ForPoint } from "@/lib/buyer-location";
 import { withBase } from "@/lib/asset-path";
+import { DEFAULT_REGION, dataPath } from "@/lib/regions";
 import type { GeocodeResult } from "@/lib/geocode";
 import type { Place, ScoreWeights } from "@/lib/types";
 import {
@@ -101,7 +102,7 @@ export default function ComparePage() {
   async function addByAddress(r: GeocodeResult) {
     try {
       if (!sa2GeoRef.current) {
-        const res = await fetch(withBase("/data/places.geojson"));
+        const res = await fetch(withBase(dataPath(DEFAULT_REGION, "places.geojson")));
         sa2GeoRef.current = (await res.json()) as FeatureCollection;
       }
       const hit = findSa2ForPoint([r.lng, r.lat], sa2GeoRef.current);

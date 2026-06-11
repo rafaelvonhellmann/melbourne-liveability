@@ -13,6 +13,7 @@ import unzipper from "unzipper";
 import type { FeatureCollection } from "geojson";
 import * as turf from "@turf/turf";
 import { RAW, GENERATED, PUBLIC_DATA } from "./lib/paths.js";
+import { IS_DEFAULT_REGION, PIPELINE_REGION } from "./lib/pipeline-region.js";
 import { getProp, featureGeometry } from "./lib/abs-geo.js";
 import {
   AM_PEAK_END,
@@ -341,6 +342,15 @@ function nearbyStops(
 }
 
 async function main() {
+  // PTV/Melbourne-wired (MEL_BBOX + PTV_GTFS_URL): a non-default region run
+  // must NOT emit Melbourne transit under another region's name. Skip loudly;
+  // normalize falls back to OSM stops. Per-region GTFS is a later wave.
+  if (!IS_DEFAULT_REGION) {
+    console.warn(
+      `precompute-gtfs: PTV (Melbourne) only - skipped for ${PIPELINE_REGION.label}; transit uses the OSM stop fallback.`
+    );
+    return;
+  }
   try {
     await readFile(GTFS_ZIP);
   } catch {

@@ -17,7 +17,8 @@ import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { ROOT, GENERATED } from "./lib/paths.js";
+import { ROOT } from "./lib/paths.js";
+import { generatedOutPath, outName } from "./lib/pipeline-region.js";
 import {
   countPopulatedFields,
   diffCoverage,
@@ -26,8 +27,12 @@ import {
 } from "./lib/coverage-diff.js";
 import { classifyCarried } from "./lib/context-merge.js";
 
-const REL_PATH = "data/generated/places.json";
-const CARRIED_REL_PATH = "data/generated/carried-fields.json";
+// Region-aware (--region <id> / REGION env): each region's gate compares its
+// OWN artifact against HEAD (places.canberra.json vs HEAD's copy). A region
+// with no committed baseline passes silently - existing first-run semantics.
+// Exported for the region-awareness unit test.
+export const REL_PATH = `data/generated/${outName("places.json")}`;
+export const CARRIED_REL_PATH = `data/generated/${outName("carried-fields.json")}`;
 
 function maxDropPct(): number {
   const arg = process.argv.find((a) => a.startsWith("--max-drop-pct="));
@@ -63,7 +68,7 @@ function showHead(relPath: string): string {
 async function checkCarriedFields() {
   let current: Record<string, number> = {};
   try {
-    current = JSON.parse(await readFile(path.join(GENERATED, "carried-fields.json"), "utf8"));
+    current = JSON.parse(await readFile(generatedOutPath("carried-fields.json"), "utf8"));
   } catch (e) {
     if ((e as NodeJS.ErrnoException)?.code !== "ENOENT") throw e;
   }
@@ -94,7 +99,7 @@ async function main() {
   }
   const before = (JSON.parse(showHead(REL_PATH)) as { places: unknown[] }).places;
   const after = (
-    JSON.parse(await readFile(path.join(GENERATED, "places.json"), "utf8")) as {
+    JSON.parse(await readFile(generatedOutPath("places.json"), "utf8")) as {
       places: unknown[];
     }
   ).places;
