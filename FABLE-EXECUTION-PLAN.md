@@ -1,5 +1,30 @@
 # Fable Execution Plan (2026-06-12)
 
+> **STANDING GOAL**: fulfill this master plan including the full expansion -
+> every capital at Tier-B quality, then regional cities (W11: Geelong/
+> Ballarat/Bendigo first, ~1wk near-zero cost; Gold Coast/Townsville gated on
+> flood adapters), connectivity 8th domain (W13), vibe labels (W9),
+> building-age layers (W10: Hobart first), MS+ELVIS heights (P6), cutover
+> (P2) when externals clear. Every session: check bake/agent state, pick the
+> lowest unfinished wave, execute, update status here. Filler between waves:
+> plans/ (9 vetted advisor plans - plans/README.md).
+
+## Status (2026-06-12 end of day)
+
+- DONE: W0 (all 8 capitals Tier-A baked + rebaked clean post-incident), W1
+  (personas deferred - plans/README.md rejected notes), W2 (crime adapter
+  registry, ACT crime live 111/134, GTFS generalized 7/8 feeds, per-region
+  manifests + e2e), P1 basemap OpenFreeMap, P3 backend code-complete
+  (112 tests, NOT deployed).
+- INCIDENT resolved: VIC sourceIds stamped on empty non-VIC safety/hazards;
+  fixed 2790714 + tripwire tests; all 7 capitals rebaked; prod verified.
+- Cloudflare provisioned: D1 festra (schema applied), KV festra-sessions,
+  R2 festra-reports/festra-tiles. Domains live, DNS unconfigured (P2).
+- NEXT: W3 Brisbane Tier-B (QPS crime first) -> W4 -> W5 (BOCSAR may jump) ->
+  W6 -> W7 hunt -> W8 paths; W11 VIC trio may interleave after W3.
+- WAITING ON FOUNDER: CF Web Analytics token, Email Routing, TfNSW key,
+  pricing, ABN/registrar chain, lawyer/Pty Ltd.
+
 THE master sequenced plan. Fable fast sessions execute top to bottom; waves are
 dependency-ordered, not calendar-dated. Build as fast as possible. Region data detail lives in
 NATIONAL-ROLLOUT.md; this doc is the work queue.
