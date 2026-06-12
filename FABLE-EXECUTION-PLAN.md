@@ -53,15 +53,19 @@ Acceptance: full gates green, Melbourne byte-identity preserved.
 1. Crime adapter interface: scripts/normalize.ts:301-310 - replace IS_VIC branch with per-state
    adapter registry { sourceId, geography (suburb|lga|none), fetch, join }. VIC becomes adapter #1.
 2. Hazards adapter interface: same pattern for normalize.ts:509-607 (bushfire/flood overlay pct).
-3. GTFS generalization: scripts/precompute-gtfs.ts beyond PTV; consume stateSources.gtfsUrl from
-   lib/regions.ts. Feeds: Translink, Transperth, Adelaide Metro, TfNSW (big - watch memory),
-   Metro Tas, NT DLI. Output region-suffixed bus-stops + frequency.
-4. Per-region sources.json: scripts/hash-sources.ts:78-86 - drop DEFAULT_REGION-only guard,
-   emit sources.{region}.json; trust drawer reads region manifest.
+3. GTFS generalization: DONE 2026-06-12. stateSources.gtfsUrls (string[]) on every region;
+   precompute-gtfs is region-generic (flat + PTV-nested zips, registry bbox clip,
+   region-suffixed gtfs-transport/bus-stops, per-feed sourceId via GTFS_SOURCES). All feed
+   URLs verified except TfNSW: key-gated (TFNSW_API_KEY env, graceful skip) - FOUNDER TASK:
+   free signup at opendata.transport.nsw.gov.au, add repo secret, wire into data-refresh.yml.
+4. Per-region sources.json: DONE 2026-06-12. hash-sources emits sources.{region}.json
+   (generated + public copies; melbourne keeps sources.json); SourceDrawer resolves ids via
+   loadRegionSources (region manifest fetch, melbourne fallback).
 5. Per-region report-tiles: bake-report-tiles.ts parameterized by region (pin reports currently
    Melbourne-only). Budget check per region before commit.
-6. Per-region e2e: smoke spec per live region (?region= load, choropleth paints, report opens),
-   wired into deploy gates + verify-live.
+6. Per-region e2e: DONE 2026-06-12. tests/e2e/regions.spec.ts parameterized over baked
+   regions (data-region marker, canvas, switcher, Location check panel); runs in dev mode
+   and in STATIC_E2E (deploy gates + verify-live) via the playwright testMatch.
 7. Canberra crime quick win: dataACT/ACTmapi suburb crime adapter -> Canberra 6/7. (1 session,
    proves the adapter interface end-to-end before Brisbane.)
 Acceptance: Canberra shows safety scored; all existing regions rebake clean; coverage gate per region.

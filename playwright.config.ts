@@ -15,7 +15,13 @@ const staticMode = !!process.env.STATIC_E2E;
 export default defineConfig({
   testDir: "./tests/e2e",
   ...(staticMode
-    ? { testMatch: [/static-artifact\.spec\.ts/, /journeys\.spec\.ts/] }
+    ? {
+        testMatch: [
+          /static-artifact\.spec\.ts/,
+          /journeys\.spec\.ts/,
+          /regions\.spec\.ts/,
+        ],
+      }
     : { testIgnore: /static-artifact\.spec\.ts/ }),
   fullyParallel: true,
   forbidOnly: !!process.env.CI,

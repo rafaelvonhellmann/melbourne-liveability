@@ -8,7 +8,8 @@ import { getDefaultWeights } from "@/lib/weights";
 import { V1_SCORED_DOMAINS, getDomain } from "@/lib/domains";
 import { buildAreaSummary } from "@/lib/area-summary";
 import { PERSONA_PRESETS, personaWeights, type PersonaId } from "@/lib/personas";
-import { sourcesForIndicatorIds, getSource, shortSourceName } from "@/lib/sources";
+import { getSource, shortSourceName } from "@/lib/sources";
+import { DEFAULT_REGION, type RegionId } from "@/lib/regions";
 import { percentileToColor } from "@/lib/colors";
 import { metricsForDomain } from "@/lib/metric-catalog";
 import type { GmBenchmarks, GmContext } from "@/lib/benchmarks";
@@ -40,6 +41,9 @@ type Props = {
   series?: Record<string, PlaceSeries>;
   /** Closest peer areas by per-domain percentile similarity (precomputed at build). */
   similar?: SimilarAreaItem[];
+  /** Region whose provenance manifest the trust drawer resolves source ids in
+   * (profiles are melbourne-static today; the seam is ready for Wave 8). */
+  region?: RegionId;
 };
 
 type TabKind = "overview" | "persona" | "domain" | "context";
@@ -63,16 +67,17 @@ export function PlaceProfileClient({
   gmContext,
   series = {},
   similar = [],
+  region = DEFAULT_REGION,
 }: Props) {
   const weights = getDefaultWeights();
   const breakdown = computeWeightedScore(place, weights);
   const domains = [...V1_SCORED_DOMAINS];
   const measured = breakdown.components.filter((c) => !c.missing).length;
 
-  const allSources = sourcesForIndicatorIds(
-    domains.flatMap((d) =>
-      Object.values(place.domains[d]?.subIndicators ?? {}).map((s) => s.sourceId)
-    )
+  // Trust drawer input: the ids resolve inside SourceDrawer against the
+  // region's manifest (melbourne = bundled sources.json, unchanged).
+  const sourceIds = domains.flatMap((d) =>
+    Object.values(place.domains[d]?.subIndicators ?? {}).map((s) => s.sourceId)
   );
 
   // Personas live in a dropdown (a "lens"), keeping the tab strip uncrowded.
@@ -197,7 +202,7 @@ export function PlaceProfileClient({
         </section>
 
         <div className="mt-6">
-          <SourceDrawer sources={allSources} />
+          <SourceDrawer sourceIds={sourceIds} region={region} />
         </div>
 
         {similar.length > 0 && (
