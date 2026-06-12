@@ -11,9 +11,10 @@
  * that lived inline in fetch-indicators.ts / normalize.ts; the Melbourne
  * pipeline output is byte-identical. Adapter #2 is the ACT (ACT Policing
  * quarterly crime statistics by suburb, dataACT). Adapter #3 is QLD (QPS
- * reported offence rates by LGA, data.qld.gov.au). Console messages inside
- * the VIC paths are preserved verbatim where they document known failure
- * modes.
+ * reported offence rates by LGA, data.qld.gov.au). Adapter #4 is NSW
+ * (BOCSAR recorded criminal incidents by suburb, data.nsw). Console messages
+ * inside the VIC paths are preserved verbatim where they document known
+ * failure modes.
  */
 import path from "node:path";
 import { readFile } from "node:fs/promises";
@@ -47,6 +48,13 @@ import {
   assertQldCrimeCsvFile,
   parseQldCrimeCsv,
 } from "./qld-crime.js";
+import {
+  NSW_CRIME_RAW_FILE,
+  applyNswCrimeToPlaces,
+  assertNswCrimeCsvFile,
+  fetchNswCrime,
+  parseNswCrimeCsv,
+} from "./nsw-crime.js";
 
 /** The shape every adapter's normalize step writes onto. */
 export type CrimePlace = {
@@ -197,6 +205,37 @@ const qldAdapter: CrimeAdapter = {
   },
 };
 
+/* ---------------------------- NSW (BOCSAR) ------------------------------ */
+
+const nswAdapter: CrimeAdapter = {
+  sourceId: "bocsar-suburb-offences",
+  geographyLevel: "suburb",
+
+  // The CSV is statewide (every NSW locality), so the same fetch serves
+  // sydney and any future NSW region (newcastle, wollongong, northern
+  // rivers). fetch() clips the ~430 MB history to the latest 12 months while
+  // streaming out of the zip - see nsw-crime.ts.
+  async fetch(_region, rawDir) {
+    await fetchNswCrime(rawDir);
+    const dest = path.join(rawDir, NSW_CRIME_RAW_FILE);
+    await assertNswCrimeCsvFile(dest); // never let an HTML error page pose as the CSV
+    console.log(`  ${NSW_CRIME_RAW_FILE}`);
+  },
+
+  async normalize({ rawDir, cw, places }) {
+    try {
+      const text = await readFile(path.join(rawDir, NSW_CRIME_RAW_FILE), "utf8");
+      const parsed = parseNswCrimeCsv(text);
+      const stats = applyNswCrimeToPlaces(places, cw, parsed);
+      console.log(
+        `Crime: ${stats.matched} SA2 via BOCSAR suburbs (${parsed.monthsUsed} months to ${parsed.latestMonth}), ${stats.unmatched} unmatched`
+      );
+    } catch (e) {
+      console.warn("Crime CSV not loaded:", (e as Error).message);
+    }
+  },
+};
+
 /* ------------------------------ Registry ------------------------------- */
 
 /** stateSlug -> adapter. States absent here have no crime source wired up
@@ -205,6 +244,7 @@ const CRIME_ADAPTERS: Record<string, CrimeAdapter> = {
   vic: vicAdapter,
   act: actAdapter,
   qld: qldAdapter,
+  nsw: nswAdapter,
 };
 
 /** The crime adapter for a region's state, or null (safety unscored). */

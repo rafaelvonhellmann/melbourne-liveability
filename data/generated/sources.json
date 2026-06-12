@@ -79,6 +79,13 @@
     "period": "rolling year (latest 12 months in export)"
   },
   {
+    "id": "bocsar-suburb-offences",
+    "name": "BOCSAR - recorded criminal incidents by NSW suburb by month (data.nsw)",
+    "url": "https://data.nsw.gov.au/data/dataset/crime-by-offence-by-nsw-suburb",
+    "licence": "CC BY 4.0",
+    "period": "rolling year (latest 12 months in export)"
+  },
+  {
     "id": "qld-spp-bushfire-prone-area",
     "name": "QFES Bushfire Prone Area - Queensland series (SPP natural hazards mapping)",
     "url": "https://utility.arcgis.com/usrsvcs/servers/8ac1ba8eccee472fbd0e7a57bf3ad320/rest/services/Hosted/BPA/FeatureServer/0",

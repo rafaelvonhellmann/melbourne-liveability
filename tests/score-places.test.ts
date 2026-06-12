@@ -14,7 +14,6 @@ import { getRegion } from "../lib/regions";
  */
 
 const NON_VIC_NO_ADAPTER = [
-  "sydney",
   "adelaide",
   "perth",
   "hobart",
@@ -111,7 +110,7 @@ describe("scorePlaces VIC-source quarantine", () => {
       violentCrimeRate: 1200,
       crimeMethod: "direct" as const,
     }));
-    const places = scorePlaces(contaminated, getRegion("sydney"), new Map());
+    const places = scorePlaces(contaminated, getRegion("perth"), new Map());
     for (const place of places) {
       expect(place.domains.safety!.scored).toBe(false);
       expect(place.domains.safety!.percentile).toBeNull();
@@ -136,6 +135,36 @@ describe("scorePlaces VIC-source quarantine", () => {
       );
       expect(safety.subIndicators.violentCrime.sourceId).toBe(
         "act-policing-crime-statistics"
+      );
+      expect(place.domains.hazards).toEqual({
+        domain: "hazards",
+        scored: false,
+        percentile: null,
+        subIndicators: {},
+      });
+    }
+    const json = JSON.stringify(places);
+    expect(json).not.toMatch(/vcsa/);
+    expect(json).not.toMatch(/"vic-/);
+  });
+
+  it("sydney (NSW adapter) scores safety from BOCSAR, hazards stay unscored", () => {
+    const raw = nonVicFixture().map((p, i) => ({
+      ...p,
+      propertyCrimeRate: 5000 + i * 1000,
+      violentCrimeRate: 800 + i * 100,
+      crimeMethod: "population-weighted" as const,
+    }));
+    const places = scorePlaces(raw, getRegion("sydney"), new Map());
+    for (const place of places) {
+      const safety = place.domains.safety!;
+      expect(safety.scored).toBe(true);
+      expect(safety.percentile).not.toBeNull();
+      expect(safety.subIndicators.propertyCrime.sourceId).toBe(
+        "bocsar-suburb-offences"
+      );
+      expect(safety.subIndicators.violentCrime.sourceId).toBe(
+        "bocsar-suburb-offences"
       );
       expect(place.domains.hazards).toEqual({
         domain: "hazards",
@@ -229,7 +258,7 @@ describe("scorePlaces VIC-source quarantine", () => {
   });
 
   it("unscored stubs do not count toward coverage or data-confidence totals", () => {
-    const [place] = scorePlaces(nonVicFixture(), getRegion("sydney"), new Map());
+    const [place] = scorePlaces(nonVicFixture(), getRegion("perth"), new Map());
     // 7 scored domains; safety + hazards percentiles are null here.
     expect(place.coverage).toBeLessThan(1);
     // No phantom always-missing VIC indicators dragging completeness.

@@ -67,7 +67,9 @@ Effort in focused Fable sessions (1 session ~ half a day equivalent).
 - BONUS: City of Perth open 3D model (7.5cm, OBJ/FBX/Cesium tiles, CBD LGA only) - sun-shadow showcase better than Melbourne's CoM data in the CBD. Optional 1-2 sessions, great marketing asset.
 
 ### Sydney (NSW) - best data in the country
-- Crime: BOCSAR suburb-level monthly since 1995, CSV+API. ~1-2 sessions. Best in AU.
+- Crime: **DONE** - BOCSAR suburb-level monthly incidents (SuburbData.zip, CC BY 4.0) wired as
+  the `nsw` crime adapter (scripts/lib/nsw-crime.ts, sourceId `bocsar-suburb-offences`); rolling
+  12 months, statewide, reusable for Newcastle/Wollongong/Northern Rivers.
 - Hazards: ePlanning EPI layers - flood planning, bushfire prone land (statewide open GIS). ~2 sessions.
 - GTFS: TfNSW complete feed (very large - watch precompute memory/time). ~0.5-1.
 - Beach: Beachwatch NSW (formal program, machine-readable) - beach card parity with Melbourne. ~1.

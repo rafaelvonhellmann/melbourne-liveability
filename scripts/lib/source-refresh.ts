@@ -89,6 +89,13 @@ export const SOURCE_REFRESH: Record<
     cadence: "rolling",
     probe: { type: "none" },
   },
+  "bocsar-suburb-offences": {
+    // BOCSAR Azure blob (SuburbData.zip) reissued quarterly; the CKAN probe
+    // helper is hardwired to discover.data.vic.gov.au, so the data.nsw
+    // resource metadata is unreachable from here. Cadence-only.
+    cadence: "quarterly",
+    probe: { type: "none" },
+  },
   "vic-mapshare-hospitals": {
     cadence: "annual",
     probe: {
