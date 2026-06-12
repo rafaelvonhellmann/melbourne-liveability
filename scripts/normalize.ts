@@ -292,8 +292,9 @@ async function main() {
   }
 
   // Crime is per-state: each state plugs in via scripts/lib/crime-adapters.ts
-  // (VIC = VCSA workbook, ACT = ACT Policing suburb statistics). No adapter ->
-  // rates stay null and the safety domain is unscored, exactly as before.
+  // (VIC = VCSA workbook, ACT = ACT Policing suburb statistics, QLD = QPS LGA
+  // offence rates). No adapter -> rates stay null and the safety domain is
+  // unscored, exactly as before.
   const crimeAdapter = crimeAdapterFor(PIPELINE_REGION);
   if (!crimeAdapter) {
     console.warn(

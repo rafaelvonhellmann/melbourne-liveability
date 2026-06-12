@@ -10,10 +10,13 @@
  * Adapter #1 is VIC (VCSA recorded offences) - a straight move of the logic
  * that lived inline in fetch-indicators.ts / normalize.ts; the Melbourne
  * pipeline output is byte-identical. Adapter #2 is the ACT (ACT Policing
- * quarterly crime statistics by suburb, dataACT). Console messages inside the
- * VIC paths are preserved verbatim where they document known failure modes.
+ * quarterly crime statistics by suburb, dataACT). Adapter #3 is QLD (QPS
+ * reported offence rates by LGA, data.qld.gov.au). Console messages inside
+ * the VIC paths are preserved verbatim where they document known failure
+ * modes.
  */
 import path from "node:path";
+import { readFile } from "node:fs/promises";
 import XLSX from "xlsx";
 import "./xlsx-fs.js"; // wires fs into the ESM build - readFile throws without it
 import type { Region } from "../../lib/regions.js";
@@ -37,6 +40,13 @@ import {
   applyActCrimeToPlaces,
   parseActCrimeWorkbook,
 } from "./act-crime.js";
+import {
+  QLD_CRIME_RAW_FILE,
+  QLD_CRIME_URL,
+  applyQldCrimeToPlaces,
+  assertQldCrimeCsvFile,
+  parseQldCrimeCsv,
+} from "./qld-crime.js";
 
 /** The shape every adapter's normalize step writes onto. */
 export type CrimePlace = {
@@ -158,6 +168,35 @@ const actAdapter: CrimeAdapter = {
   },
 };
 
+/* ----------------------------- QLD (QPS) ------------------------------- */
+
+const qldAdapter: CrimeAdapter = {
+  sourceId: "qps-lga-offence-rates",
+  geographyLevel: "lga",
+
+  // The CSV is statewide (all 77 councils), so the same fetch serves brisbane
+  // and any future QLD region (gold coast, sunshine coast, townsville).
+  async fetch(_region, rawDir) {
+    const dest = path.join(rawDir, QLD_CRIME_RAW_FILE);
+    await downloadToFile(QLD_CRIME_URL, dest);
+    await assertQldCrimeCsvFile(dest); // never let an HTML error page pose as the CSV
+    console.log(`  ${QLD_CRIME_RAW_FILE}`);
+  },
+
+  async normalize({ rawDir, cw, places }) {
+    try {
+      const text = await readFile(path.join(rawDir, QLD_CRIME_RAW_FILE), "utf8");
+      const { rates, latestMonth, monthsUsed } = parseQldCrimeCsv(text);
+      const stats = applyQldCrimeToPlaces(places, cw, rates);
+      console.log(
+        `Crime: ${stats.matched} SA2 via QPS LGA rates (${monthsUsed} months to ${latestMonth}), ${stats.unmatched} unmatched`
+      );
+    } catch (e) {
+      console.warn("Crime CSV not loaded:", (e as Error).message);
+    }
+  },
+};
+
 /* ------------------------------ Registry ------------------------------- */
 
 /** stateSlug -> adapter. States absent here have no crime source wired up
@@ -165,6 +204,7 @@ const actAdapter: CrimeAdapter = {
 const CRIME_ADAPTERS: Record<string, CrimeAdapter> = {
   vic: vicAdapter,
   act: actAdapter,
+  qld: qldAdapter,
 };
 
 /** The crime adapter for a region's state, or null (safety unscored). */

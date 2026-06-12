@@ -15,7 +15,6 @@ import { getRegion } from "../lib/regions";
 
 const NON_VIC_NO_ADAPTER = [
   "sydney",
-  "brisbane",
   "adelaide",
   "perth",
   "hobart",
@@ -137,6 +136,36 @@ describe("scorePlaces VIC-source quarantine", () => {
       );
       expect(safety.subIndicators.violentCrime.sourceId).toBe(
         "act-policing-crime-statistics"
+      );
+      expect(place.domains.hazards).toEqual({
+        domain: "hazards",
+        scored: false,
+        percentile: null,
+        subIndicators: {},
+      });
+    }
+    const json = JSON.stringify(places);
+    expect(json).not.toMatch(/vcsa/);
+    expect(json).not.toMatch(/"vic-/);
+  });
+
+  it("brisbane (QLD adapter) scores safety from QPS LGA rates, hazards stay unscored", () => {
+    const raw = nonVicFixture().map((p, i) => ({
+      ...p,
+      propertyCrimeRate: 5000 + i * 1000,
+      violentCrimeRate: 800 + i * 100,
+      crimeMethod: "direct" as const,
+    }));
+    const places = scorePlaces(raw, getRegion("brisbane"), new Map());
+    for (const place of places) {
+      const safety = place.domains.safety!;
+      expect(safety.scored).toBe(true);
+      expect(safety.percentile).not.toBeNull();
+      expect(safety.subIndicators.propertyCrime.sourceId).toBe(
+        "qps-lga-offence-rates"
+      );
+      expect(safety.subIndicators.violentCrime.sourceId).toBe(
+        "qps-lga-offence-rates"
       );
       expect(place.domains.hazards).toEqual({
         domain: "hazards",

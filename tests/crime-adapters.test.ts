@@ -24,8 +24,17 @@ describe("crimeAdapterFor registry", () => {
     expect(a!.geographyLevel).toBe("suburb");
   });
 
+  it("brisbane (QLD) gets the QPS LGA-rates adapter, lga-level", () => {
+    const a = crimeAdapterFor(getRegion("brisbane"));
+    expect(a).not.toBeNull();
+    expect(a!.sourceId).toBe("qps-lga-offence-rates");
+    expect(a!.geographyLevel).toBe("lga");
+    expect(typeof a!.fetch).toBe("function");
+    expect(typeof a!.normalize).toBe("function");
+  });
+
   it("states without an adapter resolve to null (safety unscored)", () => {
-    for (const id of ["sydney", "brisbane", "adelaide", "perth", "hobart", "darwin"] as const) {
+    for (const id of ["sydney", "adelaide", "perth", "hobart", "darwin"] as const) {
       expect(crimeAdapterFor(getRegion(id))).toBeNull();
     }
   });

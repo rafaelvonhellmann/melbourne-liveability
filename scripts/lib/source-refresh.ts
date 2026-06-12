@@ -82,6 +82,13 @@ export const SOURCE_REFRESH: Record<
     cadence: "quarterly",
     probe: { type: "none" },
   },
+  "qps-lga-offence-rates": {
+    // QPS S3 CSV regenerated monthly; no CKAN/ArcGIS probe (the data.qld CKAN
+    // resource metadata is stale - last_modified says 2022 while the S3 file
+    // is current). Cadence-only.
+    cadence: "rolling",
+    probe: { type: "none" },
+  },
   "vic-mapshare-hospitals": {
     cadence: "annual",
     probe: {

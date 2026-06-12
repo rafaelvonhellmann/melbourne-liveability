@@ -72,6 +72,13 @@
     "period": "rolling year (latest 4 quarters in export)"
   },
   {
+    "id": "qps-lga-offence-rates",
+    "name": "QPS - LGA reported offence rates per 100k ERP (data.qld.gov.au)",
+    "url": "https://www.data.qld.gov.au/dataset/lga_reported_offences_rates",
+    "licence": "CC BY 4.0",
+    "period": "rolling year (latest 12 months in export)"
+  },
+  {
     "id": "ptv-gtfs",
     "name": "PTV GTFS Schedule — metropolitan train, tram, bus (DTP)",
     "url": "https://opendata.transport.vic.gov.au/dataset/gtfs-schedule",
