@@ -41,6 +41,7 @@ const SOURCE_FILES: Record<string, { dir: "raw" | "generated" | "public"; file: 
   "act-policing-crime-statistics": { dir: "raw", file: "act-crime-statistics.xlsx" },
   "qps-lga-offence-rates": { dir: "raw", file: "qld-lga-offence-rates.csv" },
   "bocsar-suburb-offences": { dir: "raw", file: "nsw-bocsar-suburb-offences.csv" },
+  "wa-police-suburb-offences": { dir: "raw", file: "wa-police-suburb-offences.csv" },
   "ptv-gtfs": { dir: "generated", file: "gtfs-transport.json" },
   "osm-pt": { dir: "raw", file: "osm-pt.json" },
   "vic-mapshare-hospitals": { dir: "raw", file: "vic-hospitals.json" },

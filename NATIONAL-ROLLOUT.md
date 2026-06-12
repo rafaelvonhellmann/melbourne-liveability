@@ -60,7 +60,31 @@ Effort in focused Fable sessions (1 session ~ half a day equivalent).
 - Watch: no statewide beach-water program (council patchwork) - skip beach card.
 
 ### Perth (WA)
-- Crime: WA Police portal has suburb data but bulk XLSX is district-level only; suburb = ~1,700 per-locality HTML pages. Build cached scraper, monthly. ~2 sessions. AMBER.
+- Crime: **DONE** - WA Police recorded offences by locality, pulled from the crime
+  statistics portal's public Power BI report (NOT the district-only bulk XLSX, and NOT
+  1,700 HTML pages). The publish-to-web report is backed by an unauthenticated
+  `/public/reports/querydata` JSON API: POST a semantic query with the report's public
+  resource key and read the model's locality x offence-category x month grain directly.
+  Wired as the `wa` crime adapter (scripts/lib/wa-crime.ts, sourceId
+  `wa-police-suburb-offences`); rolling 12 months, statewide (1,641 WA localities, ~1,233
+  with offences), reusable for any future regional WA bake. Classification: "Selected
+  Offences Against the Person" -> violent, "Selected Offences Against Property" ->
+  property; "Detected Offences" + "Miscellaneous Offences" excluded (police-detected /
+  catch-all, same discipline as VIC/ACT/QLD/NSW). WA gazetted localities are unique
+  statewide (verified: 0 cross-district name collisions), so the join is bare-name like
+  ACT - no namesake guard needed. Cache: data/raw/wa-crime-cache/wa-crime-YYYY-MM.json
+  per immutable month, so monthly CI re-fetches only the newest month (cold start = 13
+  requests: 1 month-list + 12 months, ~0.5s throttle).
+  - **LICENCE FLAG (founder action before commercial launch):** the portal page
+    (wa.gov.au) carries the generic WA Government Terms of Use, which permit attributed
+    personal / non-commercial / in-organisation reuse but require WRITTEN PERMISSION for
+    commercial use. The data.wa.gov.au WA Police org otherwise publishes CC BY 4.0, but
+    no CC BY catalogue entry was found for the suburb crime series. Provenance recorded
+    honestly in sources.json with a verifyNote. Confirm commercial-reuse permission
+    (email WA Police, or locate a CC BY entry) before commercial launch - unlike the
+    NSW/QLD/ACT crime sources, this one is NOT confirmed open for commercial use.
+  - First perth bake watch: CI's `data:fetch` runs the FULL cold pull (13 PBI requests).
+    Watch the first run for rate-limit/timeout behaviour on the Power BI public endpoint.
 - Hazards: DFES bushfire prone areas (open), DoT/DWER flood mapping. ~2 sessions.
 - GTFS: Transperth. ~0.5.
 - Schools: NO open catchments (per-school PDFs - acknowledged state gap). Education stays proximity-based; do not hand-digitise.

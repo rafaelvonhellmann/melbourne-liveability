@@ -42,8 +42,17 @@ describe("crimeAdapterFor registry", () => {
     expect(typeof a!.normalize).toBe("function");
   });
 
+  it("perth (WA) gets the WA Police adapter, suburb-level", () => {
+    const a = crimeAdapterFor(getRegion("perth"));
+    expect(a).not.toBeNull();
+    expect(a!.sourceId).toBe("wa-police-suburb-offences");
+    expect(a!.geographyLevel).toBe("suburb");
+    expect(typeof a!.fetch).toBe("function");
+    expect(typeof a!.normalize).toBe("function");
+  });
+
   it("states without an adapter resolve to null (safety unscored)", () => {
-    for (const id of ["adelaide", "perth", "hobart", "darwin"] as const) {
+    for (const id of ["adelaide", "hobart", "darwin"] as const) {
       expect(crimeAdapterFor(getRegion(id))).toBeNull();
     }
   });

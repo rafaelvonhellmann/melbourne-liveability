@@ -96,6 +96,12 @@ export const SOURCE_REFRESH: Record<
     cadence: "quarterly",
     probe: { type: "none" },
   },
+  "wa-police-suburb-offences": {
+    // WA Police public Power BI report, refreshed monthly; the fetcher's own
+    // per-period cache discovers the new month each run, so no external probe.
+    cadence: "rolling",
+    probe: { type: "none" },
+  },
   "vic-mapshare-hospitals": {
     cadence: "annual",
     probe: {

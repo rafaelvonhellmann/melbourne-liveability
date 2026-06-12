@@ -12,9 +12,10 @@
  * pipeline output is byte-identical. Adapter #2 is the ACT (ACT Policing
  * quarterly crime statistics by suburb, dataACT). Adapter #3 is QLD (QPS
  * reported offence rates by LGA, data.qld.gov.au). Adapter #4 is NSW
- * (BOCSAR recorded criminal incidents by suburb, data.nsw). Console messages
- * inside the VIC paths are preserved verbatim where they document known
- * failure modes.
+ * (BOCSAR recorded criminal incidents by suburb, data.nsw). Adapter #5 is WA
+ * (WA Police recorded offences by locality, via the crime portal's public
+ * Power BI report). Console messages inside the VIC paths are preserved
+ * verbatim where they document known failure modes.
  */
 import path from "node:path";
 import { readFile } from "node:fs/promises";
@@ -55,6 +56,13 @@ import {
   fetchNswCrime,
   parseNswCrimeCsv,
 } from "./nsw-crime.js";
+import {
+  WA_CRIME_RAW_FILE,
+  applyWaCrimeToPlaces,
+  assertWaCrimeCsvFile,
+  fetchWaCrime,
+  parseWaCrimeCsv,
+} from "./wa-crime.js";
 
 /** The shape every adapter's normalize step writes onto. */
 export type CrimePlace = {
@@ -236,6 +244,37 @@ const nswAdapter: CrimeAdapter = {
   },
 };
 
+/* ---------------------------- WA (WA Police) --------------------------- */
+
+const waAdapter: CrimeAdapter = {
+  sourceId: "wa-police-suburb-offences",
+  geographyLevel: "suburb",
+
+  // The pull is statewide (every WA locality), so the same fetch serves perth
+  // and any future WA region. fetch() queries the WA crime portal's public
+  // Power BI report month by month, caching each immutable period under
+  // data/raw/wa-crime-cache/ - a monthly refresh re-fetches only the new month.
+  async fetch(_region, rawDir) {
+    await fetchWaCrime(rawDir);
+    const dest = path.join(rawDir, WA_CRIME_RAW_FILE);
+    await assertWaCrimeCsvFile(dest); // never let an HTML/WAF page pose as the CSV
+    console.log(`  ${WA_CRIME_RAW_FILE}`);
+  },
+
+  async normalize({ rawDir, cw, places }) {
+    try {
+      const text = await readFile(path.join(rawDir, WA_CRIME_RAW_FILE), "utf8");
+      const parsed = parseWaCrimeCsv(text);
+      const stats = applyWaCrimeToPlaces(places, cw, parsed);
+      console.log(
+        `Crime: ${stats.matched} SA2 via WA Police localities (${parsed.monthsUsed} months to ${parsed.latestMonth}), ${stats.unmatched} unmatched`
+      );
+    } catch (e) {
+      console.warn("Crime CSV not loaded:", (e as Error).message);
+    }
+  },
+};
+
 /* ------------------------------ Registry ------------------------------- */
 
 /** stateSlug -> adapter. States absent here have no crime source wired up
@@ -245,6 +284,7 @@ const CRIME_ADAPTERS: Record<string, CrimeAdapter> = {
   act: actAdapter,
   qld: qldAdapter,
   nsw: nswAdapter,
+  wa: waAdapter,
 };
 
 /** The crime adapter for a region's state, or null (safety unscored). */
