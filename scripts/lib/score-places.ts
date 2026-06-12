@@ -6,8 +6,8 @@
  * pre-extraction script.
  *
  * VIC-source quarantine (2026-06 incident): a region only gets a safety domain
- * when its state has a crime adapter, and only gets a hazards domain when the
- * VIC planning overlays actually apply (stateSlug === "vic"). Every other
+ * when its state has a crime adapter, and only gets a hazards domain when its
+ * state has a hazard adapter (scripts/lib/hazard-adapters.ts). Every other
  * region emits an HONEST unscored stub - scored:false, null percentile, no
  * sub-indicators - so no VIC sourceId ("vcsa-*" / "vic-*") can ever appear in
  * a non-VIC region's output. Before this gate, score.ts stamped
@@ -16,6 +16,7 @@
  */
 import type { Region } from "../../lib/regions.js";
 import { crimeAdapterFor } from "./crime-adapters.js";
+import { hazardAdapterFor } from "./hazard-adapters.js";
 import { percentileRank } from "../../lib/scoring.js";
 import { V1_SCORED_DOMAINS } from "../../lib/domains.js";
 import type {
@@ -197,10 +198,10 @@ export function scorePlaces(
   }
 
   // Region source gates. No crime adapter -> the safety domain is an unscored
-  // stub; the hazards overlays are VIC planning layers, so every non-VIC
-  // region gets an unscored hazards stub (per-state hazard modules pending).
+  // stub; no hazard adapter -> the hazards domain is an unscored stub. The
+  // adapters also carry the provenance ids stamped onto the sub-indicators.
   const crimeAdapter = crimeAdapterFor(region);
-  const hasHazardSource = region.stateSlug === "vic";
+  const hazardAdapter = hazardAdapterFor(region);
 
   const residential = raw.filter(
     (p) => (p.population ?? 0) >= NON_RESIDENTIAL_POP_THRESHOLD
@@ -466,19 +467,19 @@ export function scorePlaces(
         hazParts.length > 0
           ? hazParts.reduce((a, b) => a + b, 0) / hazParts.length
           : null;
-      domains.hazards = hasHazardSource
+      domains.hazards = hazardAdapter
         ? domainScore("hazards", hazPct, {
             bushfirePct: indicator(
               p.bushfirePct,
               pctBushfire.get(p.sa2Code) ?? null,
-              "vic-planning-bpa",
+              hazardAdapter.bushfireSourceId,
               "area-weighted",
               pctBushfire.get(p.sa2Code) == null
             ),
             floodPct: indicator(
               p.floodPct,
               pctFlood.get(p.sa2Code) ?? null,
-              "vic-planning-flood",
+              hazardAdapter.floodSourceId,
               "area-weighted",
               pctFlood.get(p.sa2Code) == null
             ),

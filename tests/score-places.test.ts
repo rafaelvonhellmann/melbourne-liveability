@@ -8,9 +8,9 @@ import { getRegion } from "../lib/regions";
  * sourceIds ("vcsa-recorded-offences", "vic-planning-bpa/flood") on all-null
  * indicators - false provenance implying VIC crime/overlay data covered NSW/
  * QLD/WA/SA/TAS/NT areas. The fix: regions without a crime adapter get an
- * UNSCORED safety stub; regions outside VIC get an UNSCORED hazards stub; no
- * sourceId starting with "vcsa"/"vic-" may appear anywhere in a non-VIC
- * region's output. These tests are the contamination tripwire.
+ * UNSCORED safety stub; regions without a hazard adapter get an UNSCORED
+ * hazards stub; no sourceId starting with "vcsa"/"vic-" may appear anywhere
+ * in a non-VIC region's output. These tests are the contamination tripwire.
  */
 
 const NON_VIC_NO_ADAPTER = [
@@ -149,12 +149,16 @@ describe("scorePlaces VIC-source quarantine", () => {
     expect(json).not.toMatch(/"vic-/);
   });
 
-  it("brisbane (QLD adapter) scores safety from QPS LGA rates, hazards stay unscored", () => {
+  it("brisbane (QLD adapters) scores safety from QPS and hazards from QFES BPA + BCC flood", () => {
     const raw = nonVicFixture().map((p, i) => ({
       ...p,
       propertyCrimeRate: 5000 + i * 1000,
       violentCrimeRate: 800 + i * 100,
       crimeMethod: "direct" as const,
+      bushfirePct: 10 + i * 5,
+      // Second place models an SA2 in an unmapped council (Moreton Bay/Logan/
+      // Ipswich/Redland): floodPct stays null -> honestly missing, never 0.
+      floodPct: i === 0 ? 2 : null,
     }));
     const places = scorePlaces(raw, getRegion("brisbane"), new Map());
     for (const place of places) {
@@ -167,13 +171,21 @@ describe("scorePlaces VIC-source quarantine", () => {
       expect(safety.subIndicators.violentCrime.sourceId).toBe(
         "qps-lga-offence-rates"
       );
-      expect(place.domains.hazards).toEqual({
-        domain: "hazards",
-        scored: false,
-        percentile: null,
-        subIndicators: {},
-      });
+      const hazards = place.domains.hazards!;
+      expect(hazards.scored).toBe(true);
+      expect(hazards.percentile).not.toBeNull();
+      expect(hazards.subIndicators.bushfirePct.sourceId).toBe(
+        "qld-spp-bushfire-prone-area"
+      );
+      expect(hazards.subIndicators.floodPct.sourceId).toBe(
+        "bcc-cityplan-flood-overlay"
+      );
     }
+    // Unmapped-council place: flood sub-indicator missing, hazards scored
+    // from the available bushfire part (melbourne's missing-handling).
+    expect(places[0].domains.hazards!.subIndicators.floodPct.missing).toBe(false);
+    expect(places[1].domains.hazards!.subIndicators.floodPct.missing).toBe(true);
+    expect(places[1].domains.hazards!.subIndicators.floodPct.raw).toBeNull();
     const json = JSON.stringify(places);
     expect(json).not.toMatch(/vcsa/);
     expect(json).not.toMatch(/"vic-/);

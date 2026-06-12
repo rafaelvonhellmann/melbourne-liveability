@@ -15,20 +15,24 @@
  */
 import { execSync } from "node:child_process";
 import { IS_DEFAULT_REGION, PIPELINE_REGION } from "./lib/pipeline-region.js";
+import { hazardAdapterFor } from "./lib/hazard-adapters.js";
 
 // Region: `npm run data:build -- --region=<id>` or REGION env (default
 // melbourne, byte-identical output/filenames). Non-default regions skip the
 // Melbourne/VIC-wired steps until their per-state modules land:
-//   data:hazards     - VIC planning overlays (hazards domain stays unscored)
 //   data:timeseries  - VCSA crime + VIC-coded ABS series
-// data:gtfs runs for ANY region whose registry entry has stateSources.gtfsUrls
-// (all 8 capitals; key-gated feeds self-skip). data:hash runs for every region
-// (melbourne keeps sources.json; others emit sources.<region>.json).
+// data:hazards runs for ANY region whose state has a hazard adapter
+// (scripts/lib/hazard-adapters.ts: VIC, QLD); elsewhere the hazards domain
+// stays unscored. data:gtfs runs for ANY region whose registry entry has
+// stateSources.gtfsUrls (all 8 capitals; key-gated feeds self-skip).
+// data:hash runs for every region (melbourne keeps sources.json; others emit
+// sources.<region>.json).
 const HAS_GTFS = (PIPELINE_REGION.stateSources?.gtfsUrls?.length ?? 0) > 0;
+const HAS_HAZARDS = hazardAdapterFor(PIPELINE_REGION) != null;
 const steps = [
   "npm run data:crosswalk",
   ...(HAS_GTFS ? ["npm run data:gtfs"] : []),
-  ...(IS_DEFAULT_REGION ? ["npm run data:hazards"] : []),
+  ...(HAS_HAZARDS ? ["npm run data:hazards"] : []),
   "npm run data:normalize",
   "npx tsx scripts/preserve-context.ts snapshot",
   "npm run data:score",

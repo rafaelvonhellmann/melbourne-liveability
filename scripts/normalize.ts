@@ -15,6 +15,7 @@ import {
 import { getProp, featureGeometry } from "./lib/abs-geo.js";
 import type { CrosswalkFile } from "../lib/crosswalk-types.js";
 import { crimeAdapterFor } from "./lib/crime-adapters.js";
+import { hazardAdapterFor } from "./lib/hazard-adapters.js";
 import { countWithinKm, minDistanceKm } from "./lib/proximity.js";
 import { osmPoints, isChildcareAmenity } from "./lib/osm-points.js";
 import { scoredGpPoints } from "./lib/poi-classify.js";
@@ -499,36 +500,22 @@ async function main() {
     }
   }
 
-  const bpa = await loadOverlay("vic-bpa.geojson");
-  const lsio = await loadOverlay("vic-lsio.geojson");
-  const sbo = await loadOverlay("vic-sbo.geojson");
-  const floodFeatures = [
-    ...(lsio?.features ?? []),
-    ...(sbo?.features ?? []),
-  ];
-  if (bpa || floodFeatures.length > 0) {
-    const bpaIdx = bpa ? buildHazardIndex(bpa) : null;
-    const floodIdx =
-      floodFeatures.length > 0
-        ? buildHazardIndex({ type: "FeatureCollection", features: floodFeatures })
-        : null;
-    for (const p of byCode.values()) {
-      const geom = sa2GeomByCode.get(p.sa2Code);
-      if (!geom) continue;
-      if (bpaIdx) p.bushfirePct = overlayPctInSa2(geom, bpaIdx);
-      if (floodIdx) p.floodPct = overlayPctInSa2(geom, floodIdx);
-    }
-    console.log(
-      `Hazards: BPA=${bpa?.features.length ?? 0} flood=${floodFeatures.length} polygons`
-    );
-  } else if (!IS_VIC) {
+  // Hazards are per-state: each state plugs in via
+  // scripts/lib/hazard-adapters.ts (VIC = Vicmap BPA + LSIO/SBO, QLD = QFES
+  // SPP BPA + BCC flood overlay). No adapter -> pcts stay null and the
+  // hazards domain is unscored, exactly as before.
+  const hazardAdapter = hazardAdapterFor(PIPELINE_REGION);
+  if (!hazardAdapter) {
     console.warn(
-      `Hazards: VIC planning overlays not applicable to ${PIPELINE_REGION.label} - hazards domain unscored (per-state module pending)`
+      `Hazards: no ${PIPELINE_REGION.state} hazard adapter - hazards domain unscored for ${PIPELINE_REGION.label}`
     );
   } else {
-    console.warn(
-      "Hazard overlays missing - run npm run data:hazards (scores will be missing for hazards domain)"
-    );
+    await hazardAdapter.normalize({
+      rawDir: RAW,
+      cw,
+      places: byCode.values(),
+      geomByCode: sa2GeomByCode,
+    });
   }
 
   // Heritage Overlay SHARE (context only, never scored) - a planning CONTROL,

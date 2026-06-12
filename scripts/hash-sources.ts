@@ -52,6 +52,8 @@ const SOURCE_FILES: Record<string, { dir: "raw" | "generated" | "public"; file: 
   "abs-census-preschool-2021": { dir: "raw", file: "abs-sa2-employment.json" },
   "vic-planning-bpa": { dir: "raw", file: "vic-bpa.geojson" },
   "vic-planning-flood": { dir: "raw", file: "vic-lsio.geojson" },
+  "qld-spp-bushfire-prone-area": { dir: "raw", file: "qld-bpa.geojson" },
+  "bcc-cityplan-flood-overlay": { dir: "raw", file: "qld-bcc-flood.geojson" },
   "vic-planning-heritage": { dir: "raw", file: "vic-ho.geojson" },
   "vic-planning-overlays": { dir: "raw", file: "vic-conservation-overlays.geojson" },
   "vic-coastal-inundation": { dir: "raw", file: "vic-sea-level.geojson" },

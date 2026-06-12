@@ -54,7 +54,7 @@ Effort in focused Fable sessions (1 session ~ half a day equivalent).
 
 ### Brisbane (QLD) - first
 - Crime: QPS open data, LGA-level CSVs monthly + crime locations point data (5yr). data.qld.gov.au. ~1-2 sessions.
-- Hazards: QLD bushfire SPP layer (QSpatial) + Brisbane City flood awareness overlays (open). Greater Brisbane = multiple LGA planning schemes (BCC, Moreton Bay, Logan, Ipswich, Redland). ~2-3 sessions.
+- Hazards: SHIPPED (scripts/lib/hazard-adapters.ts QLD adapter). Bushfire = QFES SPP Bushfire Prone Area statewide, bbox-clipped; flood = BCC City Plan 2014 flood overlay (river + creek/waterway + overland flow), Brisbane LGA ONLY - SA2s mostly in Moreton Bay/Logan/Ipswich/Redland etc. keep floodPct missing (null). Moreton Bay publishes open ArcGIS flood/overland overlays (services-ap1.arcgis.com/152ojN3Ts9H3cdtl OM_Flood_Hazard / OM_Overland_Flow) but the categories need mapping before mixing into one percentile pool - next increment.
 - GTFS: Translink. ~0.5 session after generalization.
 - Zoning context: BCC City Plan zoning shapefile (open) - context layer only.
 - Watch: no statewide beach-water program (council patchwork) - skip beach card.
