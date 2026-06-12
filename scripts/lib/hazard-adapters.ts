@@ -14,11 +14,12 @@
  * Adapter #2 is QLD:
  *
  *   bushfire - QFES "Bushfire Prone Area - Queensland series" (the SPP natural
- *   hazards mapping layer), hosted ArcGIS FeatureServer, CC BY 4.0:
- *     https://utility.arcgis.com/usrsvcs/servers/8ac1ba8eccee472fbd0e7a57bf3ad320/rest/services/Hosted/BPA/FeatureServer/0
- *   STATEWIDE coverage, so every SA2 in any QLD region gets a bushfirePct.
- *   Fetched clipped to the region bbox via the ArcGIS envelope param - never
- *   download the whole state.
+ *   hazards mapping layer), CC BY 4.0. STATEWIDE product, so every SA2 in any
+ *   QLD region gets a bushfirePct. Fetched as a QSpatial prepackaged regional
+ *   zip (scripts/lib/qspatial-bpa.ts) and clipped to the region bbox locally -
+ *   the AGOL utility proxy that also serves this layer 504s too often for
+ *   paged queries (CI runs 27411672860 / 27413366356); same data vintage
+ *   (July 2017 for SEQ) either way.
  *
  *   flood - Brisbane City Plan 2014 Flood overlay (CC BY 4.0,
  *   data.brisbane.qld.gov.au cp14-flood-overlay-* datasets; fetched from the
@@ -51,6 +52,7 @@ import type { FeatureCollection, Polygon, MultiPolygon } from "geojson";
 import type { Region } from "../../lib/regions.js";
 import type { CrosswalkFile } from "../../lib/crosswalk-types.js";
 import { fetchArcGisGeoJson } from "./arcgis-geojson.js";
+import { fetchQspatialBpaToFile } from "./qspatial-bpa.js";
 import { fetchPlanLayerGeoJson } from "./arcgis-plan-vic.js";
 import { buildHazardIndex, overlayPctInSa2 } from "./sa2-overlay-pct.js";
 import { normalizeQldLgaName } from "./qld-crime.js";
@@ -184,10 +186,9 @@ const vicAdapter: HazardAdapter = {
 /* ------------------------- QLD (QFES SPP + BCC) ------------------------ */
 
 /** QFES Bushfire Prone Area - Queensland series (statewide, CC BY 4.0).
- * Fields: fid, lga, class ("Very High/High/Medium Potential Bushfire
- * Intensity", "Potential Impact Buffer"). */
-export const QLD_BPA_LAYER_URL =
-  "https://utility.arcgis.com/usrsvcs/servers/8ac1ba8eccee472fbd0e7a57bf3ad320/rest/services/Hosted/BPA/FeatureServer/0";
+ * Raw-file fields: fid, lga, class ("Very High/High/Medium Potential Bushfire
+ * Intensity", "Potential Impact Buffer"). Sourced from the QSpatial
+ * prepackaged regional packs - see scripts/lib/qspatial-bpa.ts. */
 
 /** Brisbane City Plan 2014 flood overlay layers (CC BY 4.0). The ArcGIS org
  * backs the data.brisbane.qld.gov.au cp14-flood-overlay-* datasets. */
@@ -269,15 +270,15 @@ const qldAdapter: HazardAdapter = {
   floodSourceId: "bcc-cityplan-flood-overlay",
 
   async fetch(region, rawDir) {
-    // Statewide layer - ALWAYS clip server-side to the region bbox.
-    console.log("QLD Bushfire Prone Area (QFES SPP, clipped to region bbox)...");
-    const bpa = await fetchArcGisGeoJson(QLD_BPA_LAYER_URL, {
-      envelope: region.bbox,
-      outFields: "fid,lga,class",
-      geometryPrecision: 6,
-    });
-    await writeFile(path.join(rawDir, QLD_BPA_RAW_FILE), JSON.stringify(bpa));
-    console.log(`  ${bpa.features.length} polygons`);
+    // Statewide product - bulk-download the region's QSpatial pack and clip
+    // to the region bbox locally (the paged AGOL proxy was unviable).
+    console.log("QLD Bushfire Prone Area (QFES SPP via QSpatial, clipped to region bbox)...");
+    const bpaCount = await fetchQspatialBpaToFile(
+      region.bbox,
+      rawDir,
+      path.join(rawDir, QLD_BPA_RAW_FILE)
+    );
+    console.log(`  ${bpaCount} polygons`);
 
     // BCC flood overlay - all three layers or nothing: a partial union would
     // silently undercount floodPct, which is worse than an honestly missing
