@@ -41,38 +41,56 @@ export async function fetchArcGisGeoJson(
   layerUrl: string,
   opts: ArcGisGeoJsonOptions = {}
 ): Promise<GeoJSON.FeatureCollection> {
-  const pageSize = opts.pageSize ?? 2000;
+  let pageSize = opts.pageSize ?? 2000;
   const maxPages = opts.maxPages ?? 400;
   const features: GeoJSON.Feature[] = [];
   let offset = 0;
 
   for (let page = 0; page < maxPages; page++) {
-    const url = new URL(`${layerUrl}/query`);
-    url.searchParams.set("where", opts.where ?? "1=1");
-    if (opts.envelope) {
-      const { west, south, east, north } = opts.envelope;
-      url.searchParams.set("geometry", `${west},${south},${east},${north}`);
-      url.searchParams.set("geometryType", "esriGeometryEnvelope");
-      url.searchParams.set("inSR", "4326");
-      url.searchParams.set("spatialRel", "esriSpatialRelIntersects");
-    }
-    url.searchParams.set("outFields", opts.outFields ?? "OBJECTID");
-    url.searchParams.set("returnGeometry", "true");
-    url.searchParams.set("outSR", "4326");
-    if (opts.maxAllowableOffset != null) {
-      url.searchParams.set("maxAllowableOffset", String(opts.maxAllowableOffset));
-    }
-    if (opts.geometryPrecision != null) {
-      url.searchParams.set("geometryPrecision", String(opts.geometryPrecision));
-    }
-    url.searchParams.set("resultOffset", String(offset));
-    url.searchParams.set("resultRecordCount", String(pageSize));
-    url.searchParams.set("f", "geojson");
+    const buildUrl = () => {
+      const url = new URL(`${layerUrl}/query`);
+      url.searchParams.set("where", opts.where ?? "1=1");
+      if (opts.envelope) {
+        const { west, south, east, north } = opts.envelope;
+        url.searchParams.set("geometry", `${west},${south},${east},${north}`);
+        url.searchParams.set("geometryType", "esriGeometryEnvelope");
+        url.searchParams.set("inSR", "4326");
+        url.searchParams.set("spatialRel", "esriSpatialRelIntersects");
+      }
+      url.searchParams.set("outFields", opts.outFields ?? "OBJECTID");
+      url.searchParams.set("returnGeometry", "true");
+      url.searchParams.set("outSR", "4326");
+      if (opts.maxAllowableOffset != null) {
+        url.searchParams.set("maxAllowableOffset", String(opts.maxAllowableOffset));
+      }
+      if (opts.geometryPrecision != null) {
+        url.searchParams.set("geometryPrecision", String(opts.geometryPrecision));
+      }
+      url.searchParams.set("resultOffset", String(offset));
+      url.searchParams.set("resultRecordCount", String(pageSize));
+      url.searchParams.set("f", "geojson");
+      return url.toString();
+    };
 
-    let res = await fetch(url.toString(), { headers: { "User-Agent": UA } });
-    if (!res.ok && res.status >= 500) {
-      await new Promise((r) => setTimeout(r, 2000));
-      res = await fetch(url.toString(), { headers: { "User-Agent": UA } });
+    // Slow utility-proxy layers (e.g. QFES BPA) intermittently 504 on heavy
+    // polygon pages: back off and halve the page size rather than dying -
+    // a 20-minute fetch failing on one gateway timeout wastes a whole bake.
+    const backoffsMs = [5_000, 15_000, 45_000];
+    let res = await fetch(buildUrl(), { headers: { "User-Agent": UA } });
+    for (let attempt = 0; !res.ok && res.status >= 500 && attempt < backoffsMs.length; attempt++) {
+      if (res.status === 504 && pageSize > 250) {
+        pageSize = Math.max(250, Math.floor(pageSize / 2));
+        console.warn(
+          `ArcGIS ${res.status} on page ${page} - halving page size to ${pageSize}, ` +
+            `retrying in ${backoffsMs[attempt] / 1000}s (${layerUrl})`
+        );
+      } else {
+        console.warn(
+          `ArcGIS ${res.status} on page ${page} - retrying in ${backoffsMs[attempt] / 1000}s (${layerUrl})`
+        );
+      }
+      await new Promise((r) => setTimeout(r, backoffsMs[attempt]));
+      res = await fetch(buildUrl(), { headers: { "User-Agent": UA } });
     }
     if (!res.ok) throw new Error(`ArcGIS layer ${res.status}: ${layerUrl}`);
     const fc = (await res.json()) as GeoJSON.FeatureCollection & {
