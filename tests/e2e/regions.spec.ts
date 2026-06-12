@@ -21,7 +21,7 @@ import REGIONS, {
  * baked region JSON), so it runs in dev mode, against the prebuilt artifact
  * (STATIC_E2E=1) and against production via E2E_BASE_URL.
  */
-const BASE = process.env.STATIC_E2E ? "/melbourne-liveability" : "";
+const BASE = ""; // root path since the festra.au cutover (2026-06-12)
 
 // Playwright runs from the repo root; the artifact list in the checkout
 // decides which regions are live (same files CI just built/deployed).

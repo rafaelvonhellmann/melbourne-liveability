@@ -9,7 +9,7 @@ import { test, expect } from "@playwright/test";
  * artifact itself: mkdir _site && cp -r out _site/melbourne-liveability &&
  * npx serve _site -l 4173.
  */
-const BASE = "/melbourne-liveability";
+const BASE = ""; // root path since the festra.au cutover (2026-06-12)
 
 test("app shell renders under the base path", async ({ page, isMobile }) => {
   // This asserts the MAP shell (search box / sheet tabs) under the base path;

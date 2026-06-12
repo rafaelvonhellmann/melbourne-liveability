@@ -12,7 +12,7 @@ import { test, expect, type Page } from "@playwright/test";
  * prebuilt artifact in CI (STATIC_E2E=1), where URLs need the Pages sub-path
  * prefix because baseURL ends in the sub-path without a trailing slash.
  */
-const BASE = process.env.STATIC_E2E ? "/melbourne-liveability" : "";
+const BASE = ""; // root path since the festra.au cutover (2026-06-12)
 
 // The buyer panel renders twice (desktop sidebar + mobile sheet); one copy is
 // display:none per viewport, so every assertion filters to the visible copy.
