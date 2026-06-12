@@ -1,13 +1,17 @@
 {
-  "checkedAt": "2026-06-12T09:47:05.822Z",
-  "sources": 58,
+  "checkedAt": "2026-06-12T11:52:20.397Z",
+  "sources": 61,
   "referencedInCode": 0,
   "networkChecked": true,
   "errors": [],
   "warnings": [
     "act-policing-crime-statistics: missing sha256 (run data:hash after fetch)",
     "qps-lga-offence-rates: missing sha256 (run data:hash after fetch)",
-    "unreachable url vcsa-recorded-offences: https://www.crimestatistics.vic.gov.au/crime-statistics/latest-victorian-crime-data/download-data (403)"
+    "bocsar-suburb-offences: missing sha256 (run data:hash after fetch)",
+    "qld-spp-bushfire-prone-area: missing sha256 (run data:hash after fetch)",
+    "bcc-cityplan-flood-overlay: missing sha256 (run data:hash after fetch)",
+    "unreachable url vcsa-recorded-offences: https://www.crimestatistics.vic.gov.au/crime-statistics/latest-victorian-crime-data/download-data (403)",
+    "unreachable url qld-spp-bushfire-prone-area: https://utility.arcgis.com/usrsvcs/servers/8ac1ba8eccee472fbd0e7a57bf3ad320/rest/services/Hosted/BPA/FeatureServer/0 (403)"
   ],
   "liveness": [
     {
@@ -57,6 +61,24 @@
       "url": "https://www.data.qld.gov.au/dataset/lga_reported_offences_rates",
       "ok": true,
       "status": 202
+    },
+    {
+      "id": "bocsar-suburb-offences",
+      "url": "https://data.nsw.gov.au/data/dataset/crime-by-offence-by-nsw-suburb",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "qld-spp-bushfire-prone-area",
+      "url": "https://utility.arcgis.com/usrsvcs/servers/8ac1ba8eccee472fbd0e7a57bf3ad320/rest/services/Hosted/BPA/FeatureServer/0",
+      "ok": false,
+      "status": 403
+    },
+    {
+      "id": "bcc-cityplan-flood-overlay",
+      "url": "https://data.brisbane.qld.gov.au/explore/dataset/cp14-flood-overlay-brisbane-river-flood-planning-area/",
+      "ok": true,
+      "status": 200
     },
     {
       "id": "ptv-gtfs",

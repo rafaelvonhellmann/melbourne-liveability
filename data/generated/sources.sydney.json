@@ -1,0 +1,119 @@
+[
+  {
+    "id": "abs-sa2-income-dbr",
+    "name": "ABS Data by Region — median equivalised household income (weekly)",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-06-12",
+    "sha256": "3885866c020f0b6f5cac43e01ce1318c705347d6cdfe3f8c51bac136788afd9a"
+  },
+  {
+    "id": "abs-rent-to-income-2021",
+    "name": "Rent-to-income ratio — ABS Census 2021 median weekly rent ÷ ABS Data by Region equivalised household income",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "derived": true,
+    "sha256": ""
+  },
+  {
+    "id": "abs-erp-sa2",
+    "name": "ABS ERP by SA2",
+    "url": "https://www.abs.gov.au/statistics/people/population/regional-population",
+    "licence": "CC BY 4.0",
+    "period": "2023",
+    "fetchedAt": "2026-06-12",
+    "sha256": "9a7f7417d97c31d90055abcef83089c1390475c59b24ddc0d42651535d462ba2"
+  },
+  {
+    "id": "bocsar-suburb-offences",
+    "name": "BOCSAR - recorded criminal incidents by NSW suburb by month (data.nsw)",
+    "url": "https://data.nsw.gov.au/data/dataset/crime-by-offence-by-nsw-suburb",
+    "licence": "CC BY 4.0",
+    "period": "rolling year (latest 12 months in export)",
+    "fetchedAt": "2026-06-12",
+    "sha256": "4b0dc85d3eb962549955dc5be9192d13aa6b1824de67c533bcd17c1d3395e8c8"
+  },
+  {
+    "id": "osm-pt",
+    "name": "OpenStreetMap — public transport stops (Overpass fallback only)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-12",
+    "sha256": "1d75a7fcbf5a216e4fba1ee1edfba22bcc0fdc60a455b0f0c318ecddfa17d859"
+  },
+  {
+    "id": "osm-health",
+    "name": "OpenStreetMap — GP/clinic points (Overpass; hospital fallback only)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-12",
+    "sha256": "fa2b2a2a4dd44ddd450703404106abcce169c3d7623a71688120dcb1f4dba5f5"
+  },
+  {
+    "id": "abs-census-labour-2016",
+    "name": "ABS Census 2016 — labour force (employed, participation) by SA2",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2016",
+    "fetchedAt": "2026-06-12",
+    "sha256": "5b2fae832c88111a6da496ea456490fa0a230f5da606f60355f7c0d55df0ecae"
+  },
+  {
+    "id": "osm-schools",
+    "name": "OpenStreetMap — schools within 2 km (Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-12",
+    "sha256": "e8820184ddb0bd4c994988bda216c27d60572170f1aab43a178ff38404f49596"
+  },
+  {
+    "id": "abs-census-preschool-2021",
+    "name": "ABS Census 2021 — children enrolled in preschool (SA2)",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-06-12",
+    "sha256": "5b2fae832c88111a6da496ea456490fa0a230f5da606f60355f7c0d55df0ecae"
+  },
+  {
+    "id": "abs-seifa-2021",
+    "name": "ABS SEIFA 2021 — IRSAD and IRSD deciles (SA2)",
+    "url": "https://www.abs.gov.au/statistics/people/people-and-communities/socio-economic-indexes-areas-seifa-australia/latest-release",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-06-12",
+    "sha256": "d4a6fa86e65f769d41153bbd0a54e9a80f0038bf62c6fe257075e68ef19a81f7"
+  },
+  {
+    "id": "abs-census-community-2021",
+    "name": "ABS Census 2021 — tenure and dwelling structure (SA2)",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-06-12",
+    "sha256": "fb5116cc41cca0af6ec5dfbd8d0cc0f37d597c1c977fa8514a24d2ef767f9bf8"
+  },
+  {
+    "id": "osm-amenities",
+    "name": "OpenStreetMap — everyday amenities for 15-min access (supermarket, pharmacy, park, cafe/restaurant, gym/leisure; Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-12",
+    "sha256": "c40a27a9092984089d1b49c24cebb5131472c754b1caa80a8155d15eb3c8358f"
+  },
+  {
+    "id": "osm-cycleways",
+    "name": "OpenStreetMap — cycling infrastructure for cyclability index (cycleways, on-road bike lanes, bicycle-designated paths; Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-12",
+    "sha256": "9b7d5a0fdc7c0970c4be068006bd82f1bf57d76a4120b332ad8c061482dc0390"
+  }
+]

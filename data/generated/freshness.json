@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-06-12T09:39:34.721Z",
+  "checkedAt": "2026-06-12T11:37:59.411Z",
   "items": [
     {
       "id": "abs-sa2-income-dbr",
@@ -72,6 +72,30 @@
       "monthsSinceFetch": null,
       "upstreamLastUpdated": null,
       "status": "fresh"
+    },
+    {
+      "id": "bocsar-suburb-offences",
+      "cadence": "quarterly",
+      "fetchedAt": null,
+      "monthsSinceFetch": null,
+      "upstreamLastUpdated": null,
+      "status": "fresh"
+    },
+    {
+      "id": "qld-spp-bushfire-prone-area",
+      "cadence": "n/a",
+      "fetchedAt": null,
+      "monthsSinceFetch": null,
+      "upstreamLastUpdated": null,
+      "status": "unknown"
+    },
+    {
+      "id": "bcc-cityplan-flood-overlay",
+      "cadence": "n/a",
+      "fetchedAt": null,
+      "monthsSinceFetch": null,
+      "upstreamLastUpdated": null,
+      "status": "unknown"
     },
     {
       "id": "ptv-gtfs",
