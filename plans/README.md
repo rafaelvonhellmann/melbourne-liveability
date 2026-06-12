@@ -16,7 +16,7 @@ unless the operator says so; never touch the `wip-all` git stash.
 |------|-------|----------|--------|------------|--------|
 | 001  | Canberra (non-VIC) golden scoring tests            | P1 | S | —   | TODO |
 | 002  | GTFS header guard + parser tests                   | P1 | S | —   | TODO |
-| 003  | Uniform 202 on magic-link (no rate-limit oracle)   | P2 | S | —   | TODO |
+| 003  | Uniform 202 on magic-link (no rate-limit oracle)   | P2 | S | —   | DONE (run 001, codex exec, fable reviewed) |
 | 004  | Apply-step characterization + artifact validation  | P1 | M | 001, 002 recommended first (same muscle, smaller) | TODO |
 | 005  | finalize-refresh script (tested git/push/dispatch) | P2 | M | —   | TODO |
 | 006  | CLAUDE.md + .env.example + doc map/archive         | P2 | M | —   | TODO |

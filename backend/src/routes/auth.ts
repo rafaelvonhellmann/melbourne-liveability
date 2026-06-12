@@ -4,8 +4,8 @@
  * Flow:
  *  1. POST /api/auth/magic-link {email} -> issueMagicLink stores a SHA-256
  *     token hash in D1 and emails the plaintext link. Always 202 - the
- *     response never reveals whether the email has an account. Issuance is
- *     rate limited per email AND per IP (KV counters) -> 429 + Retry-After.
+ *     response never reveals whether the email has an account or was throttled.
+ *     Issuance is rate limited per email AND per IP (KV counters).
  *  2. User clicks https://festra.au/auth?token=... ; the page POSTs
  *     /api/auth/verify {token} -> verifyMagicLink burns the link (single
  *     use), upserts the user, creates a session (KV + D1 mirror) and
@@ -191,8 +191,8 @@ export async function handleMagicLinkRequest(request: Request, env: Env): Promis
     MAGIC_LINK_RATE_WINDOW_SECONDS
   );
   if (!byEmail.allowed || !byIp.allowed) {
-    const retryAfter = Math.max(byEmail.retryAfterSeconds, byIp.retryAfterSeconds);
-    return json({ error: "rate_limited" }, 429, { "Retry-After": String(retryAfter) });
+    logEvent("magic_link_throttled", {});
+    return json({ status: "sent" }, 202);
   }
 
   await issueMagicLink(env, email, provider);

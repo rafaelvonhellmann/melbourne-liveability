@@ -10,7 +10,6 @@ import { call, jsonResponse, makeEnv, stubFetch, type TestEnv } from "./fakes";
 import {
   issueMagicLink,
   MAGIC_LINK_RATE_LIMIT,
-  MAGIC_LINK_RATE_WINDOW_SECONDS,
   SESSION_COOKIE_NAME,
 } from "../src/routes/auth";
 import { hashToken } from "../src/lib/token";
@@ -114,48 +113,60 @@ describe("POST /api/auth/magic-link", () => {
     }
   });
 
-  it("429s the same email past the limit, even across rotating IPs", async () => {
+  it("throttled same-email requests get the same 202 and send nothing", async () => {
     vi.spyOn(console, "log").mockImplementation(() => {});
-    const env = consoleEnv();
-    for (let i = 0; i < MAGIC_LINK_RATE_LIMIT; i++) {
-      const ok = await call(env, "POST", "/api/auth/magic-link", {
-        body: { email: "sam@festra.au" },
-        headers: { "CF-Connecting-IP": `203.0.113.${i}` },
-      });
-      expect(ok.status).toBe(202);
-    }
+    const env = makeEnv({ RESEND_API_KEY: "re_test_123" });
+    const stub = stubFetch(() => jsonResponse({ id: "email_1" }));
+    try {
+      for (let i = 0; i < MAGIC_LINK_RATE_LIMIT; i++) {
+        const ok = await call(env, "POST", "/api/auth/magic-link", {
+          body: { email: "sam@festra.au" },
+          headers: { "CF-Connecting-IP": `203.0.113.${i}` },
+        });
+        expect(ok.status).toBe(202);
+        expect(stub.calls).toHaveLength(i + 1);
+      }
 
-    const res = await call(env, "POST", "/api/auth/magic-link", {
-      body: { email: "sam@festra.au" },
-      headers: { "CF-Connecting-IP": "203.0.113.99" },
-    });
-    expect(res.status).toBe(429);
-    expect(await res.json()).toEqual({ error: "rate_limited" });
-    const retryAfter = Number(res.headers.get("Retry-After"));
-    expect(retryAfter).toBeGreaterThan(0);
-    expect(retryAfter).toBeLessThanOrEqual(MAGIC_LINK_RATE_WINDOW_SECONDS);
-    // the denied request issued no link
-    expect(env.DB.tables.magic_links).toHaveLength(MAGIC_LINK_RATE_LIMIT);
+      const res = await call(env, "POST", "/api/auth/magic-link", {
+        body: { email: "sam@festra.au" },
+        headers: { "CF-Connecting-IP": "203.0.113.99" },
+      });
+      expect(res.status).toBe(202);
+      expect(await res.json()).toEqual({ status: "sent" });
+      expect(res.headers.get("Retry-After")).toBeNull();
+      expect(stub.calls).toHaveLength(MAGIC_LINK_RATE_LIMIT);
+      expect(env.DB.tables.magic_links).toHaveLength(MAGIC_LINK_RATE_LIMIT);
+    } finally {
+      stub.restore();
+    }
   });
 
-  it("429s the same IP past the limit, even across rotating emails", async () => {
+  it("throttled same-IP requests get the same 202 and send nothing", async () => {
     vi.spyOn(console, "log").mockImplementation(() => {});
-    const env = consoleEnv();
-    for (let i = 0; i < MAGIC_LINK_RATE_LIMIT; i++) {
-      const ok = await call(env, "POST", "/api/auth/magic-link", {
-        body: { email: `user${i}@festra.au` },
+    const env = makeEnv({ RESEND_API_KEY: "re_test_123" });
+    const stub = stubFetch(() => jsonResponse({ id: "email_1" }));
+    try {
+      for (let i = 0; i < MAGIC_LINK_RATE_LIMIT; i++) {
+        const ok = await call(env, "POST", "/api/auth/magic-link", {
+          body: { email: `user${i}@festra.au` },
+          headers: { "CF-Connecting-IP": "198.51.100.7" },
+        });
+        expect(ok.status).toBe(202);
+        expect(stub.calls).toHaveLength(i + 1);
+      }
+
+      const res = await call(env, "POST", "/api/auth/magic-link", {
+        body: { email: "fresh@festra.au" },
         headers: { "CF-Connecting-IP": "198.51.100.7" },
       });
-      expect(ok.status).toBe(202);
+      expect(res.status).toBe(202);
+      expect(await res.json()).toEqual({ status: "sent" });
+      expect(res.headers.get("Retry-After")).toBeNull();
+      expect(stub.calls).toHaveLength(MAGIC_LINK_RATE_LIMIT);
+      expect(env.DB.tables.magic_links).toHaveLength(MAGIC_LINK_RATE_LIMIT);
+    } finally {
+      stub.restore();
     }
-
-    const res = await call(env, "POST", "/api/auth/magic-link", {
-      body: { email: "fresh@festra.au" },
-      headers: { "CF-Connecting-IP": "198.51.100.7" },
-    });
-    expect(res.status).toBe(429);
-    expect(Number(res.headers.get("Retry-After"))).toBeGreaterThan(0);
-    expect(env.DB.tables.magic_links).toHaveLength(MAGIC_LINK_RATE_LIMIT);
   });
 });
 
