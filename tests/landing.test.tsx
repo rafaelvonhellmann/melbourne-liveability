@@ -354,7 +354,7 @@ describe("Landing scroll scenes", () => {
   it("scene 2 carries the honest coverage line", async () => {
     await renderLanding();
     expect(
-      screen.getByText("Greater Melbourne today, every capital at launch.")
+      screen.getByText("Every Australian capital, scored from open data.")
     ).toBeInTheDocument();
   });
 

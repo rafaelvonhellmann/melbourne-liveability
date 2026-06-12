@@ -437,7 +437,7 @@ export function Landing({
               <CaptionCard
                 heading="Drop a pin anywhere in Australia"
                 body="Type an address or tap the map. Festra opens a window on that exact spot - here, Brunswick East."
-                footnote="Greater Melbourne today, every capital at launch."
+                footnote="Every Australian capital, scored from open data."
               />
             </div>
           </section>
