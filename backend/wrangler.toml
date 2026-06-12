@@ -1,7 +1,6 @@
 # Festra API worker - CODE-COMPLETE, NOT DEPLOYED.
-# Route logic is implemented in src/routes/*, but routes/deploy below stay
-# commented out until cutover (FABLE-EXECUTION-PLAN P3: code now, deploy when
-# domain + legal + pricing unlock). Nothing in app/ talks to this worker yet.
+# Route logic is implemented in src/routes/*, and the festra.au/api/* route is
+# staged for cutover. Do not run wrangler deploy until the founder gate clears.
 
 name = "festra-api"
 main = "src/index.ts"
@@ -37,12 +36,14 @@ bucket_name = "festra-reports"
 #   EMAIL_FROM     = "Festra <auth@festra.au>"
 # ---------------------------------------------------------------------------
 
+[vars]
+ENVIRONMENT = "production"
+
 # ---------------------------------------------------------------------------
-# Routes / deploy - enable at cutover. Deliberately inert so an accidental
-# `wrangler deploy` cannot put this worker in front of real traffic.
+# Routes / deploy - route is staged for cutover; the deploy command itself
+# remains founder-gated.
 # ---------------------------------------------------------------------------
-# workers_dev = false
-# routes = [
-#   { pattern = "festra.au/api/*", zone_name = "festra.au" },
-#   { pattern = "festra.com.au/api/*", zone_name = "festra.com.au" }
-# ]
+workers_dev = false
+routes = [
+  { pattern = "festra.au/api/*", zone_name = "festra.au" }
+]

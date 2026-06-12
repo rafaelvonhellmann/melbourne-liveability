@@ -6,7 +6,7 @@
  *     token hash in D1 and emails the plaintext link. Always 202 - the
  *     response never reveals whether the email has an account or was throttled.
  *     Issuance is rate limited per email AND per IP (KV counters).
- *  2. User clicks https://festra.au/auth?token=... ; the page POSTs
+ *  2. User clicks https://festra.au/auth#token=... ; the page POSTs
  *     /api/auth/verify {token} -> verifyMagicLink burns the link (single
  *     use), upserts the user, creates a session (KV + D1 mirror) and
  *     Set-Cookie's the id.
@@ -86,7 +86,7 @@ export async function issueMagicLink(
     to: email,
     subject: "Your Festra sign-in link",
     text:
-      `Sign in to Festra:\n\nhttps://festra.au/auth?token=${token}\n\n` +
+      `Sign in to Festra:\n\nhttps://festra.au/auth#token=${token}\n\n` +
       `This link expires in ${MAGIC_LINK_TTL_MINUTES} minutes and works once. ` +
       `If you did not request it, ignore this email.`,
   });

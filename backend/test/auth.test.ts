@@ -24,7 +24,7 @@ function consoleEnv(): TestEnv {
   return makeEnv({ EMAIL_PROVIDER: "console" });
 }
 
-const TOKEN_IN_TEXT = /token=([0-9a-f-]{36})/;
+const TOKEN_IN_TEXT = /https:\/\/festra\.au\/auth#token=([0-9a-f-]{36})/;
 
 function sessionIdFromSetCookie(setCookie: string | null): string {
   const sessionId = new RegExp(`${SESSION_COOKIE_NAME}=([^;]+)`).exec(setCookie ?? "")?.[1];
@@ -60,6 +60,7 @@ describe("POST /api/auth/magic-link", () => {
       .map((c) => String(c[0]))
       .find((l) => l.includes("email_console_send"));
     expect(emailLine).toBeDefined();
+    expect(emailLine).toContain("https://festra.au/auth#token=");
     const token = TOKEN_IN_TEXT.exec(emailLine!)?.[1];
     expect(token).toBeDefined();
     expect(token).not.toBe(row.token_hash); // plaintext never persisted
@@ -121,6 +122,7 @@ describe("POST /api/auth/magic-link", () => {
       expect(new Headers(init?.headers).get("Authorization")).toBe("Bearer re_test_123");
       const sent = JSON.parse(String(init?.body)) as { to: string[]; text: string };
       expect(sent.to).toEqual(["sam@festra.au"]);
+      expect(sent.text).toContain("https://festra.au/auth#token=");
       const token = TOKEN_IN_TEXT.exec(sent.text)?.[1];
       expect(token).toBeDefined();
       expect(await hashToken(token!)).toBe(env.DB.tables.magic_links[0]!.token_hash);
