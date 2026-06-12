@@ -13,7 +13,7 @@ import { getRegion } from "../lib/regions";
  * in a non-VIC region's output. These tests are the contamination tripwire.
  */
 
-const NON_VIC_NO_ADAPTER = ["adelaide", "hobart", "darwin"] as const;
+const NON_VIC_NO_ADAPTER = ["hobart", "darwin"] as const;
 
 /** A raw place as normalize.ts emits it for a non-VIC region: crime rates and
  * overlay shares null (no source), everything else populated. */
@@ -203,6 +203,36 @@ describe("scorePlaces VIC-source quarantine", () => {
     expect(json).not.toMatch(/"vic-/);
   });
 
+  it("adelaide (SA adapter) scores safety from SAPOL, hazards stay unscored", () => {
+    const raw = nonVicFixture().map((p, i) => ({
+      ...p,
+      propertyCrimeRate: 5000 + i * 1000,
+      violentCrimeRate: 800 + i * 100,
+      crimeMethod: "area-weighted" as const,
+    }));
+    const places = scorePlaces(raw, getRegion("adelaide"), new Map());
+    for (const place of places) {
+      const safety = place.domains.safety!;
+      expect(safety.scored).toBe(true);
+      expect(safety.percentile).not.toBeNull();
+      expect(safety.subIndicators.propertyCrime.sourceId).toBe(
+        "sapol-suburb-offences"
+      );
+      expect(safety.subIndicators.violentCrime.sourceId).toBe(
+        "sapol-suburb-offences"
+      );
+      expect(place.domains.hazards).toEqual({
+        domain: "hazards",
+        scored: false,
+        percentile: null,
+        subIndicators: {},
+      });
+    }
+    const json = JSON.stringify(places);
+    expect(json).not.toMatch(/vcsa/);
+    expect(json).not.toMatch(/"vic-/);
+  });
+
   it("brisbane (QLD adapters) scores safety from QPS and hazards from QFES BPA + BCC flood", () => {
     const raw = nonVicFixture().map((p, i) => ({
       ...p,
@@ -283,7 +313,7 @@ describe("scorePlaces VIC-source quarantine", () => {
   });
 
   it("unscored stubs do not count toward coverage or data-confidence totals", () => {
-    const [place] = scorePlaces(nonVicFixture(), getRegion("adelaide"), new Map());
+    const [place] = scorePlaces(nonVicFixture(), getRegion("hobart"), new Map());
     // 7 scored domains; safety + hazards percentiles are null here.
     expect(place.coverage).toBeLessThan(1);
     // No phantom always-missing VIC indicators dragging completeness.

@@ -101,7 +101,13 @@ Effort in focused Fable sessions (1 session ~ half a day equivalent).
 - 3D: City of Sydney model is licence-locked (AAM). Use ELVIS LiDAR-derived heights or OSM. Do not use CoS model.
 
 ### Adelaide (SA)
-- Crime: SAPOL on Data.SA, suburb/postcode CSV 10+ yrs (sexual offences excluded at suburb level - footnote it). ~1 session.
+- Crime: **DONE** - SAPOL crime statistics by suburb by reported date (data.sa.gov.au, CC BY)
+  wired as the `sa` crime adapter (scripts/lib/sa-crime.ts, sourceId `sapol-suburb-offences`);
+  rolling 12 months across the two newest fiscal-year CSVs (the window spans the FY boundary),
+  statewide, classification by Offence Level 1 only (Level 2 labels were renamed wholesale
+  between the 2024-25 and 2025-26 editions). Sexual offences are published with suburb
+  "NOT DISCLOSED", so suburb-level violent rates exclude them - footnoted in sources.json.
+  SA locality names are unique statewide, so no NSW-style namesake guard is needed.
 - Hazards: PlanSA Planning and Design Code overlays (statewide single code - easiest scheme in AU). ~1-2.
 - GTFS: Adelaide Metro. ~0.5.
 - Price context: open suburb medians quarterly (Data.SA). ~1.

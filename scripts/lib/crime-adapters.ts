@@ -14,7 +14,8 @@
  * reported offence rates by LGA, data.qld.gov.au). Adapter #4 is NSW
  * (BOCSAR recorded criminal incidents by suburb, data.nsw). Adapter #5 is WA
  * (WA Police recorded offences by locality, via the crime portal's public
- * Power BI report). Console messages inside the VIC paths are preserved
+ * Power BI report). Adapter #6 is SA (SAPOL crime statistics by suburb,
+ * data.sa.gov.au). Console messages inside the VIC paths are preserved
  * verbatim where they document known failure modes.
  */
 import path from "node:path";
@@ -63,6 +64,13 @@ import {
   fetchWaCrime,
   parseWaCrimeCsv,
 } from "./wa-crime.js";
+import {
+  SA_CRIME_RAW_FILE,
+  applySaCrimeToPlaces,
+  assertSaCrimeCsvFile,
+  fetchSaCrime,
+  parseSaCrimeCsv,
+} from "./sa-crime.js";
 
 /** The shape every adapter's normalize step writes onto. */
 export type CrimePlace = {
@@ -275,6 +283,40 @@ const waAdapter: CrimeAdapter = {
   },
 };
 
+/* ----------------------------- SA (SAPOL) ------------------------------ */
+
+const saAdapter: CrimeAdapter = {
+  sourceId: "sapol-suburb-offences",
+  geographyLevel: "suburb",
+
+  // The CSVs are statewide (every SA locality), so the same fetch serves
+  // adelaide and any future SA region. fetch() discovers the two newest
+  // fiscal-year resources via the data.sa.gov.au CKAN API (SAPOL replaces
+  // the in-progress year's file in place each quarter) and clips the pair to
+  // the latest 12 months - see sa-crime.ts. NOTE: suburb-level violent
+  // counts EXCLUDE sexual offences - SAPOL withholds their location
+  // (suburb "NOT DISCLOSED"); documented in sources.json.
+  async fetch(_region, rawDir) {
+    await fetchSaCrime(rawDir);
+    const dest = path.join(rawDir, SA_CRIME_RAW_FILE);
+    await assertSaCrimeCsvFile(dest); // never let an HTML/WAF page pose as the CSV
+    console.log(`  ${SA_CRIME_RAW_FILE}`);
+  },
+
+  async normalize({ rawDir, cw, places }) {
+    try {
+      const text = await readFile(path.join(rawDir, SA_CRIME_RAW_FILE), "utf8");
+      const parsed = parseSaCrimeCsv(text);
+      const stats = applySaCrimeToPlaces(places, cw, parsed.bySuburb);
+      console.log(
+        `Crime: ${stats.matched} SA2 via SAPOL suburbs (${parsed.monthsUsed} months to ${parsed.latestMonth}), ${stats.unmatched} unmatched`
+      );
+    } catch (e) {
+      console.warn("Crime CSV not loaded:", (e as Error).message);
+    }
+  },
+};
+
 /* ------------------------------ Registry ------------------------------- */
 
 /** stateSlug -> adapter. States absent here have no crime source wired up
@@ -285,6 +327,7 @@ const CRIME_ADAPTERS: Record<string, CrimeAdapter> = {
   qld: qldAdapter,
   nsw: nswAdapter,
   wa: waAdapter,
+  sa: saAdapter,
 };
 
 /** The crime adapter for a region's state, or null (safety unscored). */

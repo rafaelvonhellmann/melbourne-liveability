@@ -51,8 +51,17 @@ describe("crimeAdapterFor registry", () => {
     expect(typeof a!.normalize).toBe("function");
   });
 
+  it("adelaide (SA) gets the SAPOL adapter, suburb-level", () => {
+    const a = crimeAdapterFor(getRegion("adelaide"));
+    expect(a).not.toBeNull();
+    expect(a!.sourceId).toBe("sapol-suburb-offences");
+    expect(a!.geographyLevel).toBe("suburb");
+    expect(typeof a!.fetch).toBe("function");
+    expect(typeof a!.normalize).toBe("function");
+  });
+
   it("states without an adapter resolve to null (safety unscored)", () => {
-    for (const id of ["adelaide", "hobart", "darwin"] as const) {
+    for (const id of ["hobart", "darwin"] as const) {
       expect(crimeAdapterFor(getRegion(id))).toBeNull();
     }
   });

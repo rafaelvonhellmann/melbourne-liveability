@@ -102,6 +102,15 @@ export const SOURCE_REFRESH: Record<
     cadence: "rolling",
     probe: { type: "none" },
   },
+  "sapol-suburb-offences": {
+    // SAPOL reissues the in-progress fiscal-year CSV roughly quarterly
+    // (replacing the "Q1 - Qn" resource in place); the fetcher rediscovers
+    // the newest resources via the data.sa.gov.au CKAN API each run, but the
+    // freshness probe helper is hardwired to discover.data.vic.gov.au (same
+    // limitation as BOCSAR), so cadence-only.
+    cadence: "quarterly",
+    probe: { type: "none" },
+  },
   "vic-mapshare-hospitals": {
     cadence: "annual",
     probe: {
