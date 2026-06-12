@@ -4,7 +4,6 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import * as turf from "@turf/turf";
-import XLSX from "xlsx";
 import "./lib/xlsx-fs.js"; // wires fs into the ESM build - readFile throws without it
 import type { FeatureCollection, Polygon, MultiPolygon } from "geojson";
 import { RAW, GENERATED } from "./lib/paths.js";
@@ -15,15 +14,7 @@ import {
 } from "./lib/pipeline-region.js";
 import { getProp, featureGeometry } from "./lib/abs-geo.js";
 import type { CrosswalkFile } from "../lib/crosswalk-types.js";
-import {
-  applyCrimeToPlaces,
-  findCrimeSheet,
-  parseLgaCrimeTable02,
-  parseSuburbCrimeTable03,
-  LGA_CRIME_LABELS,
-  SUBURB_CRIME_LABELS,
-  type CrimeCounts,
-} from "./lib/vcsa-crime.js";
+import { crimeAdapterFor } from "./lib/crime-adapters.js";
 import { countWithinKm, minDistanceKm } from "./lib/proximity.js";
 import { osmPoints, isChildcareAmenity } from "./lib/osm-points.js";
 import { scoredGpPoints } from "./lib/poi-classify.js";
@@ -298,36 +289,16 @@ async function main() {
     }
   }
 
-  if (!IS_VIC) {
+  // Crime is per-state: each state plugs in via scripts/lib/crime-adapters.ts
+  // (VIC = VCSA workbook, ACT = ACT Policing suburb statistics). No adapter ->
+  // rates stay null and the safety domain is unscored, exactly as before.
+  const crimeAdapter = crimeAdapterFor(PIPELINE_REGION);
+  if (!crimeAdapter) {
     console.warn(
-      `Crime: VCSA is VIC-only - skipped for ${PIPELINE_REGION.label} (safety domain unscored)`
+      `Crime: no ${PIPELINE_REGION.state} adapter - skipped for ${PIPELINE_REGION.label} (safety domain unscored)`
     );
   } else {
-    try {
-      const wb = XLSX.readFile(path.join(RAW, "vcsa-lga-offences.xlsx"));
-      // Sheets located by the column labels we consume (preferring the documented
-      // "Table 0x" names) so a renamed sheet / preamble rows in a new VCSA
-      // edition cannot silently parse to zero. Missing BOTH is an error: the
-      // coverage gate would refuse the refresh anyway, so say why here.
-      const t02 = findCrimeSheet(wb, /^Table 02/i, LGA_CRIME_LABELS, ["Suburb/Town Name"]);
-      const t03 = findCrimeSheet(wb, /^Table 03/i, SUBURB_CRIME_LABELS);
-      if (!t02 && !t03) {
-        throw new Error(
-          `no sheet has the known crime columns (sheets: ${wb.SheetNames.join(", ")})`
-        );
-      }
-      if (!t03) console.warn("Crime: suburb sheet (Table 03) not found - LGA fallback only");
-      const lga = t02
-        ? parseLgaCrimeTable02(t02)
-        : { property: new Map<string, number>(), violent: new Map<string, number>() };
-      const suburb = t03 ? parseSuburbCrimeTable03(t03) : new Map<string, CrimeCounts>();
-      const stats = applyCrimeToPlaces(byCode.values(), cw, suburb, lga);
-      console.log(
-        `Crime: ${stats.suburbMatched} SA2 via Table 03+crosswalk, ${stats.lgaFallback} LGA fallback`
-      );
-    } catch (e) {
-      console.warn("Crime XLSX not loaded:", (e as Error).message);
-    }
+    await crimeAdapter.normalize({ rawDir: RAW, cw, places: byCode.values() });
   }
 
   let usedGtfs = false;

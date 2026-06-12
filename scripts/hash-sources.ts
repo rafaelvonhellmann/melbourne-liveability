@@ -19,6 +19,7 @@ const SOURCE_FILES: Record<string, { dir: "raw" | "generated" | "public"; file: 
   "abs-erp-sa2": { dir: "raw", file: "abs-sa2-erp.json" },
   "abs-erp-sa2-series": { dir: "raw", file: "abs-sa2-erp-series.json" },
   "vcsa-recorded-offences": { dir: "raw", file: "vcsa-lga-offences.xlsx" },
+  "act-policing-crime-statistics": { dir: "raw", file: "act-crime-statistics.xlsx" },
   "ptv-gtfs": { dir: "generated", file: "gtfs-transport.json" },
   "osm-pt": { dir: "raw", file: "osm-pt.json" },
   "vic-mapshare-hospitals": { dir: "raw", file: "vic-hospitals.json" },

@@ -65,6 +65,13 @@
     "sha256": "bbf52f8d821643d0fee8b670cad547307a00b45b5958f3633bbba87145de2398"
   },
   {
+    "id": "act-policing-crime-statistics",
+    "name": "ACT Policing — quarterly crime statistics by suburb (dataACT)",
+    "url": "https://www.data.act.gov.au/Justice-Safety-and-Emergency/ACT-Crime-Statistics/2egm-dieb",
+    "licence": "CC BY 4.0",
+    "period": "rolling year (latest 4 quarters in export)"
+  },
+  {
     "id": "ptv-gtfs",
     "name": "PTV GTFS Schedule — metropolitan train, tram, bus (DTP)",
     "url": "https://opendata.transport.vic.gov.au/dataset/gtfs-schedule",

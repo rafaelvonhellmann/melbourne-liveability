@@ -7,20 +7,10 @@ import { RAW } from "./lib/paths.js";
 import { loadSa2Codes } from "./lib/melbourne-sa2-codes.js";
 import { PIPELINE_REGION, OVERPASS_BBOX } from "./lib/pipeline-region.js";
 import { fetchArcGisTable, overpassMelbourne } from "./lib/arcgis-fetch.js";
-import { downloadToFile } from "./lib/gov-fetch.js";
-import {
-  assertXlsxFile,
-  pickLgaOffencesXlsx,
-  type CkanCrimeResource,
-} from "./lib/vcsa-crime.js";
+import { crimeAdapterFor } from "./lib/crime-adapters.js";
 import { fetchVicHospitalPoints } from "./lib/vic-facilities.js";
 import { G37_SERVICE, G37_FIELDS } from "../lib/social-housing.js";
 import { STRESS_SERVICE, STRESS_FIELDS } from "../lib/housing-stress.js";
-
-// JSON-API calls (CKAN package_show below) keep the honest project UA; only the
-// static-file download routes through the browser-like helper (gov-fetch.ts),
-// because the .gov.au file hosts are the ones behind a WAF.
-const UA = "MelbourneLiveability/1.0";
 
 async function main() {
   await mkdir(RAW, { recursive: true });
@@ -101,7 +91,7 @@ async function main() {
   // (EXPANSION-PLAN section 3) - skip rather than fetch wrong-state data.
   if (PIPELINE_REGION.id !== "melbourne") {
     console.log(
-      `Skipping VIC-only sources (hospitals, VCSA crime) for ${PIPELINE_REGION.id} - Tier-B state module pending.`
+      `Skipping VIC-only sources (hospitals) for ${PIPELINE_REGION.id} - Tier-B state module pending.`
     );
   }
 
@@ -117,36 +107,24 @@ async function main() {
   } catch (e) {
     console.warn("  Vic hospitals:", (e as Error).message);
   }
-
-  console.log("VCSA crime (CKAN → XLSX)...");
-  try {
-    const pkg = await fetch(
-      "https://discover.data.vic.gov.au/api/3/action/package_show?id=data-tables-recorded-offences",
-      { headers: { "User-Agent": UA } }
-    );
-    const data = (await pkg.json()) as {
-      result?: { resources?: CkanCrimeResource[] };
-    };
-    const resources = data.result?.resources ?? [];
-    // Latest edition by parsed year-ending date, matching name OR URL: the
-    // June 2026 CKAN rename broke the old /LGA.*Recorded/ display-name filter
-    // and the `if (url)` skip made it silent - the refresh shipped no crime
-    // workbook and the coverage gate zeroed domains.safety (run 27280836153).
-    const xlsx = pickLgaOffencesXlsx(resources);
-    if (!xlsx?.url) {
-      throw new Error(
-        `no LGA offences XLSX among ${resources.length} CKAN resources ` +
-          `(latest names: ${resources.slice(-3).map((r) => r.name).join("; ")})`
-      );
-    }
-    const dest = path.join(RAW, "vcsa-lga-offences.xlsx");
-    await downloadToFile(xlsx.url, dest);
-    await assertXlsxFile(dest); // a 200 HTML/WAF page must not pose as the workbook
-    console.log(`  ${xlsx.name}`);
-  } catch (e) {
-    console.warn("  Crime:", (e as Error).message);
-  }
   } // end melbourne-only (VIC Tier-B) sources
+
+  // Recorded offences via the per-state crime adapter registry (VIC = VCSA
+  // CKAN -> XLSX, ACT = ACT Policing dataACT blob). States without an adapter
+  // fetch nothing - their safety domain stays unscored.
+  const crimeAdapter = crimeAdapterFor(PIPELINE_REGION);
+  if (!crimeAdapter) {
+    console.log(
+      `Skipping crime for ${PIPELINE_REGION.id} - no ${PIPELINE_REGION.state} crime adapter yet.`
+    );
+  } else {
+    console.log(`Crime (${crimeAdapter.sourceId})...`);
+    try {
+      await crimeAdapter.fetch(PIPELINE_REGION, RAW);
+    } catch (e) {
+      console.warn("  Crime:", (e as Error).message);
+    }
+  }
 
   console.log("Overpass PT stops...");
   const pt = await overpassMelbourne(`

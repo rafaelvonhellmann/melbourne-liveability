@@ -77,6 +77,11 @@ export const SOURCE_REFRESH: Record<
       match: "LGA",
     },
   },
+  "act-policing-crime-statistics": {
+    // dataACT Socrata blob (2egm-dieb): no CKAN/ArcGIS probe; quarterly issue.
+    cadence: "quarterly",
+    probe: { type: "none" },
+  },
   "vic-mapshare-hospitals": {
     cadence: "annual",
     probe: {

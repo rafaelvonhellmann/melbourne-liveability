@@ -4,7 +4,8 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { GENERATED } from "./lib/paths.js";
-import { generatedOutPath } from "./lib/pipeline-region.js";
+import { generatedOutPath, PIPELINE_REGION } from "./lib/pipeline-region.js";
+import { crimeAdapterFor } from "./lib/crime-adapters.js";
 import { percentileRank } from "../lib/scoring.js";
 import { V1_SCORED_DOMAINS } from "../lib/domains.js";
 import type {
@@ -17,6 +18,12 @@ import type {
 } from "../lib/types.js";
 
 const NON_RESIDENTIAL_POP_THRESHOLD = 200;
+
+/** Crime provenance id from the region's adapter. Regions without an adapter
+ * keep the historical VCSA id on their (all-missing) safety indicators -
+ * byte-identical output for the existing bakes. */
+const CRIME_SOURCE_ID =
+  crimeAdapterFor(PIPELINE_REGION)?.sourceId ?? "vcsa-recorded-offences";
 
 type RawPlace = {
   sa2Code: string;
@@ -375,14 +382,14 @@ async function main() {
         propertyCrime: indicator(
           p.propertyCrimeRate,
           propPct,
-          "vcsa-recorded-offences",
+          CRIME_SOURCE_ID,
           p.crimeMethod ?? "direct",
           propPct == null
         ),
         violentCrime: indicator(
           p.violentCrimeRate,
           violPct,
-          "vcsa-recorded-offences",
+          CRIME_SOURCE_ID,
           p.crimeMethod ?? "direct",
           violPct == null
         ),
