@@ -1,0 +1,120 @@
+[
+  {
+    "id": "abs-sa2-income-dbr",
+    "name": "ABS Data by Region — median equivalised household income (weekly)",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-06-12",
+    "sha256": "96b0fee4d2057a67e36fe1f7c38d0999438b8d96ac9d3942f6fac5935c01d9e9"
+  },
+  {
+    "id": "abs-rent-to-income-2021",
+    "name": "Rent-to-income ratio — ABS Census 2021 median weekly rent ÷ ABS Data by Region equivalised household income",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "derived": true,
+    "sha256": ""
+  },
+  {
+    "id": "abs-erp-sa2",
+    "name": "ABS ERP by SA2",
+    "url": "https://www.abs.gov.au/statistics/people/population/regional-population",
+    "licence": "CC BY 4.0",
+    "period": "2023",
+    "fetchedAt": "2026-06-12",
+    "sha256": "67faff99065abf23268fc760677ff212c255bb29bb7ee5e7e9d524d608e1b92a"
+  },
+  {
+    "id": "wa-police-suburb-offences",
+    "name": "WA Police Force - recorded offences by locality by month (crime statistics portal Power BI report)",
+    "url": "https://www.wa.gov.au/organisation/western-australia-police-force/crime-statistics",
+    "licence": "WA Government Terms of Use (attribution required)",
+    "verifyNote": "Portal page carries the generic wa.gov.au Terms of Use, which permit attributed personal/non-commercial/in-organisation reuse but require WRITTEN PERMISSION for commercial use - the data.wa.gov.au WA Police org otherwise publishes CC BY 4.0. CONFIRM commercial-reuse permission (email WA Police, or locate a CC BY catalogue entry for the suburb crime series) before commercial launch (checked 2026-06-12).",
+    "period": "rolling year (latest 12 months in export)",
+    "fetchedAt": "2026-06-12",
+    "sha256": "73f5845ee8955990c7d38b0a3966ff1960fef7fc32fa2c563ddad4c279296a4a"
+  },
+  {
+    "id": "osm-health",
+    "name": "OpenStreetMap — GP/clinic points (Overpass; hospital fallback only)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-12",
+    "sha256": "906a5c9116870d06da901f616ab4b5b1a5fa4d9137bc157e3235facd9632053b"
+  },
+  {
+    "id": "abs-census-labour-2016",
+    "name": "ABS Census 2016 — labour force (employed, participation) by SA2",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2016",
+    "fetchedAt": "2026-06-12",
+    "sha256": "3219ffa8222cfa78652f9ddf5382a3f5a169b28ce97d5249b64ab54200f68fe6"
+  },
+  {
+    "id": "osm-schools",
+    "name": "OpenStreetMap — schools within 2 km (Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-12",
+    "sha256": "3fa07de96a63b422579506e0862e91cf7276fe16123a7bd42dcb11cdd9741eba"
+  },
+  {
+    "id": "abs-census-preschool-2021",
+    "name": "ABS Census 2021 — children enrolled in preschool (SA2)",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-06-12",
+    "sha256": "3219ffa8222cfa78652f9ddf5382a3f5a169b28ce97d5249b64ab54200f68fe6"
+  },
+  {
+    "id": "abs-seifa-2021",
+    "name": "ABS SEIFA 2021 — IRSAD and IRSD deciles (SA2)",
+    "url": "https://www.abs.gov.au/statistics/people/people-and-communities/socio-economic-indexes-areas-seifa-australia/latest-release",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-06-12",
+    "sha256": "ab3abeadc88b4b8f28034c4446ddb65795aa9e479a11a5956cbc9f54b78b9ce2"
+  },
+  {
+    "id": "abs-census-community-2021",
+    "name": "ABS Census 2021 — tenure and dwelling structure (SA2)",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-06-12",
+    "sha256": "6da6ec3bd07b5d397aa42e2c19efe68c47e3fbc93036010c88cfcfe066409e61"
+  },
+  {
+    "id": "osm-amenities",
+    "name": "OpenStreetMap — everyday amenities for 15-min access (supermarket, pharmacy, park, cafe/restaurant, gym/leisure; Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-12",
+    "sha256": "6df620d37f7d89cfda12f216a86b950cbe1ae1611037b8164efe3b69ecb1d4ab"
+  },
+  {
+    "id": "osm-cycleways",
+    "name": "OpenStreetMap — cycling infrastructure for cyclability index (cycleways, on-road bike lanes, bicycle-designated paths; Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-12",
+    "sha256": "614a57f748764bffc38f0b6c7f537dcc10ae87f28e7352d5952c2844d3e5e40b"
+  },
+  {
+    "id": "transperth-gtfs",
+    "name": "Transperth (PTA WA) GTFS schedule",
+    "url": "https://www.transperth.wa.gov.au/About/Spatial-Data-Access",
+    "licence": "CC BY 4.0",
+    "period": "2026-06 to 2026-09",
+    "fetchedAt": "2026-06-12",
+    "sha256": "bdb51c0b5004f4df61f1ea828caebb9eb2b33ff9ffc99b10e26e5ac8e50b683b"
+  }
+]
