@@ -15,7 +15,7 @@ test.describe("content routes", () => {
     await page.goto("/account");
     await expect(page.getByRole("heading", { name: "Your data", level: 1 })).toBeVisible();
     await expect(page.getByRole("button", { name: /Export my data/ })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Clear on-device data/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Clear this device/ })).toBeVisible();
   });
 
   test("signin page renders the magic-link form", async ({ page }) => {

@@ -39,6 +39,21 @@ describe("apiFetch", () => {
     } satisfies Partial<ApiError>);
   });
 
+  it("keeps the parsed error body for callers that need stale payloads", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse({ error: "stale", server: { version: 1, updatedAt: "t" } }, 409)
+      )
+    );
+
+    await expect(apiFetch("/api/prefs")).rejects.toMatchObject({
+      status: 409,
+      code: "stale",
+      body: { error: "stale", server: { version: 1, updatedAt: "t" } },
+    } satisfies Partial<ApiError>);
+  });
+
   it("normalizes 503 as unavailable", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => jsonResponse({ error: "bindings" }, 503)));
 

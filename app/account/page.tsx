@@ -2,25 +2,47 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Download, Trash2, Lock } from "lucide-react";
+import { CloudOff, Download, LogOut, RefreshCw, ShieldCheck, Trash2 } from "lucide-react";
 import { usePlaces } from "@/lib/use-places";
 import {
+  PREFS_CHANGED_EVENT,
   loadUserPrefs,
   saveUserPrefs,
   DEFAULT_PREFS,
   type UserPrefs,
 } from "@/lib/user-prefs";
+import {
+  PROFILE_CHANGED_EVENT,
+  clearProfile,
+  loadProfile,
+  type UserProfile,
+} from "@/lib/user-profile";
+import { runWithoutSyncPush, useAccountSync } from "@/lib/sync";
+import { useSession } from "@/lib/use-session";
 import { INTEREST_VIEWS } from "@/lib/interest-views";
 import { V1_SCORED_DOMAINS, getDomain } from "@/lib/domains";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export default function AccountPage() {
   const [prefs, setPrefs] = useState<UserPrefs>(DEFAULT_PREFS);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const { places, error: placesError } = usePlaces();
-  const [cleared, setCleared] = useState(false);
+  const session = useSession();
+  const sync = useAccountSync(session);
+  const [notice, setNotice] = useState("");
 
   useEffect(() => {
-    setPrefs(loadUserPrefs());
+    const loadLocal = () => {
+      setPrefs(loadUserPrefs());
+      setProfile(loadProfile());
+    };
+    loadLocal();
+    window.addEventListener(PREFS_CHANGED_EVENT, loadLocal);
+    window.addEventListener(PROFILE_CHANGED_EVENT, loadLocal);
+    return () => {
+      window.removeEventListener(PREFS_CHANGED_EVENT, loadLocal);
+      window.removeEventListener(PROFILE_CHANGED_EVENT, loadLocal);
+    };
   }, []);
 
   const name = (slug: string) =>
@@ -31,7 +53,17 @@ export default function AccountPage() {
     : null;
 
   function exportData() {
-    const blob = new Blob([JSON.stringify(prefs, null, 2)], {
+    const blob = new Blob([
+      JSON.stringify(
+        {
+          exportedAt: new Date().toISOString(),
+          prefs: loadUserPrefs(),
+          profile: loadProfile(),
+        },
+        null,
+        2
+      ),
+    ], {
       type: "application/json",
     });
     const url = URL.createObjectURL(blob);
@@ -42,17 +74,39 @@ export default function AccountPage() {
     URL.revokeObjectURL(url);
   }
 
-  function resetData() {
-    saveUserPrefs({ ...DEFAULT_PREFS });
-    setPrefs({ ...DEFAULT_PREFS });
-    setCleared(true);
+  function clearDeviceData() {
+    if (!window.confirm("Clear data saved in this browser?")) return;
+    runWithoutSyncPush(() => {
+      saveUserPrefs({ ...DEFAULT_PREFS });
+      clearProfile();
+    });
+    setPrefs(loadUserPrefs());
+    setProfile(null);
+    setNotice("Cleared. Your on-device data has been reset.");
+  }
+
+  async function deleteSyncedCopy() {
+    if (session.status !== "signed-in") return;
+    if (!window.confirm("Delete the synced copy and sign out? This device keeps its local copy.")) {
+      return;
+    }
+    const status = await sync.deleteSyncedCopy();
+    if (status === "synced") {
+      await session.signOut();
+      setNotice("Deleted the synced copy and signed out. This device keeps its local copy.");
+    } else {
+      setNotice("Could not delete the synced copy. Your on-device data is unchanged.");
+    }
   }
 
   const hasAny =
+    !!profile ||
     !!lensLabel ||
     prefs.shortlist.length > 0 ||
     prefs.recent.length > 0 ||
-    !!prefs.weights;
+    prefs.savedChecks.length > 0 ||
+    !!prefs.weights ||
+    !!prefs.buyerProfile;
 
   return (
     <div className="flex min-h-screen flex-col bg-bg text-ink">
@@ -62,26 +116,20 @@ export default function AccountPage() {
         </Link>
         <h1 className="mt-4 font-display text-2xl font-semibold text-ink">Your data</h1>
         <p className="mt-2 text-sm text-ink-muted">
-          Everything below is stored <strong className="text-ink">only in this browser</strong>{" "}
-          (no account, nothing sent to us). It personalises your own view. Export it to keep
-          a copy, or clear it any time.
+          Everything below is stored on this device. Sign in to sync it across devices,
+          export a copy, or clear it any time.
         </p>
 
-        {/* Sync stub */}
-        <div className="mt-6 flex items-start gap-3 rounded-lg border border-surface-border bg-surface-sunken p-4">
-          <Lock className="mt-0.5 h-5 w-5 shrink-0 text-ink-muted" aria-hidden />
-          <div>
-            <h2 className="text-sm font-semibold text-ink">Sign in to sync - coming later</h2>
-            <p className="mt-0.5 text-sm text-ink-muted">
-              Optional accounts to sync your shortlist and lenses across devices may come later.
-              For now everything is free and stored only in this browser.
-            </p>
-          </div>
-        </div>
+        <SyncPanel
+          session={session}
+          status={sync.status}
+          onSync={() => void sync.syncNow("all")}
+          onSignOut={() => void session.signOut()}
+        />
 
-        {cleared && (
+        {notice && (
           <p className="mt-4 rounded-lg border border-surface-border bg-surface px-3 py-2 text-sm text-accent">
-            Cleared. Your on-device data has been reset.
+            {notice}
           </p>
         )}
 
@@ -99,6 +147,25 @@ export default function AccountPage() {
           </p>
         ) : (
           <div className="mt-6 space-y-4">
+            {profile && (
+              <Card title="Profile">
+                <Row k="Profile type" v={profile.type === "agent" ? "Agent" : "Buyer"} />
+                <Row k="Name" v={profile.name ?? "Not set"} />
+                {profile.type === "agent" && (
+                  <>
+                    <Row k="Clients" v={String(profile.clients?.length ?? 0)} />
+                    <Row
+                      k="Active client"
+                      v={
+                        profile.clients?.find((c) => c.id === profile.activeClientId)?.label ??
+                        "Not set"
+                      }
+                    />
+                  </>
+                )}
+              </Card>
+            )}
+
             <Card title="Lens">
               <Row k="Interest lens" v={lensLabel ?? "Not set (Balanced)"} />
             </Card>
@@ -169,12 +236,22 @@ export default function AccountPage() {
           </button>
           <button
             type="button"
-            onClick={resetData}
+            onClick={clearDeviceData}
             disabled={!hasAny}
             className="inline-flex items-center gap-1.5 rounded-md border border-surface-border px-3 py-1.5 text-sm text-[#9A552F] transition-colors hover:border-[#9A552F] disabled:opacity-50"
           >
-            <Trash2 className="h-4 w-4" aria-hidden /> Clear on-device data
+            <Trash2 className="h-4 w-4" aria-hidden /> Clear this device
           </button>
+          {session.status === "signed-in" && (
+            <button
+              type="button"
+              onClick={() => void deleteSyncedCopy()}
+              disabled={sync.status === "syncing"}
+              className="inline-flex items-center gap-1.5 rounded-md border border-surface-border px-3 py-1.5 text-sm text-[#9A552F] transition-colors hover:border-[#9A552F] disabled:opacity-50"
+            >
+              <Trash2 className="h-4 w-4" aria-hidden /> Delete synced copy
+            </button>
+          )}
         </div>
 
         <p className="mt-4 text-xs text-ink-muted">
@@ -186,6 +263,101 @@ export default function AccountPage() {
         </p>
       </div>
       <SiteFooter />
+    </div>
+  );
+}
+
+function SyncPanel({
+  session,
+  status,
+  onSync,
+  onSignOut,
+}: {
+  session: ReturnType<typeof useSession>;
+  status: "idle" | "syncing" | "synced" | "offline" | "error";
+  onSync: () => void;
+  onSignOut: () => void;
+}) {
+  if (session.status === "loading") {
+    return (
+      <div className="mt-6 rounded-lg border border-surface-border bg-surface-sunken p-4 text-sm text-ink-muted">
+        Checking account...
+      </div>
+    );
+  }
+
+  if (session.status === "signed-out") {
+    return (
+      <div className="mt-6 flex items-start gap-3 rounded-lg border border-surface-border bg-surface-sunken p-4">
+        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-ink-muted" aria-hidden />
+        <div>
+          <h2 className="text-sm font-semibold text-ink">Sign in to sync</h2>
+          <p className="mt-0.5 text-sm text-ink-muted">
+            Keep your shortlist, checks, profile and lenses available across devices.
+          </p>
+          <Link
+            href="/signin"
+            className="mt-3 inline-flex rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-focus"
+          >
+            Sign in
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (session.status === "unavailable") {
+    return (
+      <div className="mt-6 flex items-start gap-3 rounded-lg border border-surface-border bg-surface-sunken p-4">
+        <CloudOff className="mt-0.5 h-5 w-5 shrink-0 text-ink-muted" aria-hidden />
+        <div>
+          <h2 className="text-sm font-semibold text-ink">Sync offline</h2>
+          <p className="mt-0.5 text-sm text-ink-muted">
+            Changes are saved on this device. Sync will retry next time this page loads.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const label =
+    status === "syncing"
+      ? "Syncing"
+      : status === "synced"
+        ? "Synced"
+        : status === "offline"
+          ? "Offline"
+          : status === "error"
+            ? "Sync error"
+            : "Ready";
+
+  return (
+    <div className="mt-6 rounded-lg border border-surface-border bg-surface-sunken p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-sm font-semibold text-ink">{session.user.email}</h2>
+          <span className="mt-1 inline-flex rounded-full border border-surface-border bg-surface px-2 py-0.5 text-xs text-ink-muted">
+            {label}
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={onSync}
+            disabled={status === "syncing"}
+            className="inline-flex items-center gap-1.5 rounded-md border border-surface-border px-3 py-1.5 text-sm text-ink transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
+          >
+            <RefreshCw className="h-4 w-4" aria-hidden /> Sync now
+          </button>
+          <button
+            type="button"
+            onClick={onSignOut}
+            className="inline-flex items-center gap-1.5 rounded-md border border-surface-border px-3 py-1.5 text-sm text-ink transition-colors hover:border-accent hover:text-accent"
+          >
+            <LogOut className="h-4 w-4" aria-hidden /> Sign out
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -3,20 +3,20 @@ export type ApiErrorCode = "network" | "unavailable" | string;
 export class ApiError extends Error {
   readonly status: number;
   readonly code: ApiErrorCode;
+  readonly body: unknown;
 
-  constructor(status: number, code: ApiErrorCode) {
+  constructor(status: number, code: ApiErrorCode, body: unknown = null) {
     super(code);
     this.name = "ApiError";
     this.status = status;
     this.code = code;
+    this.body = body;
   }
 }
 
-type JsonBody = Record<string, unknown> | unknown[];
-
-type ApiFetchInit = Omit<RequestInit, "body" | "credentials"> & {
+export type ApiFetchInit = Omit<RequestInit, "body" | "credentials"> & {
   body?: BodyInit | null;
-  json?: JsonBody;
+  json?: unknown;
 };
 
 function isObjectBody(value: unknown): value is Record<string, unknown> {
@@ -70,7 +70,7 @@ export async function apiFetch<T = unknown>(
 
   const parsed = await readJson(response);
   if (!response.ok) {
-    throw new ApiError(response.status, errorCode(response, parsed));
+    throw new ApiError(response.status, errorCode(response, parsed), parsed);
   }
   return parsed as T;
 }

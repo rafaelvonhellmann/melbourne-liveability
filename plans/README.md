@@ -26,7 +26,7 @@ unless the operator says so; never touch the `wip-all` git stash.
 | 010  | Accounts backend hardening (run 001)               | P1 | M | 003 | DONE (run 001, codex exec, fable reviewed) |
 | 011  | Prefs sync backend (run 001)                       | P1 | M-L | 010 | DONE (run 001, codex exec, fable reviewed) |
 | 012  | Frontend auth foundation (run 001)                 | P1 | M | —   | DONE (run 001, codex exec, fable reviewed) |
-| 013  | Account page + sync wiring (run 001)               | P1 | M | 011, 012 | TODO |
+| 013  | Account page + sync wiring (run 001)               | P1 | M | 011, 012 | DONE (run 001, codex exec, fable fix-up: test clock pin) |
 | 014  | Accounts cutover + GATED deploy (run 001)          | P1 | M | 003, 010-013 | TODO |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (reason) | REJECTED (rationale)

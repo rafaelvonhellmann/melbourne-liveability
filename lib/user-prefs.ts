@@ -8,9 +8,9 @@ import type { BuyerProfile } from "./buyer-fit";
 
 const STORAGE_KEY = "mlv-user-prefs-v1";
 const CURRENT_PREFS_VERSION = 1;
-const MAX_SHORTLIST = 12;
+const MAX_SHORTLIST = 100;
 const MAX_RECENT = 8;
-const MAX_SAVED_CHECKS = 20;
+const MAX_SAVED_CHECKS = 50;
 
 /**
  * Same-tab notification that persisted prefs changed. The native `storage`
@@ -44,6 +44,8 @@ export type SavedCheck = {
 
 export type UserPrefs = {
   version: 1;
+  /** Client-supplied sync clock for /api/prefs whole-blob LWW. */
+  updatedAt?: string;
   weights?: ScoreWeights;
   /** @deprecated Retired persona-preset id; kept so old stored prefs still parse. */
   personaId?: string | null;
@@ -51,7 +53,7 @@ export type UserPrefs = {
   shortlist: string[];
   recent: RecentPlace[];
   savedChecks: SavedCheck[];
-  alertEmail?: string;
+  alertEmail?: string | null;
   /** Use the colourblind-safe (RdYlBu) score ramp on the map. Display-only. */
   colorblindRamp?: boolean;
   /** Lightweight personal "fit for your life" profile. Local-only. */
@@ -76,15 +78,22 @@ function isBrowser(): boolean {
 
 type StoredPrefs = Partial<Omit<UserPrefs, "version">> & { version?: unknown };
 
+function cleanUpdatedAt(v: unknown): string | undefined {
+  if (typeof v !== "string") return undefined;
+  return Number.isNaN(Date.parse(v)) ? undefined : v;
+}
+
 /**
  * Reads a v1 payload into the current shape: spread over defaults, then clamp
  * the list fields and drop malformed entries. Identity migration today.
  */
 function migrateFromV1(parsed: StoredPrefs): UserPrefs {
+  const updatedAt = cleanUpdatedAt(parsed.updatedAt);
   return {
     ...DEFAULT_PREFS,
     ...parsed,
     version: CURRENT_PREFS_VERSION,
+    updatedAt,
     // Enum drift guard: a lens id written by an older/newer build (persona-era
     // ids, rollback skew) must never reach INTEREST_VIEWS lookups - it crashed
     // every map route for returning visitors (live incident 2026-06-11).
@@ -146,8 +155,15 @@ export function loadUserPrefs(): UserPrefs {
   }
 }
 
-export function saveUserPrefs(prefs: UserPrefs): void {
+export function saveUserPrefs(
+  prefs: UserPrefs,
+  options: { preserveUpdatedAt?: boolean } = {}
+): void {
   if (!isBrowser()) return;
+  const updatedAt =
+    options.preserveUpdatedAt && prefs.updatedAt
+      ? prefs.updatedAt
+      : new Date().toISOString();
   // setItem throws when storage is blocked/full (Safari private mode, quota).
   // These writers run from click handlers, which React error boundaries don't
   // catch - so a blocked store would crash the handler. Degrade to in-memory.
@@ -157,6 +173,7 @@ export function saveUserPrefs(prefs: UserPrefs): void {
       JSON.stringify({
         ...prefs,
         version: CURRENT_PREFS_VERSION,
+        updatedAt,
         shortlist: prefs.shortlist.slice(0, MAX_SHORTLIST),
         recent: prefs.recent.slice(0, MAX_RECENT),
         savedChecks: (prefs.savedChecks ?? []).slice(0, MAX_SAVED_CHECKS),
