@@ -276,14 +276,14 @@ export default function MapPage() {
   // ---- Buyer "Location Check" mode ------------------------------------
   const router = useRouter();
 
-  // Onboarding: first-time visitors with NO share-URL state get the full-screen
-  // Landing (scroll story + big address search) INSTEAD of the map; everyone
-  // else lands straight on the map, where the lens-picker modal + dismissible
-  // map tip cover orientation. Client-only decision so the prerendered HTML
-  // and the e2e-seeded returning-user path stay byte-identical (hydration
-  // renders the map shell either way) - but it runs BEFORE the first paint,
-  // so a first-time visitor's first painted frame is the landing, never a
-  // map-shell flash, and the OnboardingModal cannot blink open underneath.
+  // Landing: every PLAIN visit (no share-URL state) gets the full-screen
+  // Landing (scroll story + big address search) INSTEAD of the map; share /
+  // deep links land straight on the map, where the lens-picker modal +
+  // dismissible map tip cover orientation. Client-only decision so the
+  // prerendered HTML stays byte-identical (hydration renders the map shell
+  // either way) - but it runs BEFORE the first paint, so a plain visitor's
+  // first painted frame is the landing, never a map-shell flash, and the
+  // OnboardingModal cannot blink open underneath.
   const [showLanding, setShowLanding] = useState(false);
   // In-session memory that the landing handled onboarding. The landing sets the
   // mlv-onboarded-v1 flag on every dismissal path, but localStorage.setItem can
@@ -291,7 +291,7 @@ export default function MapPage() {
   // OnboardingModal must still never fire right after the landing dismisses.
   const landingHandledRef = useRef(false);
   useBeforePaintEffect(() => {
-    // One-shot first-visit gate; later URL rewrites (syncBuyerUrl) never re-gate.
+    // One-shot, URL-only gate; later URL rewrites (syncBuyerUrl) never re-gate.
     setShowLanding(shouldShowLanding(window.location.search));
   }, []);
   // Post-landing profile setup: a landing profile-card click queues the quiet
@@ -1133,7 +1133,7 @@ export default function MapPage() {
 
   const isHomeBuyer = interestView === "homeBuyer";
 
-  // First-visit landing gate: rendered INSTEAD of the map UI, so the
+  // Landing gate (every plain visit): rendered INSTEAD of the map UI, so the
   // OnboardingModal never mounts behind it. Landing sets the same
   // mlv-onboarded-v1 flag on every dismissal path, then onDismiss reveals the
   // map; a hero search pick additionally drives the existing buyer-pin seams.

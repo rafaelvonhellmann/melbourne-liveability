@@ -32,7 +32,9 @@ const LIVE_REGIONS: RegionId[] = REGION_IDS.filter((r) =>
 
 test.describe("per-region smoke", () => {
   test.beforeEach(async ({ page }) => {
-    // Returning-user seed: the landing/onboarding gates have their own specs.
+    // Seen-flag seed: these are stateful deep links (?region&buyer), which
+    // skip the landing by contract; the seed keeps the lens-picker modal from
+    // opening over the panel. The landing gate has its own specs.
     await page.addInitScript(() => {
       try {
         localStorage.setItem("mlv-onboarded-v1", "1");

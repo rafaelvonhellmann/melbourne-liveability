@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 // A residential SA2 known to have a rich profile (population trend + crime).
 const PROFILE = "/places/brunswick-east-206011106";
@@ -77,14 +77,23 @@ test.describe("profile", () => {
 });
 
 test.describe("landing", () => {
-  test("first visit shows the landing hero; explore enters the map", async ({ page }) => {
-    // No seeded flag: a genuinely fresh visitor must get the landing, not the map.
+  test("every plain visit shows the landing hero; explore enters the map", async ({ page }) => {
+    // Seed the seen-flag like a returning user: the landing must STILL greet -
+    // plain visits always land on the landing now; only stateful share URLs
+    // skip straight to the map (founder decision 2026-06).
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem("mlv-onboarded-v1", "1");
+      } catch {
+        /* ignore */
+      }
+    });
     await page.goto("/");
     await expect(
       page.getByPlaceholder("A window onto your new home")
     ).toBeVisible({ timeout: 20_000 });
     await page.getByRole("button", { name: "Explore the map" }).click();
-    // Dismissal sets the onboarded flag and reveals the map chrome.
+    // Dismissal reveals the map chrome.
     await expect(
       page.getByRole("link", { name: /festra|liveable/i }).first()
     ).toBeVisible({ timeout: 20_000 });
@@ -92,9 +101,10 @@ test.describe("landing", () => {
 });
 
 test.describe("map", () => {
-  // The map tests exercise the MAP, not the first-visit landing gate (the
-  // landing has its own smoke above) - seed the seen-flag like a returning
-  // user, exactly as journeys.spec.ts does.
+  // Plain "/" greets with the landing on every visit now, so the map tests
+  // enter the way a user does: through the landing's explore CTA. The seeded
+  // seen-flag only suppresses the lens-picker modal on deep-link entries
+  // (the shared-pin test below), exactly as journeys.spec.ts does.
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       try {
@@ -105,15 +115,23 @@ test.describe("map", () => {
     });
   });
 
-  test("map route loads and MapLibre paints a canvas", async ({ page }) => {
+  /** Plain "/" -> landing -> explore CTA -> the map. */
+  async function openMapViaLanding(page: Page) {
     await page.goto("/");
+    const explore = page.getByRole("button", { name: "Explore the map" });
+    await expect(explore).toBeVisible({ timeout: 20_000 });
+    await explore.click();
+  }
+
+  test("map route loads and MapLibre paints a canvas", async ({ page }) => {
+    await openMapViaLanding(page);
     await expect(page.getByRole("link", { name: /festra|liveable/i }).first()).toBeVisible();
     // The hydration question, settled empirically: does the MapLibre canvas appear?
     await expect(page.locator("canvas.maplibregl-canvas")).toBeVisible({ timeout: 25_000 });
   });
 
   test("suburb search returns results", async ({ page, isMobile }) => {
-    await page.goto("/");
+    await openMapViaLanding(page);
     // Below the sm breakpoint the top-bar search is hidden; search lives in
     // the bottom sheet's Search tab instead.
     if (isMobile) {
@@ -141,8 +159,9 @@ test.describe("map", () => {
 
   test("shows a recoverable error when area data fails to load", async ({ page }) => {
     // Simulate the data fetch failing — the map must not silently render empty.
+    // (The landing still renders without area data; the alert lives on the map.)
     await page.route("**/data/places.json", (route) => route.abort());
-    await page.goto("/");
+    await openMapViaLanding(page);
     await expect(page.getByText("Could not load area data")).toBeVisible({ timeout: 15_000 });
   });
 });

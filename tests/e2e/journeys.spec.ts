@@ -54,9 +54,10 @@ test.describe("journey: share-URL state restore", () => {
     page,
     isMobile,
   }) => {
-    // First visits to the plain map show the onboarding lens-picker modal,
-    // whose own "Family" card would shadow the lens pill (and its overlay
-    // intercepts mobile tab clicks). Seed the seen-flag like a returning user.
+    // Stateful share URLs skip the landing by contract, but a never-onboarded
+    // visitor would then meet the lens-picker modal, whose own "Family" card
+    // would shadow the lens pill (and its overlay intercepts mobile tab
+    // clicks). Seed the seen-flag like a returning user.
     await page.addInitScript(() => {
       try {
         localStorage.setItem("mlv-onboarded-v1", "1");

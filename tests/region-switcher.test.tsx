@@ -221,7 +221,18 @@ afterEach(() => {
   ph.spCache = null;
   ph.spCacheKey = null;
   mh.maps.length = 0;
+  window.history.replaceState(null, "", "/");
 });
+
+/**
+ * Deep-link state for a page render: the mocked useSearchParams (ph.search)
+ * AND window.location must agree - the landing gate (shouldShowLanding) reads
+ * window.location.search directly, before any hook state exists.
+ */
+function setPageUrl(search: string) {
+  ph.search = search;
+  window.history.replaceState(null, "", search ? `/?${search}` : "/");
+}
 
 function stubReducedMotion(matches: boolean) {
   vi.stubGlobal("matchMedia", (query: string) => ({
@@ -412,16 +423,24 @@ describe("map page region switching", () => {
   });
 
   beforeEach(() => {
-    // The seeded returning-user path (e2e parity): no landing, no onboarding.
+    // Seen-flag seed (e2e parity): the landing now greets every PLAIN visit
+    // regardless of this flag; it only keeps the lens-picker modal from
+    // opening on the deep-link renders below.
     localStorage.setItem("mlv-onboarded-v1", "1");
     // Drop the lib/places-data session caches so each test's fetch stub fully
     // controls the verdicts (the module is a singleton across this suite).
     __resetPlacesDataCachesForTests();
   });
 
+  /** Plain "/" lands on the landing every visit - enter via the explore CTA. */
+  async function dismissLanding() {
+    fireEvent.click(await screen.findByRole("button", { name: "Explore the map" }));
+  }
+
   async function renderPage() {
     const calls = stubPageFetch();
     const utils = render(<MapPage />);
+    await dismissLanding();
     await screen.findByTestId("map-stub");
     // Initial melbourne dataset resolved (the seam may serve it from the
     // session cache on later renders - the map shell is the reliable signal).
@@ -588,7 +607,8 @@ describe("map page region switching", () => {
   });
 
   it("an unbaked ?region= link degrades to the melbourne map WITH visible copy", async () => {
-    ph.search = "region=sydney";
+    // ?region= is deep-link state: it skips the landing straight to the map.
+    setPageUrl("region=sydney");
     stubPageFetch(); // sydney places artifact 404s (probe miss)
     render(<MapPage />);
     await screen.findByTestId("map-stub");
@@ -605,7 +625,7 @@ describe("map page region switching", () => {
     // A sydney pin is valid for the URL's own region, but sydney is not baked:
     // the app serves melbourne - the pin must not jump the camera against the
     // melbourne maxBounds (envelope edge at zoom 14.5) or restore a report.
-    ph.search = "region=sydney&buyer=1&lat=-33.8688&lng=151.2093";
+    setPageUrl("region=sydney&buyer=1&lat=-33.8688&lng=151.2093");
     stubPageFetch();
     render(<MapPage />);
     await screen.findByTestId("map-stub");
@@ -642,6 +662,7 @@ describe("map page region switching", () => {
       })
     );
     render(<MapPage />);
+    await dismissLanding();
     await screen.findByTestId("map-stub");
     const bar = topBar();
     fireEvent.click(bar.getByRole("button", { name: /switch capital city/i }));

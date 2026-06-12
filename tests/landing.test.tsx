@@ -13,11 +13,13 @@ import { geocodeAddress } from "../lib/geocode";
 import type { SearchIndexEntry } from "../lib/search";
 
 /**
- * First-visit landing experience: gate decision (shouldShowLanding), the hero
- * search wired to the buyer-pin seams, the five map-backed scroll scenes, and
- * the profile-choice close band. Every dismissal path must set the SAME
- * onboarding flag the OnboardingModal uses, so the modal never fires after
- * the landing.
+ * Landing experience: gate decision (shouldShowLanding - every PLAIN visit
+ * shows the landing; only stateful share/deep-link URLs skip to the map), the
+ * hero search wired to the buyer-pin seams, the five map-backed scroll scenes,
+ * and the profile-choice close band. Every dismissal path must set the SAME
+ * onboarding flag the OnboardingModal uses, so the modal never fires for a
+ * visitor the landing already oriented (later share-link entries bypass the
+ * landing and would otherwise meet the modal).
  */
 
 vi.mock("../lib/geocode", () => ({
@@ -121,43 +123,47 @@ afterEach(() => {
   vi.mocked(geocodeAddress).mockClear();
 });
 
-describe("shouldShowLanding (first-visit gate)", () => {
-  it("shows for a fresh visitor with no URL state", () => {
+describe("shouldShowLanding (plain-visit landing gate)", () => {
+  it("shows for a plain visit with no URL state", () => {
     expect(shouldShowLanding("")).toBe(true);
   });
 
-  it("hides once the onboarded flag is set (e2e seeds this exact key)", () => {
+  it("shows on EVERY plain visit - the onboarded flag no longer skips it (founder decision 2026-06)", () => {
     localStorage.setItem(ONBOARDED_KEY, "1");
-    expect(shouldShowLanding("")).toBe(false);
+    expect(shouldShowLanding("")).toBe(true);
   });
 
-  it("hides for share-URL visitors and never marks them onboarded", () => {
+  it("shows even with saved prefs - the gate is URL-only, never localStorage", () => {
+    localStorage.setItem(
+      "mlv-user-prefs-v1",
+      JSON.stringify({ interestView: "family", shortlist: [] })
+    );
+    expect(shouldShowLanding("")).toBe(true);
+    // The gate never writes either - dismissal paths own the flag.
+    expect(localStorage.getItem(ONBOARDED_KEY)).toBeNull();
+  });
+
+  it("hides for every stateful share/deep-link URL - share links must keep working", () => {
     expect(shouldShowLanding("?buyer=1&lat=-37.8136&lng=144.9631")).toBe(false);
+    expect(shouldShowLanding("?lat=-37.8136&lng=144.9631")).toBe(false); // pin
     expect(shouldShowLanding("?select=brunswick-east-206011106")).toBe(false);
     expect(shouldShowLanding("?view=family")).toBe(false);
+    expect(shouldShowLanding("?persona=youngPro")).toBe(false); // legacy lens link
+    expect(shouldShowLanding("?layer=transport")).toBe(false);
+    expect(shouldShowLanding("?w=transport:60,affordability:5")).toBe(false);
     expect(shouldShowLanding("?list=toorak-206061138")).toBe(false);
     // Share visitors go straight to the map exactly as today - flag untouched.
     expect(localStorage.getItem(ONBOARDED_KEY)).toBeNull();
   });
 
-  it("region-only links still gate - the region applies after dismissal (decision of record)", () => {
-    // ?region= alone restores nothing the map could show over the landing, so
-    // a first-time visitor on a region-only link gets the product intro first.
-    expect(shouldShowLanding("?region=canberra")).toBe(true);
-    // A region link WITH share state (here a canberra pin, valid against the
-    // URL's own region) is a share visit exactly as today.
+  it("region links deep-link to that capital's map (supersedes the region-only decision of record)", () => {
+    expect(shouldShowLanding("?region=canberra")).toBe(false);
     expect(
       shouldShowLanding("?region=canberra&buyer=1&lat=-35.2802&lng=149.1310")
     ).toBe(false);
-  });
-
-  it("skips pre-flag returning users with saved prefs and marks them seen (modal parity)", () => {
-    localStorage.setItem(
-      "mlv-user-prefs-v1",
-      JSON.stringify({ interestView: "family", shortlist: [] })
-    );
-    expect(shouldShowLanding("")).toBe(false);
-    expect(localStorage.getItem(ONBOARDED_KEY)).toBe("1");
+    // An unknown region sanitizes to the default - nothing to restore, so the
+    // landing still greets.
+    expect(shouldShowLanding("?region=atlantis")).toBe(true);
   });
 });
 

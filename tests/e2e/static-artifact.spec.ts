@@ -12,17 +12,14 @@ import { test, expect } from "@playwright/test";
 const BASE = ""; // root path since the festra.au cutover (2026-06-12)
 
 test("app shell renders under the base path", async ({ page, isMobile }) => {
-  // This asserts the MAP shell (search box / sheet tabs) under the base path;
-  // fresh visitors get the landing instead, so seed the seen-flag like the
-  // other map-focused suites. The landing has its own smoke coverage.
-  await page.addInitScript(() => {
-    try {
-      localStorage.setItem("mlv-onboarded-v1", "1");
-    } catch {
-      /* ignore */
-    }
-  });
+  // This asserts the MAP shell (search box / sheet tabs) under the base path.
+  // Plain visits always land on the landing now, so enter the map the way a
+  // user does: through the landing's explore CTA. The landing has its own
+  // smoke coverage.
   await page.goto(`${BASE}/`);
+  const explore = page.getByRole("button", { name: "Explore the map" });
+  await expect(explore).toBeVisible({ timeout: 20_000 });
+  await explore.click();
   await expect(page.getByRole("link", { name: /festra|liveable/i }).first()).toBeVisible();
   if (isMobile) {
     // Below the sm breakpoint the header SearchBox is hidden; search lives

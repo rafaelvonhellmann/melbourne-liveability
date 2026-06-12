@@ -20,13 +20,19 @@ import {
   ReportSheet,
 } from "@/components/landing/scenes";
 import { PRODUCT_NAME } from "@/lib/brand";
+import { DEFAULT_REGION } from "@/lib/regions";
 import { parseMapUrlState } from "@/lib/share-url";
-import { loadUserPrefs } from "@/lib/user-prefs";
 import { track } from "@/lib/analytics";
 import type { SearchIndexEntry } from "@/lib/search";
 import type { GeocodeResult } from "@/lib/geocode";
 
-/** Same flag the OnboardingModal reads/sets - one onboarding gate, one key. */
+/**
+ * Same flag the OnboardingModal reads/sets. It no longer gates the landing
+ * (the landing shows on every plain visit - founder decision 2026-06); the
+ * landing still WRITES it on every dismissal path so the lens-picker modal
+ * never fires for a visitor the landing already oriented (e.g. a later
+ * share-link entry, which bypasses the landing).
+ */
 export const ONBOARDED_KEY = "mlv-onboarded-v1";
 /** Where the final-band profile choice is persisted for the profile flow. */
 export const PROFILE_CHOICE_KEY = "mlv-profile-choice-v1";
@@ -50,42 +56,33 @@ type LandingProps = {
 };
 
 /**
- * First-visit gate decision for the map route. The landing shows only when the
- * URL restores nothing (no shared pin / buyer state / selection / lens /
- * weights / shortlist / layer) AND the visitor has not been onboarded yet.
- * Mirrors OnboardingModal's skip rule for pre-flag returning users (any saved
- * preference marks them as seen). localStorage unavailable -> never gate.
+ * Landing gate for the map route. A plain visit to "/" ALWAYS shows the
+ * landing (founder decision 2026-06: the landing greets every visit; entering
+ * the map is the landing's own job - CTAs, hero search, Escape, skip link).
+ * The ONLY bypass is URL state: any share / deep link that restores something
+ * onto the map (?buyer, ?lat/?lng pin, ?select, ?layer, ?view + legacy
+ * ?persona, ?w weights, ?list shortlist, or a non-default ?region) goes
+ * straight to the map - breaking share links is not acceptable.
  *
- * Decision of record: ?region= ALONE does not count as share state - a
- * first-time visitor on a region-only link still gets the landing, and the
- * region applies to the map after dismissal (least surprising: the landing is
- * the product intro, not melbourne-specific state). Region links WITH share
- * state (pin/select/view/weights/list) skip the landing exactly as today.
+ * Supersedes the old region-only decision of record: with the landing on
+ * every plain visit, a ?region= link must deep-link to that capital's map or
+ * the recipient would meet the intro on every open.
+ *
+ * Pure URL decision - no localStorage read, so the gate behaves identically
+ * for first-time and returning visitors.
  */
 export function shouldShowLanding(search: string): boolean {
   const url = parseMapUrlState(search);
-  if (
+  return !(
     url.buyer ||
     url.pin !== null ||
     url.select !== null ||
     url.layer !== null ||
     url.view !== null ||
     url.weights !== null ||
-    url.shortlist.length > 0
-  ) {
-    return false;
-  }
-  try {
-    if (localStorage.getItem(ONBOARDED_KEY)) return false;
-    const prefs = loadUserPrefs();
-    if (prefs.interestView || prefs.personaId || prefs.shortlist.length > 0) {
-      localStorage.setItem(ONBOARDED_KEY, "1");
-      return false;
-    }
-    return true;
-  } catch {
-    return false;
-  }
+    url.shortlist.length > 0 ||
+    url.region !== DEFAULT_REGION
+  );
 }
 
 function markOnboarded() {
@@ -186,12 +183,13 @@ const PIN_AT = 0.7;
 const DOTS_AT = 0.85;
 
 /**
- * First-visit landing for the map route: the app brought forward. A live
- * (non-interactive) map is the full-screen backdrop; five scroll scenes drive
- * its camera from all-Australia down to a Brunswick East pin, then preview the
- * real product surfaces - the glimpse panel, the sourced report, the compare
- * table - before the three-door close band (explore free / paid report /
- * profile). Rendered INSTEAD of the map UI
+ * The landing for the map route, shown on EVERY plain visit (only stateful
+ * share / deep links skip it - see shouldShowLanding): the app brought
+ * forward. A live (non-interactive) map is the full-screen backdrop; five
+ * scroll scenes drive its camera from all-Australia down to a Brunswick East
+ * pin, then preview the real product surfaces - the glimpse panel, the
+ * sourced report, the compare table - before the three-door close band
+ * (explore free / paid report / profile). Rendered INSTEAD of the map UI
  * (see the gating seam in app/(map)/page.tsx); every dismissal path sets
  * ONBOARDED_KEY - the same flag the OnboardingModal uses - so the modal never
  * fires afterwards.
