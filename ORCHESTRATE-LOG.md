@@ -60,6 +60,19 @@ Explicitly OUT of scope: pricing copy, Stripe go-live (parked by founder).
 - FOUNDER GATES deferred to execution: Worker deploy + orange-cloud flip
   (outward-facing); Resend signup + SPF/DKIM/DMARC DNS records (founder-only).
 
+### [2026-06-13] Phase 5 — execution: CODE PHASE COMPLETE
+- Executor protocol (after 2 clean Codex STOPs): Fable owns ALL git (branch/
+  commit/merge); Codex edits + gates only (sandbox cannot write .git on this
+  OneDrive path; vitest needs its NODE_OPTIONS preload + --pool=threads).
+- 003 DONE (b9d962f), 010 DONE (8c1c17b), 011 DONE (c4065d5),
+  012 DONE (a2301a9), 013 DONE (a0e8eff, one Fable fix-up: test fixture
+  clock predated fake-timer now; implementation was correct),
+  014 code steps DONE (8881d64). Zero rejected diffs; every merge
+  independently re-gated by Fable (final: 989 root / 152 backend tests).
+- AWAITING FOUNDER GATES (plan 014 steps 5-8): Resend signup + SPF/DKIM/
+  DMARC records; deploy + orange-cloud approval; then live sign-in
+  walkthrough as milestone verification.
+
 ### [2026-06-13] Phase 4 — plans: WRITING
 - plans/010-014 (new) + plans/003 (pre-existing, now a pre-deploy gate).
 - Order: 003 -> 010 backend hardening -> 011 prefs sync backend ->
