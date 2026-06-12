@@ -9,7 +9,7 @@ export const dynamic = "force-static";
 // Production site URL (origin + any sub-path). Override with NEXT_PUBLIC_SITE_URL
 // (e.g. a future custom domain); defaults to the live GitHub Pages project URL.
 const SITE =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://rafaelvonhellmann.github.io/melbourne-liveability";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://festra.au";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [

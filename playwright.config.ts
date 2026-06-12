@@ -31,12 +31,11 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   use: {
     // E2E_BASE_URL lets the same static suite run against PRODUCTION
-    // (e.g. E2E_BASE_URL=https://.../melbourne-liveability STATIC_E2E=1).
+    // (e.g. E2E_BASE_URL=https://festra.au STATIC_E2E=1). Root path since the
+    // festra.au custom-domain cutover (2026-06-12).
     baseURL:
       process.env.E2E_BASE_URL ??
-      (staticMode
-        ? "http://localhost:4173/melbourne-liveability"
-        : "http://localhost:3000"),
+      (staticMode ? "http://localhost:4173" : "http://localhost:3000"),
     trace: "on-first-retry",
   },
   // Both modes run desktop + mobile: CI only ever runs STATIC_E2E=1, so the

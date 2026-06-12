@@ -2,7 +2,7 @@ export { default } from "@/components/buyer/SampleReportPage";
 
 const SITE =
   process.env.NEXT_PUBLIC_SITE_URL ??
-  "https://rafaelvonhellmann.github.io/melbourne-liveability";
+  "https://festra.au";
 
 export const metadata = {
   title: "Festra - sample buyer location check",

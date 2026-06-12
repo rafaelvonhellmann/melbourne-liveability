@@ -42,7 +42,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://rafaelvonhellmann.github.io/melbourne-liveability"
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://festra.au"
   ),
   title: "Festra - check a location before you buy or rent in Melbourne",
   description:

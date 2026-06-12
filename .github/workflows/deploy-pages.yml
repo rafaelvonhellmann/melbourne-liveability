@@ -35,11 +35,12 @@ jobs:
         run: npm run test
       - name: Verify data-source manifest
         run: npm run data:verify -- --no-network
-      - name: Build static export (sub-path aware)
+      - name: Build static export (custom domain, root path)
         env:
-          # Project site is served from https://<user>.github.io/melbourne-liveability/
-          # so runtime asset URLs (/data/*.json) must be prefixed with the repo name.
-          NEXT_PUBLIC_BASE_PATH: /melbourne-liveability
+          # Served from https://festra.au (GitHub Pages custom domain, cutover
+          # 2026-06-12) - root-relative assets, no sub-path prefix. The old
+          # github.io/melbourne-liveability URLs 301 to the custom domain.
+          NEXT_PUBLIC_SITE_URL: https://festra.au
           # Public-by-design NEXT_PUBLIC values - set them as repository
           # Variables (Settings -> Secrets and variables -> Actions -> Variables),
           # not secrets. While unset they stay empty, which keeps current
@@ -50,19 +51,16 @@ jobs:
         run: npm run build
       - name: Disable Jekyll (serve _next/* verbatim)
         run: touch out/.nojekyll
-      # Smoke-test the BUILT artifact under the GitHub Pages sub-path before it
-      # is uploaded, so a basePath regression (assets, data fetches, links)
-      # fails CI instead of shipping. Nesting out/ inside _site/ reproduces the
-      # /melbourne-liveability/ prefix; naive `serve out` would 404 every URL.
+      # Smoke-test the BUILT artifact at the root path (festra.au serves from
+      # the domain root) before it is uploaded, so an asset/link regression
+      # fails CI instead of shipping.
       - name: Install Playwright browser (static smoke)
         run: npx playwright install --with-deps chromium
-      - name: Serve artifact under the sub-path
+      - name: Serve artifact at the root path
         run: |
-          mkdir _site
-          cp -r out _site/melbourne-liveability
-          npx --yes serve@14 _site -l 4173 &
+          npx --yes serve@14 out -l 4173 &
           curl -fsS --retry 30 --retry-delay 2 --retry-connrefused \
-            http://localhost:4173/melbourne-liveability/ > /dev/null
+            http://localhost:4173/ > /dev/null
       - name: Static-artifact e2e (Playwright)
         env:
           STATIC_E2E: "1"
@@ -112,7 +110,7 @@ jobs:
       - name: Wait for Pages propagation
         run: |
           for i in $(seq 1 20); do
-            marker=$(curl -fsS "https://rafaelvonhellmann.github.io/melbourne-liveability/" | grep -c Festra || true)
+            marker=$(curl -fsSL "https://festra.au/" | grep -c Festra || true)
             [ "$marker" -gt 0 ] && exit 0
             sleep 15
           done
@@ -120,6 +118,6 @@ jobs:
       - name: E2E against the live site
         env:
           STATIC_E2E: "1"
-          E2E_BASE_URL: https://rafaelvonhellmann.github.io/melbourne-liveability
+          E2E_BASE_URL: https://festra.au
         run: npx playwright test --project=chromium
 
