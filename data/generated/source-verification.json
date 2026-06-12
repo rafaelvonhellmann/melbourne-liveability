@@ -1,6 +1,6 @@
 {
-  "checkedAt": "2026-06-12T11:52:20.397Z",
-  "sources": 61,
+  "checkedAt": "2026-06-12T12:54:22.679Z",
+  "sources": 63,
   "referencedInCode": 0,
   "networkChecked": true,
   "errors": [],
@@ -8,6 +8,8 @@
     "act-policing-crime-statistics: missing sha256 (run data:hash after fetch)",
     "qps-lga-offence-rates: missing sha256 (run data:hash after fetch)",
     "bocsar-suburb-offences: missing sha256 (run data:hash after fetch)",
+    "wa-police-suburb-offences: missing sha256 (run data:hash after fetch)",
+    "sapol-suburb-offences: missing sha256 (run data:hash after fetch)",
     "qld-spp-bushfire-prone-area: missing sha256 (run data:hash after fetch)",
     "bcc-cityplan-flood-overlay: missing sha256 (run data:hash after fetch)",
     "unreachable url vcsa-recorded-offences: https://www.crimestatistics.vic.gov.au/crime-statistics/latest-victorian-crime-data/download-data (403)",
@@ -65,6 +67,18 @@
     {
       "id": "bocsar-suburb-offences",
       "url": "https://data.nsw.gov.au/data/dataset/crime-by-offence-by-nsw-suburb",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "wa-police-suburb-offences",
+      "url": "https://www.wa.gov.au/organisation/western-australia-police-force/crime-statistics",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "sapol-suburb-offences",
+      "url": "https://data.sa.gov.au/data/dataset/crime-statistics",
       "ok": true,
       "status": 200
     },

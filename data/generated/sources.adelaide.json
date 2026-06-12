@@ -1,0 +1,120 @@
+[
+  {
+    "id": "abs-sa2-income-dbr",
+    "name": "ABS Data by Region — median equivalised household income (weekly)",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-06-12",
+    "sha256": "e99fc3d098b93805b6b12866becb8f10aeb088b94b9648d19a9fcd5f35e9028b"
+  },
+  {
+    "id": "abs-rent-to-income-2021",
+    "name": "Rent-to-income ratio — ABS Census 2021 median weekly rent ÷ ABS Data by Region equivalised household income",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "derived": true,
+    "sha256": ""
+  },
+  {
+    "id": "abs-erp-sa2",
+    "name": "ABS ERP by SA2",
+    "url": "https://www.abs.gov.au/statistics/people/population/regional-population",
+    "licence": "CC BY 4.0",
+    "period": "2023",
+    "fetchedAt": "2026-06-12",
+    "sha256": "a72525ee7cf404a9bcd5aa3d4b8887d4ad7abd59b04858963c3cd23f560f933b"
+  },
+  {
+    "id": "sapol-suburb-offences",
+    "name": "SAPOL - crime statistics by suburb by reported date (data.sa.gov.au)",
+    "url": "https://data.sa.gov.au/data/dataset/crime-statistics",
+    "licence": "CC BY",
+    "verifyNote": "Suburb-level violent counts EXCLUDE sexual offences: SAPOL withholds the incident suburb for every sexual-offence row (published as NOT DISCLOSED), so they can never join to a place. Methodology footnote, not a blocker (checked 2026-06-12).",
+    "period": "rolling year (latest 12 months across the two newest fiscal-year CSVs)",
+    "fetchedAt": "2026-06-12",
+    "sha256": "4b3416ae6457dc31d219456511575ddc8ca84e094b219c2fa755aaba938a6030"
+  },
+  {
+    "id": "osm-health",
+    "name": "OpenStreetMap — GP/clinic points (Overpass; hospital fallback only)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-12",
+    "sha256": "d1f30687d8e79d68855a67949f724511bde9902f567de1ba6787d4d6f8e84db5"
+  },
+  {
+    "id": "abs-census-labour-2016",
+    "name": "ABS Census 2016 — labour force (employed, participation) by SA2",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2016",
+    "fetchedAt": "2026-06-12",
+    "sha256": "f44d364c967c0e80bda7d767a10d8e6ef9f00dbec380f2b0f9a7c670c8054258"
+  },
+  {
+    "id": "osm-schools",
+    "name": "OpenStreetMap — schools within 2 km (Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-12",
+    "sha256": "9e046d7dae6c15ca39225339878f3b369f7f099d88bbd8449bb6ebfa49d930c1"
+  },
+  {
+    "id": "abs-census-preschool-2021",
+    "name": "ABS Census 2021 — children enrolled in preschool (SA2)",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-06-12",
+    "sha256": "f44d364c967c0e80bda7d767a10d8e6ef9f00dbec380f2b0f9a7c670c8054258"
+  },
+  {
+    "id": "abs-seifa-2021",
+    "name": "ABS SEIFA 2021 — IRSAD and IRSD deciles (SA2)",
+    "url": "https://www.abs.gov.au/statistics/people/people-and-communities/socio-economic-indexes-areas-seifa-australia/latest-release",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-06-12",
+    "sha256": "44305c3bc5f10ad63fe4fa92893a074a12b05020dd86d1561ec8bd7e7978cb0a"
+  },
+  {
+    "id": "abs-census-community-2021",
+    "name": "ABS Census 2021 — tenure and dwelling structure (SA2)",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-06-12",
+    "sha256": "f68431845af641e8f7245fc52b995a5ae2fda921613adebd1839aed8f2cccac8"
+  },
+  {
+    "id": "osm-amenities",
+    "name": "OpenStreetMap — everyday amenities for 15-min access (supermarket, pharmacy, park, cafe/restaurant, gym/leisure; Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-12",
+    "sha256": "7969968482f4ebe2ddd04bbc709fc7bd91a245e4a3cf861f6e31535594fa71fb"
+  },
+  {
+    "id": "osm-cycleways",
+    "name": "OpenStreetMap — cycling infrastructure for cyclability index (cycleways, on-road bike lanes, bicycle-designated paths; Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-12",
+    "sha256": "f9e608bff8ab2f0351f269fdfbc34436ca868236e943e3218fd38f67fe3ab98b"
+  },
+  {
+    "id": "adelaide-metro-gtfs",
+    "name": "Adelaide Metro GTFS schedule",
+    "url": "https://data.sa.gov.au/data/dataset/https-gtfs-adelaidemetro-com-au",
+    "licence": "CC BY 4.0",
+    "period": "2026-06 to 2026-10",
+    "fetchedAt": "2026-06-12",
+    "sha256": "67777c42c27cb5b701c09fc14eb0d0d51737c77806755a44a7faae645dcce539"
+  }
+]

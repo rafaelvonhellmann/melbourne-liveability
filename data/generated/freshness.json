@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-06-12T11:37:59.411Z",
+  "checkedAt": "2026-06-12T12:45:40.568Z",
   "items": [
     {
       "id": "abs-sa2-income-dbr",
@@ -53,7 +53,7 @@
       "id": "vcsa-recorded-offences",
       "cadence": "quarterly",
       "fetchedAt": "2026-06-11",
-      "monthsSinceFetch": 0,
+      "monthsSinceFetch": 0.1,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
@@ -82,6 +82,22 @@
       "status": "fresh"
     },
     {
+      "id": "wa-police-suburb-offences",
+      "cadence": "rolling",
+      "fetchedAt": null,
+      "monthsSinceFetch": null,
+      "upstreamLastUpdated": null,
+      "status": "fresh"
+    },
+    {
+      "id": "sapol-suburb-offences",
+      "cadence": "quarterly",
+      "fetchedAt": null,
+      "monthsSinceFetch": null,
+      "upstreamLastUpdated": null,
+      "status": "fresh"
+    },
+    {
       "id": "qld-spp-bushfire-prone-area",
       "cadence": "n/a",
       "fetchedAt": null,
@@ -101,7 +117,7 @@
       "id": "ptv-gtfs",
       "cadence": "rolling",
       "fetchedAt": "2026-06-11",
-      "monthsSinceFetch": 0,
+      "monthsSinceFetch": 0.1,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
@@ -109,7 +125,7 @@
       "id": "osm-pt",
       "cadence": "rolling",
       "fetchedAt": "2026-06-11",
-      "monthsSinceFetch": 0,
+      "monthsSinceFetch": 0.1,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
@@ -125,7 +141,7 @@
       "id": "osm-health",
       "cadence": "rolling",
       "fetchedAt": "2026-06-11",
-      "monthsSinceFetch": 0,
+      "monthsSinceFetch": 0.1,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
@@ -173,7 +189,7 @@
       "id": "osm-schools",
       "cadence": "rolling",
       "fetchedAt": "2026-06-11",
-      "monthsSinceFetch": 0,
+      "monthsSinceFetch": 0.1,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
@@ -213,7 +229,7 @@
       "id": "osm-amenities",
       "cadence": "rolling",
       "fetchedAt": "2026-06-11",
-      "monthsSinceFetch": 0,
+      "monthsSinceFetch": 0.1,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
@@ -221,7 +237,7 @@
       "id": "osm-cycleways",
       "cadence": "rolling",
       "fetchedAt": "2026-06-11",
-      "monthsSinceFetch": 0,
+      "monthsSinceFetch": 0.1,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
@@ -245,7 +261,7 @@
       "id": "vicmap-foi",
       "cadence": "annual",
       "fetchedAt": "2026-06-11",
-      "monthsSinceFetch": 0,
+      "monthsSinceFetch": 0.1,
       "upstreamLastUpdated": "2026-06-07",
       "status": "fresh"
     },
@@ -293,7 +309,7 @@
       "id": "abs-building-approvals",
       "cadence": "rolling",
       "fetchedAt": "2026-06-11",
-      "monthsSinceFetch": 0,
+      "monthsSinceFetch": 0.1,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
@@ -357,7 +373,7 @@
       "id": "osm-noise-corridors",
       "cadence": "rolling",
       "fetchedAt": "2026-06-11",
-      "monthsSinceFetch": 0,
+      "monthsSinceFetch": 0.1,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
@@ -365,7 +381,7 @@
       "id": "osm-nuisance-points",
       "cadence": "rolling",
       "fetchedAt": "2026-06-11",
-      "monthsSinceFetch": 0,
+      "monthsSinceFetch": 0.1,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
@@ -373,7 +389,7 @@
       "id": "osm-train-stations",
       "cadence": "rolling",
       "fetchedAt": "2026-06-11",
-      "monthsSinceFetch": 0,
+      "monthsSinceFetch": 0.1,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
