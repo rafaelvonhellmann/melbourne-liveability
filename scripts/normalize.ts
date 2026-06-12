@@ -66,7 +66,9 @@ type Sa2Raw = {
   stops800m: number | null;
   ptModes: string | null;
   amPeakFreq: number | null;
-  transportSource: "ptv-gtfs" | "osm-pt" | null;
+  /** GTFS sourceId from the region's precompute (e.g. "ptv-gtfs",
+   * "translink-gtfs" - see GTFS_SOURCES), or "osm-pt" for the fallback. */
+  transportSource: string | null;
   hospitalDistKm: number | null;
   hospitalSource: "vic-mapshare-hospitals" | "osm-health" | null;
   gpCount2km: number | null;
@@ -306,26 +308,31 @@ async function main() {
     const gtfs = JSON.parse(
       await readFile(generatedOutPath("gtfs-transport.json"), "utf8")
     ) as {
+      sourceId?: string;
       places: Record<
         string,
         { stops800m: number; amPeakFreq: number; ptModes: string | null }
       >;
     };
+    // The precompute stamps its own provenance id (ptv-gtfs for melbourne,
+    // translink-gtfs for brisbane, ...). Older melbourne artifacts without the
+    // field keep the historical id.
+    const gtfsSourceId = gtfs.sourceId ?? "ptv-gtfs";
     for (const p of byCode.values()) {
       const t = gtfs.places[p.sa2Code];
       if (!t) continue;
       p.stops800m = t.stops800m;
       p.amPeakFreq = t.amPeakFreq;
       p.ptModes = t.ptModes;
-      p.transportSource = "ptv-gtfs";
+      p.transportSource = gtfsSourceId;
       usedGtfs = true;
     }
-    console.log("Transport: PTV GTFS precompute");
+    console.log(`Transport: GTFS precompute (${gtfsSourceId})`);
   } catch {
     console.warn(
       IS_VIC
         ? "gtfs-transport.json missing - run npm run data:gtfs first"
-        : `Transport: no GTFS precompute for ${PIPELINE_REGION.label} (per-region GTFS pending) - OSM stop fallback`
+        : `Transport: no GTFS precompute for ${PIPELINE_REGION.label} (feed missing or key-gated) - OSM stop fallback`
     );
   }
 

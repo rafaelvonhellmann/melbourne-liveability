@@ -38,8 +38,14 @@ export type RegionBbox = {
 /** Per-state Tier-B source endpoints (EXPANSION-PLAN section 3). Filled in as
  * each state module lands; optional so Tier-A-only regions stay valid. */
 export type StateSources = {
-  /** Static GTFS Schedule zip (state transit authority, CC BY or similar). */
-  gtfsUrl?: string;
+  /**
+   * Static GTFS Schedule zip URLs (state transit authority, CC BY or similar).
+   * Most agencies publish one zip; Canberra publishes bus + light rail
+   * separately, and PTV's single zip nests per-mode feeds inside it. Feeds
+   * that need an API key (TfNSW) are env-gated in scripts/lib/gtfs-constants
+   * (GTFS_SOURCES) - the pipeline skips them gracefully when the key is absent.
+   */
+  gtfsUrls?: string[];
 };
 
 export type Region = {
@@ -92,8 +98,9 @@ const REGIONS: Record<RegionId, Region> = {
     hasCouncils: true,
     stateSources: {
       /** Official PTV / DTP GTFS Schedule (CC BY 4.0). */
-      gtfsUrl:
+      gtfsUrls: [
         "https://opendata.transport.vic.gov.au/dataset/3f4e292e-7f8a-4ffe-831f-1953be0fe448/resource/fb152201-859f-4882-9206-b768060b50ad/download/gtfs.zip",
+      ],
     },
   },
   sydney: {
@@ -113,6 +120,13 @@ const REGIONS: Record<RegionId, Region> = {
       [154.7, -31.45],
     ],
     hasCouncils: true,
+    stateSources: {
+      /** TfNSW complete GTFS bundle (CC BY 4.0). NEEDS a free TfNSW Open Data
+       * API key (TFNSW_API_KEY env) - the pipeline skips gracefully without it. */
+      gtfsUrls: [
+        "https://api.transport.nsw.gov.au/v1/publictransport/timetables/complete/gtfs",
+      ],
+    },
   },
   brisbane: {
     id: "brisbane",
@@ -132,6 +146,10 @@ const REGIONS: Record<RegionId, Region> = {
       [156.6, -24.9],
     ],
     hasCouncils: true,
+    stateSources: {
+      /** Translink South East Queensland GTFS (CC BY 4.0, data.qld.gov.au). */
+      gtfsUrls: ["https://gtfsrt.api.translink.com.au/GTFS/SEQ_GTFS.zip"],
+    },
   },
   adelaide: {
     id: "adelaide",
@@ -150,6 +168,12 @@ const REGIONS: Record<RegionId, Region> = {
       [142.1, -32.95],
     ],
     hasCouncils: true,
+    stateSources: {
+      /** Adelaide Metro GTFS (CC BY, data.sa.gov.au). */
+      gtfsUrls: [
+        "https://gtfs.adelaidemetro.com.au/v1/static/latest/google_transit.zip",
+      ],
+    },
   },
   perth: {
     id: "perth",
@@ -168,6 +192,12 @@ const REGIONS: Record<RegionId, Region> = {
       [119.45, -29.9],
     ],
     hasCouncils: true,
+    stateSources: {
+      /** Transperth GTFS (PTA WA, CC BY 4.0). */
+      gtfsUrls: [
+        "https://www.transperth.wa.gov.au/TimetablePDFs/GoogleTransit/Production/google_transit.zip",
+      ],
+    },
   },
   hobart: {
     id: "hobart",
@@ -186,6 +216,14 @@ const REGIONS: Record<RegionId, Region> = {
       [151.0, -41.05],
     ],
     hasCouncils: true,
+    stateSources: {
+      /** Tasmania statewide GTFS incl. Metro Tasmania (CC BY 4.0,
+       * transport.tas.gov.au - metrotas.com.au's GTFS page points here).
+       * Asset-id URL: re-check on refresh failures, the id can change. */
+      gtfsUrls: [
+        "https://www.transport.tas.gov.au/__data/assets/file/0011/557615/tas_gtfs.zip",
+      ],
+    },
   },
   darwin: {
     id: "darwin",
@@ -204,6 +242,12 @@ const REGIONS: Record<RegionId, Region> = {
       [134.45, -10.5],
     ],
     hasCouncils: true,
+    stateSources: {
+      /** NT Government Darwin bus network GTFS (CC BY, data.nt.gov.au). */
+      gtfsUrls: [
+        "https://dli.nt.gov.au/data-feeds/bus-gtfs/google-transit-darwin.zip",
+      ],
+    },
   },
   canberra: {
     id: "canberra",
@@ -223,6 +267,13 @@ const REGIONS: Record<RegionId, Region> = {
       [152.45, -33.6],
     ],
     hasCouncils: false,
+    stateSources: {
+      /** Transport Canberra GTFS - bus + light rail feeds (CC BY 4.0). */
+      gtfsUrls: [
+        "https://www.transport.act.gov.au/googletransit/google_transit.zip",
+        "https://www.transport.act.gov.au/googletransit/google_transit_lr.zip",
+      ],
+    },
   },
 };
 

@@ -14,7 +14,7 @@ import REGIONS, {
 } from "../lib/regions";
 import { GREATER_MELBOURNE_GCCSA } from "../lib/crosswalk-types";
 import { inMelbourneBBox } from "../lib/share-url";
-import { MEL_BBOX, PTV_GTFS_URL } from "../scripts/lib/gtfs-constants";
+import { GTFS_SOURCES, MEL_BBOX, PTV_GTFS_URL } from "../scripts/lib/gtfs-constants";
 import {
   lgaRawName,
   regionIdFromArgs,
@@ -154,6 +154,34 @@ describe("Melbourne aliases (exact pre-registry values)", () => {
     expect(sa2RawName(REGIONS.canberra)).toBe("sa2-canberra.geojson");
     expect(salRawName(REGIONS.canberra)).toBe("sal-act.geojson");
     expect(lgaRawName(REGIONS.sydney)).toBe("lga-nsw.geojson");
+  });
+});
+
+describe("GTFS registry (Wave 2 item 3)", () => {
+  it("every region registers at least one https GTFS feed url", () => {
+    for (const id of REGION_IDS) {
+      const urls = REGIONS[id].stateSources?.gtfsUrls ?? [];
+      expect(urls.length, `${id} gtfsUrls`).toBeGreaterThan(0);
+      for (const u of urls) expect(u).toMatch(/^https:\/\//);
+    }
+  });
+
+  it("melbourne keeps the exact PTV url as its single feed", () => {
+    expect(REGIONS.melbourne.stateSources?.gtfsUrls).toEqual([PTV_GTFS_URL]);
+  });
+
+  it("GTFS_SOURCES covers every region with unique CC BY sourceIds", () => {
+    const ids = REGION_IDS.map((r) => GTFS_SOURCES[r].sourceId);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const r of REGION_IDS) {
+      expect(GTFS_SOURCES[r].licence).toMatch(/CC BY/);
+      expect(GTFS_SOURCES[r].url).toMatch(/^https:\/\//);
+    }
+    // The pre-registry melbourne manifest id must never drift.
+    expect(GTFS_SOURCES.melbourne.sourceId).toBe("ptv-gtfs");
+    expect(GTFS_SOURCES.melbourne.keyEnv).toBeUndefined();
+    // TfNSW is the one key-gated feed (free signup; skipped without the key).
+    expect(GTFS_SOURCES.sydney.keyEnv).toBe("TFNSW_API_KEY");
   });
 });
 

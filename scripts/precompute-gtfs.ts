@@ -1,6 +1,23 @@
 /**
- * PTV GTFS → per-SA2 transport scalars (stops 800m, modes, weekday AM-peak trips).
- * Raw zip stays in data/raw (gitignored); only derived JSON is committed.
+ * GTFS Schedule → per-SA2 transport scalars (stops 800m, modes, weekday
+ * AM-peak trips) + bus-stop tuples, for the ACTIVE region (Wave 2 item 3).
+ *
+ * Feed URLs come from the registry (lib/regions.ts stateSources.gtfsUrls);
+ * provenance metadata (sourceId, licence) from scripts/lib/gtfs-constants
+ * GTFS_SOURCES. Two archive shapes are handled:
+ *   - nested: PTV's zip-of-zips (inner google_transit.zip per mode branch)
+ *   - flat:   stops.txt etc. at the archive root (every other AU agency)
+ * Stops are clipped to the region's registry bbox; stop_times is streamed
+ * line-by-line (never buffered whole - the TfNSW complete bundle is huge).
+ *
+ * Key-gated feeds (TfNSW): when GTFS_SOURCES[region].keyEnv is set but the
+ * env var is absent, the run skips gracefully - normalize falls back to OSM
+ * stops, same as a region with no feed at all.
+ *
+ * Melbourne (default region) output is unchanged: same filenames
+ * (gtfs-transport.json, bus-stops.json), same sourceId ("ptv-gtfs"), same
+ * parsing path (metro branches 2-4 of the PTV bundle). Raw zips stay in
+ * data/raw (gitignored); only derived JSON is committed.
  */
 import { createWriteStream } from "node:fs";
 import { createInterface } from "node:readline";
@@ -13,20 +30,35 @@ import unzipper from "unzipper";
 import type { FeatureCollection } from "geojson";
 import * as turf from "@turf/turf";
 import { RAW, GENERATED, PUBLIC_DATA } from "./lib/paths.js";
-import { IS_DEFAULT_REGION, PIPELINE_REGION } from "./lib/pipeline-region.js";
+import {
+  IS_DEFAULT_REGION,
+  PIPELINE_REGION,
+  generatedOutPath,
+  publicOutPath,
+  sa2RawName,
+} from "./lib/pipeline-region.js";
 import { getProp, featureGeometry } from "./lib/abs-geo.js";
 import {
   AM_PEAK_END,
   AM_PEAK_START,
-  MEL_BBOX,
-  PTV_GTFS_URL,
+  GTFS_SOURCES,
   ROUTE_TYPE_LABEL,
 } from "./lib/gtfs-constants.js";
 import { csvTable, gtfsTimeSeconds, parseCsvLine, stripBom } from "./lib/parse-csv.js";
 
 const UA = "MelbourneLiveability/1.0";
-const GTFS_ZIP = path.join(RAW, "ptv-gtfs.zip");
-const OUT_FILE = path.join(GENERATED, "gtfs-transport.json");
+const REGION = PIPELINE_REGION;
+const BBOX = REGION.bbox;
+const GTFS_URLS = REGION.stateSources?.gtfsUrls ?? [];
+const META = GTFS_SOURCES[REGION.id];
+const OUT_FILE = generatedOutPath("gtfs-transport.json");
+
+/** Raw zip cache path per feed. Melbourne keeps the historical ptv-gtfs.zip
+ * name (and its single PTV bundle); other regions get gtfs-{region}-{n}.zip. */
+function zipPath(index: number): string {
+  if (IS_DEFAULT_REGION) return path.join(RAW, "ptv-gtfs.zip");
+  return path.join(RAW, `gtfs-${REGION.id}-${index + 1}.zip`);
+}
 
 type StopItem = {
   minX: number;
@@ -46,62 +78,86 @@ type Sa2Transport = {
 
 function inBbox(lat: number, lon: number): boolean {
   return (
-    lat >= MEL_BBOX.south &&
-    lat <= MEL_BBOX.north &&
-    lon >= MEL_BBOX.west &&
-    lon <= MEL_BBOX.east
+    lat >= BBOX.south && lat <= BBOX.north && lon >= BBOX.west && lon <= BBOX.east
   );
 }
 
-async function downloadGtfs() {
-  console.log("Downloading PTV GTFS (~200MB)...");
+async function downloadGtfs(url: string, dest: string) {
+  console.log(`Downloading GTFS for ${REGION.label}: ${url}`);
   await mkdir(RAW, { recursive: true });
-  const res = await fetch(PTV_GTFS_URL, {
-    redirect: "follow",
-    headers: { "User-Agent": UA },
-  });
-  if (!res.ok) throw new Error(`GTFS download ${res.status}`);
-  if (res.body) {
-    await pipeline(res.body as NodeJS.ReadableStream, createWriteStream(GTFS_ZIP));
+  const headers: Record<string, string> = { "User-Agent": UA };
+  if (META.keyEnv) {
+    // TfNSW Open Data convention: `Authorization: apikey <key>`.
+    headers.Authorization = `apikey ${process.env[META.keyEnv]}`;
   }
-  console.log("  saved", GTFS_ZIP);
+  const res = await fetch(url, { redirect: "follow", headers });
+  if (!res.ok) throw new Error(`GTFS download ${res.status} (${url})`);
+  if (res.body) {
+    await pipeline(res.body as NodeJS.ReadableStream, createWriteStream(dest));
+  }
+  console.log("  saved", dest);
 }
 
-async function openInnerFile(
-  outer: unzipper.CentralDirectory,
-  innerPath: string,
+/**
+ * Uniform access to one GTFS feed's files, whether the feed is a zip nested
+ * inside an outer archive (PTV) or the archive itself (flat - every other
+ * AU agency). openFile returns an unzipper entry whose .stream() the
+ * stop_times reader consumes without buffering the whole file.
+ */
+type FeedReader = {
+  label: string;
+  openFile(fileName: string): Promise<unzipper.File | null>;
+};
+
+function findEntry(
+  dir: unzipper.CentralDirectory,
   fileName: string
-) {
-  const entry = outer.files.find((f) => f.path === innerPath);
-  if (!entry) return null;
-  const buf = await entry.buffer();
-  const inner = await unzipper.Open.buffer(buf);
+): unzipper.File | null {
   return (
-    inner.files.find((f) => f.path === fileName || f.path.endsWith(`/${fileName}`)) ??
-    null
+    dir.files.find(
+      (f) => f.path === fileName || f.path.endsWith(`/${fileName}`)
+    ) ?? null
   );
 }
 
-async function readInnerCsv(
+function flatReader(outer: unzipper.CentralDirectory, label: string): FeedReader {
+  return {
+    label,
+    openFile: async (fileName) => findEntry(outer, fileName),
+  };
+}
+
+function nestedReader(
   outer: unzipper.CentralDirectory,
-  innerPath: string,
-  fileName: string
-): Promise<string | null> {
-  const file = await openInnerFile(outer, innerPath, fileName);
+  innerPath: string
+): FeedReader {
+  return {
+    label: innerPath,
+    openFile: async (fileName) => {
+      const entry = outer.files.find((f) => f.path === innerPath);
+      if (!entry) return null;
+      const buf = await entry.buffer();
+      const inner = await unzipper.Open.buffer(buf);
+      return findEntry(inner, fileName);
+    },
+  };
+}
+
+async function readCsv(reader: FeedReader, fileName: string): Promise<string | null> {
+  const file = await reader.openFile(fileName);
   if (!file) return null;
   const buf = await file.buffer();
   return stripBom(buf.toString("utf8"));
 }
 
 async function streamStopTimes(
-  outer: unzipper.CentralDirectory,
-  innerPath: string,
-  melStopIds: Set<string>,
+  reader: FeedReader,
+  regionStopIds: Set<string>,
   weekdayTrips: Set<string>,
   stopAmTrips: Map<string, Set<string>>,
   stopWeekdayTrips: Map<string, Set<string>>
 ) {
-  const file = await openInnerFile(outer, innerPath, "stop_times.txt");
+  const file = await reader.openFile("stop_times.txt");
   if (!file) return;
   const stream = await file.stream();
   const rl = createInterface({ input: Readable.from(stream), crlfDelay: Infinity });
@@ -123,7 +179,7 @@ async function streamStopTimes(
     const cols = parseCsvLine(line);
     const stopId = cols[idxStop];
     const tripId = cols[idxTrip];
-    if (!stopId || !tripId || !melStopIds.has(stopId) || !weekdayTrips.has(tripId)) continue;
+    if (!stopId || !tripId || !regionStopIds.has(stopId) || !weekdayTrips.has(tripId)) continue;
     let wdSet = stopWeekdayTrips.get(stopId);
     if (!wdSet) {
       wdSet = new Set();
@@ -151,11 +207,11 @@ type FeedData = {
   calendarPeriod: { start: string; end: string } | null;
 };
 
-async function parseFeed(outerPath: string, outer: unzipper.CentralDirectory): Promise<FeedData> {
-  const stopsTxt = await readInnerCsv(outer, outerPath, "stops.txt");
-  const calendarTxt = await readInnerCsv(outer, outerPath, "calendar.txt");
-  const tripsTxt = await readInnerCsv(outer, outerPath, "trips.txt");
-  const routesTxt = await readInnerCsv(outer, outerPath, "routes.txt");
+async function parseFeed(reader: FeedReader): Promise<FeedData> {
+  const stopsTxt = await readCsv(reader, "stops.txt");
+  const calendarTxt = await readCsv(reader, "calendar.txt");
+  const tripsTxt = await readCsv(reader, "trips.txt");
+  const routesTxt = await readCsv(reader, "routes.txt");
   const stops = new Map<string, { lat: number; lon: number }>();
   for (const row of csvTable(stopsTxt ?? "")) {
     const loc = row.location_type?.trim();
@@ -184,6 +240,13 @@ async function parseFeed(outerPath: string, outer: unzipper.CentralDirectory): P
     if (st && st < minStart) minStart = st;
     if (en && en > maxEnd) maxEnd = en;
   }
+  if (weekdayServices.size === 0) {
+    // Feeds that schedule exclusively via calendar_dates.txt would yield zero
+    // weekday trips - surface it instead of silently emitting empty frequency.
+    console.warn(
+      `  ${reader.label}: no weekday services in calendar.txt - AM-peak/bus-route counts will be empty for this feed`
+    );
+  }
 
   const routeType = new Map<string, number>();
   for (const row of csvTable(routesTxt ?? "")) {
@@ -198,21 +261,19 @@ async function parseFeed(outerPath: string, outer: unzipper.CentralDirectory): P
     const rid = row.route_id;
     const sid = row.service_id;
     if (!tid || !rid) continue;
-    tripRoute.set(tid, rid);
-    if (sid && weekdayServices.has(sid)) weekdayTrips.add(tid);
+    if (sid && weekdayServices.has(sid)) {
+      weekdayTrips.add(tid);
+      // Memory: only weekday trips are ever looked up downstream (AM-peak +
+      // bus-route aggregation key off stop{Am,Weekday}Trips, both weekday-only),
+      // so don't hold route ids for the rest - matters for the TfNSW bundle.
+      tripRoute.set(tid, rid);
+    }
   }
 
-  const melStopIds = new Set(stops.keys());
+  const regionStopIds = new Set(stops.keys());
   const stopAmTrips = new Map<string, Set<string>>();
   const stopWeekdayTrips = new Map<string, Set<string>>();
-  await streamStopTimes(
-    outer,
-    outerPath,
-    melStopIds,
-    weekdayTrips,
-    stopAmTrips,
-    stopWeekdayTrips
-  );
+  await streamStopTimes(reader, regionStopIds, weekdayTrips, stopAmTrips, stopWeekdayTrips);
 
   return {
     stops,
@@ -293,7 +354,7 @@ function buildBusStops(
 
 async function loadSa2Centroids(): Promise<Map<string, [number, number]>> {
   const fc = JSON.parse(
-    await readFile(path.join(RAW, "sa2-melbourne.geojson"), "utf8")
+    await readFile(path.join(RAW, sa2RawName()), "utf8")
   ) as FeatureCollection;
   const out = new Map<string, [number, number]>();
   for (const f of fc.features) {
@@ -341,41 +402,70 @@ function nearbyStops(
   });
 }
 
+/** Parse every feed inside one downloaded archive: nested google_transit.zip
+ * entries when present (PTV - metro branches 2-4 preferred, exactly the
+ * pre-generalization behaviour), else the archive itself as a flat feed. */
+async function parseArchive(zip: string, feeds: FeedData[]) {
+  const outer = await unzipper.Open.file(zip);
+  const nested = outer.files
+    .map((f) => f.path)
+    .filter((p) => /google_transit\.zip$/i.test(p));
+  if (nested.length > 0) {
+    // Metropolitan train / tram / bus feeds (PTV branch folders 2-4).
+    const metro = nested.filter((p) => /^[234]\/google_transit\.zip$/i.test(p));
+    const innerPaths = metro.length > 0 ? metro : nested;
+    for (const p of innerPaths) {
+      console.log("  ", p);
+      feeds.push(await parseFeed(nestedReader(outer, p)));
+    }
+  } else {
+    console.log("  ", path.basename(zip), "(flat feed)");
+    feeds.push(await parseFeed(flatReader(outer, path.basename(zip))));
+  }
+}
+
 async function main() {
-  // PTV/Melbourne-wired (MEL_BBOX + PTV_GTFS_URL): a non-default region run
-  // must NOT emit Melbourne transit under another region's name. Skip loudly;
-  // normalize falls back to OSM stops. Per-region GTFS is a later wave.
-  if (!IS_DEFAULT_REGION) {
+  if (GTFS_URLS.length === 0) {
+    // No registered feed: normalize falls back to OSM stops. Skip loudly -
+    // never emit another region's transit under this region's name.
     console.warn(
-      `precompute-gtfs: PTV (Melbourne) only - skipped for ${PIPELINE_REGION.label}; transit uses the OSM stop fallback.`
+      `precompute-gtfs: no stateSources.gtfsUrls for ${REGION.label} - skipped; transit uses the OSM stop fallback.`
     );
     return;
   }
-  try {
-    await readFile(GTFS_ZIP);
-  } catch {
-    await downloadGtfs();
+  if (META.keyEnv && !process.env[META.keyEnv]) {
+    console.warn(
+      `precompute-gtfs: ${REGION.label} feed needs an API key - set ${META.keyEnv} (free signup, see ${META.url}). Skipped; transit uses the OSM stop fallback.`
+    );
+    return;
   }
 
-  console.log("Parsing GTFS feeds...");
-  const outer = await unzipper.Open.file(GTFS_ZIP);
-  const allInner = outer.files
-    .map((f) => f.path)
-    .filter((p) => /google_transit\.zip$/i.test(p));
-  // Metropolitan train / tram / bus feeds (PTV branch folders 2–4).
-  const metro = allInner.filter((p) => /^[234]\/google_transit\.zip$/i.test(p));
-  const innerPaths = metro.length > 0 ? metro : allInner;
+  const zips: string[] = [];
+  for (let i = 0; i < GTFS_URLS.length; i++) {
+    const zp = zipPath(i);
+    try {
+      await readFile(zp);
+    } catch {
+      await downloadGtfs(GTFS_URLS[i], zp);
+    }
+    zips.push(zp);
+  }
 
+  console.log(`Parsing GTFS feeds (${REGION.label})...`);
   const feeds: FeedData[] = [];
-  for (const p of innerPaths) {
-    console.log("  ", p);
-    feeds.push(await parseFeed(p, outer));
+  for (const zip of zips) {
+    await parseArchive(zip, feeds);
   }
-  if (feeds.length === 0) throw new Error("No google_transit.zip feeds found in GTFS archive");
+  if (feeds.length === 0) throw new Error("No GTFS feeds found in downloaded archives");
 
   const { allStops, stopAmTrips, stopWeekdayTrips, tripRoute, routeType, period } =
     mergeFeeds(feeds);
-  console.log(`Melbourne stops: ${allStops.size}`);
+  console.log(`${REGION.label} stops: ${allStops.size}`);
+  if (allStops.size === 0) {
+    throw new Error(
+      `GTFS feeds yielded zero stops inside the ${REGION.label} bbox - wrong feed or bbox?`
+    );
+  }
 
   const tree = buildStopIndex(allStops);
   const centroids = await loadSa2Centroids();
@@ -420,17 +510,18 @@ async function main() {
     OUT_FILE,
     JSON.stringify({
       generatedAt: new Date().toISOString(),
-      sourceId: "ptv-gtfs",
+      sourceId: META.sourceId,
       period: periodLabel,
       places: bySa2,
     })
   );
-  console.log(`Wrote ${OUT_FILE} (${Object.keys(bySa2).length} SA2)`);
+  console.log(`Wrote ${path.basename(OUT_FILE)} (${Object.keys(bySa2).length} SA2)`);
 
   const busStops = buildBusStops(allStops, stopWeekdayTrips, tripRoute, routeType);
   await mkdir(PUBLIC_DATA, { recursive: true });
-  await writeFile(path.join(PUBLIC_DATA, "bus-stops.json"), JSON.stringify(busStops));
-  console.log(`Wrote bus-stops.json (${busStops.length} bus stops)`);
+  const busOut = publicOutPath("bus-stops.json");
+  await writeFile(busOut, JSON.stringify(busStops));
+  console.log(`Wrote ${path.basename(busOut)} (${busStops.length} bus stops)`);
 }
 
 main().catch((e) => {

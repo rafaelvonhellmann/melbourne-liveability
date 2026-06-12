@@ -44,7 +44,9 @@ export type RawPlace = {
   stops800m: number | null;
   ptModes: string | null;
   amPeakFreq: number | null;
-  transportSource: "ptv-gtfs" | "osm-pt" | null;
+  /** Region GTFS sourceId from normalize (e.g. "ptv-gtfs", "translink-gtfs"),
+   * or "osm-pt" for the fallback. */
+  transportSource: string | null;
   hospitalDistKm: number | null;
   hospitalSource: "vic-mapshare-hospitals" | "osm-health" | null;
   gpCount2km: number | null;

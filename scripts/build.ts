@@ -19,13 +19,16 @@ import { IS_DEFAULT_REGION, PIPELINE_REGION } from "./lib/pipeline-region.js";
 // Region: `npm run data:build -- --region=<id>` or REGION env (default
 // melbourne, byte-identical output/filenames). Non-default regions skip the
 // Melbourne/VIC-wired steps until their per-state modules land:
-//   data:gtfs        - PTV-wired (transit falls back to OSM stops in normalize)
 //   data:hazards     - VIC planning overlays (hazards domain stays unscored)
 //   data:timeseries  - VCSA crime + VIC-coded ABS series
-//   data:hash        - sources.json provenance manifest is melbourne-only
+// data:gtfs runs for ANY region whose registry entry has stateSources.gtfsUrls
+// (all 8 capitals; key-gated feeds self-skip). data:hash runs for every region
+// (melbourne keeps sources.json; others emit sources.<region>.json).
+const HAS_GTFS = (PIPELINE_REGION.stateSources?.gtfsUrls?.length ?? 0) > 0;
 const steps = [
   "npm run data:crosswalk",
-  ...(IS_DEFAULT_REGION ? ["npm run data:gtfs", "npm run data:hazards"] : []),
+  ...(HAS_GTFS ? ["npm run data:gtfs"] : []),
+  ...(IS_DEFAULT_REGION ? ["npm run data:hazards"] : []),
   "npm run data:normalize",
   "npx tsx scripts/preserve-context.ts snapshot",
   "npm run data:score",
@@ -33,7 +36,8 @@ const steps = [
   "npx tsx scripts/preserve-context.ts merge",
   "npm run data:geo",
   "npm run data:poi",
-  ...(IS_DEFAULT_REGION ? ["npm run data:timeseries", "npm run data:hash"] : []),
+  ...(IS_DEFAULT_REGION ? ["npm run data:timeseries"] : []),
+  "npm run data:hash",
 ];
 
 console.log(`data:build region: ${PIPELINE_REGION.id} (${PIPELINE_REGION.label})`);
