@@ -23,10 +23,20 @@ unless the operator says so; never touch the `wip-all` git stash.
 | 007  | Map idle-listener cleanups                         | P2 | S | —   | TODO |
 | 008  | Granular @turf imports in client libs              | P3 | S | —   | TODO |
 | 009  | Deps + CI hygiene (node 24, postcss override)      | P3 | S | —   | TODO |
+| 010  | Accounts backend hardening (run 001)               | P1 | M | 003 | TODO |
+| 011  | Prefs sync backend (run 001)                       | P1 | M-L | 010 | TODO |
+| 012  | Frontend auth foundation (run 001)                 | P1 | M | —   | TODO |
+| 013  | Account page + sync wiring (run 001)               | P1 | M | 011, 012 | TODO |
+| 014  | Accounts cutover + GATED deploy (run 001)          | P1 | M | 003, 010-013 | TODO |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (reason) | REJECTED (rationale)
 
 ## Dependency notes
+
+- 010-014 are orchestrate run 001 (accounts). plans/003 is that run's first
+  pre-deploy gate. 012 can run in parallel with 010/011 (disjoint files);
+  013 needs both halves; 014 is last and contains FOUNDER-GATED deploy steps.
+- Reconciliation record + phase log: ORCHESTRATE-LOG.md (run 001).
 
 - 004 has no hard dependency but lands easier after 001/002 establish the
   pipeline-test fixture patterns.
