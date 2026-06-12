@@ -5,7 +5,10 @@
  */
 
 import type { Env } from "../env";
-import { comingSoon } from "../lib/http";
+import { MAX_CLIENTS, parseClientLabel } from "../lib/validate";
+import { json, unavailable } from "../lib/http";
+import { newToken } from "../lib/token";
+import { resolveSession } from "./me";
 
 export type ClientRow = {
   id: string;
@@ -15,29 +18,35 @@ export type ClientRow = {
 };
 
 /**
- * Create a client row for an agent.
- *
- * Intended implementation:
- *  - id = newToken() (src/lib/token.ts)
- *  - INSERT INTO clients (id, user_id, label, created_at) VALUES (?, ?, ?, now)
- *  - cap: keep the newest 30 per user (MAX_CLIENTS in src/lib/validate.ts) -
- *    same roll-off as the device-local addClient in lib/user-profile.ts
+ * Create a client row for an agent, then trim to the newest MAX_CLIENTS (30)
+ * per user - the same roll-off as the device-local addClient in
+ * lib/user-profile.ts. rowid breaks created_at ties by insertion order.
  */
-export async function createClient(
-  _env: Env,
-  _userId: string,
-  _label: string
-): Promise<ClientRow> {
-  // TODO(cutover): implement per the doc block above.
-  throw new Error("not_implemented: enable at cutover");
+export async function createClient(env: Env, userId: string, label: string): Promise<ClientRow> {
+  const id = newToken();
+  const createdAt = new Date().toISOString();
+  await env.DB.prepare("INSERT INTO clients (id, user_id, label, created_at) VALUES (?, ?, ?, ?)")
+    .bind(id, userId, label, createdAt)
+    .run();
+  await env.DB.prepare(
+    "DELETE FROM clients WHERE user_id = ?1 AND rowid NOT IN " +
+      "(SELECT rowid FROM clients WHERE user_id = ?1 ORDER BY created_at DESC, rowid DESC LIMIT ?2)"
+  )
+    .bind(userId, MAX_CLIENTS)
+    .run();
+  return { id, userId, label, createdAt };
 }
 
 /** POST /api/clients - body {label}. 201 ClientRow | 401 | 403 buyer | 422. */
-export async function handleCreateClient(_request: Request, _env: Env): Promise<Response> {
-  // TODO(cutover):
-  //  - me = await resolveSession(env, request); 401 when null
-  //  - me.kind !== "agent" -> json({ error: "agents_only" }, 403)
-  //  - label = parseClientLabel(body.label); 422 when null
-  //  - return json(await createClient(env, me.id, label), 201)
-  return comingSoon();
+export async function handleCreateClient(request: Request, env: Env): Promise<Response> {
+  if (!env.DB || !env.SESSIONS) return unavailable("bindings");
+  const me = await resolveSession(env, request);
+  if (!me) return json({ error: "unauthorized" }, 401);
+  if (me.kind !== "agent") return json({ error: "agents_only" }, 403);
+
+  const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
+  const label = parseClientLabel(body?.label);
+  if (!label) return json({ error: "invalid_label" }, 422);
+
+  return json(await createClient(env, me.id, label), 201);
 }

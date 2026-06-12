@@ -9,13 +9,22 @@ export interface Env {
   /** Session store: session id -> user id, TTL-expired. D1 `sessions` is the audit mirror. */
   SESSIONS: KVNamespace;
   /**
-   * R2 bucket for generated report artifacts. Optional because the binding
-   * is commented out in wrangler.toml until cutover - make this required
-   * when [[r2_buckets]] is enabled.
+   * R2 bucket `festra-reports` for generated report artifacts. Bound but
+   * unused until the report pipeline lands (see routes/stripe-webhook.ts
+   * applyCheckoutCompleted - the gap is logged as report_generation_pending).
    */
-  REPORTS?: R2Bucket;
-  /** Secret (`wrangler secret put STRIPE_SECRET_KEY`); unset until cutover. */
+  REPORTS: R2Bucket;
+  /** Secret (`wrangler secret put STRIPE_SECRET_KEY`); checkout answers 503 while unset. */
   STRIPE_SECRET_KEY?: string;
-  /** Secret (`wrangler secret put STRIPE_WEBHOOK_SECRET`); unset until cutover. */
+  /** Secret (`wrangler secret put STRIPE_WEBHOOK_SECRET`); webhook answers 503 while unset. */
   STRIPE_WEBHOOK_SECRET?: string;
+  /** Secret (`wrangler secret put RESEND_API_KEY`); selects the Resend email provider when set. */
+  RESEND_API_KEY?: string;
+  /**
+   * Optional var: "console" forces the dev/log email stub; "resend" (or
+   * unset) requires RESEND_API_KEY. Anything else -> magic-link issuance 503s.
+   */
+  EMAIL_PROVIDER?: string;
+  /** Optional var: From header for magic-link email; defaults in lib/email.ts. */
+  EMAIL_FROM?: string;
 }

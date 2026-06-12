@@ -8,10 +8,10 @@ export function json(data: unknown, status = 200, headers?: HeadersInit): Respon
 }
 
 /**
- * Pre-launch envelope: every API route except /api/health answers with this
- * single helper until cutover, so flipping the backend live is "replace the
- * comingSoon() return" per handler - never an envelope hunt.
+ * 503 for a missing binding/secret. Misconfiguration must be loud, never an
+ * open fail: a route that cannot do its job safely refuses to do it at all.
+ * `reason` names the missing piece (binding/secret name class, no values).
  */
-export function comingSoon(): Response {
-  return json({ status: "coming_soon", launch: "festra.au" }, 501);
+export function unavailable(reason: string): Response {
+  return json({ error: "service_unavailable", reason }, 503);
 }

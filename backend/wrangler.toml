@@ -1,7 +1,7 @@
-# Festra API worker - SCAFFOLD ONLY, NOT DEPLOYED.
-# Every route except GET /api/health answers 501 "coming_soon" until cutover
-# (FABLE-ULTRAPLAN P2: GitHub Pages -> Cloudflare Pages + Workers). The UI
-# team ships "coming soon" copy; nothing in app/ talks to this worker yet.
+# Festra API worker - CODE-COMPLETE, NOT DEPLOYED.
+# Route logic is implemented in src/routes/*, but routes/deploy below stay
+# commented out until cutover (FABLE-EXECUTION-PLAN P3: code now, deploy when
+# domain + legal + pricing unlock). Nothing in app/ talks to this worker yet.
 
 name = "festra-api"
 main = "src/index.ts"
@@ -14,27 +14,27 @@ compatibility_date = "2026-06-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "festra"
-# enable at cutover: paste the real id printed by `wrangler d1 create festra`
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "91419ba0-16cf-4bf3-80e4-a6619aeefa37"
 
 [[kv_namespaces]]
 binding = "SESSIONS"
-# enable at cutover: paste the real id printed by
-# `wrangler kv namespace create SESSIONS`
-id = "0000000000000000000000000000000000"
+id = "decb878869c44caf8a3f27d81d3c6f24"
 
-# enable at cutover: `wrangler r2 bucket create festra-reports`, then uncomment
-# (and make Env.REPORTS non-optional in src/env.ts).
-# [[r2_buckets]]
-# binding = "REPORTS"
-# bucket_name = "festra-reports"
+[[r2_buckets]]
+binding = "REPORTS"
+bucket_name = "festra-reports"
 
 # ---------------------------------------------------------------------------
 # Secrets - declared here so they are discoverable, but NEVER given values in
 # this file (and never under [vars]). Set them at cutover with:
 #   wrangler secret put STRIPE_SECRET_KEY       # Stripe live API key
 #   wrangler secret put STRIPE_WEBHOOK_SECRET   # signing secret for /api/webhooks/stripe
-# Until set, Env.STRIPE_SECRET_KEY / Env.STRIPE_WEBHOOK_SECRET are undefined.
+#   wrangler secret put RESEND_API_KEY          # magic-link email (Resend provider)
+# Until set, the matching routes answer 503 service_unavailable.
+#
+# Optional plain vars (safe under [vars] at cutover if needed):
+#   EMAIL_PROVIDER = "console" | "resend"   # dev stub vs real sends (src/lib/email.ts)
+#   EMAIL_FROM     = "Festra <auth@festra.au>"
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------

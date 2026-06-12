@@ -14,7 +14,8 @@ export function newToken(): string {
 
 const HEX = "0123456789abcdef";
 
-function toHex(bytes: Uint8Array): string {
+/** Lowercase hex of a byte array (shared by hashToken and HMAC verifiers). */
+export function toHex(bytes: Uint8Array): string {
   let out = "";
   for (const b of bytes) {
     out += HEX[b >> 4]! + HEX[b & 0x0f]!;

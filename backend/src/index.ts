@@ -1,19 +1,20 @@
 /**
  * festra-api worker entry. Route table lives here and nowhere else.
  *
- * Pre-launch state: every route except GET /api/health answers
- * 501 {"status":"coming_soon","launch":"festra.au"} (src/lib/http.ts
- * comingSoon). The real per-route logic is documented in src/routes/* as
- * typed signatures + TODO blocks; cutover swaps the comingSoon() returns
- * for those implementations route by route.
+ * Code-complete, NOT deployed: routes/deploy stay commented out in
+ * wrangler.toml until the cutover checklist in README.md runs. Routes that
+ * need an unset secret (Stripe keys, email provider) answer 503 - loud
+ * misconfig, never an open fail.
  */
 
 import type { Env } from "./env";
 import { Router } from "./router";
 import { json } from "./lib/http";
 import { preflight, withCors } from "./lib/cors";
+import { logError } from "./lib/log";
+import { newToken } from "./lib/token";
 import { handleMagicLinkRequest, handleVerify } from "./routes/auth";
-import { handleMe } from "./routes/me";
+import { handleLogout, handleMe } from "./routes/me";
 import { handleGetProfile, handlePutProfile } from "./routes/profile";
 import { handleCreateClient } from "./routes/clients";
 import { handleCheckoutSession } from "./routes/checkout";
@@ -23,6 +24,7 @@ import { handleHealth } from "./routes/health";
 export const router = new Router<Env>()
   .post("/api/auth/magic-link", (req, env) => handleMagicLinkRequest(req, env))
   .post("/api/auth/verify", (req, env) => handleVerify(req, env))
+  .post("/api/auth/logout", (req, env) => handleLogout(req, env))
   .get("/api/me", (req, env) => handleMe(req, env))
   .get("/api/profile", (req, env) => handleGetProfile(req, env))
   .put("/api/profile", (req, env) => handlePutProfile(req, env))
@@ -44,10 +46,11 @@ const worker = {
       const response = await router.handle(request, env, ctx);
       return withCors(response, origin);
     } catch (err) {
-      // Handlers that throw (including the not_implemented stubs if one is
-      // ever wired by mistake) become an opaque 500 - no stack to callers.
-      console.error("unhandled", request.method, path, err);
-      return withCors(json({ error: "internal" }, 500), origin);
+      // Opaque 500: the requestId correlates the response with the logged
+      // stack; the stack itself never leaves the log sink.
+      const requestId = request.headers.get("cf-ray") ?? newToken();
+      logError("unhandled_error", err, { method: request.method, path, requestId });
+      return withCors(json({ error: "internal", requestId }, 500), origin);
     }
   },
 };

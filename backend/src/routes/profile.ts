@@ -3,63 +3,81 @@
  * festra-profile-v1 record (lib/user-profile.ts in the repo root). The
  * device stays the source of truth until accounts launch; this endpoint is
  * the sync target so a profile survives a cleared localStorage / new device.
+ *
+ * sanitizeProfilePayload runs on BOTH directions: writes are rejected (422)
+ * when the record is wholesale-invalid, and stored rows are re-sanitized on
+ * the way OUT so a schema bump never hands an old shape to the client.
  */
 
 import type { Env } from "../env";
-import type { ProfilePayload } from "../lib/validate";
-import { comingSoon } from "../lib/http";
+import { sanitizeProfilePayload, type ProfilePayload } from "../lib/validate";
+import { json, unavailable } from "../lib/http";
+import { logEvent } from "../lib/log";
+import { resolveSession } from "./me";
 
 /**
- * Load the stored profile payload for a user.
- *
- * Intended implementation:
- *  - SELECT payload FROM profiles WHERE user_id = ?
- *  - JSON.parse, then sanitizeProfilePayload - stored rows are re-sanitized
- *    on the way OUT too, so a schema bump never hands an old shape to the
- *    client (same load discipline as lib/user-profile.ts loadProfile).
+ * Load the stored profile payload for a user. Unparseable or
+ * no-longer-sanitizable rows read as null (same load discipline as
+ * lib/user-profile.ts loadProfile).
  */
-export async function loadProfileRow(
-  _env: Env,
-  _userId: string
-): Promise<ProfilePayload | null> {
-  // TODO(cutover): implement per the doc block above.
-  throw new Error("not_implemented: enable at cutover");
+export async function loadProfileRow(env: Env, userId: string): Promise<ProfilePayload | null> {
+  const row = await env.DB.prepare("SELECT payload FROM profiles WHERE user_id = ?")
+    .bind(userId)
+    .first<{ payload: string }>();
+  if (!row) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(row.payload);
+  } catch {
+    logEvent("profile_payload_unparseable", { userId });
+    return null;
+  }
+  return sanitizeProfilePayload(parsed);
 }
 
-/**
- * Upsert the profile payload for a user.
- *
- * Intended implementation:
- *  - payload already passed sanitizeProfilePayload (handler's job)
- *  - INSERT INTO profiles (user_id, payload, updated_at) VALUES (?, ?, now)
- *    ON CONFLICT (user_id) DO UPDATE SET payload = ?, updated_at = now
- */
+/** Upsert the (already sanitized - handler's job) payload for a user. */
 export async function saveProfileRow(
-  _env: Env,
-  _userId: string,
-  _payload: ProfilePayload
+  env: Env,
+  userId: string,
+  payload: ProfilePayload
 ): Promise<void> {
-  // TODO(cutover): implement per the doc block above.
-  throw new Error("not_implemented: enable at cutover");
+  const now = new Date().toISOString();
+  await env.DB.prepare(
+    "INSERT INTO profiles (user_id, payload, updated_at) VALUES (?, ?, ?) " +
+      "ON CONFLICT (user_id) DO UPDATE SET payload = excluded.payload, updated_at = excluded.updated_at"
+  )
+    .bind(userId, JSON.stringify(payload), now)
+    .run();
 }
 
 /** GET /api/profile -> 200 ProfilePayload | 204 none | 401. */
-export async function handleGetProfile(_request: Request, _env: Env): Promise<Response> {
-  // TODO(cutover):
-  //  - me = await resolveSession(env, request); 401 when null
-  //  - payload = await loadProfileRow(env, me.id)
-  //  - return payload ? json(payload) : new Response(null, { status: 204 })
-  return comingSoon();
+export async function handleGetProfile(request: Request, env: Env): Promise<Response> {
+  if (!env.DB || !env.SESSIONS) return unavailable("bindings");
+  const me = await resolveSession(env, request);
+  if (!me) return json({ error: "unauthorized" }, 401);
+  const payload = await loadProfileRow(env, me.id);
+  return payload ? json(payload) : new Response(null, { status: 204 });
 }
 
 /** PUT /api/profile - body is the full festra-profile-v1 record. */
-export async function handlePutProfile(_request: Request, _env: Env): Promise<Response> {
-  // TODO(cutover):
-  //  - me = await resolveSession(env, request); 401 when null
-  //  - payload = sanitizeProfilePayload(await request.json()); 422 when null
-  //    (reject wholesale - the server never "fixes" an unknown schema version)
-  //  - await saveProfileRow(env, me.id, payload)
-  //  - return json(payload)  - echo the SANITIZED record so the device
-  //    converges on what the server actually stored
-  return comingSoon();
+export async function handlePutProfile(request: Request, env: Env): Promise<Response> {
+  if (!env.DB || !env.SESSIONS) return unavailable("bindings");
+  const me = await resolveSession(env, request);
+  if (!me) return json({ error: "unauthorized" }, 401);
+
+  const body: unknown = await request.json().catch(() => undefined);
+  if (body === undefined) return json({ error: "invalid_json" }, 400);
+  // Reject wholesale - the server never "fixes" an unknown schema version.
+  const payload = sanitizeProfilePayload(body);
+  if (!payload) return json({ error: "invalid_profile" }, 422);
+
+  await saveProfileRow(env, me.id, payload);
+  // "agents flip via profile": users.kind follows the synced profile type.
+  if (payload.type !== me.kind) {
+    await env.DB.prepare("UPDATE users SET kind = ? WHERE id = ?")
+      .bind(payload.type, me.id)
+      .run();
+  }
+  // Echo the SANITIZED record so the device converges on what was stored.
+  return json(payload);
 }

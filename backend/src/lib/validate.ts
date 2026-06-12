@@ -16,7 +16,8 @@
 
 // --- constants kept identical to lib/user-profile.ts -----------------------
 const CURRENT_PROFILE_VERSION = 1;
-const MAX_CLIENTS = 30;
+/** Per-user client cap - shared with the server-side roll-off in routes/clients.ts. */
+export const MAX_CLIENTS = 30;
 const MAX_TEXT = 80;
 
 // RFC 5321 caps the forward path at 254 octets.
