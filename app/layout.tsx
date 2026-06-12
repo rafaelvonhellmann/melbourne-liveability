@@ -68,6 +68,16 @@ export default function RootLayout({
         {ANALYTICS_DOMAIN && (
           <Script defer data-domain={ANALYTICS_DOMAIN} src="https://plausible.io/js/script.js" />
         )}
+        {/* Cloudflare Web Analytics - cookieless RUM beacon. The token is
+            public by design (it ships in every page's HTML). Env-gated so
+            local dev and forks stay beacon-free. */}
+        {process.env.NEXT_PUBLIC_CF_BEACON_TOKEN && (
+          <Script
+            defer
+            src="https://static.cloudflareinsights.com/beacon.min.js"
+            data-cf-beacon={`{"token": "${process.env.NEXT_PUBLIC_CF_BEACON_TOKEN}"}`}
+          />
+        )}
       </body>
     </html>
   );

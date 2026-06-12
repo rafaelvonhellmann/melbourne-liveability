@@ -46,6 +46,7 @@ jobs:
           # not secrets. While unset they stay empty, which keeps current
           # behaviour: no analytics script, mailto feedback fallback.
           NEXT_PUBLIC_ANALYTICS_DOMAIN: ${{ vars.NEXT_PUBLIC_ANALYTICS_DOMAIN }}
+          NEXT_PUBLIC_CF_BEACON_TOKEN: ${{ vars.NEXT_PUBLIC_CF_BEACON_TOKEN }}
           NEXT_PUBLIC_FORMSPREE_FEEDBACK_ID: ${{ vars.NEXT_PUBLIC_FORMSPREE_FEEDBACK_ID }}
           NEXT_PUBLIC_FEEDBACK_EMAIL: ${{ vars.NEXT_PUBLIC_FEEDBACK_EMAIL }}
         run: npm run build
