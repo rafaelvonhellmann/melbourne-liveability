@@ -303,7 +303,7 @@ export function SearchBox({
 
           {showAddressSection && geo.status === "loading" && (
             <li role="presentation" className="border-t border-surface-border">
-              <p className="px-3 py-2 text-sm text-ink-muted">
+              <p role="status" aria-live="polite" className="px-3 py-2 text-sm text-ink-muted">
                 Searching addresses…
               </p>
             </li>
@@ -311,8 +311,8 @@ export function SearchBox({
 
           {showAddressSection && geo.status === "error" && (
             <li role="presentation" className="border-t border-surface-border">
-              <p className="px-3 py-2 text-xs leading-snug text-ink-muted">
-                Couldn’t reach address search. Try a suburb or data area, or
+              <p role="status" aria-live="polite" className="px-3 py-2 text-xs leading-snug text-ink-muted">
+                Address lookup failed - try a suburb or data area name, or
                 click the map.
               </p>
             </li>
@@ -320,7 +320,7 @@ export function SearchBox({
 
           {showAddressSection && geo.status === "done" && geo.results.length === 0 && (
             <li role="presentation" className="border-t border-surface-border">
-              <p className="px-3 py-2 text-xs leading-snug text-ink-muted">
+              <p role="status" aria-live="polite" className="px-3 py-2 text-xs leading-snug text-ink-muted">
                 No Melbourne address matched “{trimmed}”. Try a suburb or click
                 the map.
               </p>

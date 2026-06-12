@@ -67,6 +67,11 @@ export function BuyerHereCard({ place }: { place: Place }) {
             The exact-address check measures amenities, hazards and noise from the pin you
             drop. The quick check uses this area&apos;s centre point, so it is approximate.
           </p>
+          {/* A11y: async status announced to AT - the visible button label
+              changes are not reliably announced on their own. */}
+          <p role="status" aria-live="polite" className="sr-only">
+            {loading ? "Generating area report…" : report ? "Area report ready." : ""}
+          </p>
         </div>
       </div>
 

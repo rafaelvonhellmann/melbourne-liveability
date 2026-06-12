@@ -309,6 +309,13 @@ export function Landing({
     onDismiss();
   };
 
+  /** Skip link (first focusable): straight past the scroll story to the map. */
+  const skipToMap = () => {
+    markOnboarded();
+    track("landing_skip_link");
+    onDismiss();
+  };
+
   const signIn = () => {
     track("landing_sign_in");
     closeBandRef.current?.scrollIntoView?.({
@@ -338,6 +345,15 @@ export function Landing({
 
   return (
     <main ref={rootRef} className="min-h-screen bg-bg text-ink">
+      {/* A11y: first focusable element - keyboard/AT users skip the scroll
+          story entirely (same flag-then-dismiss contract as every path). */}
+      <button
+        type="button"
+        onClick={skipToMap}
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-accent-ink"
+      >
+        Skip to map
+      </button>
       <div className="relative">
         {/* The live map backdrop - sticky for the whole scroll story, scrolled
             away naturally by the close band. Non-interactive; the scroll owns

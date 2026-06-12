@@ -129,4 +129,19 @@ describe("SearchBox submit-only geocode (P0-8 regression guard)", () => {
       expect.objectContaining({ shortLabel: "12 Smith St, Abbotsford" })
     );
   });
+
+  it("a failed geocode shows visible, polite-announced feedback in the dropdown", async () => {
+    vi.mocked(geocodeAddress).mockRejectedValueOnce(new Error("network down"));
+    const { container } = render(
+      <SearchBox index={INDEX} onSelect={vi.fn()} onGeocode={vi.fn()} />
+    );
+    const input = screen.getByRole("combobox");
+    fireEvent.change(input, { target: { value: "12 smith st, abbotsford" } });
+    fireEvent.submit(container.querySelector("form") as HTMLFormElement);
+
+    const status = await screen.findByText(/Address lookup failed/);
+    expect(status).toBeVisible();
+    expect(status).toHaveAttribute("aria-live", "polite");
+    expect(status).toHaveAttribute("role", "status");
+  });
 });

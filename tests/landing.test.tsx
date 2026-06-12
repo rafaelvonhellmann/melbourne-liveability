@@ -259,6 +259,45 @@ describe("Landing hero (scene 1)", () => {
   });
 });
 
+describe("Landing under prefers-reduced-motion (static frames, full content)", () => {
+  it("still renders the whole landing - all scenes and the close band", async () => {
+    stubReducedMotion(true);
+    await renderLanding();
+    // Hero + every scroll-scene heading is present as static content.
+    expect(screen.getByRole("heading", { level: 1, name: "Festra" })).toBeInTheDocument();
+    for (const name of [
+      "Drop a pin anywhere in Australia",
+      "Read the area in one glance",
+      "Go deep when you are serious",
+      "Compare before you commit",
+    ]) {
+      expect(screen.getByRole("heading", { level: 2, name })).toBeInTheDocument();
+    }
+    for (let i = 1; i <= 5; i++) {
+      expect(screen.getByTestId(`landing-scene-${i}`)).toBeInTheDocument();
+    }
+    // The final buyer/agent/skip band stays reachable by normal scrolling.
+    const band = document.getElementById("get-started") as HTMLElement;
+    expect(within(band).getByRole("button", { name: "I am buying a home" })).toBeInTheDocument();
+    expect(within(band).getByRole("button", { name: "I work with buyers" })).toBeInTheDocument();
+    expect(within(band).getByRole("button", { name: "Skip for now" })).toBeInTheDocument();
+  });
+});
+
+describe("Landing skip link (a11y)", () => {
+  it("is the first focusable element and dismisses straight to the map", async () => {
+    const { props } = await renderLanding();
+    const main = screen.getByRole("main");
+    const first = main.querySelector<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    expect(first).toHaveTextContent("Skip to map");
+    fireEvent.click(first as HTMLElement);
+    expect(props.onDismiss).toHaveBeenCalledTimes(1);
+    expect(localStorage.getItem(ONBOARDED_KEY)).toBe("1");
+  });
+});
+
 describe("Landing keyboard dismissal (a11y - no scrolling required)", () => {
   it("Escape sets the flag and dismisses like every other path", async () => {
     const { props } = await renderLanding();

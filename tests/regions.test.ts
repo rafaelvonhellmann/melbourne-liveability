@@ -13,11 +13,6 @@ import REGIONS, {
   type RegionId,
 } from "../lib/regions";
 import { GREATER_MELBOURNE_GCCSA } from "../lib/crosswalk-types";
-import {
-  MELBOURNE_BOUNDS,
-  MELBOURNE_CENTER,
-  MELBOURNE_MAX_BOUNDS,
-} from "../lib/region";
 import { inMelbourneBBox } from "../lib/share-url";
 import { MEL_BBOX, PTV_GTFS_URL } from "../scripts/lib/gtfs-constants";
 import {
@@ -103,13 +98,17 @@ describe("Melbourne aliases (exact pre-registry values)", () => {
     expect(GREATER_MELBOURNE_GCCSA).toBe("2GMEL");
   });
 
-  it("lib/region.ts constants are unchanged", () => {
-    expect(MELBOURNE_CENTER).toEqual([144.9631, -37.8136]);
-    expect(MELBOURNE_BOUNDS).toEqual([
+  it("melbourne registry values are unchanged (ex lib/region.ts aliases)", () => {
+    const m = REGIONS.melbourne;
+    expect(m.mapCenter).toEqual([144.9631, -37.8136]);
+    expect([
+      [m.bbox.west, m.bbox.south],
+      [m.bbox.east, m.bbox.north],
+    ]).toEqual([
       [144.45, -38.35],
       [145.65, -37.45],
     ]);
-    expect(MELBOURNE_MAX_BOUNDS).toEqual([
+    expect(m.maxBounds).toEqual([
       [141.0, -39.6],
       [148.8, -36.0],
     ]);
