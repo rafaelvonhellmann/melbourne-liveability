@@ -44,7 +44,9 @@ export function csvRows(text: string): string[][] {
 export function csvTable(text: string): Record<string, string>[] {
   const lines = stripBom(text).split(/\r?\n/).filter((l) => l.length > 0);
   if (lines.length < 2) return [];
-  const header = parseCsvLine(lines[0]).map((h) => stripBom(h));
+  // Trim header cells: real feeds ship headers like "stop_id, stop_lat" with
+  // stray spaces (Transperth GTFS), which would silently break keyed lookups.
+  const header = parseCsvLine(lines[0]).map((h) => stripBom(h).trim());
   const out: Record<string, string>[] = [];
   for (let i = 1; i < lines.length; i++) {
     const cols = parseCsvLine(lines[i]);

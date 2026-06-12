@@ -169,7 +169,7 @@ async function streamStopTimes(
   for await (const line of rl) {
     if (!line) continue;
     if (!header) {
-      header = parseCsvLine(stripBom(line)).map((h) => stripBom(h));
+      header = parseCsvLine(stripBom(line)).map((h) => stripBom(h).trim());
       idxStop = header.indexOf("stop_id");
       idxTrip = header.indexOf("trip_id");
       idxArr = header.indexOf("arrival_time");
