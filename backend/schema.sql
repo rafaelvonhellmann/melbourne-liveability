@@ -50,6 +50,16 @@ CREATE TABLE IF NOT EXISTS profiles (
   updated_at TEXT NOT NULL
 );
 
+-- Server-side copy of the device-local preferences. payload is the JSON
+-- record shaped like mlv-user-prefs-v1 (lib/user-prefs.ts UserPrefs) plus
+-- a client-supplied updatedAt sync clock. Every write passes
+-- src/lib/validate.ts sanitizePrefsPayload first.
+CREATE TABLE IF NOT EXISTS prefs (
+  user_id    TEXT PRIMARY KEY REFERENCES users (id),
+  payload    TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
 -- Agent sub-profiles (mirrors AgentClient in lib/user-profile.ts). Kept
 -- relational - not only inside profiles.payload - so purchases/reports can
 -- reference a client row later without parsing JSON.

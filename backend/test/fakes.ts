@@ -30,6 +30,7 @@ export type SessionTableRow = {
   expires_at: string;
 };
 export type ProfileTableRow = { user_id: string; payload: string; updated_at: string };
+export type PrefsTableRow = { user_id: string; payload: string; updated_at: string };
 export type ClientTableRow = {
   rowid: number;
   id: string;
@@ -53,6 +54,7 @@ export type Tables = {
   magic_links: MagicLinkTableRow[];
   sessions: SessionTableRow[];
   profiles: ProfileTableRow[];
+  prefs: PrefsTableRow[];
   clients: ClientTableRow[];
   purchases: PurchaseTableRow[];
 };
@@ -75,6 +77,10 @@ const SQL = {
   selectProfile: "SELECT payload FROM profiles WHERE user_id = ?",
   upsertProfile:
     "INSERT INTO profiles (user_id, payload, updated_at) VALUES (?, ?, ?) " +
+    "ON CONFLICT (user_id) DO UPDATE SET payload = excluded.payload, updated_at = excluded.updated_at",
+  selectPrefs: "SELECT payload FROM prefs WHERE user_id = ?",
+  upsertPrefs:
+    "INSERT INTO prefs (user_id, payload, updated_at) VALUES (?, ?, ?) " +
     "ON CONFLICT (user_id) DO UPDATE SET payload = excluded.payload, updated_at = excluded.updated_at",
   updateUserKind: "UPDATE users SET kind = ? WHERE id = ?",
   insertClient: "INSERT INTO clients (id, user_id, label, created_at) VALUES (?, ?, ?, ?)",
@@ -126,6 +132,7 @@ export class FakeD1 implements D1Database {
     magic_links: [],
     sessions: [],
     profiles: [],
+    prefs: [],
     clients: [],
     purchases: [],
   };
@@ -232,6 +239,21 @@ export class FakeD1 implements D1Database {
           existing.updated_at = updated_at;
         } else {
           t.profiles.push({ user_id, payload, updated_at });
+        }
+        return { rows: [], changes: 1 };
+      }
+      case SQL.selectPrefs: {
+        const [user_id] = params as [string];
+        return { rows: t.prefs.filter((r) => r.user_id === user_id), changes: 0 };
+      }
+      case SQL.upsertPrefs: {
+        const [user_id, payload, updated_at] = params as [string, string, string];
+        const existing = t.prefs.find((r) => r.user_id === user_id);
+        if (existing) {
+          existing.payload = payload;
+          existing.updated_at = updated_at;
+        } else {
+          t.prefs.push({ user_id, payload, updated_at });
         }
         return { rows: [], changes: 1 };
       }

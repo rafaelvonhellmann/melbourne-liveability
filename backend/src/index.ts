@@ -16,6 +16,7 @@ import { newToken } from "./lib/token";
 import { handleMagicLinkRequest, handleVerify } from "./routes/auth";
 import { handleLogout, handleMe } from "./routes/me";
 import { handleGetProfile, handlePutProfile } from "./routes/profile";
+import { handleGetPrefs, handlePutPrefs } from "./routes/prefs";
 import { handleCreateClient } from "./routes/clients";
 import { handleCheckoutSession } from "./routes/checkout";
 import { handleStripeWebhook } from "./routes/stripe-webhook";
@@ -28,6 +29,8 @@ export const router = new Router<Env>()
   .get("/api/me", (req, env) => handleMe(req, env))
   .get("/api/profile", (req, env) => handleGetProfile(req, env))
   .put("/api/profile", (req, env) => handlePutProfile(req, env))
+  .get("/api/prefs", (req, env) => handleGetPrefs(req, env))
+  .put("/api/prefs", (req, env) => handlePutPrefs(req, env))
   .post("/api/clients", (req, env) => handleCreateClient(req, env))
   .post("/api/checkout/session", (req, env) => handleCheckoutSession(req, env))
   .post("/api/webhooks/stripe", (req, env) => handleStripeWebhook(req, env))

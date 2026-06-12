@@ -5,6 +5,7 @@ import {
   parsePurchaseStatus,
   parseSku,
   parseUserKind,
+  sanitizePrefsPayload,
   sanitizeProfilePayload,
 } from "../src/lib/validate";
 
@@ -194,6 +195,162 @@ describe("sanitizeProfilePayload", () => {
       NOW
     );
     expect(out).toEqual({ version: 1, type: "agent", createdAt: NOW });
+  });
+});
+
+describe("sanitizePrefsPayload", () => {
+  it("accepts and cleans a current prefs record", () => {
+    const out = sanitizePrefsPayload({
+      version: 1,
+      updatedAt: NOW,
+      weights: { affordability: 30, transport: 18, equity: 99 },
+      interestView: "homeBuyer",
+      shortlist: [" carlton ", 42, ""],
+      recent: [{ slug: " fitzroy ", name: " Fitzroy ", viewedAt: NOW }],
+      savedChecks: [
+        {
+          id: " -37.80000,144.97000 ",
+          lat: -37.8,
+          lng: 144.97,
+          areaName: " Carlton ",
+          label: " Near park ",
+          savedAt: NOW,
+        },
+      ],
+      alertEmail: "  Sam@Festra.AU ",
+      colorblindRamp: true,
+      buyerProfile: {
+        mode: "agent",
+        intent: "buy",
+        household: "family",
+        car: "one_car",
+        commuteLabel: "  CBD  ",
+        anchors: [{ id: "a1", kind: "work", label: " Office ", lng: 144.96, lat: -37.81 }],
+        quiet: "high",
+        transport: "medium",
+        dealBreakers: ["flood", "flood", "noise", "bad"],
+        updatedAt: NOW,
+        removed: "field",
+      },
+      personaId: "family",
+      junk: true,
+    });
+
+    expect(out).toEqual({
+      version: 1,
+      updatedAt: NOW,
+      weights: { affordability: 30, transport: 18 },
+      interestView: "homeBuyer",
+      shortlist: ["carlton"],
+      recent: [{ slug: "fitzroy", name: "Fitzroy", viewedAt: NOW }],
+      savedChecks: [
+        {
+          id: "-37.80000,144.97000",
+          lat: -37.8,
+          lng: 144.97,
+          areaName: "Carlton",
+          label: "Near park",
+          savedAt: NOW,
+        },
+      ],
+      alertEmail: "sam@festra.au",
+      colorblindRamp: true,
+      buyerProfile: {
+        mode: "buyer",
+        intent: "buy",
+        household: "family",
+        car: "one_car",
+        commuteLabel: "CBD",
+        anchors: [{ id: "a1", kind: "work", label: "Office", lng: 144.96, lat: -37.81 }],
+        quiet: "high",
+        transport: "medium",
+        dealBreakers: ["flood", "noise"],
+        updatedAt: NOW,
+      },
+    });
+    expect(out).not.toHaveProperty("personaId");
+    expect(out).not.toHaveProperty("junk");
+  });
+
+  it("rejects unknown versions, missing sync clocks and non-objects wholesale", () => {
+    expect(sanitizePrefsPayload({ version: 2, updatedAt: NOW })).toBeNull();
+    expect(sanitizePrefsPayload({ version: 1 })).toBeNull();
+    expect(sanitizePrefsPayload({ version: 1, updatedAt: "yesterday" })).toBeNull();
+    expect(sanitizePrefsPayload(null)).toBeNull();
+    expect(sanitizePrefsPayload([])).toBeNull();
+  });
+
+  it("caps list fields and text widths", () => {
+    const out = sanitizePrefsPayload({
+      version: 1,
+      updatedAt: NOW,
+      shortlist: Array.from({ length: 105 }, (_, i) => ` ${"s".repeat(90)}-${i} `),
+      recent: Array.from({ length: 105 }, (_, i) => ({
+        slug: `recent-${i}`,
+        name: ` ${"n".repeat(90)} `,
+        viewedAt: NOW,
+      })),
+      savedChecks: Array.from({ length: 55 }, (_, i) => ({
+        id: `check-${i}`,
+        lat: -37 + i * 0.001,
+        lng: 144 + i * 0.001,
+        savedAt: NOW,
+      })),
+    });
+    expect(out?.shortlist).toHaveLength(100);
+    expect(out?.shortlist[0]).toHaveLength(80);
+    expect(out?.recent).toHaveLength(100);
+    expect(out?.recent[0]!.name).toHaveLength(80);
+    expect(out?.savedChecks).toHaveLength(50);
+  });
+
+  it("clamps numeric weights to 0-60 and drops unknown or non-numeric entries", () => {
+    const out = sanitizePrefsPayload({
+      version: 1,
+      updatedAt: NOW,
+      weights: {
+        affordability: -5,
+        transport: 61,
+        safety: Number.NaN,
+        health: "10",
+        education: 22.5,
+        greenSpace: 50,
+      },
+    });
+    expect(out?.weights).toEqual({ affordability: 0, transport: 60, education: 22.5 });
+  });
+
+  it("guards prefs enums and drops malformed saved checks / buyer profile fields", () => {
+    const out = sanitizePrefsPayload({
+      version: 1,
+      updatedAt: NOW,
+      interestView: "youngPro",
+      savedChecks: [
+        { id: "bad-lat", lat: "no", lng: 144, savedAt: NOW },
+        { id: "bad-lng", lat: -37, lng: 181, savedAt: NOW },
+        { id: "bad-date", lat: -37, lng: 144, savedAt: "today" },
+        { id: "ok", lat: -37, lng: 144, savedAt: NOW },
+      ],
+      alertEmail: "not-an-email",
+      buyerProfile: {
+        mode: "buyer",
+        intent: "own",
+        anchors: [
+          { id: "bad", kind: "mars", label: "Bad", lng: 144, lat: -37 },
+          { id: "ok", kind: "family", label: "Mum", lng: 144.9, lat: -37.8 },
+        ],
+        quiet: "urgent",
+        dealBreakers: ["industry", "unknown"],
+      },
+    });
+    expect(out?.interestView).toBeUndefined();
+    expect(out?.savedChecks).toEqual([{ id: "ok", lat: -37, lng: 144, savedAt: NOW }]);
+    expect(out?.alertEmail).toBeNull();
+    expect(out?.buyerProfile).toEqual({
+      mode: "buyer",
+      anchors: [{ id: "ok", kind: "family", label: "Mum", lng: 144.9, lat: -37.8 }],
+      dealBreakers: ["industry"],
+    });
   });
 });
 

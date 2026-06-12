@@ -16,11 +16,16 @@
 
 // --- constants kept identical to lib/user-profile.ts -----------------------
 const CURRENT_PROFILE_VERSION = 1;
+const CURRENT_PREFS_VERSION = 1;
 /** Per-user client cap - shared with the server-side roll-off in routes/clients.ts. */
 export const MAX_CLIENTS = 30;
 export const MAX_BODY_BYTES = 64_000;
 const MAX_TEXT = 80;
 const MAX_CLIENT_ID = 64;
+const MAX_PREF_LIST = 100;
+const MAX_PREF_SAVED_CHECKS = 50;
+const MAX_PREF_WEIGHT = 60;
+const MAX_PREF_ANCHORS = 20;
 
 // RFC 5321 caps the forward path at 254 octets.
 const MAX_EMAIL = 254;
@@ -61,6 +66,255 @@ export function parsePurchaseStatus(raw: unknown): PurchaseStatus | null {
   return raw === "pending" || raw === "paid" || raw === "failed" || raw === "refunded"
     ? raw
     : null;
+}
+
+// --- mlv-user-prefs-v1 payload ---------------------------------------------
+
+const PREF_WEIGHT_DOMAINS = [
+  "affordability",
+  "transport",
+  "safety",
+  "health",
+  "hazards",
+  "education",
+  "income",
+] as const;
+
+type PrefWeightDomain = (typeof PREF_WEIGHT_DOMAINS)[number];
+type PrefWeights = Partial<Record<PrefWeightDomain, number>>;
+
+export type PrefInterestView =
+  | "general"
+  | "rental"
+  | "homeBuyer"
+  | "education"
+  | "dataQuality"
+  | "family"
+  | "retiree";
+
+const PREF_INTEREST_VIEWS: PrefInterestView[] = [
+  "general",
+  "rental",
+  "homeBuyer",
+  "education",
+  "dataQuality",
+  "family",
+  "retiree",
+];
+
+export type PrefRecentPlace = {
+  slug: string;
+  name: string;
+  viewedAt: string;
+};
+
+export type PrefSavedCheck = {
+  id: string;
+  lat: number;
+  lng: number;
+  areaName?: string;
+  label?: string;
+  savedAt: string;
+};
+
+export type PrefAnchorKind = "work" | "school" | "family" | "other";
+
+export type PrefBuyerAnchor = {
+  id: string;
+  kind: PrefAnchorKind;
+  label: string;
+  lng: number;
+  lat: number;
+};
+
+export type PrefBuyerProfile = {
+  mode: "buyer";
+  intent?: "buy" | "rent";
+  household?: "solo" | "couple" | "family" | "share" | "retiree";
+  car?: "no_car" | "one_car" | "multi_car";
+  commuteLabel?: string;
+  anchors?: PrefBuyerAnchor[];
+  quiet?: "low" | "medium" | "high";
+  transport?: "low" | "medium" | "high";
+  dealBreakers?: Array<
+    "flood" | "bushfire" | "heritage" | "noise" | "industry" | "poor_transport"
+  >;
+  updatedAt?: string;
+};
+
+/** Server copy of the device-local mlv-user-prefs-v1 record plus sync clock. */
+export type PrefsPayload = {
+  version: 1;
+  updatedAt: string;
+  weights?: PrefWeights;
+  interestView?: PrefInterestView;
+  shortlist: string[];
+  recent: PrefRecentPlace[];
+  savedChecks: PrefSavedCheck[];
+  alertEmail?: string | null;
+  colorblindRamp?: boolean;
+  buyerProfile?: PrefBuyerProfile;
+};
+
+function parseInterestView(raw: unknown): PrefInterestView | undefined {
+  return typeof raw === "string" && (PREF_INTEREST_VIEWS as string[]).includes(raw)
+    ? (raw as PrefInterestView)
+    : undefined;
+}
+
+function clampPrefWeight(raw: unknown): number | undefined {
+  if (typeof raw !== "number" || !Number.isFinite(raw)) return undefined;
+  return Math.min(MAX_PREF_WEIGHT, Math.max(0, raw));
+}
+
+function cleanPrefWeights(raw: unknown): PrefWeights | undefined {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
+  const input = raw as Record<string, unknown>;
+  const weights: PrefWeights = {};
+  for (const domain of PREF_WEIGHT_DOMAINS) {
+    const n = clampPrefWeight(input[domain]);
+    if (n !== undefined) weights[domain] = n;
+  }
+  return Object.keys(weights).length > 0 ? weights : undefined;
+}
+
+function cleanStringList(raw: unknown, cap: number): string[] {
+  if (!Array.isArray(raw)) return [];
+  const out: string[] = [];
+  for (const item of raw) {
+    if (out.length >= cap) break;
+    const text = cleanText(item);
+    if (text) out.push(text);
+  }
+  return out;
+}
+
+function cleanRecentPlaces(raw: unknown): PrefRecentPlace[] {
+  if (!Array.isArray(raw)) return [];
+  const out: PrefRecentPlace[] = [];
+  for (const item of raw) {
+    if (out.length >= MAX_PREF_LIST) break;
+    if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+    const entry = item as Record<string, unknown>;
+    const slug = cleanText(entry.slug);
+    const name = cleanText(entry.name);
+    const viewedAt = cleanIsoTimestamp(entry.viewedAt);
+    if (!slug || !name || !viewedAt) continue;
+    out.push({ slug, name, viewedAt });
+  }
+  return out;
+}
+
+function cleanLat(raw: unknown): number | undefined {
+  return typeof raw === "number" && Number.isFinite(raw) && raw >= -90 && raw <= 90
+    ? raw
+    : undefined;
+}
+
+function cleanLng(raw: unknown): number | undefined {
+  return typeof raw === "number" && Number.isFinite(raw) && raw >= -180 && raw <= 180
+    ? raw
+    : undefined;
+}
+
+function cleanSavedChecks(raw: unknown): PrefSavedCheck[] {
+  if (!Array.isArray(raw)) return [];
+  const out: PrefSavedCheck[] = [];
+  for (const item of raw) {
+    if (out.length >= MAX_PREF_SAVED_CHECKS) break;
+    if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+    const entry = item as Record<string, unknown>;
+    const id = cleanText(entry.id);
+    const lat = cleanLat(entry.lat);
+    const lng = cleanLng(entry.lng);
+    const savedAt = cleanIsoTimestamp(entry.savedAt);
+    if (!id || lat === undefined || lng === undefined || !savedAt) continue;
+    const check: PrefSavedCheck = { id, lat, lng, savedAt };
+    const areaName = cleanText(entry.areaName);
+    const label = cleanText(entry.label);
+    if (areaName) check.areaName = areaName;
+    if (label) check.label = label;
+    out.push(check);
+  }
+  return out;
+}
+
+function parseOneOf<T extends string>(raw: unknown, values: readonly T[]): T | undefined {
+  return typeof raw === "string" && (values as readonly string[]).includes(raw)
+    ? (raw as T)
+    : undefined;
+}
+
+function cleanBuyerAnchors(raw: unknown): PrefBuyerAnchor[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const out: PrefBuyerAnchor[] = [];
+  for (const item of raw) {
+    if (out.length >= MAX_PREF_ANCHORS) break;
+    if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+    const entry = item as Record<string, unknown>;
+    const id = cleanText(entry.id);
+    const kind = parseOneOf(entry.kind, ["work", "school", "family", "other"] as const);
+    const label = cleanText(entry.label);
+    const lng = cleanLng(entry.lng);
+    const lat = cleanLat(entry.lat);
+    if (!id || !kind || !label || lng === undefined || lat === undefined) continue;
+    out.push({ id, kind, label, lng, lat });
+  }
+  return out.length > 0 ? out : undefined;
+}
+
+function cleanDealBreakers(raw: unknown): PrefBuyerProfile["dealBreakers"] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const out: NonNullable<PrefBuyerProfile["dealBreakers"]> = [];
+  const seen = new Set<string>();
+  const allowed = [
+    "flood",
+    "bushfire",
+    "heritage",
+    "noise",
+    "industry",
+    "poor_transport",
+  ] as const;
+  for (const item of raw) {
+    const id = parseOneOf(item, allowed);
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push(id);
+  }
+  return out.length > 0 ? out : undefined;
+}
+
+function cleanBuyerProfile(raw: unknown): PrefBuyerProfile | undefined {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
+  const input = raw as Record<string, unknown>;
+  const mode = parseOneOf(input.mode, ["buyer", "agent"] as const);
+  if (!mode) return undefined;
+  const profile: PrefBuyerProfile = { mode: "buyer" };
+  const intent = parseOneOf(input.intent, ["buy", "rent"] as const);
+  const household = parseOneOf(input.household, [
+    "solo",
+    "couple",
+    "family",
+    "share",
+    "retiree",
+  ] as const);
+  const car = parseOneOf(input.car, ["no_car", "one_car", "multi_car"] as const);
+  const quiet = parseOneOf(input.quiet, ["low", "medium", "high"] as const);
+  const transport = parseOneOf(input.transport, ["low", "medium", "high"] as const);
+  const commuteLabel = cleanText(input.commuteLabel);
+  const anchors = cleanBuyerAnchors(input.anchors);
+  const dealBreakers = cleanDealBreakers(input.dealBreakers);
+  const updatedAt = cleanIsoTimestamp(input.updatedAt);
+  if (intent) profile.intent = intent;
+  if (household) profile.household = household;
+  if (car) profile.car = car;
+  if (commuteLabel) profile.commuteLabel = commuteLabel;
+  if (anchors) profile.anchors = anchors;
+  if (quiet) profile.quiet = quiet;
+  if (transport) profile.transport = transport;
+  if (dealBreakers) profile.dealBreakers = dealBreakers;
+  if (updatedAt) profile.updatedAt = updatedAt;
+  return profile;
 }
 
 // --- festra-profile-v1 payload ----------------------------------------------
@@ -160,6 +414,38 @@ export function sanitizeProfilePayload(
     }
   }
   return profile;
+}
+
+/**
+ * Read an arbitrary parsed JSON body into the current prefs sync shape, or
+ * null. Wrong/missing version and missing/invalid sync updatedAt reject the
+ * whole record; field-level drift is cleaned away so devices converge on the
+ * stored server shape.
+ */
+export function sanitizePrefsPayload(parsed: unknown): PrefsPayload | null {
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+  const p = parsed as Record<string, unknown>;
+  if (p.version !== CURRENT_PREFS_VERSION) return null;
+  const updatedAt = cleanIsoTimestamp(p.updatedAt);
+  if (!updatedAt) return null;
+
+  const prefs: PrefsPayload = {
+    version: 1,
+    updatedAt,
+    shortlist: cleanStringList(p.shortlist, MAX_PREF_LIST),
+    recent: cleanRecentPlaces(p.recent),
+    savedChecks: cleanSavedChecks(p.savedChecks),
+  };
+
+  const weights = cleanPrefWeights(p.weights);
+  const interestView = parseInterestView(p.interestView);
+  const buyerProfile = cleanBuyerProfile(p.buyerProfile);
+  if (weights) prefs.weights = weights;
+  if (interestView) prefs.interestView = interestView;
+  if ("alertEmail" in p) prefs.alertEmail = normalizeEmail(p.alertEmail);
+  if (typeof p.colorblindRamp === "boolean") prefs.colorblindRamp = p.colorblindRamp;
+  if (buyerProfile) prefs.buyerProfile = buyerProfile;
+  return prefs;
 }
 
 /**
