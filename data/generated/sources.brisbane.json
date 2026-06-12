@@ -1,0 +1,119 @@
+[
+  {
+    "id": "abs-sa2-income-dbr",
+    "name": "ABS Data by Region — median equivalised household income (weekly)",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-06-12",
+    "sha256": "d9a65772a07f51df92447dcc2b81e89d3defee84cc1c532d6c66bcbf37fa8a97"
+  },
+  {
+    "id": "abs-rent-to-income-2021",
+    "name": "Rent-to-income ratio — ABS Census 2021 median weekly rent ÷ ABS Data by Region equivalised household income",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "derived": true,
+    "sha256": ""
+  },
+  {
+    "id": "abs-erp-sa2",
+    "name": "ABS ERP by SA2",
+    "url": "https://www.abs.gov.au/statistics/people/population/regional-population",
+    "licence": "CC BY 4.0",
+    "period": "2023",
+    "fetchedAt": "2026-06-12",
+    "sha256": "ef6c8d130a8e4b753cb38e55116ef07d5d9fcfb67b7f04312391e002ecd87068"
+  },
+  {
+    "id": "qps-lga-offence-rates",
+    "name": "QPS - LGA reported offence rates per 100k ERP (data.qld.gov.au)",
+    "url": "https://www.data.qld.gov.au/dataset/lga_reported_offences_rates",
+    "licence": "CC BY 4.0",
+    "period": "rolling year (latest 12 months in export)",
+    "fetchedAt": "2026-06-12",
+    "sha256": "2705d26e622bf807fba1551e7bdd6f1eea0a3bb4eea6c2084746aca41247f4c7"
+  },
+  {
+    "id": "osm-health",
+    "name": "OpenStreetMap — GP/clinic points (Overpass; hospital fallback only)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-12",
+    "sha256": "0938b24fcf562d8c809ef69cb26fd393baa53c13ac4a38c8c4ec33651600f7c9"
+  },
+  {
+    "id": "abs-census-labour-2016",
+    "name": "ABS Census 2016 — labour force (employed, participation) by SA2",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2016",
+    "fetchedAt": "2026-06-12",
+    "sha256": "f63e5385d3eeae44c42fe5ad37a7e418a7b0adabd0f1f8623357df3bf24ed268"
+  },
+  {
+    "id": "osm-schools",
+    "name": "OpenStreetMap — schools within 2 km (Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-12",
+    "sha256": "059d368a12d79591d0ea8ed0fe4e3a83472573947ee0d7aa9592ddefe51ff0b4"
+  },
+  {
+    "id": "abs-census-preschool-2021",
+    "name": "ABS Census 2021 — children enrolled in preschool (SA2)",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-06-12",
+    "sha256": "f63e5385d3eeae44c42fe5ad37a7e418a7b0adabd0f1f8623357df3bf24ed268"
+  },
+  {
+    "id": "abs-seifa-2021",
+    "name": "ABS SEIFA 2021 — IRSAD and IRSD deciles (SA2)",
+    "url": "https://www.abs.gov.au/statistics/people/people-and-communities/socio-economic-indexes-areas-seifa-australia/latest-release",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-06-12",
+    "sha256": "bb4746654a36b6bbac5a4051ce60b955495182138013b5c4f05487422e416473"
+  },
+  {
+    "id": "abs-census-community-2021",
+    "name": "ABS Census 2021 — tenure and dwelling structure (SA2)",
+    "url": "https://dbr.abs.gov.au/",
+    "licence": "CC BY 4.0",
+    "period": "2021",
+    "fetchedAt": "2026-06-12",
+    "sha256": "45cf9b454a81685fe80a382037b1b4251c7157a508065642b132177dc8c4101d"
+  },
+  {
+    "id": "osm-amenities",
+    "name": "OpenStreetMap — everyday amenities for 15-min access (supermarket, pharmacy, park, cafe/restaurant, gym/leisure; Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-12",
+    "sha256": "717e8dc8c96270f29a06ece39c00080e0493f4925cf3be81b3dfeb25ec03b3a1"
+  },
+  {
+    "id": "osm-cycleways",
+    "name": "OpenStreetMap — cycling infrastructure for cyclability index (cycleways, on-road bike lanes, bicycle-designated paths; Overpass)",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL — attribute OSM",
+    "period": "current",
+    "fetchedAt": "2026-06-12",
+    "sha256": "6a02161835b6860e3d2e24731bc5a1007cc826e85c9dc3de0fe994c32d38096e"
+  },
+  {
+    "id": "translink-gtfs",
+    "name": "Translink - South East Queensland GTFS schedule",
+    "url": "https://www.data.qld.gov.au/dataset/general-transit-feed-specification-gtfs-translink",
+    "licence": "CC BY 4.0",
+    "period": "2026-06 to 2026-08",
+    "fetchedAt": "2026-06-12",
+    "sha256": "3f8ac095b2ee6022ab81d0fe0c54a534ecbeaf52a40e0bed3ee3df68fe4d6ab8"
+  }
+]

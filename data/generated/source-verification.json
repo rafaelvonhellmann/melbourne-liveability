@@ -1,11 +1,12 @@
 {
-  "checkedAt": "2026-06-12T04:25:00.555Z",
-  "sources": 57,
+  "checkedAt": "2026-06-12T09:47:05.822Z",
+  "sources": 58,
   "referencedInCode": 0,
   "networkChecked": true,
   "errors": [],
   "warnings": [
     "act-policing-crime-statistics: missing sha256 (run data:hash after fetch)",
+    "qps-lga-offence-rates: missing sha256 (run data:hash after fetch)",
     "unreachable url vcsa-recorded-offences: https://www.crimestatistics.vic.gov.au/crime-statistics/latest-victorian-crime-data/download-data (403)"
   ],
   "liveness": [
@@ -50,6 +51,12 @@
       "url": "https://www.data.act.gov.au/Justice-Safety-and-Emergency/ACT-Crime-Statistics/2egm-dieb",
       "ok": true,
       "status": 200
+    },
+    {
+      "id": "qps-lga-offence-rates",
+      "url": "https://www.data.qld.gov.au/dataset/lga_reported_offences_rates",
+      "ok": true,
+      "status": 202
     },
     {
       "id": "ptv-gtfs",
