@@ -83,7 +83,7 @@ export async function handleMagicLinkRequest(request: Request, env: Env): Promis
 
 ## Git workflow
 
-- Branch: `advisor/003-uniform-202`
+- Branch: `advisor-003-uniform-202`
 - Commit: `fix(auth): rate-limited magic-link requests return uniform 202 (no oracle)`
 - Do NOT push unless the operator instructed it.
 

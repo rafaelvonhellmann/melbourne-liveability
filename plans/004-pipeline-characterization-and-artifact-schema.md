@@ -98,7 +98,7 @@ sibling context fields).
 
 ## Git workflow
 
-- Branch: `advisor/004-pipeline-characterization`
+- Branch: `advisor-004-pipeline-characterization`
 - Two commits: `test(pipeline): characterization tests for apply steps`,
   then `feat(pipeline): inter-step artifact validation (data:validate)`
 - Do NOT push unless the operator instructed it.

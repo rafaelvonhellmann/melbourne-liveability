@@ -99,7 +99,7 @@ makes the failure modes explicit, retried where safe, and unit-tested.
 
 ## Git workflow
 
-- Branch: `advisor/005-finalize-refresh`
+- Branch: `advisor-005-finalize-refresh`
 - Commit: `feat(ci): tested finalize-refresh script with bounded rebase/push retry`
 - Do NOT push unless the operator instructed it.
 

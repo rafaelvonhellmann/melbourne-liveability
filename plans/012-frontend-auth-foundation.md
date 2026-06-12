@@ -66,7 +66,7 @@ tests for each, e2e additions.
 
 ## Git workflow
 
-Branch `advisor/012-frontend-auth`; do NOT push unless the operator
+Branch `advisor-012-frontend-auth`; do NOT push unless the operator
 instructed it.
 
 ## Steps

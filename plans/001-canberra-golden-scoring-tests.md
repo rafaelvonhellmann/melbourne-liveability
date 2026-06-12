@@ -83,7 +83,7 @@ function makePlace(
 
 ## Git workflow
 
-- Branch: `advisor/001-canberra-golden`
+- Branch: `advisor-001-canberra-golden`
 - One commit, conventional style, e.g.
   `test(score): hand-computed golden values for the canberra (non-VIC) path`
 - Do NOT push unless the operator instructed it.

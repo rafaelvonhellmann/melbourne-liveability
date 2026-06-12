@@ -96,7 +96,7 @@ point.
 
 ## Git workflow
 
-- Branch: `advisor/006-docs`
+- Branch: `advisor-006-docs`
 - Commits: `docs: CLAUDE.md executor entry point + .env.example`, then
   `docs: DOC-MAP + archive superseded plans`, then `docs: README reflects 8 live capitals`
 - Do NOT push unless the operator instructed it.

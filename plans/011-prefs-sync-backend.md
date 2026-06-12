@@ -75,7 +75,7 @@ backend/test/prefs.test.ts (new) + fakes.ts additions.
 
 ## Git workflow
 
-Branch `advisor/011-prefs-sync`; do NOT push unless the operator instructed it.
+Branch `advisor-011-prefs-sync`; do NOT push unless the operator instructed it.
 
 ## Steps
 

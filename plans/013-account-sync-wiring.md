@@ -69,7 +69,7 @@ pricing copy, alerts.
 
 ## Git workflow
 
-Branch `advisor/013-account-sync`; do NOT push unless the operator instructed it.
+Branch `advisor-013-account-sync`; do NOT push unless the operator instructed it.
 
 ## Steps
 

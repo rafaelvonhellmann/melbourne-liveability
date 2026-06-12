@@ -64,7 +64,7 @@ documented there.
 
 ## Git workflow
 
-Branch `advisor/010-accounts-hardening`; conventional commits; do NOT push
+Branch `advisor-010-accounts-hardening`; conventional commits; do NOT push
 unless the operator instructed it.
 
 ## Steps

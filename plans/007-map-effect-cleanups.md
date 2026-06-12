@@ -96,7 +96,7 @@ Find them: `rtk grep -n "once(\"idle\"" components/MelbourneMap.tsx`.
 
 ## Git workflow
 
-- Branch: `advisor/007-map-effect-cleanups`
+- Branch: `advisor-007-map-effect-cleanups`
 - Commit: `fix(map): unregister pending idle handlers on effect re-run`
 - Do NOT push unless the operator instructed it.
 

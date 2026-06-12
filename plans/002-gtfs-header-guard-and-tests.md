@@ -97,7 +97,7 @@ all with `rtk grep -n "indexOf(" scripts/precompute-gtfs.ts`).
 
 ## Git workflow
 
-- Branch: `advisor/002-gtfs-header-guard`
+- Branch: `advisor-002-gtfs-header-guard`
 - Commit style: `fix(gtfs): fail loudly when a feed header drops a required column`
 - Do NOT push unless the operator instructed it.
 

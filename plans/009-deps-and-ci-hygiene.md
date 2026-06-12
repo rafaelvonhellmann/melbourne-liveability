@@ -76,7 +76,7 @@ audit shouldn't re-find.
 
 ## Git workflow
 
-- Branch: `advisor/009-deps-hygiene`
+- Branch: `advisor-009-deps-hygiene`
 - Commit: `chore(deps): postcss override, node-24 CI, prune, patch bumps`
 - Do NOT push unless the operator instructed it.
 

@@ -76,7 +76,7 @@ import * as turf from "@turf/turf";
 
 ## Git workflow
 
-- Branch: `advisor/008-turf-granular`
+- Branch: `advisor-008-turf-granular`
 - Commit: `perf(bundle): granular @turf imports in client libs`
 - Do NOT push unless the operator instructed it.
 
