@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-06-12T02:22:11.064Z",
+  "checkedAt": "2026-06-12T03:02:07.843Z",
   "items": [
     {
       "id": "abs-sa2-income-dbr",
@@ -54,6 +54,14 @@
       "cadence": "quarterly",
       "fetchedAt": "2026-06-11",
       "monthsSinceFetch": 0,
+      "upstreamLastUpdated": null,
+      "status": "fresh"
+    },
+    {
+      "id": "act-policing-crime-statistics",
+      "cadence": "quarterly",
+      "fetchedAt": null,
+      "monthsSinceFetch": null,
       "upstreamLastUpdated": null,
       "status": "fresh"
     },
