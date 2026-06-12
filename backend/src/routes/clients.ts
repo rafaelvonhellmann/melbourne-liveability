@@ -5,10 +5,18 @@
  */
 
 import type { Env } from "../env";
-import { MAX_CLIENTS, parseClientLabel } from "../lib/validate";
+import { MAX_BODY_BYTES, MAX_CLIENTS, parseClientLabel } from "../lib/validate";
 import { json, unavailable } from "../lib/http";
+import { rateLimit } from "../lib/rate-limit";
 import { newToken } from "../lib/token";
 import { resolveSession } from "./me";
+
+const CLIENT_WRITE_RATE_LIMIT = 5;
+const CLIENT_WRITE_RATE_WINDOW_SECONDS = 60;
+
+function bodyBytes(raw: string): number {
+  return new TextEncoder().encode(raw).byteLength;
+}
 
 export type ClientRow = {
   id: string;
@@ -44,7 +52,26 @@ export async function handleCreateClient(request: Request, env: Env): Promise<Re
   if (!me) return json({ error: "unauthorized" }, 401);
   if (me.kind !== "agent") return json({ error: "agents_only" }, 403);
 
-  const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
+  const writeLimit = await rateLimit(
+    env.SESSIONS,
+    `rl:clients:${me.id}`,
+    CLIENT_WRITE_RATE_LIMIT,
+    CLIENT_WRITE_RATE_WINDOW_SECONDS
+  );
+  if (!writeLimit.allowed) {
+    return json({ error: "rate_limited" }, 429, {
+      "Retry-After": String(writeLimit.retryAfterSeconds),
+    });
+  }
+
+  const rawBody = await request.text();
+  if (bodyBytes(rawBody) > MAX_BODY_BYTES) return json({ error: "too_large" }, 413);
+  let body: Record<string, unknown> | null;
+  try {
+    body = JSON.parse(rawBody) as Record<string, unknown>;
+  } catch {
+    body = null;
+  }
   const label = parseClientLabel(body?.label);
   if (!label) return json({ error: "invalid_label" }, 422);
 

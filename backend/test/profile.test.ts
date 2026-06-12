@@ -5,6 +5,7 @@
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { call, makeEnv, seedUserWithSession } from "./fakes";
+import { MAX_BODY_BYTES } from "../src/lib/validate";
 import type { Env } from "../src/env";
 
 const NOW = "2026-06-12T00:00:00.000Z";
@@ -91,7 +92,7 @@ describe("PUT /api/profile", () => {
           { id: "c1", label: "duplicate id", createdAt: NOW }, // dropped
           { id: "c2", label: 42 }, // non-string label -> dropped
           { id: "", label: "no id" }, // dropped
-          { id: "c3", label: "Third" }, // missing createdAt -> filled
+          { id: "c3", label: "Third" }, // missing createdAt -> dropped
         ],
         activeClientId: "ghost", // dangling -> first client
       },
@@ -101,9 +102,8 @@ describe("PUT /api/profile", () => {
       clients: Array<{ id: string; label: string; createdAt: string }>;
       activeClientId: string;
     };
-    expect(echoed.clients.map((c) => c.id)).toEqual(["c1", "c3"]);
+    expect(echoed.clients.map((c) => c.id)).toEqual(["c1"]);
     expect(echoed.clients[0]!.label).toBe("First Client");
-    expect(typeof echoed.clients[1]!.createdAt).toBe("string");
     expect(echoed.activeClientId).toBe("c1");
 
     const got = await call(env, "GET", "/api/profile", { headers: { Cookie: cookie } });
@@ -148,6 +148,40 @@ describe("PUT /api/profile", () => {
     expect(await notJson.json()).toEqual({ error: "invalid_json" });
 
     expect(env.DB.tables.profiles).toHaveLength(0);
+  });
+
+  it("413s a body over 64KB before parsing", async () => {
+    const env = makeEnv();
+    const { cookie } = await seedUserWithSession(env);
+    const res = await call(env, "PUT", "/api/profile", {
+      headers: { Cookie: cookie, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        version: 1,
+        type: "buyer",
+        createdAt: NOW,
+        name: "x".repeat(MAX_BODY_BYTES),
+      }),
+    });
+    expect(res.status).toBe(413);
+    expect(await res.json()).toEqual({ error: "too_large" });
+  });
+
+  it("429s the 11th profile write in a minute", async () => {
+    const env = makeEnv();
+    const { cookie } = await seedUserWithSession(env);
+    const body = { version: 1, type: "buyer", createdAt: NOW };
+    for (let i = 0; i < 10; i++) {
+      const ok = await call(env, "PUT", "/api/profile", { headers: { Cookie: cookie }, body });
+      expect(ok.status).toBe(200);
+    }
+
+    const limited = await call(env, "PUT", "/api/profile", {
+      headers: { Cookie: cookie },
+      body,
+    });
+    expect(limited.status).toBe(429);
+    expect(limited.headers.get("Retry-After")).toBe("60");
+    expect(await limited.json()).toEqual({ error: "rate_limited" });
   });
 
   it("401s without a session; 503s without bindings", async () => {

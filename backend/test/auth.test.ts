@@ -26,6 +26,12 @@ function consoleEnv(): TestEnv {
 
 const TOKEN_IN_TEXT = /token=([0-9a-f-]{36})/;
 
+function sessionIdFromSetCookie(setCookie: string | null): string {
+  const sessionId = new RegExp(`${SESSION_COOKIE_NAME}=([^;]+)`).exec(setCookie ?? "")?.[1];
+  expect(sessionId).toBeDefined();
+  return sessionId!;
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
 });
@@ -78,8 +84,18 @@ describe("POST /api/auth/magic-link", () => {
     expect(await res.json()).toEqual({ error: "service_unavailable", reason: "bindings" });
   });
 
-  it("503s when no email provider is configured (misconfig is loud)", async () => {
+  it("uses the console provider in dev when no email provider is configured", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     const res = await call(makeEnv(), "POST", "/api/auth/magic-link", {
+      body: { email: "a@b.co" },
+    });
+    expect(res.status).toBe(202);
+    expect(await res.json()).toEqual({ status: "sent" });
+    expect(logSpy.mock.calls.some((c) => String(c[0]).includes("email_console_send"))).toBe(true);
+  });
+
+  it("503s in production when Resend is not configured", async () => {
+    const res = await call(makeEnv({ ENVIRONMENT: "production" }), "POST", "/api/auth/magic-link", {
       body: { email: "a@b.co" },
     });
     expect(res.status).toBe(503);
@@ -180,8 +196,7 @@ describe("POST /api/auth/verify", () => {
     expect(await res.json()).toEqual({ status: "ok" });
 
     const setCookie = res.headers.get("Set-Cookie")!;
-    const sessionId = new RegExp(`${SESSION_COOKIE_NAME}=([^;]+)`).exec(setCookie)?.[1];
-    expect(sessionId).toBeDefined();
+    const sessionId = sessionIdFromSetCookie(setCookie);
     for (const attr of ["HttpOnly", "Secure", "SameSite=Lax", "Path=/", "Expires="]) {
       expect(setCookie).toContain(attr);
     }
@@ -191,7 +206,7 @@ describe("POST /api/auth/verify", () => {
     const user = env.DB.tables.users[0]!;
     expect(user.email).toBe("new@festra.au");
     expect(user.kind).toBe("buyer");
-    expect(await env.SESSIONS.get(sessionId!)).toBe(user.id);
+    expect(await env.SESSIONS.get(sessionId)).toBe(user.id);
     expect(
       env.DB.tables.sessions.some((s) => s.id === sessionId && s.user_id === user.id)
     ).toBe(true);
@@ -211,6 +226,48 @@ describe("POST /api/auth/verify", () => {
     expect(env.DB.tables.sessions).toHaveLength(2); // two sessions, one user
   });
 
+  it("caps a user at five sessions, evicting the oldest from KV and D1", async () => {
+    const env = consoleEnv();
+    const sessionIds: string[] = [];
+    for (let i = 0; i < 6; i++) {
+      const token = await issueMagicLink(env, "sam@festra.au", silentProvider);
+      const res = await call(env, "POST", "/api/auth/verify", { body: { token } });
+      expect(res.status).toBe(200);
+      sessionIds.push(sessionIdFromSetCookie(res.headers.get("Set-Cookie")));
+    }
+
+    expect(env.DB.tables.users).toHaveLength(1);
+    expect(env.DB.tables.sessions).toHaveLength(5);
+    expect(env.DB.tables.sessions.map((s) => s.id)).not.toContain(sessionIds[0]);
+    expect(await env.SESSIONS.get(sessionIds[0]!)).toBeNull();
+    for (const sessionId of sessionIds.slice(1)) {
+      expect(await env.SESSIONS.get(sessionId)).toBe(env.DB.tables.users[0]!.id);
+      const me = await call(env, "GET", "/api/me", {
+        headers: { Cookie: `${SESSION_COOKIE_NAME}=${sessionId}` },
+      });
+      expect(me.status).toBe(200);
+    }
+  });
+
+  it("deletes the just-put KV session when the D1 session insert fails", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const env = consoleEnv();
+    const token = await issueMagicLink(env, "sam@festra.au", silentProvider);
+    const exec = env.DB.exec.bind(env.DB);
+    env.DB.exec = (sql, params) => {
+      if (sql === "INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)") {
+        throw new Error("session insert failed");
+      }
+      return exec(sql, params);
+    };
+
+    const res = await call(env, "POST", "/api/auth/verify", { body: { token } });
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ error: "internal", requestId: expect.any(String) });
+    expect(env.DB.tables.sessions).toHaveLength(0);
+    expect([...env.SESSIONS.store.keys()]).toEqual([]);
+  });
+
   it("401s a reused link (single use) and mints no second session", async () => {
     const env = consoleEnv();
     const token = await issueMagicLink(env, "sam@festra.au", silentProvider);
@@ -219,6 +276,17 @@ describe("POST /api/auth/verify", () => {
     const replay = await call(env, "POST", "/api/auth/verify", { body: { token } });
     expect(replay.status).toBe(401);
     expect(await replay.json()).toEqual({ error: "invalid_or_expired" });
+    expect(env.DB.tables.sessions).toHaveLength(1);
+  });
+
+  it("only one same-token verify can mint a session", async () => {
+    const env = consoleEnv();
+    const token = await issueMagicLink(env, "sam@festra.au", silentProvider);
+
+    const first = await call(env, "POST", "/api/auth/verify", { body: { token } });
+    const second = await call(env, "POST", "/api/auth/verify", { body: { token } });
+
+    expect([first.status, second.status].sort()).toEqual([200, 401]);
     expect(env.DB.tables.sessions).toHaveLength(1);
   });
 

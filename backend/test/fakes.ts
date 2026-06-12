@@ -22,7 +22,13 @@ export type MagicLinkTableRow = {
   expires_at: string;
   used_at: string | null;
 };
-export type SessionTableRow = { id: string; user_id: string; expires_at: string };
+export type SessionTableRow = {
+  rowid: number;
+  id: string;
+  user_id: string;
+  created_at: string | null;
+  expires_at: string;
+};
 export type ProfileTableRow = { user_id: string; payload: string; updated_at: string };
 export type ClientTableRow = {
   rowid: number;
@@ -62,6 +68,9 @@ const SQL = {
   selectUserByEmail: "SELECT id, email, kind, created_at FROM users WHERE email = ?",
   insertUser: "INSERT INTO users (id, email, kind, created_at) VALUES (?, ?, 'buyer', ?)",
   insertSession: "INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)",
+  selectEvictedSessions:
+    "SELECT id FROM sessions WHERE user_id = ?1 ORDER BY created_at DESC, rowid DESC LIMIT -1 OFFSET ?2",
+  deleteSessionById: "DELETE FROM sessions WHERE id = ? AND user_id = ?",
   selectUserById: "SELECT id, email, kind, created_at FROM users WHERE id = ?",
   selectProfile: "SELECT payload FROM profiles WHERE user_id = ?",
   upsertProfile:
@@ -120,7 +129,12 @@ export class FakeD1 implements D1Database {
     clients: [],
     purchases: [],
   };
-  private nextRowid = 1;
+  private nextSessionRowid = 1;
+  private nextClientRowid = 1;
+
+  allocateSessionRowid(): number {
+    return this.nextSessionRowid++;
+  }
 
   prepare(query: string): D1PreparedStatement {
     return new FakeStatement(this, normalize(query));
@@ -172,8 +186,35 @@ export class FakeD1 implements D1Database {
       }
       case SQL.insertSession: {
         const [id, user_id, expires_at] = params as [string, string, string];
-        t.sessions.push({ id, user_id, expires_at });
+        t.sessions.push({
+          rowid: this.allocateSessionRowid(),
+          id,
+          user_id,
+          created_at: new Date().toISOString(),
+          expires_at,
+        });
         return { rows: [], changes: 1 };
+      }
+      case SQL.selectEvictedSessions: {
+        const [user_id, offset] = params as [string, number];
+        const newestFirst = t.sessions
+          .filter((s) => s.user_id === user_id)
+          .sort((a, b) => {
+            if (a.created_at === b.created_at) return b.rowid - a.rowid;
+            if (a.created_at === null) return 1;
+            if (b.created_at === null) return -1;
+            return a.created_at < b.created_at ? 1 : -1;
+          });
+        return {
+          rows: newestFirst.slice(offset).map((s) => ({ id: s.id })),
+          changes: 0,
+        };
+      }
+      case SQL.deleteSessionById: {
+        const [id, user_id] = params as [string, string];
+        const before = t.sessions.length;
+        this.tables.sessions = t.sessions.filter((s) => s.id !== id || s.user_id !== user_id);
+        return { rows: [], changes: before - this.tables.sessions.length };
       }
       case SQL.selectUserById: {
         const [id] = params as [string];
@@ -207,7 +248,7 @@ export class FakeD1 implements D1Database {
       }
       case SQL.insertClient: {
         const [id, user_id, label, created_at] = params as [string, string, string, string];
-        t.clients.push({ rowid: this.nextRowid++, id, user_id, label, created_at });
+        t.clients.push({ rowid: this.nextClientRowid++, id, user_id, label, created_at });
         return { rows: [], changes: 1 };
       }
       case SQL.trimClients: {
@@ -384,8 +425,10 @@ export async function seedUserWithSession(
     created_at: now.toISOString(),
   });
   env.DB.tables.sessions.push({
+    rowid: env.DB.allocateSessionRowid(),
     id: sessionId,
     user_id: userId,
+    created_at: now.toISOString(),
     expires_at: new Date(now.getTime() + 30 * 86_400_000).toISOString(),
   });
   await env.SESSIONS.put(sessionId, userId, { expirationTtl: 30 * 86_400 });

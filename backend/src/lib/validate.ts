@@ -18,11 +18,14 @@
 const CURRENT_PROFILE_VERSION = 1;
 /** Per-user client cap - shared with the server-side roll-off in routes/clients.ts. */
 export const MAX_CLIENTS = 30;
+export const MAX_BODY_BYTES = 64_000;
 const MAX_TEXT = 80;
+const MAX_CLIENT_ID = 64;
 
 // RFC 5321 caps the forward path at 254 octets.
 const MAX_EMAIL = 254;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const ISO_8601_UTC_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
 
 /**
  * Trimmed, lowercased email or null. Deliberately a sanity shape-check, not
@@ -86,6 +89,17 @@ function cleanText(v: unknown): string | undefined {
   return t.length > 0 ? t : undefined;
 }
 
+function cleanClientId(v: unknown): string | undefined {
+  if (typeof v !== "string") return undefined;
+  const id = v.trim();
+  return id.length > 0 && id.length <= MAX_CLIENT_ID ? id : undefined;
+}
+
+function cleanIsoTimestamp(v: unknown): string | undefined {
+  if (typeof v !== "string" || !ISO_8601_UTC_RE.test(v)) return undefined;
+  return Number.isNaN(Date.parse(v)) ? undefined : v;
+}
+
 /** Drop malformed / duplicate client entries; never throw on poisoned shapes. */
 function cleanClients(v: unknown, now: string): AgentClient[] {
   if (!Array.isArray(v)) return [];
@@ -95,14 +109,16 @@ function cleanClients(v: unknown, now: string): AgentClient[] {
     if (out.length >= MAX_CLIENTS) break;
     if (!c || typeof c !== "object" || Array.isArray(c)) continue;
     const entry = c as Record<string, unknown>;
-    const id = typeof entry.id === "string" && entry.id.length > 0 ? entry.id : null;
+    // Client ids are device-minted and referenced locally; invalid ids are dropped, not regenerated.
+    const id = cleanClientId(entry.id);
     const label = cleanText(entry.label);
-    if (!id || !label || seen.has(id)) continue;
+    const createdAt = cleanIsoTimestamp(entry.createdAt);
+    if (!id || !label || !createdAt || seen.has(id)) continue;
     seen.add(id);
     out.push({
       id,
       label,
-      createdAt: typeof entry.createdAt === "string" ? entry.createdAt : now,
+      createdAt,
     });
   }
   return out;

@@ -120,17 +120,31 @@ describe("sanitizeProfilePayload", () => {
           { id: "c2", label: "   ", createdAt: NOW }, // blank label
           { id: "", label: "No id", createdAt: NOW },
           "junk",
-          { id: "c3", label: "Third" }, // missing createdAt -> now
+          { id: "c3", label: "Third" }, // missing createdAt -> dropped
         ],
         activeClientId: "c3",
       },
       NOW
     );
-    expect(out?.clients).toEqual([
-      { id: "c1", label: "First", createdAt: NOW },
-      { id: "c3", label: "Third", createdAt: NOW },
-    ]);
-    expect(out?.activeClientId).toBe("c3");
+    expect(out?.clients).toEqual([{ id: "c1", label: "First", createdAt: NOW }]);
+    expect(out?.activeClientId).toBe("c1");
+  });
+
+  it("drops clients with oversized ids or non-ISO createdAt values", () => {
+    const out = sanitizeProfilePayload(
+      {
+        version: 1,
+        type: "agent",
+        createdAt: NOW,
+        clients: [
+          { id: "x".repeat(65), label: "Too Long", createdAt: NOW },
+          { id: "ok-id", label: "Bad Date", createdAt: "yesterday" },
+          { id: "good-id", label: "Good", createdAt: NOW },
+        ],
+      },
+      NOW
+    );
+    expect(out?.clients).toEqual([{ id: "good-id", label: "Good", createdAt: NOW }]);
   });
 
   it("repoints a dangling activeClientId at the first client", () => {

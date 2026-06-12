@@ -39,6 +39,15 @@ describe("GET /api/me", () => {
     expect(res.status).toBe(401);
   });
 
+  it("401s duplicate session-cookie values", async () => {
+    const env = makeEnv();
+    const { cookie, sessionId } = await seedUserWithSession(env);
+    const res = await call(env, "GET", "/api/me", {
+      headers: { Cookie: `${cookie}; theme=light; ${SESSION_COOKIE_NAME}=${sessionId}` },
+    });
+    expect(res.status).toBe(401);
+  });
+
   it("401s once the KV session TTL has elapsed", async () => {
     const env = makeEnv();
     const { cookie } = await seedUserWithSession(env);

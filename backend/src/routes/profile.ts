@@ -10,10 +10,18 @@
  */
 
 import type { Env } from "../env";
-import { sanitizeProfilePayload, type ProfilePayload } from "../lib/validate";
+import { MAX_BODY_BYTES, sanitizeProfilePayload, type ProfilePayload } from "../lib/validate";
 import { json, unavailable } from "../lib/http";
+import { rateLimit } from "../lib/rate-limit";
 import { logEvent } from "../lib/log";
 import { resolveSession } from "./me";
+
+const PROFILE_WRITE_RATE_LIMIT = 10;
+const PROFILE_WRITE_RATE_WINDOW_SECONDS = 60;
+
+function bodyBytes(raw: string): number {
+  return new TextEncoder().encode(raw).byteLength;
+}
 
 /**
  * Load the stored profile payload for a user. Unparseable or
@@ -65,7 +73,26 @@ export async function handlePutProfile(request: Request, env: Env): Promise<Resp
   const me = await resolveSession(env, request);
   if (!me) return json({ error: "unauthorized" }, 401);
 
-  const body: unknown = await request.json().catch(() => undefined);
+  const writeLimit = await rateLimit(
+    env.SESSIONS,
+    `rl:profile:${me.id}`,
+    PROFILE_WRITE_RATE_LIMIT,
+    PROFILE_WRITE_RATE_WINDOW_SECONDS
+  );
+  if (!writeLimit.allowed) {
+    return json({ error: "rate_limited" }, 429, {
+      "Retry-After": String(writeLimit.retryAfterSeconds),
+    });
+  }
+
+  const rawBody = await request.text();
+  if (bodyBytes(rawBody) > MAX_BODY_BYTES) return json({ error: "too_large" }, 413);
+  let body: unknown;
+  try {
+    body = JSON.parse(rawBody);
+  } catch {
+    body = undefined;
+  }
   if (body === undefined) return json({ error: "invalid_json" }, 400);
   // Reject wholesale - the server never "fixes" an unknown schema version.
   const payload = sanitizeProfilePayload(body);

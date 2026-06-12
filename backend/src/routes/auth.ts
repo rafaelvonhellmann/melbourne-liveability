@@ -23,9 +23,10 @@ import { emailProviderFromEnv, type EmailProvider } from "../lib/email";
 import { rateLimit } from "../lib/rate-limit";
 import { logEvent } from "../lib/log";
 
-export const SESSION_COOKIE_NAME = "festra_session";
+export const SESSION_COOKIE_NAME = "__Host-festra_session";
 export const MAGIC_LINK_TTL_MINUTES = 15;
 export const SESSION_TTL_DAYS = 30;
+export const MAX_SESSIONS_PER_USER = 5;
 /** Max magic-link issuances per email and per IP within the window. */
 export const MAGIC_LINK_RATE_LIMIT = 5;
 export const MAGIC_LINK_RATE_WINDOW_SECONDS = 3600;
@@ -43,6 +44,25 @@ type UserRow = {
   kind: string;
   created_at: string;
 };
+
+type SessionIdRow = {
+  id: string;
+};
+
+async function pruneOldSessions(env: Env, userId: string): Promise<void> {
+  const evicted = await env.DB.prepare(
+    "SELECT id FROM sessions WHERE user_id = ?1 ORDER BY created_at DESC, rowid DESC LIMIT -1 OFFSET ?2"
+  )
+    .bind(userId, MAX_SESSIONS_PER_USER)
+    .all<SessionIdRow>();
+  const evictedIds = evicted.results.map((row) => row.id).filter((id) => id.length > 0);
+  for (const id of evictedIds) {
+    await env.SESSIONS.delete(id);
+  }
+  for (const id of evictedIds) {
+    await env.DB.prepare("DELETE FROM sessions WHERE id = ? AND user_id = ?").bind(id, userId).run();
+  }
+}
 
 /**
  * Issue a magic link for an already-validated email: store the SHA-256 hash
@@ -130,9 +150,15 @@ export async function verifyMagicLink(
   await env.SESSIONS.put(sessionId, userId, {
     expirationTtl: SESSION_TTL_DAYS * 86_400,
   });
-  await env.DB.prepare("INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)")
-    .bind(sessionId, userId, expires.toISOString())
-    .run();
+  try {
+    await env.DB.prepare("INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)")
+      .bind(sessionId, userId, expires.toISOString())
+      .run();
+  } catch (err) {
+    await env.SESSIONS.delete(sessionId);
+    throw err;
+  }
+  await pruneOldSessions(env, userId);
   return { sessionId, userId, expires };
 }
 

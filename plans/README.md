@@ -23,7 +23,7 @@ unless the operator says so; never touch the `wip-all` git stash.
 | 007  | Map idle-listener cleanups                         | P2 | S | —   | TODO |
 | 008  | Granular @turf imports in client libs              | P3 | S | —   | TODO |
 | 009  | Deps + CI hygiene (node 24, postcss override)      | P3 | S | —   | TODO |
-| 010  | Accounts backend hardening (run 001)               | P1 | M | 003 | TODO |
+| 010  | Accounts backend hardening (run 001)               | P1 | M | 003 | DONE (run 001, codex exec, fable reviewed) |
 | 011  | Prefs sync backend (run 001)                       | P1 | M-L | 010 | TODO |
 | 012  | Frontend auth foundation (run 001)                 | P1 | M | —   | TODO |
 | 013  | Account page + sync wiring (run 001)               | P1 | M | 011, 012 | TODO |

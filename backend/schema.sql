@@ -35,6 +35,7 @@ CREATE INDEX IF NOT EXISTS idx_magic_links_email ON magic_links (email);
 CREATE TABLE IF NOT EXISTS sessions (
   id         TEXT PRIMARY KEY,
   user_id    TEXT NOT NULL REFERENCES users (id),
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   expires_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions (user_id);

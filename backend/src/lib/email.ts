@@ -2,11 +2,13 @@
  * Email provider abstraction for magic-link delivery.
  *
  * Selection is driven by env (emailProviderFromEnv):
- * - EMAIL_PROVIDER="console"  -> ConsoleEmailProvider (dev stub: logs the
+ * - ENVIRONMENT="production" -> Resend only; console can never run there.
+ * - EMAIL_PROVIDER="console"  -> ConsoleEmailProvider in dev/test only (logs the
  *   message instead of sending - the magic link lands in `wrangler tail` /
  *   local logs so the flow is testable without an email account).
  * - RESEND_API_KEY set (and EMAIL_PROVIDER unset or "resend")
  *   -> ResendEmailProvider over plain HTTP (no SDK).
+ * - dev/test with neither set -> ConsoleEmailProvider.
  * - anything else -> null; callers answer 503 (misconfig is loud, never an
  *   open fail and never a silent drop).
  */
@@ -75,14 +77,20 @@ type EmailEnv = {
   EMAIL_PROVIDER?: string;
   RESEND_API_KEY?: string;
   EMAIL_FROM?: string;
+  ENVIRONMENT?: string;
 };
 
 /** Pick the provider from env, or null when none is usable (callers 503). */
 export function emailProviderFromEnv(env: EmailEnv): EmailProvider | null {
+  if (env.ENVIRONMENT === "production") {
+    if (!env.RESEND_API_KEY) return null;
+    if (env.EMAIL_PROVIDER !== undefined && env.EMAIL_PROVIDER !== "resend") return null;
+    return new ResendEmailProvider(env.RESEND_API_KEY, env.EMAIL_FROM ?? DEFAULT_EMAIL_FROM);
+  }
   if (env.EMAIL_PROVIDER === "console") return new ConsoleEmailProvider();
   if (env.EMAIL_PROVIDER !== undefined && env.EMAIL_PROVIDER !== "resend") return null;
   if (env.RESEND_API_KEY) {
     return new ResendEmailProvider(env.RESEND_API_KEY, env.EMAIL_FROM ?? DEFAULT_EMAIL_FROM);
   }
-  return null;
+  return env.EMAIL_PROVIDER === "resend" ? null : new ConsoleEmailProvider();
 }

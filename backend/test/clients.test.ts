@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { call, makeEnv, seedUserWithSession } from "./fakes";
-import { MAX_CLIENTS } from "../src/lib/validate";
+import { MAX_BODY_BYTES, MAX_CLIENTS } from "../src/lib/validate";
 import type { Env } from "../src/env";
 
 describe("POST /api/clients", () => {
@@ -58,6 +58,37 @@ describe("POST /api/clients", () => {
     expect(env.DB.tables.clients).toHaveLength(0);
   });
 
+  it("413s a body over 64KB before parsing", async () => {
+    const env = makeEnv();
+    const { cookie } = await seedUserWithSession(env, { kind: "agent" });
+    const res = await call(env, "POST", "/api/clients", {
+      headers: { Cookie: cookie, "Content-Type": "application/json" },
+      body: JSON.stringify({ label: "x".repeat(MAX_BODY_BYTES) }),
+    });
+    expect(res.status).toBe(413);
+    expect(await res.json()).toEqual({ error: "too_large" });
+  });
+
+  it("429s the 6th client write in a minute", async () => {
+    const env = makeEnv();
+    const { cookie } = await seedUserWithSession(env, { kind: "agent" });
+    for (let i = 0; i < 5; i++) {
+      const ok = await call(env, "POST", "/api/clients", {
+        headers: { Cookie: cookie },
+        body: { label: `client ${i}` },
+      });
+      expect(ok.status).toBe(201);
+    }
+
+    const limited = await call(env, "POST", "/api/clients", {
+      headers: { Cookie: cookie },
+      body: { label: "client 6" },
+    });
+    expect(limited.status).toBe(429);
+    expect(limited.headers.get("Retry-After")).toBe("60");
+    expect(await limited.json()).toEqual({ error: "rate_limited" });
+  });
+
   it("caps a user at MAX_CLIENTS (30), rolling the oldest off - other agents untouched", async () => {
     const env = makeEnv();
     const { cookie } = await seedUserWithSession(env, { kind: "agent", email: "a@festra.au" });
@@ -72,6 +103,7 @@ describe("POST /api/clients", () => {
     });
 
     for (let i = 1; i <= MAX_CLIENTS + 1; i++) {
+      if (i > 1 && (i - 1) % 5 === 0) env.SESSIONS.advance(61);
       const res = await call(env, "POST", "/api/clients", {
         headers: { Cookie: cookie },
         body: { label: `client ${i}` },

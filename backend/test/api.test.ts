@@ -100,6 +100,7 @@ describe("session cookies", () => {
       `${SESSION_COOKIE_NAME}=abc-123; HttpOnly; Secure; SameSite=Lax; Path=/; ` +
         `Expires=${expires.toUTCString()}`
     );
+    expect(cookie).not.toContain("Domain=");
   });
 
   it("clearSessionCookie expires the cookie with the same attribute set", () => {

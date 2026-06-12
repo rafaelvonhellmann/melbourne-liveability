@@ -24,23 +24,27 @@ type UserRow = {
   created_at: string;
 };
 
-/** Extract the festra_session cookie value, or null. */
+/** Extract the __Host-festra_session cookie value, or null. */
 export function readSessionCookie(request: Request): string | null {
   const header = request.headers.get("Cookie");
   if (!header) return null;
+  let value: string | null = null;
+  let count = 0;
   for (const part of header.split(";")) {
     const eq = part.indexOf("=");
     if (eq === -1) continue;
     if (part.slice(0, eq).trim() === SESSION_COOKIE_NAME) {
-      const value = part.slice(eq + 1).trim();
-      if (value.length > 0) return value;
+      count += 1;
+      if (count > 1) return null;
+      const parsed = part.slice(eq + 1).trim();
+      value = parsed.length > 0 ? parsed : null;
     }
   }
-  return null;
+  return value;
 }
 
 /**
- * Resolve the festra_session cookie to a user - the shared auth gate.
+ * Resolve the __Host-festra_session cookie to a user - the shared auth gate.
  * KV is the hot path (expired ids vanish by TTL; no D1 read when the
  * session is gone); the users row is fetched once and kind passes
  * parseUserKind before it is trusted (enum drift guard).
