@@ -18,6 +18,28 @@ test.describe("content routes", () => {
     await expect(page.getByRole("button", { name: /Clear on-device data/ })).toBeVisible();
   });
 
+  test("signin page renders the magic-link form", async ({ page }) => {
+    await page.goto("/signin");
+    await expect(page.getByRole("heading", { name: "Sign in", level: 1 })).toBeVisible();
+    await expect(page.getByLabel("Email address")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Send sign-in link" })).toBeVisible();
+  });
+
+  test("auth page scrubs junk token and renders invalid state", async ({ page }) => {
+    await page.route("**/api/auth/verify", (route) =>
+      route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "invalid_or_expired" }),
+      })
+    );
+    await page.goto("/auth#token=junk");
+    await expect(
+      page.getByRole("heading", { name: "This sign-in link did not work" })
+    ).toBeVisible();
+    expect(page.url()).not.toContain("token");
+  });
+
   test("privacy + terms are marked draft", async ({ page }) => {
     await page.goto("/privacy");
     await expect(page.getByText(/Draft - not yet legal advice/)).toBeVisible();

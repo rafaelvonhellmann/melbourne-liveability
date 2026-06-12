@@ -32,6 +32,7 @@ import { POI_CATEGORY_BY_ID, type PoiCategoryId } from "@/lib/poi-categories";
 import { Attribution } from "@/components/Attribution";
 import { SelectedSummaryCard } from "@/components/SelectedSummaryCard";
 import { FeedbackButton } from "@/components/FeedbackButton";
+import { HeaderAccountLink } from "@/components/HeaderAccountLink";
 import { OnboardingModal } from "@/components/OnboardingModal";
 import { Landing, shouldShowLanding, type LandingProfileChoice } from "@/components/Landing";
 import { ProfileSetup } from "@/components/ProfileSetup";
@@ -1623,9 +1624,7 @@ function TopBar({
         <FeedbackButton />
         <NavLink href="/buyer">Buyer check</NavLink>
         <NavLink href="/compare">Compare</NavLink>
-        <NavLink href="/account" hideOnSmall>
-          Your data
-        </NavLink>
+        <HeaderAccountLink hideOnSmall />
         <NavLink href="/alerts" hideOnSmall>
           Alerts
         </NavLink>
