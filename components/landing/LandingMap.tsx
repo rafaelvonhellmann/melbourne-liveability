@@ -10,6 +10,7 @@ import {
 } from "react";
 import type { Map as MaplibreMap, Marker as MaplibreMarker } from "maplibre-gl";
 import { POI_CATEGORIES } from "@/lib/poi-categories";
+import { BASEMAP_STYLE_URL } from "@/lib/basemap";
 
 /** The maplibre Marker constructor, captured from the dynamic import. */
 type MarkerCtor = typeof import("maplibre-gl")["Marker"];
@@ -47,8 +48,8 @@ type MaplibreLib = {
  *   OnboardingModal aesthetic) so the landing never breaks.
  */
 
-/** Same public basemap style as MelbourneMap (components/MelbourneMap.tsx). */
-const BASEMAP = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
+/** Same public basemap style as MelbourneMap (see lib/basemap.ts). */
+const BASEMAP = BASEMAP_STYLE_URL;
 
 /** Real-world radius of the pin ring - the farthest plotted amenity sits at
  * 633 m, so 820 m keeps every dot (plus its own width) clearly inside. */

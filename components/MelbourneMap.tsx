@@ -6,6 +6,7 @@ import type { DomainId } from "@/lib/types";
 import type { BuyerAnchor } from "@/lib/anchors";
 import type { NoiseLine } from "@/lib/noise";
 import { MAJOR_PROJECTS } from "@/lib/major-projects";
+import { BASEMAP_STYLE_URL } from "@/lib/basemap";
 import {
   choroplethFillColor,
   choroplethFillColorByProp,
@@ -69,8 +70,7 @@ function addPoiLayer(map: maplibregl.Map, region: RegionId): void {
 
 // Light basemap to sit under the warm-editorial chrome; the YlGnBu choropleth
 // remains the independent data channel on top.
-const BASEMAP =
-  "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
+const BASEMAP = BASEMAP_STYLE_URL;
 
 // Big Build flagship projects as a static GeoJSON point set (curated; see
 // lib/major-projects). Drawn as an opt-in buyer-mode layer.

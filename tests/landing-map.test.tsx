@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, cleanup, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { createRef, useRef } from "react";
+import { BASEMAP_STYLE_URL } from "@/lib/basemap";
 import {
   LandingMap,
   lerpCamera,
@@ -335,9 +336,7 @@ describe("LandingMap", () => {
   it("mounts a non-interactive map on the first keyframe with the shared basemap", async () => {
     const { map } = await renderRig();
     expect(map.options.interactive).toBe(false);
-    expect(map.options.style).toBe(
-      "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-    );
+    expect(map.options.style).toBe(BASEMAP_STYLE_URL);
     expect(map.options.center).toEqual([144.95, -37.81]);
     expect(map.options.zoom).toBe(11);
     // Scroll passes through the rig - the page, not the map, owns the gesture.
