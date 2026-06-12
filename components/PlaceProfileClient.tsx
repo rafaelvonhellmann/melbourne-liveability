@@ -7,7 +7,6 @@ import { computeWeightedScore } from "@/lib/scoring";
 import { getDefaultWeights } from "@/lib/weights";
 import { V1_SCORED_DOMAINS, getDomain } from "@/lib/domains";
 import { buildAreaSummary } from "@/lib/area-summary";
-import { PERSONA_PRESETS, personaWeights, type PersonaId } from "@/lib/personas";
 import { getSource, shortSourceName } from "@/lib/sources";
 import { DEFAULT_REGION, type RegionId } from "@/lib/regions";
 import { percentileToColor } from "@/lib/colors";
@@ -46,19 +45,16 @@ type Props = {
   region?: RegionId;
 };
 
-type TabKind = "overview" | "persona" | "domain" | "context";
+type TabKind = "overview" | "domain" | "context";
 type ContextId = "homebuyer" | "coverage" | "equity" | "walkcycle";
 
 type Tab = {
   id: string;
   label: string;
   kind: TabKind;
-  persona?: PersonaId;
   domain?: DomainId;
   context?: ContextId;
 };
-
-const PERSONA_ORDER: PersonaId[] = ["family", "youngPro", "retiree", "student"];
 
 export function PlaceProfileClient({
   place,
@@ -80,15 +76,12 @@ export function PlaceProfileClient({
     Object.values(place.domains[d]?.subIndicators ?? {}).map((s) => s.sourceId)
   );
 
-  // Personas live in a dropdown (a "lens"), keeping the tab strip uncrowded.
-  const personaTabs: Tab[] = PERSONA_ORDER.map((p): Tab => ({
-    id: `persona-${p}`,
-    label: PERSONA_PRESETS[p].label,
-    kind: "persona",
-    persona: p,
-  }));
-
   // Tabs shown in the strip: overview, the scored domains, then context groups.
+  // The persona lens dropdown that used to sit beside the strip is retired
+  // (P1-11): areas in some metro regions are missing data, and a re-weighted
+  // "persona score" misleads there. The map's interest-view lens
+  // (lib/interest-views.ts) is the one lens system; legacy ?persona= links
+  // resolve there via legacyPersonaToView.
   const stripTabs: Tab[] = [
     { id: "overview", label: "Overview", kind: "overview" },
     ...domains.map(
@@ -105,9 +98,8 @@ export function PlaceProfileClient({
     { id: "ctx-coverage", label: "Data coverage", kind: "context", context: "coverage" },
   ];
 
-  const allTabs = [...stripTabs, ...personaTabs];
   const [activeId, setActiveId] = useState("overview");
-  const activeTab = allTabs.find((t) => t.id === activeId) ?? stripTabs[0];
+  const activeTab = stripTabs.find((t) => t.id === activeId) ?? stripTabs[0];
 
   return (
     <div className="min-h-screen bg-bg text-ink">
@@ -158,9 +150,8 @@ export function PlaceProfileClient({
           <BuyerHereCard place={place} />
         </div>
 
-        <div className="mt-5 flex items-end gap-3 border-b border-surface-border">
+        <div className="mt-5 border-b border-surface-border">
           <TabStrip tabs={stripTabs} activeId={activeId} onSelect={setActiveId} />
-          <PersonaLens personas={personaTabs} activeId={activeId} onSelect={setActiveId} />
         </div>
 
         <section
@@ -179,9 +170,6 @@ export function PlaceProfileClient({
               series={series}
               onNavigate={setActiveId}
             />
-          )}
-          {activeTab.kind === "persona" && activeTab.persona && (
-            <PersonaPanel place={place} persona={activeTab.persona} />
           )}
           {activeTab.kind === "domain" && activeTab.domain && (
             <DomainPanel
@@ -212,9 +200,9 @@ export function PlaceProfileClient({
         )}
 
         <p className="mt-6 text-xs text-ink-muted">
-          Not relocation or financial advice. The composite and persona scores are
-          percentile ranks within Greater Melbourne presented as{" "}
-          <b className="text-ink">optional lenses</b> - a data-access tool, not a
+          Not relocation or financial advice. The composite score is a percentile
+          rank within Greater Melbourne presented as an{" "}
+          <b className="text-ink">optional lens</b> - a data-access tool, not a
           definitive ranking of places. Context metrics are never folded into the
           locked seven-domain composite.
         </p>
@@ -305,46 +293,6 @@ function TabStrip({
   );
 }
 
-/* ----------------------------- Persona lens --------------------------- */
-
-function PersonaLens({
-  personas,
-  activeId,
-  onSelect,
-}: {
-  personas: Tab[];
-  activeId: string;
-  onSelect: (id: string) => void;
-}) {
-  const active = personas.find((p) => p.id === activeId);
-  return (
-    <div className="shrink-0 pb-1.5">
-      <label htmlFor="persona-lens" className="sr-only">
-        Persona lens
-      </label>
-      <select
-        id="persona-lens"
-        value={active?.id ?? ""}
-        onChange={(e) => {
-          if (e.target.value) onSelect(e.target.value);
-        }}
-        className={`rounded-lg border bg-surface px-2.5 py-1.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-          active
-            ? "border-accent font-medium text-ink"
-            : "border-surface-border text-ink-muted hover:border-accent hover:text-ink"
-        }`}
-      >
-        <option value="">Persona lens…</option>
-        {personas.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
 /* ----------------------------- Overview ------------------------------- */
 
 function OverviewPanel({
@@ -410,9 +358,10 @@ function OverviewPanel({
         <Caveat className="mt-3">
           <b className="text-ink">One optional lens.</b> This composite is the
           default-weight blend of the seven scored domains, shown as percentile
-          ranks within Greater Melbourne - not an authority on where to live. Open
-          a persona tab to re-weight it, or a category tab for the underlying
-          metrics. Outer-growth areas always rank low on transport.
+          ranks within Greater Melbourne - not an authority on where to live.
+          Open a category tab for the underlying metrics, or re-weight the map
+          itself with the Lens picker. Outer-growth areas always rank low on
+          transport.
         </Caveat>
 
         <h3 className="mb-2 mt-5 text-xs font-semibold tracking-wide text-ink-muted">
@@ -461,62 +410,6 @@ function OverviewPanel({
         </div>
       </section>
     )}
-    </div>
-  );
-}
-
-/* ----------------------------- Persona -------------------------------- */
-
-function PersonaPanel({ place, persona }: { place: Place; persona: PersonaId }) {
-  const preset = PERSONA_PRESETS[persona];
-  const weights = personaWeights(persona);
-  const breakdown = computeWeightedScore(place, weights);
-  const weighted = breakdown.components; // domains with weight > 0
-  const present = weighted.filter((c) => !c.missing).length;
-
-  return (
-    <div>
-      <div className="flex flex-wrap items-center gap-4 rounded-lg border border-surface-border bg-surface p-4 shadow-card">
-        <ScoreBadge value={breakdown.total} size={64} caption="lens score" />
-        <div className="min-w-0 flex-1">
-          <h2 className="font-display text-xl font-medium text-ink">
-            {preset.label} lens
-          </h2>
-          <p className="mt-0.5 text-sm text-ink-muted">{preset.description}</p>
-        </div>
-        <span className="num rounded-full border border-surface-border bg-surface-sunken px-2.5 py-0.5 text-xs text-ink-muted">
-          {present}/{weighted.length} weighted domains with data
-        </span>
-      </div>
-
-      <Caveat className="mt-3">
-        <b className="text-ink">Optional lens, not an authority.</b> This re-weights
-        the same seven scored domains toward {preset.label.toLowerCase()} priorities
-        and renormalises across the domains we hold for this area. It is one way to
-        read the data, not a definitive ranking.
-      </Caveat>
-
-      <h3 className="mb-2 mt-5 text-xs font-semibold tracking-wide text-ink-muted">
-        Factor breakdown (percentile · weight)
-      </h3>
-      {weighted.map((c) => {
-        const cfg = getDomain(c.domain);
-        return (
-          <DomainBar
-            key={c.domain}
-            label={cfg?.label ?? c.domain}
-            percentile={c.missing ? null : (c.percentile ?? null)}
-            weight={c.weight}
-          />
-        );
-      })}
-
-      {present < weighted.length && (
-        <p className="mt-2 text-xs text-ink-muted">
-          {weighted.length - present} weighted domain(s) have no data for this area
-          and are excluded from the lens score (present weights are renormalised).
-        </p>
-      )}
     </div>
   );
 }

@@ -1,5 +1,9 @@
 import type { ScoreWeights } from "./types";
-import { parseInterestView, type InterestViewId } from "./interest-views";
+import {
+  legacyPersonaToView,
+  parseInterestView,
+  type InterestViewId,
+} from "./interest-views";
 import type { BuyerProfile } from "./buyer-fit";
 
 const STORAGE_KEY = "mlv-user-prefs-v1";
@@ -84,8 +88,14 @@ function migrateFromV1(parsed: StoredPrefs): UserPrefs {
     // Enum drift guard: a lens id written by an older/newer build (persona-era
     // ids, rollback skew) must never reach INTEREST_VIEWS lookups - it crashed
     // every map route for returning visitors (live incident 2026-06-11).
+    // A stored persona-era choice (the retired personaId field, P1-11) folds
+    // into the lens it maps to, so an old visitor's saved lens survives the
+    // persona retirement - but never over a valid stored interestView.
     interestView:
       parseInterestView((parsed.interestView as string | undefined) ?? null) ??
+      legacyPersonaToView(
+        typeof parsed.personaId === "string" ? parsed.personaId : null
+      ) ??
       undefined,
     shortlist: Array.isArray(parsed.shortlist)
       ? parsed.shortlist.filter((s) => typeof s === "string").slice(0, MAX_SHORTLIST)

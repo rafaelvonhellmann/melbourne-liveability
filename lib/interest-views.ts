@@ -145,8 +145,10 @@ export function parseInterestView(raw: string | null): InterestViewId | null {
 }
 
 /**
- * Legacy `?persona=` preset ids (the retired PERSONA_PRESETS surface) map to
- * the lens each one folded into, so old shared links still resolve.
+ * Legacy persona-preset ids (the retired persona surface - lib/personas.ts,
+ * deleted in P1-11) map to the lens each one folded into, so old `?persona=`
+ * shared links AND stored persona-era prefs (user-prefs migrateFromV1) still
+ * resolve.
  */
 const LEGACY_PERSONA_VIEWS: Record<string, InterestViewId> = {
   family: "family",

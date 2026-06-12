@@ -132,6 +132,47 @@ describe("schema version migration", () => {
   });
 });
 
+describe("persona retirement migration (P1-11)", () => {
+  it("folds a stored persona-era choice into the lens it maps to", () => {
+    localStorage.setItem(
+      "mlv-user-prefs-v1",
+      JSON.stringify({ version: 1, personaId: "youngPro", shortlist: [] })
+    );
+    expect(loadUserPrefs().interestView).toBe("rental");
+    localStorage.setItem(
+      "mlv-user-prefs-v1",
+      JSON.stringify({ version: 1, personaId: "family", shortlist: [] })
+    );
+    expect(loadUserPrefs().interestView).toBe("family");
+  });
+
+  it("never lets a stored personaId override a valid saved lens", () => {
+    localStorage.setItem(
+      "mlv-user-prefs-v1",
+      JSON.stringify({
+        version: 1,
+        personaId: "retiree",
+        interestView: "homeBuyer",
+        shortlist: [],
+      })
+    );
+    expect(loadUserPrefs().interestView).toBe("homeBuyer");
+  });
+
+  it("leaves the lens unset for an unmappable or non-string personaId", () => {
+    localStorage.setItem(
+      "mlv-user-prefs-v1",
+      JSON.stringify({ version: 1, personaId: "families", shortlist: [] })
+    );
+    expect(loadUserPrefs().interestView).toBeUndefined();
+    localStorage.setItem(
+      "mlv-user-prefs-v1",
+      JSON.stringify({ version: 1, personaId: 7, shortlist: [] })
+    );
+    expect(loadUserPrefs().interestView).toBeUndefined();
+  });
+});
+
 describe("buyer profile back-compat", () => {
   it("returns null when no profile is saved", () => {
     expect(loadBuyerProfile()).toBeNull();

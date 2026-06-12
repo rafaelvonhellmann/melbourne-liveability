@@ -296,10 +296,10 @@ export default function MethodologyPage() {
         <p>
           Each place profile is a tabbed drawer (adapted from the Analisa.pt
           municipality-drawer pattern): an Overview tab (composite breakdown, key facts,
-          resident-population trend), one tab per persona lens (Family, Young professional,
-          Retiree, Student) that re-weights the same seven domains, one tab per scored
-          domain, and context tabs (Home buyer, Walk &amp; cycle, Equity &amp; community,
-          Data coverage).
+          resident-population trend), one tab per scored domain, and context tabs (Home
+          buyer, Walk &amp; cycle, Equity &amp; community, Data coverage). Re-weighted
+          reads of the seven domains live in the map&apos;s Lens picker (Balanced,
+          Renting, Buying, Family, Retiree, Data quality), not on the profile.
         </p>
         <p>
           Inside a domain tab, each indicator card shows its value, unit, honest direction,
