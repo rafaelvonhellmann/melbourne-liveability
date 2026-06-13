@@ -568,16 +568,6 @@ export const SOURCE_REGISTRY = [
     licenceVerdict: "open-with-attribution",
   },
   {
-    id: "mw-hws-macros",
-    name: "Melbourne Water Healthy Waterways Strategy 2018 - macroinvertebrate habitat-suitability (waterway condition CURRENT_1) - runtime pin lookup",
-    url: "https://data-melbournewater.opendata.arcgis.com/datasets/hws2018-habitat-suitability-modelling-results-for-macroinvertebrates",
-    licence: "CC BY-SA 4.0 (Melbourne Water)",
-    verifyNote: "ArcGIS item 7754f292286342a99baf7c26e8f7463e licenseInfo states Creative Commons Attribution Share-Alike 4.0 International, attribution 'Melbourne Water' (checked 2026-06-10). ShareAlike: adapted material from this layer must carry the same licence.",
-    period: "2018",
-    derived: true,
-    licenceVerdict: "non-commercial-or-restricted",
-  },
-  {
     id: "aec-federal-2022",
     name: "AEC 2022 federal election - members elected + two-party-preferred by division (results CSVs; electorate lens retired 2026-06-09)",
     url: "https://results.aec.gov.au/27966/Website/HouseDownloadsMenu-27966-Csv.htm",

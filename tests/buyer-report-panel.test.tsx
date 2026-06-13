@@ -126,7 +126,7 @@ const PLACE: Place = {
 };
 
 beforeEach(() => {
-  // Auto-fetch cards (urban heat / canopy / noise / waterway / beach) all treat
+  // Auto-fetch cards (urban heat / canopy / noise / beach) all treat
   // a non-ok response as "no coverage" -> they omit themselves. No network.
   vi.stubGlobal(
     "fetch",
