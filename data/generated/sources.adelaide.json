@@ -37,13 +37,31 @@
     "sha256": "4b3416ae6457dc31d219456511575ddc8ca84e094b219c2fa755aaba938a6030"
   },
   {
+    "id": "sa-plansa-bushfire-hazards",
+    "name": "PlanSA Bushfire hazard overlays - Property Planning Atlas (SA DIT)",
+    "url": "https://lsa2.geohub.sa.gov.au/arcgis/rest/services/SAPPA/PropertyPlanningAtlasV18/MapServer",
+    "licence": "CC BY 4.0",
+    "period": "current",
+    "fetchedAt": "2026-06-13",
+    "sha256": "5944577649440d47542b3e0471e9b2abf9ab7b88d9f4734bd98bdca16f2310ce"
+  },
+  {
+    "id": "sa-plansa-flood-hazards",
+    "name": "PlanSA Flood hazard overlays - Property Planning Atlas (SA DIT)",
+    "url": "https://lsa2.geohub.sa.gov.au/arcgis/rest/services/SAPPA/PropertyPlanningAtlasV18/MapServer",
+    "licence": "CC BY 4.0",
+    "period": "current",
+    "fetchedAt": "2026-06-13",
+    "sha256": "41e9af4fcac6ed261d9c1c36573609990be1c3d4ba93291cc4cfb2df599316a7"
+  },
+  {
     "id": "osm-health",
     "name": "OpenStreetMap — GP/clinic points (Overpass; hospital fallback only)",
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-12",
-    "sha256": "d1f30687d8e79d68855a67949f724511bde9902f567de1ba6787d4d6f8e84db5"
+    "fetchedAt": "2026-06-13",
+    "sha256": "8c77441c8413de835a447a75150714b72d56e9dac888f57278aedee441c404fa"
   },
   {
     "id": "abs-census-labour-2016",
@@ -60,8 +78,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-12",
-    "sha256": "9e046d7dae6c15ca39225339878f3b369f7f099d88bbd8449bb6ebfa49d930c1"
+    "fetchedAt": "2026-06-13",
+    "sha256": "384e1d039915dd8a7c29d40933a44dce2813e3d8d67c153797a0cfca562950bc"
   },
   {
     "id": "abs-census-preschool-2021",
@@ -96,8 +114,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-12",
-    "sha256": "7969968482f4ebe2ddd04bbc709fc7bd91a245e4a3cf861f6e31535594fa71fb"
+    "fetchedAt": "2026-06-13",
+    "sha256": "07ec8c3c0d890fe392b88a44f969becf6a364d63cd99d68f5da104fcc798e435"
   },
   {
     "id": "osm-cycleways",
@@ -105,8 +123,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-12",
-    "sha256": "f9e608bff8ab2f0351f269fdfbc34436ca868236e943e3218fd38f67fe3ab98b"
+    "fetchedAt": "2026-06-13",
+    "sha256": "942fa97e7e68f5c5676ee2467c193d6d7033fdca0006727b1c0ac9c6c55a9c71"
   },
   {
     "id": "adelaide-metro-gtfs",
@@ -114,7 +132,7 @@
     "url": "https://data.sa.gov.au/data/dataset/https-gtfs-adelaidemetro-com-au",
     "licence": "CC BY 4.0",
     "period": "2026-06 to 2026-10",
-    "fetchedAt": "2026-06-12",
-    "sha256": "67777c42c27cb5b701c09fc14eb0d0d51737c77806755a44a7faae645dcce539"
+    "fetchedAt": "2026-06-13",
+    "sha256": "d786bdb8fb30748035cabd04d5e7dced0018096253bfb84e2f8e18ee17aade75"
   }
 ]

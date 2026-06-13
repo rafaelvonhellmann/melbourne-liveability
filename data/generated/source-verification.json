@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-06-13T08:29:14.589Z",
+  "checkedAt": "2026-06-13T08:59:58.953Z",
   "sources": 69,
   "referencedInCode": 0,
   "networkChecked": true,
@@ -19,6 +19,7 @@
     "sa-plansa-flood-hazards: missing sha256 (run data:hash after fetch)",
     "nsw-beachwatch: missing sha256 (run data:hash after fetch)",
     "unreachable url vcsa-recorded-offences: https://www.crimestatistics.vic.gov.au/crime-statistics/latest-victorian-crime-data/download-data (403)",
+    "unreachable url wa-police-suburb-offences: https://www.wa.gov.au/organisation/western-australia-police-force/crime-statistics (403)",
     "unreachable url sa-plansa-bushfire-hazards: https://lsa2.geohub.sa.gov.au/arcgis/rest/services/SAPPA/PropertyPlanningAtlasV18/MapServer (403)",
     "unreachable url sa-plansa-flood-hazards: https://lsa2.geohub.sa.gov.au/arcgis/rest/services/SAPPA/PropertyPlanningAtlasV18/MapServer (403)"
   ],
@@ -80,8 +81,8 @@
     {
       "id": "wa-police-suburb-offences",
       "url": "https://www.wa.gov.au/organisation/western-australia-police-force/crime-statistics",
-      "ok": true,
-      "status": 200
+      "ok": false,
+      "status": 403
     },
     {
       "id": "sapol-suburb-offences",
