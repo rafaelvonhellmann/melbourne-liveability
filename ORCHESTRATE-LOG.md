@@ -73,6 +73,24 @@ Explicitly OUT of scope: pricing copy, Stripe go-live (parked by founder).
   DMARC records; deploy + orange-cloud approval; then live sign-in
   walkthrough as milestone verification.
 
+### [2026-06-13] Phase 6 — MILESTONE VERIFIED: accounts live in production
+- Gates cleared: founder approved deploy (AskUserQuestion, recorded); Resend
+  domain verified (auto-configure) + DMARC added; D1 migrations applied;
+  festra-api deployed on festra.au/api/* ; festra.au orange-clouded.
+- Live walkthrough evidence: POST /api/auth/magic-link -> 202; Resend
+  delivered to founder's Gmail; founder clicked the /auth#token= link and
+  confirmed signed-in ("yeap, worked"). D1 ground truth:
+  users=1, sessions=1, magic_links used=1. /api/health {"ok":true} via the
+  proxy; site 200 in 56ms.
+- Late blockers resolved during deploy (Fable lane, logged): wrangler.toml
+  TOML scoping (routes under [vars] - invisible to wrangler), backend TS
+  world separation (root exclude + CI backend tsc step), test fakes aligned
+  to real workers-types (Codex execution, zero any-casts).
+- Cross-device sync verification (second browser) left as founder
+  self-verification; engine + tests cover it.
+- REMAINING: full CI green through proxy (take 3 in flight), Phase 7
+  close-out (one /simplify pass + architecture exit-review + founder report).
+
 ### [2026-06-13] Phase 4 — plans: WRITING
 - plans/010-014 (new) + plans/003 (pre-existing, now a pre-deploy gate).
 - Order: 003 -> 010 backend hardening -> 011 prefs sync backend ->
