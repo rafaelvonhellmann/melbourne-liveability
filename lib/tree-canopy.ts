@@ -8,6 +8,7 @@
  */
 import type { LngLat } from "./buyer-location";
 import { timeoutSignal } from "./fetch-timeout";
+import { registryId } from "./source-ids";
 
 const COOLING_GREENING_URL =
   "https://plan-gis.mapshare.vic.gov.au/arcgis/rest/services/CoolingGreening/CoolingGreening/MapServer";
@@ -16,7 +17,7 @@ const COOLING_GREENING_URL =
 const CANOPY_LAYER = 25;
 
 /** Source id in the data manifest (sources.json) for attribution. */
-export const TREE_CANOPY_SOURCE_ID = "vic-tree-canopy";
+export const TREE_CANOPY_SOURCE_ID = registryId("vic-tree-canopy");
 
 export type TreeCanopy = {
   /** % of the surrounding mesh block under tree canopy (3 m+). */

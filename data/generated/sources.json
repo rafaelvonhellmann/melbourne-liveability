@@ -548,10 +548,10 @@
     "name": "AEC 2022 federal election - members elected + two-party-preferred by division (results CSVs; electorate lens retired 2026-06-09)",
     "url": "https://results.aec.gov.au/27966/Website/HouseDownloadsMenu-27966-Csv.htm",
     "licence": "CC BY 4.0 (AEC)",
+    "verifyNote": "The former AEC Federal Electoral Boundaries 2025 'pin lookup' was stale and is removed; if the electorate lens returns, use Geoscape Administrative Boundaries (CC BY 4.0) for division geometry. Results CSVs stay CC BY 4.0.",
     "period": "2022",
     "fetchedAt": "2026-06-08",
     "derived": true,
-    "verifyNote": "The former AEC Federal Electoral Boundaries 2025 'pin lookup' was stale and is removed; if the electorate lens returns, use Geoscape Administrative Boundaries (CC BY 4.0) for division geometry. Results CSVs stay CC BY 4.0.",
     "sha256": ""
   },
   {

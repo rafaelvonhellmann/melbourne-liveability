@@ -59,6 +59,7 @@ import { saHazardsAdapter } from "./sa-hazards.js";
 import { fetchPlanLayerGeoJson } from "./arcgis-plan-vic.js";
 import { buildHazardIndex, overlayPctInSa2 } from "./sa2-overlay-pct.js";
 import { normalizeQldLgaName } from "./qld-crime.js";
+import { assertBakeable, registryId } from "./source-registry.js";
 
 /** The shape every adapter's normalize step writes onto. */
 export type HazardPlace = {
@@ -110,15 +111,19 @@ const VIC_BPA_URL =
   "https://services-ap1.arcgis.com/P744lA0wf4LlBZ84/ArcGIS/rest/services/Vicmap_Planning/FeatureServer";
 const VIC_OVERLAYS_URL =
   "https://plan-gis.mapshare.vic.gov.au/arcgis/rest/services/Planning/Vicplan_PlanningSchemeOverlays/MapServer";
+const VIC_BUSHFIRE_SOURCE_ID = registryId("vic-planning-bpa");
+const VIC_FLOOD_SOURCE_ID = registryId("vic-planning-flood");
 
 const vicAdapter: HazardAdapter = {
-  bushfireSourceId: "vic-planning-bpa",
-  floodSourceId: "vic-planning-flood",
+  bushfireSourceId: VIC_BUSHFIRE_SOURCE_ID,
+  floodSourceId: VIC_FLOOD_SOURCE_ID,
 
   // Straight move of scripts/fetch-hazards.ts (BPA/LSIO/SBO part) - console
   // messages and failure modes preserved (BPA failure throws and kills the
   // refresh; LSIO/SBO failures warn and continue).
   async fetch(_region, rawDir) {
+    assertBakeable(VIC_BUSHFIRE_SOURCE_ID);
+    assertBakeable(VIC_FLOOD_SOURCE_ID);
     console.log("Bushfire Prone Areas (Vicmap Planning)...");
     const bpa = await fetchPlanLayerGeoJson(VIC_BPA_URL, 9, 50);
     await writeFile(path.join(rawDir, "vic-bpa.geojson"), JSON.stringify(bpa));
@@ -207,6 +212,8 @@ export const QLD_BCC_FLOOD_LAYERS = [
  * geometryPrecision 5 (~1 m) so the artifacts stay tens of MB). */
 export const QLD_BPA_RAW_FILE = "qld-bpa.geojson";
 export const QLD_FLOOD_RAW_FILE = "qld-bcc-flood.geojson";
+const QLD_BUSHFIRE_SOURCE_ID = registryId("qld-spp-bushfire-prone-area");
+const QLD_FLOOD_SOURCE_ID = registryId("bcc-cityplan-flood-overlay");
 
 /** Councils whose open flood overlays are wired up (normalizeQldLgaName keys).
  * See the header for why Moreton Bay/Logan/Ipswich/Redland are absent. */
@@ -269,10 +276,12 @@ export function applyQldHazardsToPlaces(
 }
 
 const qldAdapter: HazardAdapter = {
-  bushfireSourceId: "qld-spp-bushfire-prone-area",
-  floodSourceId: "bcc-cityplan-flood-overlay",
+  bushfireSourceId: QLD_BUSHFIRE_SOURCE_ID,
+  floodSourceId: QLD_FLOOD_SOURCE_ID,
 
   async fetch(region, rawDir) {
+    assertBakeable(QLD_BUSHFIRE_SOURCE_ID);
+    assertBakeable(QLD_FLOOD_SOURCE_ID);
     // Statewide product - bulk-download the region's QSpatial pack and clip
     // to the region bbox locally (the paged AGOL proxy was unviable).
     console.log("QLD Bushfire Prone Area (QFES SPP via QSpatial, clipped to region bbox)...");

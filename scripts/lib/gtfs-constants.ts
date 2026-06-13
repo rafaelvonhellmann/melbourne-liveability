@@ -1,4 +1,5 @@
 import REGIONS, { type RegionId } from "../../lib/regions.js";
+import { registryId } from "./source-registry.js";
 
 /** Official PTV / DTP GTFS Schedule (CC BY 4.0). Sourced from the region
  * registry's melbourne entry (lib/regions.ts); export name kept. */
@@ -52,13 +53,13 @@ export type GtfsSourceMeta = {
 export const GTFS_SOURCES: Record<RegionId, GtfsSourceMeta> = {
   melbourne: {
     // Pre-existing melbourne manifest entry - id must stay "ptv-gtfs".
-    sourceId: "ptv-gtfs",
+    sourceId: registryId("ptv-gtfs"),
     name: "PTV GTFS Schedule - stops, routes, weekday AM-peak trips",
     url: "https://opendata.transport.vic.gov.au/dataset/gtfs-schedule",
     licence: "CC BY 4.0",
   },
   sydney: {
-    sourceId: "tfnsw-gtfs",
+    sourceId: registryId("tfnsw-gtfs"),
     name: "Transport for NSW - complete GTFS schedule",
     url: "https://opendata.transport.nsw.gov.au/data/dataset/timetables-complete-gtfs",
     licence: "CC BY 4.0",
@@ -66,37 +67,37 @@ export const GTFS_SOURCES: Record<RegionId, GtfsSourceMeta> = {
     keyEnv: "TFNSW_API_KEY",
   },
   brisbane: {
-    sourceId: "translink-gtfs",
+    sourceId: registryId("translink-gtfs"),
     name: "Translink - South East Queensland GTFS schedule",
     url: "https://www.data.qld.gov.au/dataset/general-transit-feed-specification-gtfs-translink",
     licence: "CC BY 4.0",
   },
   adelaide: {
-    sourceId: "adelaide-metro-gtfs",
+    sourceId: registryId("adelaide-metro-gtfs"),
     name: "Adelaide Metro GTFS schedule",
     url: "https://data.sa.gov.au/data/dataset/https-gtfs-adelaidemetro-com-au",
     licence: "CC BY 4.0",
   },
   perth: {
-    sourceId: "transperth-gtfs",
+    sourceId: registryId("transperth-gtfs"),
     name: "Transperth (PTA WA) GTFS schedule",
     url: "https://www.transperth.wa.gov.au/About/Spatial-Data-Access",
     licence: "CC BY 4.0",
   },
   hobart: {
-    sourceId: "tas-gtfs",
+    sourceId: registryId("tas-gtfs"),
     name: "Tasmania statewide GTFS schedule (Metro Tasmania + regional operators)",
     url: "https://www.transport.tas.gov.au/public_transport/gtfs-data",
     licence: "CC BY 4.0",
   },
   darwin: {
-    sourceId: "nt-gtfs",
+    sourceId: registryId("nt-gtfs"),
     name: "NT Government GTFS schedule - Darwin bus network",
     url: "https://data.nt.gov.au/dataset/bus-timetable-data-and-geographic-information-darwin",
     licence: "CC BY 4.0",
   },
   canberra: {
-    sourceId: "transport-canberra-gtfs",
+    sourceId: registryId("transport-canberra-gtfs"),
     name: "Transport Canberra GTFS schedule (bus + light rail)",
     url: "https://www.transport.act.gov.au/contact-us/information-for-developers",
     licence: "CC BY 4.0",

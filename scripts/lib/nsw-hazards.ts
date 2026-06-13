@@ -23,6 +23,7 @@ import type {
 } from "./hazard-adapters.js";
 import { fetchArcGisGeoJson } from "./arcgis-geojson.js";
 import { buildHazardIndex, overlayPctInSa2 } from "./sa2-overlay-pct.js";
+import { assertBakeable, registryId } from "./source-registry.js";
 
 export const NSW_BFPL_LAYER_URL =
   "https://portal.spatial.nsw.gov.au/server/rest/services/Hosted/NSW_BushFire_Prone_Land/FeatureServer/0";
@@ -32,6 +33,8 @@ export const NSW_EPI_FLOOD_LAYER_URL =
 
 export const NSW_BFPL_RAW_FILE = "nsw-bfpl.geojson";
 export const NSW_EPI_FLOOD_RAW_FILE = "nsw-epi-flood.geojson";
+export const NSW_BUSHFIRE_SOURCE_ID = registryId("nsw-rfs-bush-fire-prone-land");
+export const NSW_FLOOD_SOURCE_ID = registryId("nsw-epi-flood-planning-area");
 
 /** Flood-related classes from the EPI Flood layer. The renderer also contains
  * a few non-flood strays (for example Cultural Heritage Landscape Area and
@@ -100,10 +103,12 @@ export function applyNswHazardsToPlaces(
 }
 
 export const nswHazardsAdapter: HazardAdapter = {
-  bushfireSourceId: "nsw-rfs-bush-fire-prone-land",
-  floodSourceId: "nsw-epi-flood-planning-area",
+  bushfireSourceId: NSW_BUSHFIRE_SOURCE_ID,
+  floodSourceId: NSW_FLOOD_SOURCE_ID,
 
   async fetch(region, rawDir) {
+    assertBakeable(NSW_BUSHFIRE_SOURCE_ID);
+    assertBakeable(NSW_FLOOD_SOURCE_ID);
     console.log(
       "NSW Bush Fire Prone Land (RFS BFPL, clipped to region bbox)..."
     );

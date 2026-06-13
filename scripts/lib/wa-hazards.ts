@@ -38,9 +38,10 @@ import type {
 } from "./hazard-adapters.js";
 import { fetchArcGisGeoJson } from "./arcgis-geojson.js";
 import { buildHazardIndex, overlayPctInSa2 } from "./sa2-overlay-pct.js";
+import { assertBakeable, registryId } from "./source-registry.js";
 
-export const WA_BUSHFIRE_SOURCE_ID = "wa-dfes-bushfire-prone-areas-2025";
-export const WA_FLOOD_SOURCE_ID = "wa-dwer-fpm-100aep-floodway-fringe";
+export const WA_BUSHFIRE_SOURCE_ID = registryId("wa-dfes-bushfire-prone-areas-2025");
+export const WA_FLOOD_SOURCE_ID = registryId("wa-dwer-fpm-100aep-floodway-fringe");
 
 export const WA_BPA_RAW_FILE = "wa-bpa.geojson";
 export const WA_FLOOD_RAW_FILE = "wa-dwer-floodway-fringe.geojson";
@@ -127,6 +128,7 @@ export async function fetchWaHazardOverlays(
   await mkdir(rawDir, { recursive: true });
 
   console.log("WA Bush Fire Prone Areas 2025 (DFES/OBRM via SLIP, clipped to Perth bbox)...");
+  assertBakeable(WA_BUSHFIRE_SOURCE_ID);
   const bpa = clipFeatureCollectionToBbox(
     await fetchArcGisGeoJson(WA_BPA_LAYER_URL, {
       envelope: region.bbox,

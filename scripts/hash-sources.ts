@@ -27,69 +27,12 @@ import {
 import { GTFS_SOURCES } from "./lib/gtfs-constants.js";
 import {
   buildRegionSourceEntries,
+  buildMelbourneManifestFromRegistry,
   collectSourceIds,
+  serializeManifest,
   type ManifestSource,
 } from "./lib/region-sources.js";
-
-/** sourceId → raw file (relative to data/raw, or data/generated for derived precompute). */
-const SOURCE_FILES: Record<string, { dir: "raw" | "generated" | "public"; file: string }> = {
-  "abs-sa2-income-dbr": { dir: "raw", file: "abs-sa2-income.json" },
-  "abs-census-rent-2021": { dir: "raw", file: "abs-sa2-rent.json" },
-  "abs-erp-sa2": { dir: "raw", file: "abs-sa2-erp.json" },
-  "abs-erp-sa2-series": { dir: "raw", file: "abs-sa2-erp-series.json" },
-  "vcsa-recorded-offences": { dir: "raw", file: "vcsa-lga-offences.xlsx" },
-  "act-policing-crime-statistics": { dir: "raw", file: "act-crime-statistics.xlsx" },
-  "qps-lga-offence-rates": { dir: "raw", file: "qld-lga-offence-rates.csv" },
-  "bocsar-suburb-offences": { dir: "raw", file: "nsw-bocsar-suburb-offences.csv" },
-  "wa-police-suburb-offences": { dir: "raw", file: "wa-police-suburb-offences.csv" },
-  "sapol-suburb-offences": { dir: "raw", file: "sa-sapol-suburb-offences.csv" },
-  "ptv-gtfs": { dir: "generated", file: "gtfs-transport.json" },
-  "osm-pt": { dir: "raw", file: "osm-pt.json" },
-  "vic-mapshare-hospitals": { dir: "raw", file: "vic-hospitals.json" },
-  "vicmap-police": { dir: "raw", file: "vic-police.json" },
-  "vicmap-foi": { dir: "raw", file: "vic-childcare.json" },
-  "osm-health": { dir: "raw", file: "osm-health.json" },
-  "osm-post": { dir: "raw", file: "osm-post.json" },
-  "osm-clinical-social": { dir: "raw", file: "osm-clinical-social.json" },
-  "abs-census-labour-2016": { dir: "raw", file: "abs-sa2-employment.json" },
-  "abs-census-preschool-2021": { dir: "raw", file: "abs-sa2-employment.json" },
-  "vic-planning-bpa": { dir: "raw", file: "vic-bpa.geojson" },
-  "vic-planning-flood": { dir: "raw", file: "vic-lsio.geojson" },
-  "qld-spp-bushfire-prone-area": { dir: "raw", file: "qld-bpa.geojson" },
-  "bcc-cityplan-flood-overlay": { dir: "raw", file: "qld-bcc-flood.geojson" },
-  "nsw-rfs-bush-fire-prone-land": { dir: "raw", file: "nsw-bfpl.geojson" },
-  "nsw-epi-flood-planning-area": { dir: "raw", file: "nsw-epi-flood.geojson" },
-  // WA ships bushfire-only - the DWER flood layer is CC-NC and never fetched.
-  "wa-dfes-bushfire-prone-areas-2025": { dir: "raw", file: "wa-bpa.geojson" },
-  "sa-plansa-bushfire-hazards": { dir: "raw", file: "sa-plansa-bushfire.geojson" },
-  "sa-plansa-flood-hazards": { dir: "raw", file: "sa-plansa-flood.geojson" },
-  // Beachwatch is a Sydney-only water-quality lens (separate static artifact).
-  "nsw-beachwatch": { dir: "public", file: "beach-quality.sydney.json" },
-  "vic-planning-heritage": { dir: "raw", file: "vic-ho.geojson" },
-  "vic-planning-overlays": { dir: "raw", file: "vic-conservation-overlays.geojson" },
-  "vic-coastal-inundation": { dir: "raw", file: "vic-sea-level.geojson" },
-  "vic-fire-history": { dir: "raw", file: "vic-fire-history.geojson" },
-  "vif2023-sa2": { dir: "raw", file: "vif2023-sa2.xlsx" },
-  "abs-building-approvals": { dir: "raw", file: "abs-sa2-approvals.json" },
-  "vic-school-zones": { dir: "public", file: "school-zones.json" },
-  "dtp-aadt": { dir: "public", file: "traffic-aadt.json" },
-  "vic-water-corp": { dir: "raw", file: "water-corp.geojson" },
-  "epa-air": { dir: "public", file: "epa-air-sites.json" },
-  "abs-census-tsp-sa2": { dir: "raw", file: "abs-sa2-affordability.json" },
-  "vic-activity-centres": { dir: "public", file: "activity-centres.json" },
-  "osm-noise-corridors": { dir: "public", file: "noise-lines.json" },
-  "osm-nuisance-points": { dir: "public", file: "nuisance-points.json" },
-  "osm-train-stations": { dir: "public", file: "train-stations.json" },
-  "osm-schools": { dir: "raw", file: "osm-schools.json" },
-  "osm-amenities": { dir: "raw", file: "osm-amenities.json" },
-  "osm-cycleways": { dir: "raw", file: "osm-cycleways.json" },
-  "osm-aged-care": { dir: "raw", file: "osm-aged-care.json" },
-  "abs-seifa-2021": { dir: "raw", file: "abs-sa2-seifa.json" },
-  "abs-census-community-2021": { dir: "raw", file: "abs-sa2-community.json" },
-  "abs-census-g49-sa2": { dir: "raw", file: "abs-sa2-qualifications.json" },
-  "osm-future-transport": { dir: "public", file: "future-transport.json" },
-  "vic-doe-school-locations": { dir: "raw", file: "vic-schools-by-sa2.json" },
-};
+import { SOURCE_FILES } from "./lib/source-files.js";
 
 type Source = ManifestSource;
 
@@ -109,7 +52,18 @@ function dirBase(dir: "raw" | "generated" | "public"): string {
 /** The default (melbourne) path, unchanged: update sources.json in place. */
 async function hashDefaultManifest() {
   const sourcesPath = path.join(GENERATED, "sources.json");
-  const sources = JSON.parse(await readFile(sourcesPath, "utf8")) as Source[];
+  // Metadata + canonical key order come from the registry (the single source
+  // of truth); sha256/fetchedAt are carried forward from the existing file so a
+  // no-op run keeps hashes/dates stable and the byte-identity baseline holds
+  // even when the raw files are not present locally.
+  const existing = JSON.parse(await readFile(sourcesPath, "utf8")) as Source[];
+  const existingById = new Map(existing.map((s) => [s.id, s]));
+  const sources = buildMelbourneManifestFromRegistry() as Source[];
+  for (const s of sources) {
+    const prev = existingById.get(s.id);
+    if (prev?.fetchedAt !== undefined) s.fetchedAt = prev.fetchedAt;
+    if (prev?.sha256 !== undefined) s.sha256 = prev.sha256;
+  }
   const today = new Date().toISOString().slice(0, 10);
 
   const missing: string[] = [];
@@ -138,7 +92,7 @@ async function hashDefaultManifest() {
     }
   }
 
-  await writeFile(sourcesPath, JSON.stringify(sources, null, 2) + "\n");
+  await writeFile(sourcesPath, serializeManifest(sources));
   console.log(`Hashed ${hashed}/${sources.length} sources.`);
   if (missing.length) {
     console.warn("No hash for:\n  " + missing.join("\n  "));

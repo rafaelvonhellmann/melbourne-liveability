@@ -12,6 +12,7 @@
  */
 import type { LngLat } from "./buyer-location";
 import { timeoutSignal } from "./fetch-timeout";
+import { registryId } from "./source-ids";
 
 const PLAN_GIS = "https://plan-gis.mapshare.vic.gov.au/arcgis/rest/services";
 const TULLA = `${PLAN_GIS}/Planning/Melbourne_Airport_Master_Plan_2022_VicPlan/MapServer`;
@@ -27,7 +28,7 @@ const TULLA_BANDS: [number, number][] = [
 ];
 
 /** Source id in the data manifest (sources.json) for attribution. */
-export const AIRCRAFT_NOISE_SOURCE_ID = "vic-anef";
+export const AIRCRAFT_NOISE_SOURCE_ID = registryId("vic-anef");
 
 export type AircraftNoise = { airport: string; anef: number };
 
