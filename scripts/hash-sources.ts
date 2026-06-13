@@ -57,6 +57,14 @@ const SOURCE_FILES: Record<string, { dir: "raw" | "generated" | "public"; file: 
   "vic-planning-flood": { dir: "raw", file: "vic-lsio.geojson" },
   "qld-spp-bushfire-prone-area": { dir: "raw", file: "qld-bpa.geojson" },
   "bcc-cityplan-flood-overlay": { dir: "raw", file: "qld-bcc-flood.geojson" },
+  "nsw-rfs-bush-fire-prone-land": { dir: "raw", file: "nsw-bfpl.geojson" },
+  "nsw-epi-flood-planning-area": { dir: "raw", file: "nsw-epi-flood.geojson" },
+  // WA ships bushfire-only - the DWER flood layer is CC-NC and never fetched.
+  "wa-dfes-bushfire-prone-areas-2025": { dir: "raw", file: "wa-bpa.geojson" },
+  "sa-plansa-bushfire-hazards": { dir: "raw", file: "sa-plansa-bushfire.geojson" },
+  "sa-plansa-flood-hazards": { dir: "raw", file: "sa-plansa-flood.geojson" },
+  // Beachwatch is a Sydney-only water-quality lens (separate static artifact).
+  "nsw-beachwatch": { dir: "public", file: "beach-quality.sydney.json" },
   "vic-planning-heritage": { dir: "raw", file: "vic-ho.geojson" },
   "vic-planning-overlays": { dir: "raw", file: "vic-conservation-overlays.geojson" },
   "vic-coastal-inundation": { dir: "raw", file: "vic-sea-level.geojson" },

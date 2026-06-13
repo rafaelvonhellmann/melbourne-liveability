@@ -139,27 +139,14 @@ export async function fetchWaHazardOverlays(
   await writeFile(path.join(rawDir, WA_BPA_RAW_FILE), JSON.stringify(bpa));
   console.log(`  ${bpa.features.length} polygons`);
 
-  let floodFeatures = 0;
-  try {
-    console.log("WA DWER 1% AEP floodway/fringe (SLIP, clipped to Perth bbox)...");
-    const flood = clipFeatureCollectionToBbox(
-      await fetchArcGisGeoJson(WA_FLOOD_LAYER_URL, {
-        envelope: region.bbox,
-        outFields: "objectid,ext_type,status,location",
-        pageSize: 5000,
-        geometryPrecision: 5,
-      }),
-      region.bbox
-    );
-    floodFeatures = flood.features.length;
-    await writeFile(path.join(rawDir, WA_FLOOD_RAW_FILE), JSON.stringify(flood));
-    console.log(`  ${floodFeatures} polygons`);
-  } catch (e) {
-    console.warn(
-      "  WA DWER floodway/fringe skipped (floodPct will be missing):",
-      (e as Error).message
-    );
-  }
+  // WA DWER 1% AEP floodway/fringe is CC BY-NC (non-commercial). Festra serves
+  // data as public static tiles and needs commercial + redistribution rights,
+  // so the DWER flood layer is NEVER fetched or baked - Perth ships
+  // bushfire-only. floodPct stays null (missing:true) everywhere and the flood
+  // sub-indicator renders "no data". See the DATA-EXPANSION-PLAN licence rule.
+  // WA_FLOOD_LAYER_URL / WA_FLOOD_RAW_FILE are kept exported for the day the
+  // licence clears, but are intentionally unreferenced here.
+  const floodFeatures = 0;
 
   return { bushfireFeatures: bpa.features.length, floodFeatures };
 }

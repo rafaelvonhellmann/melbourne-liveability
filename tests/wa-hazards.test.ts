@@ -140,7 +140,7 @@ describe("waHazardsAdapter", () => {
     }
   });
 
-  it("fetches the WA ArcGIS layers with the Perth bbox and writes raw files", async () => {
+  it("fetches only the WA bushfire layer with the Perth bbox (flood dropped, CC-NC)", async () => {
     const calls: string[] = [];
     vi.stubGlobal(
       "fetch",
@@ -159,10 +159,12 @@ describe("waHazardsAdapter", () => {
     const rawDir = await mkdtemp(path.join(process.cwd(), ".tmp-wa-hazards-"));
     try {
       const stats = await fetchWaHazardOverlays(getRegion("perth"), rawDir);
-      expect(stats).toEqual({ bushfireFeatures: 1, floodFeatures: 1 });
-      expect(calls).toHaveLength(2);
+      // WA ships bushfire-only: the DWER 1% AEP flood layer is CC BY-NC and is
+      // never fetched, so only the bushfire layer is requested/written.
+      expect(stats).toEqual({ bushfireFeatures: 1, floodFeatures: 0 });
+      expect(calls).toHaveLength(1);
       expect(calls[0]).toContain(WA_BPA_LAYER_URL);
-      expect(calls[1]).toContain(WA_FLOOD_LAYER_URL);
+      expect(calls.some((u) => u.includes(WA_FLOOD_LAYER_URL))).toBe(false);
       for (const url of calls) {
         expect(url).toContain("geometry=115.4%2C-32.9%2C116.45%2C-31.4");
         expect(url).toContain("geometryPrecision=5");
@@ -171,11 +173,11 @@ describe("waHazardsAdapter", () => {
       const bpa = JSON.parse(
         await readFile(path.join(rawDir, WA_BPA_RAW_FILE), "utf8")
       ) as FeatureCollection;
-      const flood = JSON.parse(
-        await readFile(path.join(rawDir, WA_FLOOD_RAW_FILE), "utf8")
-      ) as FeatureCollection;
       expect(bpa.features).toHaveLength(1);
-      expect(flood.features).toHaveLength(1);
+      // The CC-NC flood raw file must never be written to disk.
+      await expect(
+        readFile(path.join(rawDir, WA_FLOOD_RAW_FILE), "utf8")
+      ).rejects.toThrow();
     } finally {
       await rm(rawDir, { recursive: true, force: true });
     }

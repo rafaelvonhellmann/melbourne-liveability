@@ -35,15 +35,37 @@ describe("hazardAdapterFor registry", () => {
     expect(typeof a!.normalize).toBe("function");
   });
 
+  it("sydney (NSW) gets the RFS BFPL + EPI flood-planning adapter", () => {
+    const a = hazardAdapterFor(getRegion("sydney"));
+    expect(a).not.toBeNull();
+    expect(a!.bushfireSourceId).toBe("nsw-rfs-bush-fire-prone-land");
+    expect(a!.floodSourceId).toBe("nsw-epi-flood-planning-area");
+    expect(typeof a!.fetch).toBe("function");
+    expect(typeof a!.normalize).toBe("function");
+  });
+
+  it("perth (WA) gets the DFES bushfire adapter (flood dropped - CC-NC, never fetched)", () => {
+    const a = hazardAdapterFor(getRegion("perth"));
+    expect(a).not.toBeNull();
+    expect(a!.bushfireSourceId).toBe("wa-dfes-bushfire-prone-areas-2025");
+    // floodSourceId is declared for type completeness, but the DWER flood layer
+    // is CC BY-NC and is never fetched - floodPct stays missing on every Perth
+    // place (see scripts/lib/wa-hazards.ts fetchWaHazardOverlays).
+    expect(typeof a!.fetch).toBe("function");
+    expect(typeof a!.normalize).toBe("function");
+  });
+
+  it("adelaide (SA) gets the PlanSA bushfire + flood adapter", () => {
+    const a = hazardAdapterFor(getRegion("adelaide"));
+    expect(a).not.toBeNull();
+    expect(a!.bushfireSourceId).toBe("sa-plansa-bushfire-hazards");
+    expect(a!.floodSourceId).toBe("sa-plansa-flood-hazards");
+    expect(typeof a!.fetch).toBe("function");
+    expect(typeof a!.normalize).toBe("function");
+  });
+
   it("states without an adapter resolve to null (hazards unscored) - incl. the ACT", () => {
-    for (const id of [
-      "sydney",
-      "adelaide",
-      "perth",
-      "hobart",
-      "darwin",
-      "canberra",
-    ] as const) {
+    for (const id of ["hobart", "darwin", "canberra"] as const) {
       expect(hazardAdapterFor(getRegion(id))).toBeNull();
     }
   });
