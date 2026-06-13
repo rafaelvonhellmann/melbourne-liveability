@@ -500,7 +500,7 @@ describe("map page region switching", () => {
     for (const label of [
       "Buyer check",
       "Compare",
-      "Your data",
+      "Profile",
       "Alerts",
       "Methodology",
       "Disclaimer",

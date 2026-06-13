@@ -114,7 +114,7 @@ export default function AccountPage() {
         <Link href="/" className="text-sm text-accent hover:underline">
           ← Map
         </Link>
-        <h1 className="mt-4 font-display text-2xl font-semibold text-ink">Your data</h1>
+        <h1 className="mt-4 font-display text-2xl font-semibold text-ink">Profile</h1>
         <p className="mt-2 text-sm text-ink-muted">
           Everything below is stored on this device. Sign in to sync it across devices,
           export a copy, or clear it any time.

@@ -193,7 +193,10 @@ describe("Landing hero (scene 1)", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("or scroll to see how it works")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Explore the map" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Sign in" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+      "href",
+      "/signin"
+    );
     // The live map rig is mounted behind the scenes.
     expect(screen.getByTestId("landing-map")).toBeInTheDocument();
   });
@@ -238,30 +241,6 @@ describe("Landing hero (scene 1)", () => {
     expect(props.onAreaSelect).not.toHaveBeenCalled();
     expect(props.onProfileChoice).not.toHaveBeenCalled();
     expect(localStorage.getItem(ONBOARDED_KEY)).toBe("1");
-  });
-
-  it('"Sign in" smooth-scrolls to the close band without dismissing or flagging', async () => {
-    const { props } = await renderLanding();
-    const band = document.getElementById("get-started") as HTMLElement;
-    expect(band).not.toBeNull();
-    expect(within(band).getByText("Set up your window")).toBeInTheDocument();
-    const spy = vi.fn();
-    band.scrollIntoView = spy;
-    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy.mock.calls[0][0]).toMatchObject({ behavior: "smooth", block: "start" });
-    expect(props.onDismiss).not.toHaveBeenCalled();
-    expect(localStorage.getItem(ONBOARDED_KEY)).toBeNull();
-  });
-
-  it('"Sign in" snaps (behavior: auto) under prefers-reduced-motion', async () => {
-    stubReducedMotion(true);
-    await renderLanding();
-    const band = document.getElementById("get-started") as HTMLElement;
-    const spy = vi.fn();
-    band.scrollIntoView = spy;
-    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
-    expect(spy.mock.calls[0][0]).toMatchObject({ behavior: "auto" });
   });
 });
 

@@ -13,7 +13,7 @@ test.describe("content routes", () => {
 
   test("account page renders with export + clear", async ({ page }) => {
     await page.goto("/account");
-    await expect(page.getByRole("heading", { name: "Your data", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Profile", level: 1 })).toBeVisible();
     await expect(page.getByRole("button", { name: /Export my data/ })).toBeVisible();
     await expect(page.getByRole("button", { name: /Clear this device/ })).toBeVisible();
   });

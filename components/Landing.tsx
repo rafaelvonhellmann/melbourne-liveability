@@ -93,14 +93,6 @@ function markOnboarded() {
   }
 }
 
-function prefersReducedMotion(): boolean {
-  return (
-    typeof window !== "undefined" &&
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
-}
-
 /** Pin-dot F mark (same geometry as app/icon.svg), accent via currentColor. */
 function FMark({ size = 26 }: { size?: number }) {
   return (
@@ -314,14 +306,6 @@ export function Landing({
     onDismiss();
   };
 
-  const signIn = () => {
-    track("landing_sign_in");
-    closeBandRef.current?.scrollIntoView?.({
-      behavior: prefersReducedMotion() ? "auto" : "smooth",
-      block: "start",
-    });
-  };
-
   const chooseProfile = (type: "buyer" | "agent") => {
     try {
       localStorage.setItem(PROFILE_CHOICE_KEY, type);
@@ -382,13 +366,13 @@ export function Landing({
             data-testid="landing-scene-1"
             className="landing-scene pointer-events-none relative flex h-screen flex-col items-center justify-center px-4"
           >
-            <button
-              type="button"
-              onClick={signIn}
+            <Link
+              href="/signin"
+              onClick={() => track("landing_sign_in")}
               className="landing-el pointer-events-auto absolute right-4 top-4 rounded-md border border-surface-border bg-bg/70 px-3 py-1.5 text-sm text-ink backdrop-blur-sm transition-colors hover:border-accent hover:text-accent sm:right-6 sm:top-6"
             >
               Sign in
-            </button>
+            </Link>
 
             <div className="landing-el pointer-events-auto w-full max-w-2xl rounded-lg border border-surface-border bg-bg/85 p-6 shadow-card backdrop-blur-sm sm:p-8">
               <div className="flex items-center justify-center gap-2.5">

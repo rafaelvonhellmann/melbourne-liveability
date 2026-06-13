@@ -23,7 +23,7 @@ afterEach(() => {
 });
 
 describe("header session indicator", () => {
-  it("leaves the Your data link unchanged while signed out", async () => {
+  it("routes the signed-out Profile link to sign in", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => jsonResponse({ error: "unauthorized" }, 401))
@@ -31,7 +31,7 @@ describe("header session indicator", () => {
     render(<HeaderAccountLink />);
 
     await waitFor(() => expect(screen.queryByTestId("session-indicator")).not.toBeInTheDocument());
-    expect(screen.getByRole("link", { name: "Your data" })).toHaveAttribute("href", "/account");
+    expect(screen.getByRole("link", { name: "Profile" })).toHaveAttribute("href", "/signin");
   });
 
   it("shows a subtle signed-in indicator with the email in the title", async () => {
@@ -48,7 +48,11 @@ describe("header session indicator", () => {
     render(<HeaderAccountLink />);
 
     await waitFor(() => expect(screen.getByTestId("session-indicator")).toBeInTheDocument());
-    expect(screen.getByRole("link", { name: "Your data" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Profile" })).toHaveAttribute(
+      "href",
+      "/account"
+    );
+    expect(screen.getByRole("link", { name: "Profile" })).toHaveAttribute(
       "title",
       "Signed in as sam@example.com"
     );
