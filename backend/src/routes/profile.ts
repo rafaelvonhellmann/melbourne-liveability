@@ -10,7 +10,7 @@
  */
 
 import type { Env } from "../env";
-import { MAX_BODY_BYTES, sanitizeProfilePayload, type ProfilePayload } from "../lib/validate";
+import { exceedsMaxBodyBytes, sanitizeProfilePayload, type ProfilePayload } from "../lib/validate";
 import { json, unavailable } from "../lib/http";
 import { rateLimit } from "../lib/rate-limit";
 import { logEvent } from "../lib/log";
@@ -18,10 +18,6 @@ import { resolveSession } from "./me";
 
 const PROFILE_WRITE_RATE_LIMIT = 10;
 const PROFILE_WRITE_RATE_WINDOW_SECONDS = 60;
-
-function bodyBytes(raw: string): number {
-  return new TextEncoder().encode(raw).byteLength;
-}
 
 /**
  * Load the stored profile payload for a user. Unparseable or
@@ -86,7 +82,7 @@ export async function handlePutProfile(request: Request, env: Env): Promise<Resp
   }
 
   const rawBody = await request.text();
-  if (bodyBytes(rawBody) > MAX_BODY_BYTES) return json({ error: "too_large" }, 413);
+  if (exceedsMaxBodyBytes(rawBody)) return json({ error: "too_large" }, 413);
   let body: unknown;
   try {
     body = JSON.parse(rawBody);

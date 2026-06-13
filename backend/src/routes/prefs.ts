@@ -5,7 +5,7 @@
  */
 
 import type { Env } from "../env";
-import { MAX_BODY_BYTES, sanitizePrefsPayload, type PrefsPayload } from "../lib/validate";
+import { exceedsMaxBodyBytes, sanitizePrefsPayload, type PrefsPayload } from "../lib/validate";
 import { json, unavailable } from "../lib/http";
 import { logEvent } from "../lib/log";
 import { rateLimit } from "../lib/rate-limit";
@@ -13,10 +13,6 @@ import { resolveSession } from "./me";
 
 const PREFS_WRITE_RATE_LIMIT = 12;
 const PREFS_WRITE_RATE_WINDOW_SECONDS = 60;
-
-function bodyBytes(raw: string): number {
-  return new TextEncoder().encode(raw).byteLength;
-}
 
 function isServerNewer(server: PrefsPayload, incoming: PrefsPayload): boolean {
   return Date.parse(server.updatedAt) > Date.parse(incoming.updatedAt);
@@ -84,7 +80,7 @@ export async function handlePutPrefs(request: Request, env: Env): Promise<Respon
   }
 
   const rawBody = await request.text();
-  if (bodyBytes(rawBody) > MAX_BODY_BYTES) return json({ error: "too_large" }, 413);
+  if (exceedsMaxBodyBytes(rawBody)) return json({ error: "too_large" }, 413);
   let body: unknown;
   try {
     body = JSON.parse(rawBody);

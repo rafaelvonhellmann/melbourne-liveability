@@ -43,6 +43,11 @@ export function normalizeEmail(raw: unknown): string | null {
   return EMAIL_RE.test(email) ? email : null;
 }
 
+/** True when a raw request body exceeds the shared UTF-8 byte cap. */
+export function exceedsMaxBodyBytes(raw: string): boolean {
+  return new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES;
+}
+
 // --- enum guards ------------------------------------------------------------
 
 export type UserKind = "buyer" | "agent";
@@ -355,7 +360,7 @@ function cleanIsoTimestamp(v: unknown): string | undefined {
 }
 
 /** Drop malformed / duplicate client entries; never throw on poisoned shapes. */
-function cleanClients(v: unknown, now: string): AgentClient[] {
+function cleanClients(v: unknown): AgentClient[] {
   if (!Array.isArray(v)) return [];
   const out: AgentClient[] = [];
   const seen = new Set<string>();
@@ -404,7 +409,7 @@ export function sanitizeProfilePayload(
   const name = cleanText(p.name);
   if (name) profile.name = name;
   if (type === "agent") {
-    const clients = cleanClients(p.clients, now);
+    const clients = cleanClients(p.clients);
     if (clients.length > 0) {
       profile.clients = clients;
       const active = typeof p.activeClientId === "string" ? p.activeClientId : null;

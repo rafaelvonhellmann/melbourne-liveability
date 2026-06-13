@@ -5,7 +5,7 @@
  */
 
 import type { Env } from "../env";
-import { MAX_BODY_BYTES, MAX_CLIENTS, parseClientLabel } from "../lib/validate";
+import { exceedsMaxBodyBytes, MAX_CLIENTS, parseClientLabel } from "../lib/validate";
 import { json, unavailable } from "../lib/http";
 import { rateLimit } from "../lib/rate-limit";
 import { newToken } from "../lib/token";
@@ -13,10 +13,6 @@ import { resolveSession } from "./me";
 
 const CLIENT_WRITE_RATE_LIMIT = 5;
 const CLIENT_WRITE_RATE_WINDOW_SECONDS = 60;
-
-function bodyBytes(raw: string): number {
-  return new TextEncoder().encode(raw).byteLength;
-}
 
 export type ClientRow = {
   id: string;
@@ -65,7 +61,7 @@ export async function handleCreateClient(request: Request, env: Env): Promise<Re
   }
 
   const rawBody = await request.text();
-  if (bodyBytes(rawBody) > MAX_BODY_BYTES) return json({ error: "too_large" }, 413);
+  if (exceedsMaxBodyBytes(rawBody)) return json({ error: "too_large" }, 413);
   let body: Record<string, unknown> | null;
   try {
     body = JSON.parse(rawBody) as Record<string, unknown>;

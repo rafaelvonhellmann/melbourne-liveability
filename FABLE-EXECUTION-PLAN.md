@@ -20,8 +20,17 @@
   fixed 2790714 + tripwire tests; all 7 capitals rebaked; prod verified.
 - Cloudflare provisioned: D1 festra (schema applied), KV festra-sessions,
   R2 festra-reports/festra-tiles. Domains live, DNS unconfigured (P2).
-- NEXT: W3 Brisbane Tier-B (QPS crime first) -> W4 -> W5 (BOCSAR may jump) ->
-  W6 -> W7 hunt -> W8 paths; W11 VIC trio may interleave after W3.
+- ACCOUNTS LIVE (2026-06-13, orchestrate run 001): magic-link sign-in verified
+  in production; worker on festra.au/api/*; festra.au orange-clouded; full CI
+  green through the proxy. Executor protocol locked: Codex gpt-5.5 xhigh fast
+  executes ALL code; Fable reviews/plans/gates/ops only.
+- CRIME ADAPTERS DONE: VIC, ACT, QLD, NSW, WA, SA all live.
+- NEXT (founder-ordered, via orchestrate executor protocol): run-001 close-out
+  (simplify gate + sign-in button bug #27) -> Brisbane hazards static artifact
+  (CI 180-min timeout fix; ClipZipShip output is static July 2017 - bake once,
+  commit derived pct) -> NSW/WA/SA hazards adapters -> W7 TAS/NT hunt ->
+  remaining Tier-B extras (Beachwatch, VG prices) -> W8 paths -> W11 regional.
+  Founder UX batch queued: #27 bug, #28 profile surface, #29 cycle radius.
 - WAITING ON FOUNDER: CF Web Analytics token, Email Routing, TfNSW key,
   pricing, ABN/registrar chain, lawyer/Pty Ltd.
 

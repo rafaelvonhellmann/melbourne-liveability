@@ -234,13 +234,9 @@ function defaultProfilePayload(user: SessionUser, now = new Date().toISOString()
   return { version: 1, type: user.kind, createdAt: now };
 }
 
-async function putPrefsOnce(payload: SyncedUserPrefs): Promise<SyncedUserPrefs> {
-  return fetcher<SyncedUserPrefs>("/api/prefs", { method: "PUT", json: payload });
-}
-
 async function putPrefs(payload: SyncedUserPrefs, retry = true): Promise<SyncedUserPrefs> {
   try {
-    return await putPrefsOnce(payload);
+    return await fetcher<SyncedUserPrefs>("/api/prefs", { method: "PUT", json: payload });
   } catch (err) {
     const server = stalePrefsServer(err);
     if (!retry || !server) throw err;
