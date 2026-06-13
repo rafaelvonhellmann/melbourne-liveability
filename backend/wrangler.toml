@@ -6,6 +6,14 @@ name = "festra-api"
 main = "src/index.ts"
 compatibility_date = "2026-06-01"
 
+# Top-level deploy config - MUST stay above any [table] header (TOML scoping;
+# placing these after [vars] silently turns them into vars and wrangler
+# ignores them - that exact bug blocked the first deploy attempt).
+workers_dev = false
+routes = [
+  { pattern = "festra.au/api/*", zone_name = "festra.au" }
+]
+
 # ---------------------------------------------------------------------------
 # Bindings (typed in src/env.ts - keep the two in sync)
 # ---------------------------------------------------------------------------
@@ -38,12 +46,3 @@ bucket_name = "festra-reports"
 
 [vars]
 ENVIRONMENT = "production"
-
-# ---------------------------------------------------------------------------
-# Routes / deploy - route is staged for cutover; the deploy command itself
-# remains founder-gated.
-# ---------------------------------------------------------------------------
-workers_dev = false
-routes = [
-  { pattern = "festra.au/api/*", zone_name = "festra.au" }
-]
