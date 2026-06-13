@@ -631,6 +631,14 @@ export function BuyerReportPanel({
               <Row k="Completed Year 12" v={fmtPct(community.year12Pct) ?? "—"} />
             )}
             <Row k="Socio-economic ranking (SEIFA)" v={equity?.irsadDecile != null ? `${equity.irsadDecile}/10` : "—"} />
+            <Row
+              k="IRSAD national percentile"
+              v={
+                equity?.irsadPercentile != null
+                  ? `${Math.round(equity.irsadPercentile)}/100`
+                  : "—"
+              }
+            />
             <p className="mt-2 text-[11px] leading-snug text-ink-muted">
               SEIFA decile: 1 = most disadvantaged, 10 = most advantaged, ranked against all of
               Australia (ABS) - area context, not a judgement of residents.

@@ -8,8 +8,9 @@ import { getDefaultWeights } from "@/lib/weights";
 import { V1_SCORED_DOMAINS, getDomain } from "@/lib/domains";
 import { buildAreaSummary } from "@/lib/area-summary";
 import { getSource, shortSourceName } from "@/lib/sources";
-import { DEFAULT_REGION, type RegionId } from "@/lib/regions";
+import { DEFAULT_REGION, getRegion, type RegionId } from "@/lib/regions";
 import { percentileToColor } from "@/lib/colors";
+import { domainVerdict } from "@/lib/verdict";
 import { metricsForDomain } from "@/lib/metric-catalog";
 import type { GmBenchmarks, GmContext } from "@/lib/benchmarks";
 import type { PlaceSeries } from "@/lib/timeseries";
@@ -69,6 +70,7 @@ export function PlaceProfileClient({
   const breakdown = computeWeightedScore(place, weights);
   const domains = [...V1_SCORED_DOMAINS];
   const measured = breakdown.components.filter((c) => !c.missing).length;
+  const regionLabel = getRegion(region).label;
 
   // Trust drawer input: the ids resolve inside SourceDrawer against the
   // region's manifest (melbourne = bundled sources.json, unchanged).
@@ -168,6 +170,7 @@ export function PlaceProfileClient({
               measured={measured}
               total={domains.length}
               series={series}
+              regionLabel={regionLabel}
               onNavigate={setActiveId}
             />
           )}
@@ -301,6 +304,7 @@ function OverviewPanel({
   measured,
   total,
   series,
+  regionLabel,
   onNavigate,
 }: {
   place: Place;
@@ -308,6 +312,7 @@ function OverviewPanel({
   measured: number;
   total: number;
   series: Record<string, PlaceSeries>;
+  regionLabel: string;
   onNavigate: (id: string) => void;
 }) {
   const entryPoints: { id: string; label: string; blurb: string }[] = [
@@ -351,6 +356,11 @@ function OverviewPanel({
               label={cfg?.label ?? c.domain}
               percentile={c.missing ? null : (c.percentile ?? null)}
               weight={c.weight}
+              verdict={domainVerdict(
+                c.domain,
+                c.missing ? null : (c.percentile ?? null),
+                regionLabel
+              )}
             />
           );
         })}

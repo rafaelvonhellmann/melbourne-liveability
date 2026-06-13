@@ -35,6 +35,14 @@ export function ContextPanels({
               gmContext?.irsadDecile != null
                 ? `Greater Melbourne median: ${Math.round(gmContext.irsadDecile)}`
                 : null
+              }
+          />
+          <Row
+            label="IRSAD national percentile"
+            value={
+              context.equity.irsadPercentile != null
+                ? `${Math.round(context.equity.irsadPercentile)}/100`
+                : null
             }
           />
           <p className="mt-2 text-xs text-ink-muted">

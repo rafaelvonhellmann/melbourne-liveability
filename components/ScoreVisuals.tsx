@@ -1,4 +1,5 @@
 import { percentileToColor, percentileTextColor } from "@/lib/colors";
+import type { DomainVerdict } from "@/lib/verdict";
 
 type ScoreBadgeProps = {
   /** 0–100 value. */
@@ -39,10 +40,12 @@ type DomainBarProps = {
   percentile: number | null;
   /** Optional weight % suffix. */
   weight?: number;
+  /** Optional display-only plain-English verdict for this percentile. */
+  verdict?: DomainVerdict | null;
 };
 
 /** Labelled breakdown bar with a YlGnBu fill. */
-export function DomainBar({ label, percentile, weight }: DomainBarProps) {
+export function DomainBar({ label, percentile, weight, verdict }: DomainBarProps) {
   const pct = percentile ?? 0;
   return (
     <div className="mb-2.5">
@@ -62,6 +65,18 @@ export function DomainBar({ label, percentile, weight }: DomainBarProps) {
           }}
         />
       </div>
+      {verdict && (
+        <p className="mt-1 text-[11px] leading-snug text-ink-muted">
+          <span
+            className="font-medium"
+            style={{ color: percentileToColor(percentile) }}
+          >
+            {verdict.band.label}
+          </span>
+          {" · "}
+          {verdict.headline}
+        </p>
+      )}
     </div>
   );
 }

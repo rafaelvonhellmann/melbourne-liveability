@@ -4,6 +4,8 @@ import Link from "next/link";
 import type { Place, ScoreWeights } from "@/lib/types";
 import { computeWeightedScore } from "@/lib/scoring";
 import { V1_SCORED_DOMAINS, getDomain } from "@/lib/domains";
+import { DEFAULT_REGION, getRegion } from "@/lib/regions";
+import { domainVerdict } from "@/lib/verdict";
 import { ScoreBadge, DomainBar } from "./ScoreVisuals";
 
 type ScoreBreakdownPanelProps = {
@@ -13,6 +15,7 @@ type ScoreBreakdownPanelProps = {
 
 export function ScoreBreakdownPanel({ place, weights }: ScoreBreakdownPanelProps) {
   const breakdown = computeWeightedScore(place, weights);
+  const regionLabel = getRegion(DEFAULT_REGION).label;
 
   return (
     <div className="rounded-lg border border-surface-border bg-surface p-4 text-sm shadow-card">
@@ -44,6 +47,11 @@ export function ScoreBreakdownPanel({ place, weights }: ScoreBreakdownPanelProps
               label={cfg?.label ?? c.domain}
               percentile={c.missing ? null : (c.percentile ?? null)}
               weight={c.weight}
+              verdict={domainVerdict(
+                c.domain,
+                c.missing ? null : (c.percentile ?? null),
+                regionLabel
+              )}
             />
           );
         })}

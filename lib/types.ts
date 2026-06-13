@@ -33,10 +33,12 @@ export type IndicatorValue = {
     | "direct"
     | "proximity"
     | "precomputed"
+    | "sa1-modal"
     | null;
   sourceId: string;
   missing: boolean;
   stale: boolean;
+  note?: string;
 };
 
 export type DomainScore = {
@@ -243,6 +245,8 @@ export type WaterRetailer = {
 export type PlaceContext = {
   equity?: {
     irsadDecile: number | null;
+    irsadPercentile: number | null;
+    irsadScore: number | null;
     irsdDecile: number | null;
     sourceId: string;
     period: string;

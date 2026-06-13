@@ -50,11 +50,15 @@ async function main() {
   });
   await writeFile(path.join(RAW, "abs-sa2-employment.json"), JSON.stringify(emp));
 
-  console.log("ABS SEIFA 2021 (IRSAD / IRSD deciles)...");
+  console.log("ABS SEIFA 2021 (IRSAD / IRSD deciles + IRSAD percentile/score)...");
   const seifa = await fetchArcGisTable(
     "ABS_Socio_Economic_Indexes_for_Areas_SEIFA_by_2021_SA2",
     0,
-    { codes, outFields: "sa2_code_2021,irsad_aus_decile,irsd_aus_decile" }
+    {
+      codes,
+      outFields:
+        "sa2_code_2021,irsad_aus_decile,irsd_aus_decile,irsad_aus_percentile,irsad_score",
+    }
   );
   await writeFile(path.join(RAW, "abs-sa2-seifa.json"), JSON.stringify(seifa));
 

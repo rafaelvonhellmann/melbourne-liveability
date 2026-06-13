@@ -4,9 +4,12 @@
  * Split out of lib/buyer-report.ts (P1-10 decomposition) - no logic changes.
  */
 import { getSourcesByIds } from "../source-manifest";
+import { domainVerdict } from "../verdict";
 import type { BuyerFinding } from "./types";
 import { pctOf, METHODOLOGY_REF } from "./helpers";
 import type { EngineCtx } from "./context";
+
+const REGION_LABEL = "Greater Melbourne";
 
 /**
  * 2) Overall area liveability (SA2). `overall` is the safe overall score the
@@ -46,16 +49,36 @@ export function pushLiveabilityFinding(findings: BuyerFinding[], overall: number
 export function pushHealthFinding(findings: BuyerFinding[], ctx: EngineCtx): void {
   const { place } = ctx;
   const healthPct = pctOf(place, "health");
+  const healthVerdict = domainVerdict("health", healthPct, REGION_LABEL);
   if (healthPct != null && healthPct >= 70) {
     findings.push({
       id: "health-strong",
       kind: "positive",
       severity: "info",
       title: "Good access to health services",
-      summary: `Health access scores in the top tier for Greater Melbourne (${Math.round(healthPct)}th percentile) for this wider area.`,
+      summary: `${healthVerdict?.headline ?? "Health access scores strongly"} for this wider area.`,
       confidence: "medium",
       geography: "sa2",
       sourceRefs: getSourcesByIds(["vic-mapshare-hospitals", "osm-health"]),
+    });
+  }
+
+  const mmm = place?.domains?.health?.subIndicators?.modifiedMonashModel;
+  const mmmCode = typeof mmm?.raw === "number" && Number.isFinite(mmm.raw) ? mmm.raw : null;
+  const mmmNote = mmm?.note;
+  if (mmmCode != null) {
+    findings.push({
+      id: "health-mmm-context",
+      kind: "neutral",
+      severity: "info",
+      title: "Health-access remoteness context",
+      summary: `Modified Monash Model ${mmmCode} for this SA2, rolled up from SA1 areas. This is context only and is not included in the health score.`,
+      whyItMatters:
+        "MMM is used nationally to describe relative remoteness for health workforce and access programs; metro areas usually sit at the low-remoteness end.",
+      caveat: mmmNote,
+      confidence: "medium",
+      geography: "sa2",
+      sourceRefs: getSourcesByIds(["doh-mmm-2023"]),
     });
   }
 }
@@ -66,11 +89,7 @@ export function pushHealthFinding(findings: BuyerFinding[], ctx: EngineCtx): voi
  */
 export function pushSafetyFinding(findings: BuyerFinding[], ctx: EngineCtx): void {
   const { place } = ctx;
-  const propCrimePct = place?.domains?.safety?.subIndicators?.propertyCrime?.percentile ?? null;
-  const violentCrimePct = place?.domains?.safety?.subIndicators?.violentCrime?.percentile ?? null;
-  const crimeBits: string[] = [];
-  if (typeof propCrimePct === "number") crimeBits.push(`property offences ~${Math.round(propCrimePct)}th percentile`);
-  if (typeof violentCrimePct === "number") crimeBits.push(`offences against the person ~${Math.round(violentCrimePct)}th percentile`);
+  const safetyVerdict = domainVerdict("safety", pctOf(place, "safety"), REGION_LABEL);
   findings.push({
     id: "safety-context",
     kind: "verify",
@@ -78,14 +97,14 @@ export function pushSafetyFinding(findings: BuyerFinding[], ctx: EngineCtx): voi
     title: "Review local safety context",
     summary: !place
       ? "This point is outside our Greater Melbourne coverage, so no local crime context is available here. Recorded offences are published at suburb or council-area level - check the VCSA data for the actual area."
-      : crimeBits.length
-        ? `Recorded ${crimeBits.join(" and ")} across Greater Melbourne, measured at suburb or council-area level - not the specific street.`
+      : safetyVerdict
+        ? `${safetyVerdict.headline}, measured at suburb or council-area level - not the specific street.`
         : "We do not hold recorded-offence figures for this specific area - check VCSA crime data for the wider council area.",
     verifyAction: "Walk the immediate street at different times and check recent local reports.",
     caveat:
       "Recorded offences reflect reporting and policing, not true crime levels; percentiles rank areas and do not predict a specific street.",
-    confidence: place && crimeBits.length ? "medium" : "unknown",
-    geography: place && crimeBits.length ? "lga" : "unknown",
+    confidence: place && safetyVerdict ? "medium" : "unknown",
+    geography: place && safetyVerdict ? "lga" : "unknown",
     sourceRefs: getSourcesByIds(["vcsa-recorded-offences"]),
   });
 }

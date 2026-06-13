@@ -121,7 +121,14 @@ const PLACE: Place = {
       sourceId: "abs-census",
       period: "2021",
     },
-    equity: { irsadDecile: 7, irsdDecile: 6, sourceId: "abs-seifa", period: "2021" },
+    equity: {
+      irsadDecile: 7,
+      irsadPercentile: null,
+      irsadScore: null,
+      irsdDecile: 6,
+      sourceId: "abs-seifa",
+      period: "2021",
+    },
   },
 };
 

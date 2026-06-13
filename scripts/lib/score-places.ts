@@ -51,6 +51,8 @@ export type RawPlace = {
   hospitalDistKm: number | null;
   hospitalSource: "vic-mapshare-hospitals" | "osm-health" | null;
   gpCount2km: number | null;
+  mmmCode?: number | null;
+  mmmNote?: string | null;
   employmentRatio: number | null;
   participationRate: number | null;
   bushfirePct: number | null;
@@ -120,6 +122,7 @@ function computeDataConfidence(
     const subs = domains[d]?.subIndicators;
     if (!subs) continue;
     for (const ind of Object.values(subs)) {
+      if (ind.method === "sa1-modal") continue;
       total++;
       const conf = METHOD_CONFIDENCE[ind.method ?? ""] ?? 0.5;
       methodSum += conf;
@@ -409,7 +412,7 @@ export function scorePlaces(
             ),
           })
         : unscoredDomain("safety");
-      domains.health = domainScore("health", healthPct, {
+      const healthSubIndicators: Record<string, IndicatorValue> = {
         hospitalDistKm: indicator(
           p.hospitalDistKm,
           hPct,
@@ -424,7 +427,19 @@ export function scorePlaces(
           "proximity",
           gPct == null
         ),
-      });
+      };
+      if (p.mmmCode != null && Number.isFinite(p.mmmCode)) {
+        healthSubIndicators.modifiedMonashModel = {
+          raw: p.mmmCode,
+          percentile: null,
+          method: "sa1-modal",
+          sourceId: "doh-mmm-2023",
+          missing: false,
+          stale: isStale("doh-mmm-2023"),
+          ...(p.mmmNote ? { note: p.mmmNote } : {}),
+        };
+      }
+      domains.health = domainScore("health", healthPct, healthSubIndicators);
 
       const incParts = [
         pctDhi.get(p.sa2Code),

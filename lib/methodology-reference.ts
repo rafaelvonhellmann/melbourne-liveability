@@ -104,10 +104,16 @@ export type ContextSourcing = {
 
 export const CONTEXT_SOURCING: ContextSourcing[] = [
   {
-    label: "Equity - SEIFA IRSAD / IRSD deciles",
+    label: "Equity - SEIFA IRSAD / IRSD deciles + IRSAD national percentile",
     sourceId: "abs-seifa-2021",
     geography: "SA2 (direct)",
     use: "Equity panel + optional map layer",
+  },
+  {
+    label: "Health remoteness context - Modified Monash Model 2023",
+    sourceId: "doh-mmm-2023",
+    geography: "SA1 -> SA2 (9-digit parent prefix)",
+    use: "Health domain context sub-indicator + buyer-report context finding; modal MMM code only, never scored",
   },
   {
     label: "Community - tenure, dwelling mix, First Nations %",

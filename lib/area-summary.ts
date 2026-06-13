@@ -13,7 +13,7 @@ import { V1_SCORED_DOMAINS } from "./domains";
  * but "hazards"/"safety" need careful wording (a strong area means LOW hazard
  * exposure / low crime), so strengths and weaknesses use separate label maps.
  */
-const POS_LABEL: Partial<Record<DomainId, string>> = {
+export const POS_LABEL: Partial<Record<DomainId, string>> = {
   affordability: "affordability",
   transport: "public transport",
   safety: "safety",
@@ -23,7 +23,7 @@ const POS_LABEL: Partial<Record<DomainId, string>> = {
   income: "the local economy",
 };
 
-const NEG_LABEL: Partial<Record<DomainId, string>> = {
+export const NEG_LABEL: Partial<Record<DomainId, string>> = {
   affordability: "affordability",
   transport: "public transport",
   safety: "safety",
