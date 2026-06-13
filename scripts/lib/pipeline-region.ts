@@ -89,6 +89,9 @@ export function rawOutPath(
 export function sa2RawName(region: Region = PIPELINE_REGION): string {
   return `sa2-${region.id}.geojson`;
 }
+export function sa1RawName(region: Region = PIPELINE_REGION): string {
+  return `sa1-${region.id}.geojson`;
+}
 export function salRawName(region: Region = PIPELINE_REGION): string {
   return `sal-${region.stateSlug}.geojson`;
 }

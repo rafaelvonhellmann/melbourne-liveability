@@ -1,3 +1,5 @@
+import type { RegionId } from "./regions";
+
 export type SourceMeta = {
   id: string;
   name: string;
@@ -322,6 +324,32 @@ export type Place = {
   domains: Partial<Record<DomainId, DomainScore>>;
   context?: PlaceContext;
   dataConfidence?: DataConfidence;
+};
+
+export type PocketSeifa = {
+  irsadDecile: number | null;
+  irsdDecile: number | null;
+  sourceId: "abs-seifa-sa1-2021";
+  period: "2021";
+};
+
+export type Pocket = {
+  sa1Code: string;
+  sa2Code: string;
+  centroid: [number, number];
+  population: number | null;
+  seifa: PocketSeifa;
+  withinSa2Rank?: number;
+  medianRentWeekly?: number;
+  renterPct?: number;
+  apartmentPct?: number;
+};
+
+export type PocketsFile = {
+  generatedAt: string;
+  asgsEdition: "2021";
+  region: RegionId;
+  pockets: Pocket[];
 };
 
 /** Geography at which a trend series is held - never mislabel LGA data as SA2. */

@@ -14,8 +14,15 @@
  * DATA-PIPELINE-AUDIT.md for the apply-step -> fetch -> workflow audit.
  */
 import { execSync } from "node:child_process";
-import { IS_DEFAULT_REGION, PIPELINE_REGION } from "./lib/pipeline-region.js";
+import { existsSync } from "node:fs";
+import path from "node:path";
+import {
+  IS_DEFAULT_REGION,
+  PIPELINE_REGION,
+  sa1RawName,
+} from "./lib/pipeline-region.js";
 import { hazardAdapterFor } from "./lib/hazard-adapters.js";
+import { RAW } from "./lib/paths.js";
 
 // Region: `npm run data:build -- --region=<id>` or REGION env (default
 // melbourne, byte-identical output/filenames). Non-default regions skip the
@@ -29,6 +36,7 @@ import { hazardAdapterFor } from "./lib/hazard-adapters.js";
 // sources.<region>.json).
 const HAS_GTFS = (PIPELINE_REGION.stateSources?.gtfsUrls?.length ?? 0) > 0;
 const HAS_HAZARDS = hazardAdapterFor(PIPELINE_REGION) != null;
+const HAS_SA1 = existsSync(path.join(RAW, sa1RawName()));
 const steps = [
   "npm run data:crosswalk",
   ...(HAS_GTFS ? ["npm run data:gtfs"] : []),
@@ -39,12 +47,16 @@ const steps = [
   "npx tsx scripts/apply-civic.ts",
   "npx tsx scripts/preserve-context.ts merge",
   "npm run data:geo",
+  ...(HAS_SA1 ? ["npm run data:pockets"] : []),
   "npm run data:poi",
   ...(IS_DEFAULT_REGION ? ["npm run data:timeseries"] : []),
   "npm run data:hash",
 ];
 
 console.log(`data:build region: ${PIPELINE_REGION.id} (${PIPELINE_REGION.label})`);
+if (!HAS_SA1) {
+  console.warn(`${sa1RawName()} missing - skipping data:pockets`);
+}
 
 for (const step of steps) {
   console.log(`\n> ${step}`);
