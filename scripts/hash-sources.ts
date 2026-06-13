@@ -27,7 +27,9 @@ import {
 import { GTFS_SOURCES } from "./lib/gtfs-constants.js";
 import {
   buildRegionSourceEntries,
+  buildMelbourneManifestFromRegistry,
   collectSourceIds,
+  serializeManifest,
   type ManifestSource,
 } from "./lib/region-sources.js";
 
@@ -109,7 +111,18 @@ function dirBase(dir: "raw" | "generated" | "public"): string {
 /** The default (melbourne) path, unchanged: update sources.json in place. */
 async function hashDefaultManifest() {
   const sourcesPath = path.join(GENERATED, "sources.json");
-  const sources = JSON.parse(await readFile(sourcesPath, "utf8")) as Source[];
+  // Metadata + canonical key order come from the registry (the single source
+  // of truth); sha256/fetchedAt are carried forward from the existing file so a
+  // no-op run keeps hashes/dates stable and the byte-identity baseline holds
+  // even when the raw files are not present locally.
+  const existing = JSON.parse(await readFile(sourcesPath, "utf8")) as Source[];
+  const existingById = new Map(existing.map((s) => [s.id, s]));
+  const sources = buildMelbourneManifestFromRegistry() as Source[];
+  for (const s of sources) {
+    const prev = existingById.get(s.id);
+    if (prev?.fetchedAt !== undefined) s.fetchedAt = prev.fetchedAt;
+    if (prev?.sha256 !== undefined) s.sha256 = prev.sha256;
+  }
   const today = new Date().toISOString().slice(0, 10);
 
   const missing: string[] = [];
@@ -138,7 +151,7 @@ async function hashDefaultManifest() {
     }
   }
 
-  await writeFile(sourcesPath, JSON.stringify(sources, null, 2) + "\n");
+  await writeFile(sourcesPath, serializeManifest(sources));
   console.log(`Hashed ${hashed}/${sources.length} sources.`);
   if (missing.length) {
     console.warn("No hash for:\n  " + missing.join("\n  "));

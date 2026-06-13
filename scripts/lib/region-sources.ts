@@ -8,18 +8,103 @@
  * (the script self-executes on import).
  */
 import type { GtfsSourceMeta } from "./gtfs-constants.js";
+import { SOURCE_REGISTRY } from "./source-registry.js";
+import type { LicenceVerdict } from "./source-verify.js";
 
 export type ManifestSource = {
   id: string;
   name?: string;
   url?: string;
+  method?: string;
   licence?: string;
+  verifyNote?: string;
+  licenceVerdict?: LicenceVerdict;
   period?: string;
   sha256?: string;
   fetchedAt?: string;
   derived?: boolean;
   [k: string]: unknown;
 };
+
+type ManifestKey =
+  | "id"
+  | "name"
+  | "url"
+  | "method"
+  | "licence"
+  | "verifyNote"
+  | "period"
+  | "fetchedAt"
+  | "derived"
+  | "sha256";
+
+const MANIFEST_KEY_ORDER: ManifestKey[] = [
+  "id",
+  "name",
+  "url",
+  "method",
+  "licence",
+  "verifyNote",
+  "period",
+  "fetchedAt",
+  "derived",
+  "sha256",
+];
+
+const REGISTRY_ONLY_SOURCE_IDS = new Set([
+  "wa-dwer-fpm-100aep-floodway-fringe",
+]);
+
+function hasOwn(source: ManifestSource, key: ManifestKey): boolean {
+  return Object.prototype.hasOwnProperty.call(source, key);
+}
+
+function shouldEmitManifestKey(
+  source: ManifestSource,
+  key: ManifestKey
+): boolean {
+  const value = source[key];
+  if (key === "id") return typeof value === "string";
+  if (key === "derived") return value === true;
+  if (key === "sha256") {
+    return (
+      typeof value === "string" &&
+      (value.length > 0 || (source.derived === true && hasOwn(source, key)))
+    );
+  }
+  if (value === undefined || value === null) return false;
+  if (typeof value === "string") return value.length > 0;
+  return true;
+}
+
+export function serializeManifest(entries: ManifestSource[]): string {
+  const ordered = entries.map((source) => {
+    const out: Record<string, unknown> = {};
+    for (const key of MANIFEST_KEY_ORDER) {
+      if (shouldEmitManifestKey(source, key)) {
+        out[key] = source[key];
+      }
+    }
+    return out;
+  });
+  return `${JSON.stringify(ordered, null, 2)}\n`;
+}
+
+export function buildMelbourneManifestFromRegistry(): ManifestSource[] {
+  return SOURCE_REGISTRY.filter(
+    (source) => !REGISTRY_ONLY_SOURCE_IDS.has(source.id)
+  ).map((source) => {
+    const registrySource = source as ManifestSource;
+    const out: ManifestSource = { id: registrySource.id };
+    for (const key of MANIFEST_KEY_ORDER) {
+      if (key === "id" || key === "fetchedAt" || key === "sha256") continue;
+      if (shouldEmitManifestKey(registrySource, key)) {
+        (out as Record<string, unknown>)[key] = registrySource[key];
+      }
+    }
+    return out;
+  });
+}
 
 /** Every `sourceId` string value reachable in a JSON tree (places.{region}.json
  * subIndicators and any future nested provenance refs). */

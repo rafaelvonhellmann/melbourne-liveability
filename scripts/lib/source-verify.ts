@@ -5,11 +5,25 @@
  * mislabelled, dead, or referenced in code but absent from the manifest.
  */
 
+export type LicenceVerdict =
+  | "open-commercial-ok"
+  | "open-with-attribution"
+  | "non-commercial-or-restricted"
+  | "paid-or-closed";
+
+export const BAKEABLE_VERDICTS = new Set<LicenceVerdict>([
+  "open-commercial-ok",
+  "open-with-attribution",
+]);
+
 export type SourceRecord = {
   id: string;
   name?: string;
   url?: string;
+  method?: string;
   licence?: string;
+  verifyNote?: string;
+  licenceVerdict?: LicenceVerdict;
   period?: string;
   fetchedAt?: string;
   sha256?: string;
