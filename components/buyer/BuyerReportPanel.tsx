@@ -9,7 +9,6 @@ import { anchorKindLabel, bandLabel } from "@/lib/anchors";
 import { UrbanHeatCard } from "./UrbanHeatCard";
 import { TreeCanopyCard } from "./TreeCanopyCard";
 import { AircraftNoiseCard } from "./AircraftNoiseCard";
-import { WaterwayHealthCard } from "./WaterwayHealthCard";
 import { BeachQualityCard } from "./BeachQualityCard";
 // 3D building/sun view is heavy (MapLibre) - load it only when the user opens it.
 const SunShadowView = dynamic(
@@ -469,13 +468,6 @@ export function BuyerReportPanel({
         )}
         {hasPin && variant !== "embedded" && (
           <AircraftNoiseCard
-            lng={report.location.lng as number}
-            lat={report.location.lat as number}
-            compact={isLive}
-          />
-        )}
-        {hasPin && variant !== "embedded" && (
-          <WaterwayHealthCard
             lng={report.location.lng as number}
             lat={report.location.lat as number}
             compact={isLive}

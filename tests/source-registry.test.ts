@@ -38,7 +38,7 @@ describe("source registry", () => {
 
   it("guards raw baking by registry licence verdict", () => {
     expect(() => assertBakeable("abs-seifa-2021")).not.toThrow();
-    expect(() => assertBakeable("mw-hws-macros")).toThrow(/not bakeable/i);
+    expect(() => assertBakeable("bom-solar-climatology")).toThrow(/not bakeable/i);
     expect(() => assertBakeable("unknown-source-id")).toThrow(/unknown source id/i);
   });
 
