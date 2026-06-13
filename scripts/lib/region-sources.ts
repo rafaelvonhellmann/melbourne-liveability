@@ -8,8 +8,8 @@
  * (the script self-executes on import).
  */
 import type { GtfsSourceMeta } from "./gtfs-constants.js";
-import { SOURCE_REGISTRY } from "./source-registry.js";
-import type { LicenceVerdict } from "./source-verify.js";
+import { REGISTRY_BY_ID, SOURCE_REGISTRY } from "./source-registry.js";
+import { BAKEABLE_VERDICTS, type LicenceVerdict } from "./source-verify.js";
 
 export type ManifestSource = {
   id: string;
@@ -77,6 +77,29 @@ function shouldEmitManifestKey(
   return true;
 }
 
+function assertOnlySanctionedDroppedIds(
+  referencedIds: Set<string>,
+  emittedIds: Set<string>
+): void {
+  for (const id of referencedIds) {
+    if (emittedIds.has(id)) continue;
+    const registered = REGISTRY_BY_ID.get(id);
+    if (!registered) {
+      throw new Error(
+        `Referenced source id ${id} is not in the source registry and was dropped from the region manifest`
+      );
+    }
+    if (
+      !registered.licenceVerdict ||
+      BAKEABLE_VERDICTS.has(registered.licenceVerdict)
+    ) {
+      throw new Error(
+        `Referenced bakeable source id ${id} was dropped from the region manifest`
+      );
+    }
+  }
+}
+
 export function serializeManifest(entries: ManifestSource[]): string {
   const ordered = entries.map((source) => {
     const out: Record<string, unknown> = {};
@@ -92,7 +115,14 @@ export function serializeManifest(entries: ManifestSource[]): string {
 
 export function buildMelbourneManifestFromRegistry(): ManifestSource[] {
   return SOURCE_REGISTRY.filter(
-    (source) => !REGISTRY_ONLY_SOURCE_IDS.has(source.id)
+    (source) => {
+      const regions =
+        "regions" in source ? (source.regions as readonly string[]) : undefined;
+      return (
+        !REGISTRY_ONLY_SOURCE_IDS.has(source.id) &&
+        (!regions || regions.includes("melbourne"))
+      );
+    }
   ).map((source) => {
     const registrySource = source as ManifestSource;
     const out: ManifestSource = { id: registrySource.id };
@@ -154,5 +184,9 @@ export function buildRegionSourceEntries(
       ...(gtfs.period ? { period: gtfs.period } : {}),
     });
   }
+  assertOnlySanctionedDroppedIds(
+    referencedIds,
+    new Set(entries.map((entry) => entry.id))
+  );
   return entries;
 }

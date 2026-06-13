@@ -23,8 +23,9 @@ import type { Beach } from "../../lib/beach-quality.js";
 import { getRegion, regionDataFile, type Region } from "../../lib/regions.js";
 import { browserFetch } from "./gov-fetch.js";
 import { PUBLIC_DATA } from "./paths.js";
+import { registryId } from "./source-registry.js";
 
-export const NSW_BEACHWATCH_SOURCE_ID = "nsw-beachwatch";
+export const NSW_BEACHWATCH_SOURCE_ID = registryId("nsw-beachwatch");
 export const NSW_BEACHWATCH_GEOJSON_URL =
   "https://api.beachwatch.nsw.gov.au/public/sites/geojson";
 export const NSW_BEACHWATCH_ENTEROCOCCI_URL =

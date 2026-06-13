@@ -179,6 +179,69 @@ export const SOURCE_REGISTRY = [
     licenceVerdict: "open-with-attribution",
   },
   {
+    id: "tfnsw-gtfs",
+    name: "Transport for NSW - complete GTFS schedule",
+    url: "https://opendata.transport.nsw.gov.au/data/dataset/timetables-complete-gtfs",
+    licence: "CC BY 4.0",
+    period: "rolling schedule export",
+    regions: ["sydney"],
+    licenceVerdict: "open-with-attribution",
+  },
+  {
+    id: "translink-gtfs",
+    name: "Translink - South East Queensland GTFS schedule",
+    url: "https://www.data.qld.gov.au/dataset/general-transit-feed-specification-gtfs-translink",
+    licence: "CC BY 4.0",
+    period: "rolling schedule export",
+    regions: ["brisbane"],
+    licenceVerdict: "open-with-attribution",
+  },
+  {
+    id: "adelaide-metro-gtfs",
+    name: "Adelaide Metro GTFS schedule",
+    url: "https://data.sa.gov.au/data/dataset/https-gtfs-adelaidemetro-com-au",
+    licence: "CC BY 4.0",
+    period: "rolling schedule export",
+    regions: ["adelaide"],
+    licenceVerdict: "open-with-attribution",
+  },
+  {
+    id: "transperth-gtfs",
+    name: "Transperth (PTA WA) GTFS schedule",
+    url: "https://www.transperth.wa.gov.au/About/Spatial-Data-Access",
+    licence: "CC BY 4.0",
+    period: "rolling schedule export",
+    regions: ["perth"],
+    licenceVerdict: "open-with-attribution",
+  },
+  {
+    id: "tas-gtfs",
+    name: "Tasmania statewide GTFS schedule (Metro Tasmania + regional operators)",
+    url: "https://www.transport.tas.gov.au/public_transport/gtfs-data",
+    licence: "CC BY 4.0",
+    period: "rolling schedule export",
+    regions: ["hobart"],
+    licenceVerdict: "open-with-attribution",
+  },
+  {
+    id: "nt-gtfs",
+    name: "NT Government GTFS schedule - Darwin bus network",
+    url: "https://data.nt.gov.au/dataset/bus-timetable-data-and-geographic-information-darwin",
+    licence: "CC BY 4.0",
+    period: "rolling schedule export",
+    regions: ["darwin"],
+    licenceVerdict: "open-with-attribution",
+  },
+  {
+    id: "transport-canberra-gtfs",
+    name: "Transport Canberra GTFS schedule (bus + light rail)",
+    url: "https://www.transport.act.gov.au/contact-us/information-for-developers",
+    licence: "CC BY 4.0",
+    period: "rolling schedule export",
+    regions: ["canberra"],
+    licenceVerdict: "open-with-attribution",
+  },
+  {
     id: "osm-pt",
     name: "OpenStreetMap — public transport stops (Overpass fallback only)",
     url: "https://www.openstreetmap.org/",
@@ -588,6 +651,10 @@ export const SOURCE_REGISTRY = [
 ] as const satisfies SourceRecord[];
 
 export type SourceRegistryId = (typeof SOURCE_REGISTRY)[number]["id"];
+
+export function registryId<const T extends SourceRegistryId>(id: T): T {
+  return id;
+}
 
 export const REGISTRY_BY_ID = new Map<string, SourceRecord>(
   SOURCE_REGISTRY.map((source) => [source.id, source])

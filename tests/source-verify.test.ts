@@ -48,6 +48,21 @@ describe("validateSourceManifest", () => {
       validateSourceManifest(noHash).some((i) => i.severity === "warn" && /sha256/.test(i.message))
     ).toBe(true);
   });
+  it("errors when a real baked source has a non-bakeable registry verdict", () => {
+    const issues = validateSourceManifest([
+      {
+        id: "wa-police-suburb-offences",
+        name: "WA Police",
+        url: "https://www.wa.gov.au/",
+        licence: "WA Government Terms of Use",
+        period: "rolling",
+        sha256: "abc123",
+      },
+    ]);
+    expect(
+      issues.some((i) => i.severity === "error" && /non-bakeable licence verdict/.test(i.message))
+    ).toBe(true);
+  });
 });
 
 describe("extractReferencedSourceIds", () => {
@@ -56,11 +71,13 @@ describe("extractReferencedSourceIds", () => {
       const a = getSourcesByIds(["osm-amenities", "vic-planning-heritage"]);
       const b = getSourceById("vcsa-recorded-offences");
       const c = getSourcesByIds([ 'ptv-gtfs' ]);
+      const d = registryId("vic-anef");
     `;
     expect(extractReferencedSourceIds(code).sort()).toEqual([
       "osm-amenities",
       "ptv-gtfs",
       "vcsa-recorded-offences",
+      "vic-anef",
       "vic-planning-heritage",
     ]);
   });

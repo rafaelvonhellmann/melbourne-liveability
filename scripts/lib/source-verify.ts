@@ -4,6 +4,8 @@
  * network or filesystem. The goal: never ship a claim whose source is missing,
  * mislabelled, dead, or referenced in code but absent from the manifest.
  */
+import type { RegionId } from "../../lib/regions.js";
+import { REGISTRY_BY_ID } from "./source-registry.js";
 
 export type LicenceVerdict =
   | "open-commercial-ok"
@@ -28,10 +30,13 @@ export type SourceRecord = {
   fetchedAt?: string;
   sha256?: string;
   derived?: boolean;
+  regions?: readonly RegionId[];
 };
 
 export type IssueSeverity = "error" | "warn";
 export type SourceIssue = { id: string; severity: IssueSeverity; message: string };
+
+const RESTRICTED_LICENCE_TEXT = /NC|non[- ]?commercial|share[- ]?alike/i;
 
 /**
  * Static validation of the source manifest (no network). Errors block CI;
@@ -55,6 +60,30 @@ export function validateSourceManifest(sources: SourceRecord[]): SourceIssue[] {
     if (!s.name?.trim()) issues.push({ id, severity: "error", message: "missing name" });
     if (!s.licence?.trim()) issues.push({ id, severity: "warn", message: "missing licence" });
     if (!s.period?.trim()) issues.push({ id, severity: "warn", message: "missing period" });
+
+    const registrySource = REGISTRY_BY_ID.get(s.id);
+    const verdict = s.licenceVerdict ?? registrySource?.licenceVerdict;
+    if (verdict) {
+      if (s.licence && RESTRICTED_LICENCE_TEXT.test(s.licence) && BAKEABLE_VERDICTS.has(verdict)) {
+        issues.push({
+          id,
+          severity: "error",
+          message: `licence text looks restricted (${s.licence}) but registry verdict is ${verdict}`,
+        });
+      }
+      if (
+        !s.derived &&
+        typeof s.sha256 === "string" &&
+        s.sha256.trim().length > 0 &&
+        !BAKEABLE_VERDICTS.has(verdict)
+      ) {
+        issues.push({
+          id,
+          severity: "error",
+          message: `non-derived baked source has non-bakeable licence verdict ${verdict}`,
+        });
+      }
+    }
 
     if (s.derived) continue; // computed source: no single url / file / hash.
 
@@ -83,6 +112,18 @@ export function extractReferencedSourceIds(code: string): string[] {
   for (const m of code.matchAll(/getSourceById\(\s*["']([^"']+)["']/g)) {
     ids.add(m[1]);
   }
+  for (const m of code.matchAll(/registryId\(\s*["']([^"']+)["']\s*\)/g)) {
+    ids.add(m[1]);
+  }
+  return [...ids];
+}
+
+export function extractAdapterSourceIds(code: string): string[] {
+  const ids = new Set<string>();
+  for (const m of code.matchAll(/\b(?:sourceId|\w+SourceId)\s*:\s*["']([^"']+)["']/g)) {
+    ids.add(m[1]);
+  }
+  for (const id of extractReferencedSourceIds(code)) ids.add(id);
   return [...ids];
 }
 

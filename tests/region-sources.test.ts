@@ -108,6 +108,27 @@ describe("buildRegionSourceEntries", () => {
     );
     expect(out.filter((s) => s.id === "translink-gtfs")).toHaveLength(1);
   });
+
+  it("throws when a referenced dropped id is unknown", () => {
+    expect(() =>
+      buildRegionSourceEntries(template, new Set(["unknown-dropped-source"]))
+    ).toThrow(/not in the source registry/);
+  });
+
+  it("throws when a referenced bakeable registry id is dropped", () => {
+    expect(() =>
+      buildRegionSourceEntries(template, new Set(["abs-seifa-2021"]))
+    ).toThrow(/Referenced bakeable source id abs-seifa-2021/);
+  });
+
+  it("allows WA DWER to be referenced but dropped because it is registry non-bakeable", () => {
+    expect(() =>
+      buildRegionSourceEntries(
+        template,
+        new Set(["wa-dwer-fpm-100aep-floodway-fringe"])
+      )
+    ).not.toThrow();
+  });
 });
 
 describe("loadRegionSources (frontend trust-drawer loader)", () => {

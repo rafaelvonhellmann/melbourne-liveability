@@ -12,11 +12,16 @@
  * block CI; network dead-urls are reported as WARNINGS (transient outages
  * shouldn't fail an unrelated build). `--no-network` skips the liveness probes.
  */
-import { readFile, writeFile } from "node:fs/promises";
+import { readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { GENERATED, ROOT } from "./lib/paths.js";
+import { collectSourceIds } from "./lib/region-sources.js";
+import { REGISTRY_BY_ID, SOURCE_REGISTRY } from "./lib/source-registry.js";
+import { SOURCE_FILES } from "./lib/source-files.js";
 import {
+  BAKEABLE_VERDICTS,
   validateSourceManifest,
+  extractAdapterSourceIds,
   extractReferencedSourceIds,
   danglingReferences,
   type SourceRecord,
@@ -24,12 +29,13 @@ import {
 
 const UA = "MelbourneLiveability-verify/1.0";
 
-// Code files that cite sources via getSourcesByIds / getSourceById.
-const CODE_FILES = [
-  "lib/buyer-report.ts",
-  "lib/methodology-reference.ts",
-  "lib/sources.ts",
-  "lib/source-manifest.ts",
+const ADAPTER_SOURCE_FILES = [
+  "scripts/lib/crime-adapters.ts",
+  "scripts/lib/hazard-adapters.ts",
+  "scripts/lib/nsw-hazards.ts",
+  "scripts/lib/wa-hazards.ts",
+  "scripts/lib/sa-hazards.ts",
+  "scripts/lib/gtfs-constants.ts",
 ];
 
 async function checkUrl(url: string): Promise<{ ok: boolean; status: number | string }> {
@@ -59,17 +65,78 @@ async function checkUrl(url: string): Promise<{ ok: boolean; status: number | st
   }
 }
 
-async function readCodeReferences(): Promise<string[]> {
+async function listCodeFiles(dir: string): Promise<string[]> {
+  const out: string[] = [];
+  const entries = await readdir(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      out.push(...(await listCodeFiles(full)));
+      continue;
+    }
+    if (entry.isFile() && /\.(ts|tsx)$/.test(entry.name)) {
+      out.push(full);
+    }
+  }
+  return out;
+}
+
+async function readCodeReferences(): Promise<{
+  ids: string[];
+  files: string[];
+}> {
   const ids = new Set<string>();
-  for (const rel of CODE_FILES) {
+  const files = await listCodeFiles(path.join(ROOT, "lib"));
+  for (const file of files) {
     try {
-      const code = await readFile(path.join(ROOT, rel), "utf8");
+      const code = await readFile(file, "utf8");
       for (const id of extractReferencedSourceIds(code)) ids.add(id);
     } catch {
       /* a cited-source file is optional */
     }
   }
-  return [...ids];
+  return { ids: [...ids].sort(), files: files.map((file) => path.relative(ROOT, file)).sort() };
+}
+
+async function readAdapterSourceIds(): Promise<string[]> {
+  const ids = new Set<string>();
+  for (const rel of ADAPTER_SOURCE_FILES) {
+    try {
+      const code = await readFile(path.join(ROOT, rel), "utf8");
+      for (const id of extractAdapterSourceIds(code)) ids.add(id);
+    } catch {
+      /* a source-id adapter file is optional */
+    }
+  }
+  return [...ids].sort();
+}
+
+async function readPlacesSourceIds(): Promise<string[]> {
+  const places = JSON.parse(
+    await readFile(path.join(GENERATED, "places.json"), "utf8")
+  ) as unknown;
+  return [...collectSourceIds(places)].sort();
+}
+
+function registryMembershipErrors(
+  referenced: string[],
+  manifestIds: Set<string>
+): string[] {
+  const registryIds = new Set<string>(SOURCE_REGISTRY.map((source) => source.id));
+  const errors: string[] = [];
+  for (const id of referenced) {
+    if (!registryIds.has(id)) {
+      errors.push(`source registry: referenced id "${id}" is not registered`);
+      continue;
+    }
+    const verdict = REGISTRY_BY_ID.get(id)?.licenceVerdict;
+    if (verdict && !BAKEABLE_VERDICTS.has(verdict) && !manifestIds.has(id) && SOURCE_FILES[id]) {
+      errors.push(
+        `source registry: non-bakeable dropped id "${id}" must not have a SOURCE_FILES mapping`
+      );
+    }
+  }
+  return errors;
 }
 
 async function main() {
@@ -80,8 +147,18 @@ async function main() {
 
   const manifestIssues = validateSourceManifest(sources);
   const manifestIds = new Set(sources.map((s) => s.id));
-  const referenced = await readCodeReferences();
-  const dangling = danglingReferences(referenced, manifestIds);
+  const codeReferences = await readCodeReferences();
+  const adapterReferences = await readAdapterSourceIds();
+  const placesReferences = await readPlacesSourceIds();
+  const referenced = [
+    ...new Set([
+      ...codeReferences.ids,
+      ...adapterReferences,
+      ...placesReferences,
+    ]),
+  ].sort();
+  const dangling = danglingReferences(codeReferences.ids, manifestIds);
+  const membershipErrors = registryMembershipErrors(referenced, manifestIds);
 
   const liveness: { id: string; url: string; ok: boolean; status: number | string }[] = [];
   if (!noNetwork) {
@@ -99,6 +176,7 @@ async function main() {
     ...dangling.map(
       (id) => `dangling citation: "${id}" is referenced in code but missing from the manifest`
     ),
+    ...membershipErrors,
   ];
   const warnings = [
     ...manifestIssues.filter((i) => i.severity === "warn").map((i) => `${i.id}: ${i.message}`),
@@ -108,7 +186,11 @@ async function main() {
   const report = {
     checkedAt: new Date().toISOString(),
     sources: sources.length,
-    referencedInCode: referenced.length,
+    referencedInCode: codeReferences.ids.length,
+    referencedFilesScanned: codeReferences.files.length,
+    referencedIds: referenced,
+    referencedInAdapters: adapterReferences,
+    referencedInPlaces: placesReferences,
     networkChecked: !noNetwork,
     errors,
     warnings,

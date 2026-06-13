@@ -12,6 +12,7 @@
  */
 import type { LngLat } from "./buyer-location";
 import { timeoutSignal } from "./fetch-timeout";
+import { registryId } from "./source-ids";
 
 const COOLING_GREENING_URL =
   "https://plan-gis.mapshare.vic.gov.au/arcgis/rest/services/CoolingGreening/CoolingGreening/MapServer";
@@ -20,7 +21,7 @@ const COOLING_GREENING_URL =
 const UHI_LAYER = 55;
 
 /** Source id in the data manifest (sources.json) for attribution + verify-sources. */
-export const URBAN_HEAT_SOURCE_ID = "vic-cooling-greening";
+export const URBAN_HEAT_SOURCE_ID = registryId("vic-cooling-greening");
 
 export type UrbanHeat = {
   /** Land-surface-temperature uplift vs non-urban baseline, degrees C. */

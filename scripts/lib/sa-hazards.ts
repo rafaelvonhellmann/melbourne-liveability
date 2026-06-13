@@ -27,12 +27,13 @@ import type {
 } from "./hazard-adapters.js";
 import { browserFetch } from "./gov-fetch.js";
 import { buildHazardIndex, overlayPctInSa2 } from "./sa2-overlay-pct.js";
+import { assertBakeable, registryId } from "./source-registry.js";
 
 export const SA_PLANSA_ATLAS_MAPSERVER =
   "https://lsa2.geohub.sa.gov.au/arcgis/rest/services/SAPPA/PropertyPlanningAtlasV18/MapServer";
 
-export const SA_BUSHFIRE_SOURCE_ID = "sa-plansa-bushfire-hazards";
-export const SA_FLOOD_SOURCE_ID = "sa-plansa-flood-hazards";
+export const SA_BUSHFIRE_SOURCE_ID = registryId("sa-plansa-bushfire-hazards");
+export const SA_FLOOD_SOURCE_ID = registryId("sa-plansa-flood-hazards");
 
 export const SA_BUSHFIRE_RAW_FILE = "sa-plansa-bushfire.geojson";
 export const SA_FLOOD_RAW_FILE = "sa-plansa-flood.geojson";
@@ -345,6 +346,8 @@ export const saHazardsAdapter: HazardAdapter = {
   floodSourceId: SA_FLOOD_SOURCE_ID,
 
   async fetch(region: Region, rawDir: string) {
+    assertBakeable(SA_BUSHFIRE_SOURCE_ID);
+    assertBakeable(SA_FLOOD_SOURCE_ID);
     console.log("SA Planning and Design Code bushfire hazard overlays (PlanSA/SAPPA, clipped to region bbox)...");
     const bushfire = await fetchLayerSet(SA_BUSHFIRE_LAYERS, region.bbox);
     await writeFile(path.join(rawDir, SA_BUSHFIRE_RAW_FILE), JSON.stringify(bushfire));

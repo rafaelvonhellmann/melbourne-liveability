@@ -71,6 +71,7 @@ import {
   fetchSaCrime,
   parseSaCrimeCsv,
 } from "./sa-crime.js";
+import { assertBakeable, registryId } from "./source-registry.js";
 
 /** The shape every adapter's normalize step writes onto. */
 export type CrimePlace = {
@@ -104,13 +105,21 @@ export type CrimeAdapter = {
 
 const UA = "MelbourneLiveability/1.0";
 
+const VCSA_SOURCE_ID = registryId("vcsa-recorded-offences");
+const ACT_CRIME_SOURCE_ID = registryId("act-policing-crime-statistics");
+const QLD_CRIME_SOURCE_ID = registryId("qps-lga-offence-rates");
+const NSW_CRIME_SOURCE_ID = registryId("bocsar-suburb-offences");
+const WA_CRIME_SOURCE_ID = registryId("wa-police-suburb-offences");
+const SA_CRIME_SOURCE_ID = registryId("sapol-suburb-offences");
+
 /* ----------------------------- VIC (VCSA) ------------------------------ */
 
 const vicAdapter: CrimeAdapter = {
-  sourceId: "vcsa-recorded-offences",
+  sourceId: VCSA_SOURCE_ID,
   geographyLevel: "suburb",
 
   async fetch(_region, rawDir) {
+    assertBakeable(VCSA_SOURCE_ID);
     const pkg = await fetch(
       "https://discover.data.vic.gov.au/api/3/action/package_show?id=data-tables-recorded-offences",
       { headers: { "User-Agent": UA } }
@@ -168,10 +177,11 @@ const vicAdapter: CrimeAdapter = {
 /* -------------------------- ACT (ACT Policing) ------------------------- */
 
 const actAdapter: CrimeAdapter = {
-  sourceId: "act-policing-crime-statistics",
+  sourceId: ACT_CRIME_SOURCE_ID,
   geographyLevel: "suburb",
 
   async fetch(_region, rawDir) {
+    assertBakeable(ACT_CRIME_SOURCE_ID);
     const dest = path.join(rawDir, ACT_CRIME_RAW_FILE);
     await downloadToFile(ACT_CRIME_URL, dest);
     await assertXlsxFile(dest); // never let an HTML error page pose as the workbook
@@ -195,12 +205,13 @@ const actAdapter: CrimeAdapter = {
 /* ----------------------------- QLD (QPS) ------------------------------- */
 
 const qldAdapter: CrimeAdapter = {
-  sourceId: "qps-lga-offence-rates",
+  sourceId: QLD_CRIME_SOURCE_ID,
   geographyLevel: "lga",
 
   // The CSV is statewide (all 77 councils), so the same fetch serves brisbane
   // and any future QLD region (gold coast, sunshine coast, townsville).
   async fetch(_region, rawDir) {
+    assertBakeable(QLD_CRIME_SOURCE_ID);
     const dest = path.join(rawDir, QLD_CRIME_RAW_FILE);
     await downloadToFile(QLD_CRIME_URL, dest);
     await assertQldCrimeCsvFile(dest); // never let an HTML error page pose as the CSV
@@ -224,7 +235,7 @@ const qldAdapter: CrimeAdapter = {
 /* ---------------------------- NSW (BOCSAR) ------------------------------ */
 
 const nswAdapter: CrimeAdapter = {
-  sourceId: "bocsar-suburb-offences",
+  sourceId: NSW_CRIME_SOURCE_ID,
   geographyLevel: "suburb",
 
   // The CSV is statewide (every NSW locality), so the same fetch serves
@@ -232,6 +243,7 @@ const nswAdapter: CrimeAdapter = {
   // rivers). fetch() clips the ~430 MB history to the latest 12 months while
   // streaming out of the zip - see nsw-crime.ts.
   async fetch(_region, rawDir) {
+    assertBakeable(NSW_CRIME_SOURCE_ID);
     await fetchNswCrime(rawDir);
     const dest = path.join(rawDir, NSW_CRIME_RAW_FILE);
     await assertNswCrimeCsvFile(dest); // never let an HTML error page pose as the CSV
@@ -255,7 +267,7 @@ const nswAdapter: CrimeAdapter = {
 /* ---------------------------- WA (WA Police) --------------------------- */
 
 const waAdapter: CrimeAdapter = {
-  sourceId: "wa-police-suburb-offences",
+  sourceId: WA_CRIME_SOURCE_ID,
   geographyLevel: "suburb",
 
   // The pull is statewide (every WA locality), so the same fetch serves perth
@@ -263,6 +275,7 @@ const waAdapter: CrimeAdapter = {
   // Power BI report month by month, caching each immutable period under
   // data/raw/wa-crime-cache/ - a monthly refresh re-fetches only the new month.
   async fetch(_region, rawDir) {
+    assertBakeable(WA_CRIME_SOURCE_ID);
     await fetchWaCrime(rawDir);
     const dest = path.join(rawDir, WA_CRIME_RAW_FILE);
     await assertWaCrimeCsvFile(dest); // never let an HTML/WAF page pose as the CSV
@@ -286,7 +299,7 @@ const waAdapter: CrimeAdapter = {
 /* ----------------------------- SA (SAPOL) ------------------------------ */
 
 const saAdapter: CrimeAdapter = {
-  sourceId: "sapol-suburb-offences",
+  sourceId: SA_CRIME_SOURCE_ID,
   geographyLevel: "suburb",
 
   // The CSVs are statewide (every SA locality), so the same fetch serves
@@ -297,6 +310,7 @@ const saAdapter: CrimeAdapter = {
   // counts EXCLUDE sexual offences - SAPOL withholds their location
   // (suburb "NOT DISCLOSED"); documented in sources.json.
   async fetch(_region, rawDir) {
+    assertBakeable(SA_CRIME_SOURCE_ID);
     await fetchSaCrime(rawDir);
     const dest = path.join(rawDir, SA_CRIME_RAW_FILE);
     await assertSaCrimeCsvFile(dest); // never let an HTML/WAF page pose as the CSV

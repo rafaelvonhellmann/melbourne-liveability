@@ -12,12 +12,13 @@
  */
 import type { LngLat } from "./buyer-location";
 import { timeoutSignal } from "./fetch-timeout";
+import { registryId } from "./source-ids";
 
 const MW_MACRO_URL =
   "https://services5.arcgis.com/ZSYwjtv8RKVhkXIL/arcgis/rest/services/MACROS_HSM_HWS/FeatureServer/1/query";
 
 /** Source id in the data manifest (sources.json) for attribution. */
-export const WATERWAY_SOURCE_ID = "mw-hws-macros";
+export const WATERWAY_SOURCE_ID = registryId("mw-hws-macros");
 
 export type WaterwayHealth = {
   /** 0-100 condition score (averaged local reaches). */

@@ -16,8 +16,9 @@ import {
   sanitizeRegionId,
   type RegionId,
 } from "./regions";
+import { registryId } from "./source-ids";
 
-export const BEACH_SOURCE_ID = "epa-beach-report";
+export const BEACH_SOURCE_ID = registryId("epa-beach-report");
 
 export type Beach = {
   name: string;
