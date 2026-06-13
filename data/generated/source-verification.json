@@ -1,6 +1,6 @@
 {
-  "checkedAt": "2026-06-12T13:27:59.995Z",
-  "sources": 63,
+  "checkedAt": "2026-06-13T07:46:17.839Z",
+  "sources": 69,
   "referencedInCode": 0,
   "networkChecked": true,
   "errors": [],
@@ -12,8 +12,15 @@
     "sapol-suburb-offences: missing sha256 (run data:hash after fetch)",
     "qld-spp-bushfire-prone-area: missing sha256 (run data:hash after fetch)",
     "bcc-cityplan-flood-overlay: missing sha256 (run data:hash after fetch)",
+    "nsw-rfs-bush-fire-prone-land: missing sha256 (run data:hash after fetch)",
+    "nsw-epi-flood-planning-area: missing sha256 (run data:hash after fetch)",
+    "wa-dfes-bushfire-prone-areas-2025: missing sha256 (run data:hash after fetch)",
+    "sa-plansa-bushfire-hazards: missing sha256 (run data:hash after fetch)",
+    "sa-plansa-flood-hazards: missing sha256 (run data:hash after fetch)",
+    "nsw-beachwatch: missing sha256 (run data:hash after fetch)",
     "unreachable url vcsa-recorded-offences: https://www.crimestatistics.vic.gov.au/crime-statistics/latest-victorian-crime-data/download-data (403)",
-    "unreachable url qld-spp-bushfire-prone-area: https://utility.arcgis.com/usrsvcs/servers/8ac1ba8eccee472fbd0e7a57bf3ad320/rest/services/Hosted/BPA/FeatureServer/0 (403)"
+    "unreachable url sa-plansa-bushfire-hazards: https://lsa2.geohub.sa.gov.au/arcgis/rest/services/SAPPA/PropertyPlanningAtlasV18/MapServer (403)",
+    "unreachable url sa-plansa-flood-hazards: https://lsa2.geohub.sa.gov.au/arcgis/rest/services/SAPPA/PropertyPlanningAtlasV18/MapServer (403)"
   ],
   "liveness": [
     {
@@ -84,13 +91,49 @@
     },
     {
       "id": "qld-spp-bushfire-prone-area",
-      "url": "https://utility.arcgis.com/usrsvcs/servers/8ac1ba8eccee472fbd0e7a57bf3ad320/rest/services/Hosted/BPA/FeatureServer/0",
-      "ok": false,
-      "status": 403
+      "url": "https://qldspatial.information.qld.gov.au/catalogue/catalog/search/resource/details.page?uuid=%7B8712BDE4-27D1-49A2-83F1-AE7A692B816D%7D",
+      "ok": true,
+      "status": 200
     },
     {
       "id": "bcc-cityplan-flood-overlay",
       "url": "https://data.brisbane.qld.gov.au/explore/dataset/cp14-flood-overlay-brisbane-river-flood-planning-area/",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "nsw-rfs-bush-fire-prone-land",
+      "url": "https://portal.spatial.nsw.gov.au/server/rest/services/Hosted/NSW_BushFire_Prone_Land/FeatureServer/0",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "nsw-epi-flood-planning-area",
+      "url": "https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/ePlanning/Planning_Portal_Hazard/MapServer/230",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "wa-dfes-bushfire-prone-areas-2025",
+      "url": "https://public-services.slip.wa.gov.au/public/rest/services/SLIP_Public_Services/Bush_Fire_Prone_Areas/MapServer/22",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "id": "sa-plansa-bushfire-hazards",
+      "url": "https://lsa2.geohub.sa.gov.au/arcgis/rest/services/SAPPA/PropertyPlanningAtlasV18/MapServer",
+      "ok": false,
+      "status": 403
+    },
+    {
+      "id": "sa-plansa-flood-hazards",
+      "url": "https://lsa2.geohub.sa.gov.au/arcgis/rest/services/SAPPA/PropertyPlanningAtlasV18/MapServer",
+      "ok": false,
+      "status": 403
+    },
+    {
+      "id": "nsw-beachwatch",
+      "url": "https://www.beachwatch.nsw.gov.au/",
       "ok": true,
       "status": 200
     },

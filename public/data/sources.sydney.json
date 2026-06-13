@@ -36,13 +36,31 @@
     "sha256": "4b0dc85d3eb962549955dc5be9192d13aa6b1824de67c533bcd17c1d3395e8c8"
   },
   {
+    "id": "nsw-rfs-bush-fire-prone-land",
+    "name": "NSW Bush Fire Prone Land - RFS mapped categories (NSW Spatial Services hosted layer)",
+    "url": "https://portal.spatial.nsw.gov.au/server/rest/services/Hosted/NSW_BushFire_Prone_Land/FeatureServer/0",
+    "licence": "CC BY 4.0",
+    "period": "current",
+    "fetchedAt": "2026-06-13",
+    "sha256": "3ad7bce4c0b40b2e04143d5e4c283b3dc856f48a7ab39ec53c6a6452bdee6852"
+  },
+  {
+    "id": "nsw-epi-flood-planning-area",
+    "name": "NSW Flood Planning Area - EPI hazard layer (NSW Planning Portal / DPE ePlanning)",
+    "url": "https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/ePlanning/Planning_Portal_Hazard/MapServer/230",
+    "licence": "CC BY 4.0",
+    "period": "current",
+    "fetchedAt": "2026-06-13",
+    "sha256": "87b09e388f18be2a28a88f724024274958af81156624e787ef7eab6d5d36cf4e"
+  },
+  {
     "id": "osm-pt",
     "name": "OpenStreetMap — public transport stops (Overpass fallback only)",
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-12",
-    "sha256": "1d75a7fcbf5a216e4fba1ee1edfba22bcc0fdc60a455b0f0c318ecddfa17d859"
+    "fetchedAt": "2026-06-13",
+    "sha256": "0ca378acf8cb4747395bed89e057e9c0928c04aff14cc094d6f3b504d2bce50a"
   },
   {
     "id": "osm-health",
@@ -50,8 +68,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-12",
-    "sha256": "fa2b2a2a4dd44ddd450703404106abcce169c3d7623a71688120dcb1f4dba5f5"
+    "fetchedAt": "2026-06-13",
+    "sha256": "71793ac26820631e6ad5d4fb0701fff5fab847a7e45f9ef6fd2a12115fcfabea"
   },
   {
     "id": "abs-census-labour-2016",
@@ -68,8 +86,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-12",
-    "sha256": "e8820184ddb0bd4c994988bda216c27d60572170f1aab43a178ff38404f49596"
+    "fetchedAt": "2026-06-13",
+    "sha256": "0dcfaaa1ff4e805f446de97840c733d887ff96e2a5ad6a66b4235f560965d893"
   },
   {
     "id": "abs-census-preschool-2021",
@@ -104,8 +122,8 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-12",
-    "sha256": "c40a27a9092984089d1b49c24cebb5131472c754b1caa80a8155d15eb3c8358f"
+    "fetchedAt": "2026-06-13",
+    "sha256": "67d6fa2fb8fdbd90979da51d6147e785203dcae130588e834bdaf3183a217d77"
   },
   {
     "id": "osm-cycleways",
@@ -113,7 +131,7 @@
     "url": "https://www.openstreetmap.org/",
     "licence": "ODbL — attribute OSM",
     "period": "current",
-    "fetchedAt": "2026-06-12",
-    "sha256": "9b7d5a0fdc7c0970c4be068006bd82f1bf57d76a4120b332ad8c061482dc0390"
+    "fetchedAt": "2026-06-13",
+    "sha256": "de73eb772de567ebcab107ffcec57c328dc56634d116685499b4aba54b01cd26"
   }
 ]
