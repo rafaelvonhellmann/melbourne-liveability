@@ -98,6 +98,16 @@ const SQL = {
 
 type ExecResult = { rows: Record<string, unknown>[]; changes: number };
 
+const d1Meta = (changes: number, rowsRead: number): D1Meta & Record<string, unknown> => ({
+  duration: 0,
+  size_after: 0,
+  rows_read: rowsRead,
+  rows_written: changes,
+  last_row_id: 0,
+  changed_db: changes > 0,
+  changes,
+});
+
 class FakeStatement implements D1PreparedStatement {
   private params: unknown[] = [];
 
@@ -111,18 +121,34 @@ class FakeStatement implements D1PreparedStatement {
     return this;
   }
 
-  async first<T = Record<string, unknown>>(): Promise<T | null> {
-    const { rows } = this.db.exec(this.sql, this.params);
-    return (rows[0] as unknown as T | undefined) ?? null;
+  first<T = unknown>(colName: string): Promise<T | null>;
+  first<T = Record<string, unknown>>(): Promise<T | null>;
+  async first<T = Record<string, unknown>>(colName?: string): Promise<T | null> {
+    const { rows } = this.db.execute(this.sql, this.params);
+    const row = rows[0];
+    if (!row) return null;
+    if (colName !== undefined) return (row[colName] as T | undefined) ?? null;
+    return row as unknown as T;
   }
 
   async run<T = Record<string, unknown>>(): Promise<D1Result<T>> {
-    const { rows, changes } = this.db.exec(this.sql, this.params);
-    return { results: rows as unknown as T[], success: true, meta: { changes } };
+    const { rows, changes } = this.db.execute(this.sql, this.params);
+    return { results: rows as unknown as T[], success: true, meta: d1Meta(changes, rows.length) };
   }
 
   async all<T = Record<string, unknown>>(): Promise<D1Result<T>> {
     return this.run<T>();
+  }
+
+  raw<T = unknown[]>(options: { columnNames: true }): Promise<[string[], ...T[]]>;
+  raw<T = unknown[]>(options?: { columnNames?: false }): Promise<T[]>;
+  async raw<T = unknown[]>(options?: { columnNames?: boolean }): Promise<T[] | [string[], ...T[]]> {
+    const { results } = await this.all<Record<string, unknown>>();
+    const rows = results.map((row) => Object.values(row) as T);
+    if (options?.columnNames) {
+      return [results[0] ? Object.keys(results[0]) : [], ...rows];
+    }
+    return rows;
   }
 }
 
@@ -153,7 +179,24 @@ export class FakeD1 implements D1Database {
     throw new Error("FakeD1.batch: no route uses batch");
   }
 
-  exec(sql: string, params: unknown[]): ExecResult {
+  async exec(query: string): Promise<D1ExecResult> {
+    const statements = query
+      .split(";")
+      .map(normalize)
+      .filter((statement) => statement.length > 0);
+    for (const statement of statements) this.execute(statement, []);
+    return { count: statements.length, duration: 0 };
+  }
+
+  withSession(): D1DatabaseSession {
+    throw new Error("FakeD1.withSession: no route uses sessions");
+  }
+
+  dump(): Promise<ArrayBuffer> {
+    throw new Error("FakeD1.dump: no route uses dump");
+  }
+
+  execute(sql: string, params: unknown[]): ExecResult {
     const t = this.tables;
     switch (sql) {
       case SQL.insertMagicLink: {
@@ -340,6 +383,24 @@ export class FakeD1 implements D1Database {
  * TTL-aware KV fake with its own advanceable clock, so "the session
  * expired" is modelled as elapsed time, not as a sneaky delete.
  */
+type KvGetType = "text" | "json" | "arrayBuffer" | "stream";
+type KvGetArg =
+  | KvGetType
+  | Partial<KVNamespaceGetOptions<undefined>>
+  | KVNamespaceGetOptions<KvGetType>;
+
+const isKvGetType = (value: unknown): value is KvGetType =>
+  value === "text" || value === "json" || value === "arrayBuffer" || value === "stream";
+
+const kvGetType = (arg: KvGetArg | undefined): KvGetType => {
+  if (isKvGetType(arg)) return arg;
+  if (typeof arg === "object" && arg !== null && "type" in arg) {
+    const candidate = (arg as { type?: unknown }).type;
+    if (isKvGetType(candidate)) return candidate;
+  }
+  return "text";
+};
+
 export class FakeKV implements KVNamespace {
   readonly store = new Map<string, { value: string; expiresAtMs: number | null }>();
   private nowMs = Date.now();
@@ -349,7 +410,7 @@ export class FakeKV implements KVNamespace {
     this.nowMs += seconds * 1000;
   }
 
-  async get(key: string): Promise<string | null> {
+  private readString(key: string): string | null {
     const entry = this.store.get(key);
     if (!entry) return null;
     if (entry.expiresAtMs !== null && entry.expiresAtMs <= this.nowMs) {
@@ -359,11 +420,178 @@ export class FakeKV implements KVNamespace {
     return entry.value;
   }
 
+  private readValue<ExpectedValue>(key: string, type: KvGetType) {
+    const value = this.readString(key);
+    if (value === null) return null;
+    if (type === "json") return JSON.parse(value) as ExpectedValue;
+    if (type === "arrayBuffer") return new TextEncoder().encode(value).buffer.slice(0);
+    if (type === "stream") return new Blob([value]).stream();
+    return value;
+  }
+
+  get(key: string, options?: Partial<KVNamespaceGetOptions<undefined>>): Promise<string | null>;
+  get(key: string, type: "text"): Promise<string | null>;
+  get<ExpectedValue = unknown>(key: string, type: "json"): Promise<ExpectedValue | null>;
+  get(key: string, type: "arrayBuffer"): Promise<ArrayBuffer | null>;
+  get(key: string, type: "stream"): Promise<ReadableStream | null>;
+  get(key: string, options?: KVNamespaceGetOptions<"text">): Promise<string | null>;
+  get<ExpectedValue = unknown>(
+    key: string,
+    options?: KVNamespaceGetOptions<"json">
+  ): Promise<ExpectedValue | null>;
+  get(key: string, options?: KVNamespaceGetOptions<"arrayBuffer">): Promise<ArrayBuffer | null>;
+  get(key: string, options?: KVNamespaceGetOptions<"stream">): Promise<ReadableStream | null>;
+  get(key: string[], type: "text"): Promise<Map<string, string | null>>;
+  get<ExpectedValue = unknown>(
+    key: string[],
+    type: "json"
+  ): Promise<Map<string, ExpectedValue | null>>;
+  get(
+    key: string[],
+    options?: Partial<KVNamespaceGetOptions<undefined>>
+  ): Promise<Map<string, string | null>>;
+  get(
+    key: string[],
+    options?: KVNamespaceGetOptions<"text">
+  ): Promise<Map<string, string | null>>;
+  get<ExpectedValue = unknown>(
+    key: string[],
+    options?: KVNamespaceGetOptions<"json">
+  ): Promise<Map<string, ExpectedValue | null>>;
+  async get<ExpectedValue = unknown>(
+    key: string | string[],
+    typeOrOptions?: KvGetArg
+  ): Promise<
+    | string
+    | ExpectedValue
+    | ArrayBuffer
+    | ReadableStream
+    | null
+    | Map<string, string | ExpectedValue | ArrayBuffer | ReadableStream | null>
+  > {
+    const type = kvGetType(typeOrOptions);
+    if (Array.isArray(key)) {
+      return new Map(key.map((item) => [item, this.readValue<ExpectedValue>(item, type)]));
+    }
+    return this.readValue<ExpectedValue>(key, type);
+  }
+
+  async list<Metadata = unknown>(
+    options?: KVNamespaceListOptions
+  ): Promise<KVNamespaceListResult<Metadata, string>> {
+    const prefix = options?.prefix ?? "";
+    const liveKeys = [...this.store.keys()].filter((key) => this.readString(key) !== null);
+    const matchingKeys = prefix ? liveKeys.filter((key) => key.startsWith(prefix)) : liveKeys;
+    const limit = options?.limit ?? matchingKeys.length;
+    return {
+      list_complete: true,
+      keys: matchingKeys.slice(0, limit).map((name) => ({ name })),
+      cacheStatus: null,
+    };
+  }
+
+  private withMetadata<Value, Metadata>(
+    value: Value | null
+  ): KVNamespaceGetWithMetadataResult<Value, Metadata> {
+    return { value, metadata: null, cacheStatus: null };
+  }
+
+  getWithMetadata<Metadata = unknown>(
+    key: string,
+    options?: Partial<KVNamespaceGetOptions<undefined>>
+  ): Promise<KVNamespaceGetWithMetadataResult<string, Metadata>>;
+  getWithMetadata<Metadata = unknown>(
+    key: string,
+    type: "text"
+  ): Promise<KVNamespaceGetWithMetadataResult<string, Metadata>>;
+  getWithMetadata<ExpectedValue = unknown, Metadata = unknown>(
+    key: string,
+    type: "json"
+  ): Promise<KVNamespaceGetWithMetadataResult<ExpectedValue, Metadata>>;
+  getWithMetadata<Metadata = unknown>(
+    key: string,
+    type: "arrayBuffer"
+  ): Promise<KVNamespaceGetWithMetadataResult<ArrayBuffer, Metadata>>;
+  getWithMetadata<Metadata = unknown>(
+    key: string,
+    type: "stream"
+  ): Promise<KVNamespaceGetWithMetadataResult<ReadableStream, Metadata>>;
+  getWithMetadata<Metadata = unknown>(
+    key: string,
+    options: KVNamespaceGetOptions<"text">
+  ): Promise<KVNamespaceGetWithMetadataResult<string, Metadata>>;
+  getWithMetadata<ExpectedValue = unknown, Metadata = unknown>(
+    key: string,
+    options: KVNamespaceGetOptions<"json">
+  ): Promise<KVNamespaceGetWithMetadataResult<ExpectedValue, Metadata>>;
+  getWithMetadata<Metadata = unknown>(
+    key: string,
+    options: KVNamespaceGetOptions<"arrayBuffer">
+  ): Promise<KVNamespaceGetWithMetadataResult<ArrayBuffer, Metadata>>;
+  getWithMetadata<Metadata = unknown>(
+    key: string,
+    options: KVNamespaceGetOptions<"stream">
+  ): Promise<KVNamespaceGetWithMetadataResult<ReadableStream, Metadata>>;
+  getWithMetadata<Metadata = unknown>(
+    key: string[],
+    type: "text"
+  ): Promise<Map<string, KVNamespaceGetWithMetadataResult<string, Metadata>>>;
+  getWithMetadata<ExpectedValue = unknown, Metadata = unknown>(
+    key: string[],
+    type: "json"
+  ): Promise<Map<string, KVNamespaceGetWithMetadataResult<ExpectedValue, Metadata>>>;
+  getWithMetadata<Metadata = unknown>(
+    key: string[],
+    options?: Partial<KVNamespaceGetOptions<undefined>>
+  ): Promise<Map<string, KVNamespaceGetWithMetadataResult<string, Metadata>>>;
+  getWithMetadata<Metadata = unknown>(
+    key: string[],
+    options?: KVNamespaceGetOptions<"text">
+  ): Promise<Map<string, KVNamespaceGetWithMetadataResult<string, Metadata>>>;
+  getWithMetadata<ExpectedValue = unknown, Metadata = unknown>(
+    key: string[],
+    options?: KVNamespaceGetOptions<"json">
+  ): Promise<Map<string, KVNamespaceGetWithMetadataResult<ExpectedValue, Metadata>>>;
+  async getWithMetadata<ExpectedValue = unknown, Metadata = unknown>(
+    key: string | string[],
+    typeOrOptions?: KvGetArg
+  ): Promise<
+    | KVNamespaceGetWithMetadataResult<
+        string | ExpectedValue | ArrayBuffer | ReadableStream,
+        Metadata
+      >
+    | Map<
+        string,
+        KVNamespaceGetWithMetadataResult<
+          string | ExpectedValue | ArrayBuffer | ReadableStream,
+          Metadata
+        >
+      >
+  > {
+    const type = kvGetType(typeOrOptions);
+    if (Array.isArray(key)) {
+      return new Map(
+        key.map((item) => [
+          item,
+          this.withMetadata<string | ExpectedValue | ArrayBuffer | ReadableStream, Metadata>(
+            this.readValue<ExpectedValue>(item, type)
+          ),
+        ])
+      );
+    }
+    return this.withMetadata<string | ExpectedValue | ArrayBuffer | ReadableStream, Metadata>(
+      this.readValue<ExpectedValue>(key, type)
+    );
+  }
+
   async put(
     key: string,
-    value: string,
-    options?: { expiration?: number; expirationTtl?: number }
+    value: string | ArrayBuffer | ArrayBufferView | ReadableStream,
+    options?: KVNamespacePutOptions
   ): Promise<void> {
+    if (typeof value !== "string") {
+      throw new Error("FakeKV.put: only string values are used by these tests");
+    }
     const expiresAtMs =
       options?.expirationTtl !== undefined
         ? this.nowMs + options.expirationTtl * 1000
@@ -380,16 +608,112 @@ export class FakeKV implements KVNamespace {
 
 // --- R2 (bound but unused until the report pipeline lands) --------------
 
-export function fakeR2(): R2Bucket {
+type R2PutValue = ReadableStream | ArrayBuffer | ArrayBufferView | string | null | Blob;
+
+const r2Size = (value: R2PutValue): number => {
+  if (value === null) return 0;
+  if (typeof value === "string") return new TextEncoder().encode(value).byteLength;
+  if (value instanceof ArrayBuffer) return value.byteLength;
+  if (ArrayBuffer.isView(value)) return value.byteLength;
+  if (value instanceof Blob) return value.size;
+  return 0;
+};
+
+const r2HttpMetadata = (metadata?: R2HTTPMetadata | Headers): R2HTTPMetadata | undefined => {
+  if (!metadata) return undefined;
+  if (!(metadata instanceof Headers)) return metadata;
+
+  const out: R2HTTPMetadata = {};
+  const contentType = metadata.get("content-type");
+  const contentLanguage = metadata.get("content-language");
+  const contentDisposition = metadata.get("content-disposition");
+  const contentEncoding = metadata.get("content-encoding");
+  const cacheControl = metadata.get("cache-control");
+  if (contentType !== null) out.contentType = contentType;
+  if (contentLanguage !== null) out.contentLanguage = contentLanguage;
+  if (contentDisposition !== null) out.contentDisposition = contentDisposition;
+  if (contentEncoding !== null) out.contentEncoding = contentEncoding;
+  if (cacheControl !== null) out.cacheControl = cacheControl;
+  return Object.keys(out).length > 0 ? out : undefined;
+};
+
+const writeR2HttpMetadata = (headers: Headers, metadata: R2HTTPMetadata | undefined): void => {
+  if (!metadata) return;
+  if (metadata.contentType) headers.set("content-type", metadata.contentType);
+  if (metadata.contentLanguage) headers.set("content-language", metadata.contentLanguage);
+  if (metadata.contentDisposition) headers.set("content-disposition", metadata.contentDisposition);
+  if (metadata.contentEncoding) headers.set("content-encoding", metadata.contentEncoding);
+  if (metadata.cacheControl) headers.set("cache-control", metadata.cacheControl);
+  if (metadata.cacheExpiry) headers.set("expires", metadata.cacheExpiry.toUTCString());
+};
+
+const makeR2Object = (
+  key: string,
+  value: R2PutValue,
+  options?: R2PutOptions
+): R2Object => {
+  const httpMetadata = r2HttpMetadata(options?.httpMetadata);
   return {
-    async put() {
-      return undefined;
+    key,
+    version: "fake-r2-version",
+    size: r2Size(value),
+    etag: "fake-r2-etag",
+    httpEtag: '"fake-r2-etag"',
+    checksums: { toJSON: () => ({}) },
+    uploaded: new Date(0),
+    httpMetadata,
+    customMetadata: options?.customMetadata,
+    storageClass: options?.storageClass ?? "Standard",
+    writeHttpMetadata(headers: Headers) {
+      writeR2HttpMetadata(headers, httpMetadata);
     },
-    async get() {
-      return null;
-    },
-    async delete() {},
   };
+};
+
+class FakeR2 implements R2Bucket {
+  async head(_key: string): Promise<R2Object | null> {
+    return null;
+  }
+
+  get(
+    key: string,
+    options: R2GetOptions & { onlyIf: R2Conditional | Headers }
+  ): Promise<R2ObjectBody | R2Object | null>;
+  get(key: string, options?: R2GetOptions): Promise<R2ObjectBody | null>;
+  async get(_key: string, _options?: R2GetOptions): Promise<R2ObjectBody | R2Object | null> {
+    return null;
+  }
+
+  put(
+    key: string,
+    value: R2PutValue,
+    options?: R2PutOptions & { onlyIf: R2Conditional | Headers }
+  ): Promise<R2Object | null>;
+  put(key: string, value: R2PutValue, options?: R2PutOptions): Promise<R2Object>;
+  async put(key: string, value: R2PutValue, options?: R2PutOptions): Promise<R2Object | null> {
+    return makeR2Object(key, value, options);
+  }
+
+  async createMultipartUpload(
+    _key: string,
+    _options?: R2MultipartOptions
+  ): Promise<R2MultipartUpload> {
+    throw new Error("FakeR2.createMultipartUpload: no route uses multipart uploads");
+  }
+
+  resumeMultipartUpload(_key: string, _uploadId: string): R2MultipartUpload {
+    throw new Error("FakeR2.resumeMultipartUpload: no route uses multipart uploads");
+  }
+
+  async delete(_keys: string | string[]): Promise<void> {}
+
+  async list(_options?: R2ListOptions): Promise<R2Objects> {
+    return { objects: [], delimitedPrefixes: [], truncated: false };
+  }
+}
+
+export function fakeR2(): R2Bucket {
+  return new FakeR2();
 }
 
 // --- env / request helpers ----------------------------------------------
@@ -408,6 +732,7 @@ export function makeEnv(overrides: Partial<Env> = {}): TestEnv {
 export const ctx: ExecutionContext = {
   waitUntil() {},
   passThroughOnException() {},
+  props: {},
 };
 
 /**

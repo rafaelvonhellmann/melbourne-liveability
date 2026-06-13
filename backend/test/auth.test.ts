@@ -255,12 +255,12 @@ describe("POST /api/auth/verify", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     const env = consoleEnv();
     const token = await issueMagicLink(env, "sam@festra.au", silentProvider);
-    const exec = env.DB.exec.bind(env.DB);
-    env.DB.exec = (sql, params) => {
+    const execute = env.DB.execute.bind(env.DB);
+    env.DB.execute = (sql, params) => {
       if (sql === "INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)") {
         throw new Error("session insert failed");
       }
-      return exec(sql, params);
+      return execute(sql, params);
     };
 
     const res = await call(env, "POST", "/api/auth/verify", { body: { token } });

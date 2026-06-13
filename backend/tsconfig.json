@@ -10,9 +10,10 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "lib": ["ES2022", "WebWorker"],
-    // Empty on purpose: do NOT auto-load @types/* from the repo root
-    // node_modules (e.g. @types/node would fight lib WebWorker globals).
-    "types": [],
+    // Cutover 2026-06-13: real Cloudflare bindings types (the ambient.d.ts
+    // shim is deleted per the runbook). Still no @types/node here - the
+    // WebWorker lib provides the runtime globals.
+    "types": ["@cloudflare/workers-types"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noFallthroughCasesInSwitch": true,

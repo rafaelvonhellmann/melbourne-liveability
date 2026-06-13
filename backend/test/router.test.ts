@@ -6,6 +6,7 @@ type TestEnv = { tag: string };
 const ctx: ExecutionContext = {
   waitUntil() {},
   passThroughOnException() {},
+  props: {},
 };
 
 const env: TestEnv = { tag: "test-env" };
