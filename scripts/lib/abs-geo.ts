@@ -1,5 +1,8 @@
 import type { Feature, FeatureCollection, Polygon, MultiPolygon } from "geojson";
 
+export const ASGS_EDITION = "2021" as const;
+// ABS_BASE hard-pins ASGS Edition 3 (2021). ASGS Ed.4 is a future migration,
+// not a runtime switch, so keep the service path fixed.
 const ABS_BASE = "https://geo.abs.gov.au/arcgis/rest/services/ASGS2021";
 
 type ArcGisQueryParams = {
