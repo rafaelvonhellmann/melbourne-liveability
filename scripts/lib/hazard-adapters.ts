@@ -53,6 +53,9 @@ import type { Region } from "../../lib/regions.js";
 import type { CrosswalkFile } from "../../lib/crosswalk-types.js";
 import { fetchArcGisGeoJson } from "./arcgis-geojson.js";
 import { fetchQspatialBpaToFile } from "./qspatial-bpa.js";
+import { nswHazardsAdapter } from "./nsw-hazards.js";
+import { waHazardsAdapter } from "./wa-hazards.js";
+import { saHazardsAdapter } from "./sa-hazards.js";
 import { fetchPlanLayerGeoJson } from "./arcgis-plan-vic.js";
 import { buildHazardIndex, overlayPctInSa2 } from "./sa2-overlay-pct.js";
 import { normalizeQldLgaName } from "./qld-crime.js";
@@ -339,6 +342,9 @@ const qldAdapter: HazardAdapter = {
 const HAZARD_ADAPTERS: Record<string, HazardAdapter> = {
   vic: vicAdapter,
   qld: qldAdapter,
+  nsw: nswHazardsAdapter,
+  wa: waHazardsAdapter,
+  sa: saHazardsAdapter,
 };
 
 /** The hazard adapter for a region's state, or null (hazards unscored). */

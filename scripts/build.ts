@@ -22,7 +22,7 @@ import { hazardAdapterFor } from "./lib/hazard-adapters.js";
 // Melbourne/VIC-wired steps until their per-state modules land:
 //   data:timeseries  - VCSA crime + VIC-coded ABS series
 // data:hazards runs for ANY region whose state has a hazard adapter
-// (scripts/lib/hazard-adapters.ts: VIC, QLD); elsewhere the hazards domain
+// (scripts/lib/hazard-adapters.ts: VIC, QLD, NSW, WA, SA); elsewhere the hazards domain
 // stays unscored. data:gtfs runs for ANY region whose registry entry has
 // stateSources.gtfsUrls (all 8 capitals; key-gated feeds self-skip).
 // data:hash runs for every region (melbourne keeps sources.json; others emit

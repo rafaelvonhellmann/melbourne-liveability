@@ -143,12 +143,14 @@ describe("scorePlaces VIC-source quarantine", () => {
     expect(json).not.toMatch(/"vic-/);
   });
 
-  it("sydney (NSW adapter) scores safety from BOCSAR, hazards stay unscored", () => {
+  it("sydney (NSW adapter) scores safety from BOCSAR and hazards from RFS BFPL + EPI flood", () => {
     const raw = nonVicFixture().map((p, i) => ({
       ...p,
       propertyCrimeRate: 5000 + i * 1000,
       violentCrimeRate: 800 + i * 100,
       crimeMethod: "population-weighted" as const,
+      bushfirePct: 10 + i * 5,
+      floodPct: 2 + i * 4,
     }));
     const places = scorePlaces(raw, getRegion("sydney"), new Map());
     for (const place of places) {
@@ -161,24 +163,31 @@ describe("scorePlaces VIC-source quarantine", () => {
       expect(safety.subIndicators.violentCrime.sourceId).toBe(
         "bocsar-suburb-offences"
       );
-      expect(place.domains.hazards).toEqual({
-        domain: "hazards",
-        scored: false,
-        percentile: null,
-        subIndicators: {},
-      });
+      const hazards = place.domains.hazards!;
+      expect(hazards.scored).toBe(true);
+      expect(hazards.percentile).not.toBeNull();
+      expect(hazards.subIndicators.bushfirePct.sourceId).toBe(
+        "nsw-rfs-bush-fire-prone-land"
+      );
+      expect(hazards.subIndicators.floodPct.sourceId).toBe(
+        "nsw-epi-flood-planning-area"
+      );
     }
     const json = JSON.stringify(places);
     expect(json).not.toMatch(/vcsa/);
     expect(json).not.toMatch(/"vic-/);
   });
 
-  it("perth (WA adapter) scores safety from WA Police, hazards stay unscored", () => {
+  it("perth (WA adapter) scores safety from WA Police and hazards bushfire-only (DWER flood dropped, CC-NC)", () => {
     const raw = nonVicFixture().map((p, i) => ({
       ...p,
       propertyCrimeRate: 5000 + i * 1000,
       violentCrimeRate: 800 + i * 100,
       crimeMethod: "area-weighted" as const,
+      bushfirePct: 10 + i * 5,
+      // floodPct null by construction: the DWER 1% AEP flood layer is CC BY-NC
+      // and is never fetched, so Perth flood stays honestly missing everywhere.
+      floodPct: null,
     }));
     const places = scorePlaces(raw, getRegion("perth"), new Map());
     for (const place of places) {
@@ -191,24 +200,29 @@ describe("scorePlaces VIC-source quarantine", () => {
       expect(safety.subIndicators.violentCrime.sourceId).toBe(
         "wa-police-suburb-offences"
       );
-      expect(place.domains.hazards).toEqual({
-        domain: "hazards",
-        scored: false,
-        percentile: null,
-        subIndicators: {},
-      });
+      const hazards = place.domains.hazards!;
+      expect(hazards.scored).toBe(true);
+      expect(hazards.percentile).not.toBeNull();
+      expect(hazards.subIndicators.bushfirePct.sourceId).toBe(
+        "wa-dfes-bushfire-prone-areas-2025"
+      );
+      // The WA bushfire-only invariant: flood is always honestly missing.
+      expect(hazards.subIndicators.floodPct.missing).toBe(true);
+      expect(hazards.subIndicators.floodPct.raw).toBeNull();
     }
     const json = JSON.stringify(places);
     expect(json).not.toMatch(/vcsa/);
     expect(json).not.toMatch(/"vic-/);
   });
 
-  it("adelaide (SA adapter) scores safety from SAPOL, hazards stay unscored", () => {
+  it("adelaide (SA adapter) scores safety from SAPOL and hazards from PlanSA bushfire + flood", () => {
     const raw = nonVicFixture().map((p, i) => ({
       ...p,
       propertyCrimeRate: 5000 + i * 1000,
       violentCrimeRate: 800 + i * 100,
       crimeMethod: "area-weighted" as const,
+      bushfirePct: 10 + i * 5,
+      floodPct: 2 + i * 4,
     }));
     const places = scorePlaces(raw, getRegion("adelaide"), new Map());
     for (const place of places) {
@@ -221,12 +235,15 @@ describe("scorePlaces VIC-source quarantine", () => {
       expect(safety.subIndicators.violentCrime.sourceId).toBe(
         "sapol-suburb-offences"
       );
-      expect(place.domains.hazards).toEqual({
-        domain: "hazards",
-        scored: false,
-        percentile: null,
-        subIndicators: {},
-      });
+      const hazards = place.domains.hazards!;
+      expect(hazards.scored).toBe(true);
+      expect(hazards.percentile).not.toBeNull();
+      expect(hazards.subIndicators.bushfirePct.sourceId).toBe(
+        "sa-plansa-bushfire-hazards"
+      );
+      expect(hazards.subIndicators.floodPct.sourceId).toBe(
+        "sa-plansa-flood-hazards"
+      );
     }
     const json = JSON.stringify(places);
     expect(json).not.toMatch(/vcsa/);
