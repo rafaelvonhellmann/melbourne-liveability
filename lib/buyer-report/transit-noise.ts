@@ -18,9 +18,12 @@ import {
 import { nearestStation, nearestBusStop, type Station } from "../transit";
 import { busiestRoadNear } from "../traffic";
 import { getSourcesByIds } from "../source-manifest";
+import { domainVerdict } from "../verdict";
 import { MAJOR_PROJECT_THRESHOLD_KM, type BuyerFinding } from "./types";
 import { pctOf } from "./helpers";
 import type { EngineCtx } from "./context";
+
+const REGION_LABEL = "Greater Melbourne";
 
 /**
  * Transport-noise proximity proxy (pin-level, OSM lines). Only FLAG when a
@@ -193,13 +196,14 @@ export function pushMajorProjectFinding(findings: BuyerFinding[], ctx: EngineCtx
 export function pushTransportPercentileFinding(findings: BuyerFinding[], ctx: EngineCtx): void {
   const { place } = ctx;
   const transportPct = pctOf(place, "transport");
+  const transportVerdict = domainVerdict("transport", transportPct, REGION_LABEL);
   if (transportPct != null && transportPct >= 70) {
     findings.push({
       id: "transport-strong",
       kind: "positive",
       severity: "info",
       title: "Strong public transport proximity",
-      summary: `Transport scores in the top tier for Greater Melbourne (${Math.round(transportPct)}th percentile) for this wider area.`,
+      summary: `${transportVerdict?.headline ?? "Public transport access scores strongly"} for this wider area.`,
       confidence: "medium",
       geography: "sa2",
       caveat: "Area-level; confirm the actual stops, lines and peak-hour commute for this address.",
@@ -212,7 +216,7 @@ export function pushTransportPercentileFinding(findings: BuyerFinding[], ctx: En
       tone: "concern",
       severity: "low",
       title: "Inspect the commute at peak hour",
-      summary: `Transport sits in the lower range for Greater Melbourne (${Math.round(transportPct)}th percentile) for this wider area.`,
+      summary: `${transportVerdict?.headline ?? "Public transport access is limited"} for this wider area.`,
       verifyAction: "Test the door-to-door commute at peak hour before relying on public transport.",
       confidence: "medium",
       geography: "sa2",

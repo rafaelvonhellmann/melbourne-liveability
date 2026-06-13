@@ -60,6 +60,7 @@
     "data:nuisance": "tsx scripts/fetch-nuisance.ts",
     "data:stations": "tsx scripts/fetch-train-stations.ts",
     "data:vic-facilities": "tsx scripts/fetch-vic-facilities.ts",
+    "data:mmm": "tsx scripts/fetch-mmm.ts",
     "data:social-housing": "tsx scripts/fetch-social-housing.ts",
     "data:apply-social-housing": "tsx scripts/apply-social-housing.ts",
     "data:apply-density": "tsx scripts/apply-density.ts",

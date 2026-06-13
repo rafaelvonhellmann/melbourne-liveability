@@ -32,6 +32,7 @@ import { COASTAL_SCENARIOS } from "../lib/coastal.js";
 import { readVifProjections } from "./lib/vif-parse.js";
 import { readApprovalsFile } from "./lib/abs-approvals.js";
 import { readQualificationsFile, type QualPlace } from "./lib/abs-qualifications.js";
+import { rollupMmmSa1ToSa2 } from "./lib/mmm.js";
 import { summarizeApprovals, type MonthlySeries } from "../lib/approvals.js";
 import { waterRetailerAt, type WaterCorp } from "../lib/water.js";
 import type {
@@ -73,6 +74,8 @@ type Sa2Raw = {
   hospitalDistKm: number | null;
   hospitalSource: "vic-mapshare-hospitals" | "osm-health" | null;
   gpCount2km: number | null;
+  mmmCode: number | null;
+  mmmNote: string | null;
   employmentRatio: number | null;
   participationRate: number | null;
   bushfirePct: number | null;
@@ -80,6 +83,8 @@ type Sa2Raw = {
   schools2km: number | null;
   preschoolEnrolled: number | null;
   irsadDecile: number | null;
+  irsadPercentile: number | null;
+  irsadScore: number | null;
   irsdDecile: number | null;
   renterPct: number | null;
   apartmentPct: number | null;
@@ -155,6 +160,8 @@ async function main() {
       hospitalDistKm: null,
       hospitalSource: null,
       gpCount2km: null,
+      mmmCode: null,
+      mmmNote: null,
       employmentRatio: null,
       participationRate: null,
       bushfirePct: null,
@@ -162,6 +169,8 @@ async function main() {
       schools2km: null,
       preschoolEnrolled: null,
       irsadDecile: null,
+      irsadPercentile: null,
+      irsadScore: null,
       irsdDecile: null,
       renterPct: null,
       apartmentPct: null,
@@ -221,8 +230,12 @@ async function main() {
     const p = byCode.get(code);
     if (!p) continue;
     const irsad = Number(row.irsad_aus_decile);
+    const irsadPercentile = Number(row.irsad_aus_percentile);
+    const irsadScore = Number(row.irsad_score);
     const irsd = Number(row.irsd_aus_decile);
     if (Number.isFinite(irsad)) p.irsadDecile = irsad;
+    if (Number.isFinite(irsadPercentile)) p.irsadPercentile = irsadPercentile;
+    if (Number.isFinite(irsadScore)) p.irsadScore = irsadScore;
     if (Number.isFinite(irsd)) p.irsdDecile = irsd;
   }
 
@@ -400,6 +413,17 @@ async function main() {
   console.log(
     `Health: hospitals from ${hospitalSource} (${hospitalPts.length} points), GP from osm-health nodes (${gps.length}, locked scored set)`
   );
+
+  const mmmBySa2 = rollupMmmSa1ToSa2(await loadAttrJsonAsync("mmm-sa1.json"));
+  if (mmmBySa2.size > 0) {
+    for (const p of byCode.values()) {
+      const mmm = mmmBySa2.get(p.sa2Code);
+      if (!mmm) continue;
+      p.mmmCode = mmm.code;
+      p.mmmNote = mmm.note;
+    }
+    console.log(`MMM 2023: SA1 modal rollup matched ${mmmBySa2.size} SA2`);
+  }
 
   const schoolsJson = JSON.parse(
     (await readFile(path.join(RAW, "osm-schools.json"), "utf8").catch(() => "{}")) ||
@@ -700,9 +724,16 @@ async function main() {
         note: "Federal election booth results by SA2 are planned for v2; not shown in v1.x.",
       },
     };
-    if (p.irsadDecile != null || p.irsdDecile != null) {
+    if (
+      p.irsadDecile != null ||
+      p.irsadPercentile != null ||
+      p.irsadScore != null ||
+      p.irsdDecile != null
+    ) {
       ctx.equity = {
         irsadDecile: p.irsadDecile,
+        irsadPercentile: p.irsadPercentile,
+        irsadScore: p.irsadScore,
         irsdDecile: p.irsdDecile,
         sourceId: "abs-seifa-2021",
         period: "2021",

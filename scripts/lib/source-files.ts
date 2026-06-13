@@ -21,6 +21,7 @@ export const SOURCE_FILES: Record<string, SourceFileMapping> = {
   "vicmap-police": { dir: "raw", file: "vic-police.json" },
   "vicmap-foi": { dir: "raw", file: "vic-childcare.json" },
   "osm-health": { dir: "raw", file: "osm-health.json" },
+  "doh-mmm-2023": { dir: "raw", file: "mmm-sa1.json" },
   "osm-post": { dir: "raw", file: "osm-post.json" },
   "osm-clinical-social": { dir: "raw", file: "osm-clinical-social.json" },
   "abs-census-labour-2016": { dir: "raw", file: "abs-sa2-employment.json" },

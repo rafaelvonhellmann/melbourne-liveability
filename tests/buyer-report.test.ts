@@ -181,7 +181,14 @@ function samplePlace(): Place {
     },
     context: {
       community: { renterPct: 40, apartmentPct: 20, firstNationsPct: 1, year12Pct: 80, sourceId: "abs", period: "2021" },
-      equity: { irsadDecile: 7, irsdDecile: 6, sourceId: "abs", period: "2021" },
+      equity: {
+        irsadDecile: 7,
+        irsadPercentile: null,
+        irsadScore: null,
+        irsdDecile: 6,
+        sourceId: "abs",
+        period: "2021",
+      },
     },
     dataConfidence: {
       score: 90,

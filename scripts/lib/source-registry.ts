@@ -266,6 +266,15 @@ export const SOURCE_REGISTRY = [
     licenceVerdict: "open-with-attribution",
   },
   {
+    id: "doh-mmm-2023",
+    name: "Modified Monash Model 2023 - health-access remoteness (MM1-7) by SA1, rolled up to SA2 (Dept of Health and Aged Care)",
+    url: "https://data.gov.au/data/dataset/modified-monash-model-mmm-2023",
+    licence: "CC BY 4.0",
+    verifyNote: "The data.gov.au catalogue record states CC BY 4.0; some Dept of Health/ArcGIS metadata and legacy downloads refer to Creative Commons Attribution 2.5 Australia. Both are attribution-compatible and bakeable, but re-check on refresh (checked 2026-06-13).",
+    period: "2023 (published Mar 2025)",
+    licenceVerdict: "open-with-attribution",
+  },
+  {
     id: "osm-post",
     name: "OpenStreetMap — post offices / LPO points (Overpass)",
     url: "https://www.openstreetmap.org/",
@@ -323,7 +332,7 @@ export const SOURCE_REGISTRY = [
   },
   {
     id: "abs-seifa-2021",
-    name: "ABS SEIFA 2021 — IRSAD and IRSD deciles (SA2)",
+    name: "ABS SEIFA 2021 — IRSAD and IRSD deciles + percentiles (SA2)",
     url: "https://www.abs.gov.au/statistics/people/people-and-communities/socio-economic-indexes-areas-seifa-australia/latest-release",
     licence: "CC BY 4.0",
     period: "2021",
