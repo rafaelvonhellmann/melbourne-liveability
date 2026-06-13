@@ -173,7 +173,12 @@ describe("applySaHazardsToPlaces pct math", () => {
   });
 });
 
-describe("SA hazards real clipped fetch", () => {
+// Live-network test: hits the real PlanSA/SAPPA ArcGIS server, which 500s
+// intermittently (the "Flooding General" layer is unreliable on deep pages).
+// Skipped by default so it never flakes the CI deploy gate; run on demand with
+// RUN_LIVE_HAZARD_TESTS=1. The adapter's deterministic pct-math + metadata
+// suites above stay in the always-on gate.
+describe.skipIf(!process.env.RUN_LIVE_HAZARD_TESTS)("SA hazards real clipped fetch (live)", () => {
   it("fetches real PlanSA/SAPPA hazard features and applies them to three Adelaide SA2 samples", async () => {
     const adelaide = getRegion("adelaide");
     const geoms = await loadAdelaideSampleGeoms();

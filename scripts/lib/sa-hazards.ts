@@ -284,9 +284,17 @@ async function fetchLayerSet(
   const features: Feature[] = [];
   for (const layer of layers) {
     console.log(`PlanSA ${layer.name}...`);
-    const fc = await fetchSaHazardLayerGeoJson(layer, bbox);
-    features.push(...fc.features);
-    console.log(`  ${fc.features.length} polygons`);
+    try {
+      const fc = await fetchSaHazardLayerGeoJson(layer, bbox);
+      features.push(...fc.features);
+      console.log(`  ${fc.features.length} polygons`);
+    } catch (e) {
+      // Per-layer resilience: a single PlanSA sublayer that 500s (e.g. the
+      // "Flooding General" layer 372 fails server-side on a deep page) must
+      // NOT discard the sublayers that fetched cleanly. Keep what we have and
+      // carry on; the missing sublayer just lowers coverage, never correctness.
+      console.warn(`  PlanSA ${layer.name} skipped (${(e as Error).message})`);
+    }
   }
   return { type: "FeatureCollection", features };
 }
