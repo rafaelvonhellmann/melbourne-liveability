@@ -10,6 +10,12 @@
  */
 import type { LngLat } from "./buyer-location";
 import { withBase } from "./asset-path";
+import {
+  DEFAULT_REGION,
+  dataPath,
+  sanitizeRegionId,
+  type RegionId,
+} from "./regions";
 
 export const BEACH_SOURCE_ID = "epa-beach-report";
 
@@ -47,22 +53,34 @@ export function nearestBeach(beaches: Beach[], pin: LngLat, maxKm = 6): NearestB
   return best;
 }
 
-let cache: Beach[] | null = null;
-async function loadBeaches(): Promise<Beach[]> {
-  if (cache) return cache;
+function activeRegionId(): RegionId {
+  if (typeof window === "undefined") return DEFAULT_REGION;
+  return sanitizeRegionId(new URLSearchParams(window.location.search).get("region"));
+}
+
+const cache = new Map<RegionId, Beach[]>();
+async function loadBeaches(region: RegionId = activeRegionId()): Promise<Beach[]> {
+  const cached = cache.get(region);
+  if (cached) return cached;
   try {
-    const res = await fetch(withBase("/data/beach-quality.json"));
+    const res = await fetch(withBase(dataPath(region, "beach-quality.json")));
     // Guard the shape, not just the status: a non-array body (error page, junk
     // JSON) must degrade to "no beaches", never throw downstream (never-throw).
     const body: unknown = res.ok ? await res.json() : null;
-    cache = Array.isArray(body) ? (body as Beach[]) : [];
+    const beaches = Array.isArray(body) ? (body as Beach[]) : [];
+    cache.set(region, beaches);
+    return beaches;
   } catch {
-    cache = [];
+    cache.set(region, []);
+    return [];
   }
-  return cache;
 }
 
 /** Nearest monitored beach within ~6 km of `pin`, or null (not near the bay). */
-export async function fetchNearestBeach(pin: LngLat, maxKm = 6): Promise<NearestBeach | null> {
-  return nearestBeach(await loadBeaches(), pin, maxKm);
+export async function fetchNearestBeach(
+  pin: LngLat,
+  maxKm = 6,
+  region: RegionId = activeRegionId()
+): Promise<NearestBeach | null> {
+  return nearestBeach(await loadBeaches(region), pin, maxKm);
 }
